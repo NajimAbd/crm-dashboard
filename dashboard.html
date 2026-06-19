@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RUQYA CRM — Tableau de bord</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --green-deep: #0D1A12;
+    --green-mid: #16261A;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --bg-soft: #FAF7F1;
+    --text-main: #2C2C2A;
+    --text-soft: #6B6B68;
+    --border-soft: #E5DECF;
+    --status-paid: #5A8C5A;
+    --status-pending: #C49A4E;
+    --status-cold: #9C9C9C;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg-soft);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    min-height: 100vh;
+  }
+
+  /* ==== TOP BAR ==== */
+  .topbar {
+    background: var(--green-deep);
+    color: var(--cream);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--gold);
+  }
+
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+
+  .brand-mark {
+    width: 34px; height: 34px;
+  }
+
+  .brand-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--cream);
+    letter-spacing: 0.01em;
+  }
+
+  .brand-sub {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 2px;
+  }
+
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    background: rgba(184, 150, 90, 0.12);
+    border: 1px solid rgba(184, 150, 90, 0.3);
+    border-radius: 24px;
+    font-size: 13px;
+    color: var(--cream);
+  }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: rgba(224, 104, 90, 0.12);
+    border: 1px solid rgba(224, 104, 90, 0.35);
+    border-radius: 24px;
+    color: #E0685A;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.2s;
+  }
+  .logout-btn:hover { background: rgba(224, 104, 90, 0.22); }
+
+  /* ==== PAGE LAYOUT ==== */
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 36px 32px 60px;
+  }
+
+  .page-header {
+    margin-bottom: 32px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 38px;
+    margin: 0 0 6px;
+    color: var(--green-deep);
+  }
+  .subtitle {
+    color: var(--text-soft);
+    font-size: 14px;
+  }
+
+  /* ==== STATS ==== */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+  .stat-card {
+    background: white;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 22px 22px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--gold);
+  }
+  .stat-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--green-deep);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+
+  /* ==== LEADS TABLE ==== */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--green-deep);
+    margin: 0;
+  }
+  .search-box {
+    position: relative;
+  }
+  .search-box input {
+    padding: 9px 14px 9px 36px;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    font-size: 13px;
+    background: white;
+    outline: none;
+    width: 240px;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .search-box input:focus { border-color: var(--gold); }
+  .search-box svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-soft);
+  }
+
+  .leads-table-wrap {
+    background: white;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  thead {
+    background: #F4EFE3;
+  }
+  th {
+    text-align: left;
+    padding: 12px 18px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background 0.15s; }
+  tbody tr:hover { background: #FBF9F4; }
+
+  .lead-name {
+    font-weight: 600;
+    color: var(--green-deep);
+  }
+  .lead-meta {
+    font-size: 12px;
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
+  .source-chip {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    background: rgba(184, 150, 90, 0.12);
+    color: #8B6E3A;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+  .status-chip {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .status-buyer { background: rgba(90, 140, 90, 0.15); color: var(--status-paid); }
+  .status-prospect { background: rgba(156, 156, 156, 0.15); color: var(--status-cold); }
+
+  .empty-state, .loading-state {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--text-soft);
+  }
+  .empty-state svg, .loading-state svg {
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  /* spinner */
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2.5px solid var(--border-soft);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 720px) {
+    .topbar { padding: 14px 16px; }
+    .page { padding: 24px 16px 50px; }
+    .search-box input { width: 180px; }
+    h1 { font-size: 28px; }
+    table { font-size: 12px; }
+    th, td { padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="50" rx="46" ry="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+      <circle cx="50" cy="50" r="6" fill="#B8965A"/>
+      <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-text">RUQYA CRM</div>
+      <div class="brand-sub">Plateforme praticiens</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="user-chip">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span id="userName">…</span>
+    </div>
+    <button class="logout-btn" onclick="logout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Déconnexion
+    </button>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="page-header">
+    <div class="eyebrow">Tableau de bord</div>
+    <h1 id="welcome">Bonjour</h1>
+    <div class="subtitle" id="welcomeSub">Vue d'ensemble de votre activité</div>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat-card"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Leads totaux</div></div>
+    <div class="stat-card"><div class="stat-value" id="statBuyers">—</div><div class="stat-label">Clients acheteurs</div></div>
+    <div class="stat-card"><div class="stat-value" id="statRate">—</div><div class="stat-label">Taux conversion</div></div>
+    <div class="stat-card"><div class="stat-value" id="statNew">—</div><div class="stat-label">Nouveaux (7 j)</div></div>
+  </div>
+
+  <div class="section-header">
+    <h2 class="section-title">Mes leads</h2>
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Rechercher un lead…">
+    </div>
+  </div>
+
+  <div class="leads-table-wrap" id="tableContainer">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div>Chargement des leads…</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const CRM_API_LEADS = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-leads';
+  const SESSION_KEY = 'crm_session_user';
+  const SESSION_EXPIRY = 'crm_session_expiry';
+
+  // === Auth check ===
+  function getSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+      if (!raw || Date.now() >= expiry) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+  function logout() {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_EXPIRY);
+    window.location.href = 'index.html';
+  }
+
+  const session = getSession();
+  if (!session) {
+    window.location.href = 'index.html';
+  }
+
+  // === Display user name ===
+  document.getElementById('userName').textContent = session.nom_praticien || session.login;
+  document.getElementById('welcome').textContent = 'Bienvenue, ' + (session.login.charAt(0).toUpperCase() + session.login.slice(1));
+
+  let allLeads = [];
+
+  async function loadLeads() {
+    try {
+      const resp = await fetch(CRM_API_LEADS + '?account_id=' + encodeURIComponent(session.account_id));
+      const data = await resp.json();
+      allLeads = data.leads || [];
+      renderStats(allLeads);
+      renderTable(allLeads);
+    } catch (err) {
+      document.getElementById('tableContainer').innerHTML =
+        '<div class="empty-state">Impossible de charger les leads. Vérifiez votre connexion.</div>';
+    }
+  }
+
+  function renderStats(leads) {
+    const total = leads.length;
+    const buyers = leads.filter(l => l.a_achete == 1 || l.a_achete === true).length;
+    const rate = total > 0 ? Math.round(buyers / total * 100) : 0;
+
+    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const newLeads = leads.filter(l => {
+      if (!l.date_inscription) return false;
+      const d = new Date(l.date_inscription.replace(' ', 'T'));
+      return d.getTime() >= sevenDaysAgo;
+    }).length;
+
+    document.getElementById('statTotal').textContent = total;
+    document.getElementById('statBuyers').textContent = buyers;
+    document.getElementById('statRate').textContent = rate + '%';
+    document.getElementById('statNew').textContent = newLeads;
+  }
+
+  function renderTable(leads) {
+    const container = document.getElementById('tableContainer');
+    if (leads.length === 0) {
+      container.innerHTML =
+        '<div class="empty-state">' +
+          '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' +
+          '<div>Aucun lead pour le moment.</div>' +
+        '</div>';
+      return;
+    }
+
+    let html = '<table><thead><tr>' +
+      '<th>Lead</th>' +
+      '<th>Contact</th>' +
+      '<th>Source</th>' +
+      '<th>Statut webinaire</th>' +
+      '<th>Statut</th>' +
+      '<th>Inscription</th>' +
+      '</tr></thead><tbody>';
+
+    leads.forEach(l => {
+      const fullName = ((l.prenom || '') + ' ' + (l.nom || '')).trim() || '—';
+      const email = l.email || '—';
+      const whatsapp = l.whatsapp || '';
+      const source = l.source ? '<span class="source-chip">' + l.source + '</span>' : '—';
+      const webStatus = l.statut_webinaire || '—';
+      const buyerStatus = (l.a_achete == 1 || l.a_achete === true)
+        ? '<span class="status-chip status-buyer">Client</span>'
+        : '<span class="status-chip status-prospect">Prospect</span>';
+      const date = l.date_inscription
+        ? new Date(l.date_inscription.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—';
+
+      html += '<tr>' +
+        '<td><div class="lead-name">' + escapeHtml(fullName) + '</div></td>' +
+        '<td>' + escapeHtml(email) + (whatsapp ? '<div class="lead-meta">' + escapeHtml(whatsapp) + '</div>' : '') + '</td>' +
+        '<td>' + source + '</td>' +
+        '<td>' + escapeHtml(webStatus) + '</td>' +
+        '<td>' + buyerStatus + '</td>' +
+        '<td>' + date + '</td>' +
+        '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  // === Search filter ===
+  document.getElementById('searchInput').addEventListener('input', function(e) {
+    const q = e.target.value.toLowerCase().trim();
+    if (!q) return renderTable(allLeads);
+    const filtered = allLeads.filter(l =>
+      ((l.nom || '') + ' ' + (l.prenom || '') + ' ' + (l.email || '') + ' ' + (l.whatsapp || '')).toLowerCase().includes(q)
+    );
+    renderTable(filtered);
+  });
+
+  loadLeads();
+</script>
+
+</body>
+</html>
