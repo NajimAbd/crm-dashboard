@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RUQYA CRM — Ventes</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --green-deep: #0D1A12;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --bg-soft: #FAF7F1;
+    --text-main: #2C2C2A;
+    --text-soft: #6B6B68;
+    --border-soft: #E5DECF;
+    --status-paid: #5A8C5A;
+    --status-pending: #C49A4E;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg-soft); font-family: 'Inter', sans-serif; color: var(--text-main); min-height: 100vh; }
+
+  .topbar { background: var(--green-deep); color: var(--cream); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--gold); }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-text { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: var(--cream); }
+  .brand-sub { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .nav-link { color: var(--gold-light); text-decoration: none; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .nav-link:hover { color: var(--cream); }
+  .logout-btn { display: flex; align-items: center; gap: 6px; padding: 7px 14px; background: rgba(224, 104, 90, 0.12); border: 1px solid rgba(224, 104, 90, 0.35); border-radius: 24px; color: #E0685A; cursor: pointer; font-size: 13px; font-family: 'Inter', sans-serif; }
+  .logout-btn:hover { background: rgba(224, 104, 90, 0.22); }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 36px 32px 60px; }
+  .page-header { margin-bottom: 28px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 8px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 36px; margin: 0 0 6px; color: var(--green-deep); }
+  .subtitle { color: var(--text-soft); font-size: 14px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: white; border: 1px solid var(--border-soft); border-radius: 12px; padding: 22px 22px 20px; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold); }
+  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 600; color: var(--green-deep); line-height: 1; margin-bottom: 6px; }
+  .stat-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; }
+
+  .sales-table-wrap { background: white; border: 1px solid var(--border-soft); border-radius: 14px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: #F4EFE3; }
+  th { text-align: left; padding: 13px 20px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; border-bottom: 1px solid var(--border-soft); }
+  td { padding: 15px 20px; border-bottom: 1px solid var(--border-soft); font-size: 13px; vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #FBF9F4; cursor: pointer; }
+
+  .product-name { font-weight: 600; color: var(--green-deep); }
+  .client-name { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+  .amount { font-weight: 700; color: var(--status-paid); font-size: 14px; }
+  .channel-chip { display: inline-block; padding: 2px 9px; border-radius: 12px; font-size: 11px; background: rgba(184, 150, 90, 0.12); color: #8B6E3A; font-weight: 500; }
+  .pay-chip { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+  .pay-paid { background: rgba(90, 140, 90, 0.15); color: var(--status-paid); }
+  .pay-pending { background: rgba(196, 154, 78, 0.15); color: var(--status-pending); }
+
+  .empty-state, .loading-state { text-align: center; padding: 80px 24px; color: var(--text-soft); }
+  .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border-soft); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 720px) {
+    .page { padding: 24px 16px 50px; }
+    table { font-size: 12px; }
+    th, td { padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="50" rx="46" ry="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+      <circle cx="50" cy="50" r="6" fill="#B8965A"/>
+      <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-text">RUQYA CRM</div>
+      <div class="brand-sub">Plateforme praticiens</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <a class="nav-link" onclick="window.location.href='dashboard.html'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Tableau de bord
+    </a>
+    <button class="logout-btn" onclick="logout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Déconnexion
+    </button>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="page-header">
+    <div class="eyebrow">Activité commerciale</div>
+    <h1>Mes ventes</h1>
+    <div class="subtitle">Historique complet de vos transactions</div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Chiffre d'affaires (CHF)</div></div>
+    <div class="stat-card"><div class="stat-value" id="statCount">—</div><div class="stat-label">Ventes totales</div></div>
+    <div class="stat-card"><div class="stat-value" id="statAvg">—</div><div class="stat-label">Panier moyen (CHF)</div></div>
+  </div>
+
+  <div class="sales-table-wrap" id="tableContainer">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div>Chargement des ventes…</div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const CRM_SALES_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-sales';
+  const SESSION_KEY = 'crm_session_user';
+  const SESSION_EXPIRY = 'crm_session_expiry';
+
+  function getSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+      if (!raw || Date.now() >= expiry) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+  function logout() {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_EXPIRY);
+    window.location.href = 'index.html';
+  }
+
+  const session = getSession();
+  if (!session) {
+    window.location.href = 'index.html';
+    throw new Error('No session');
+  }
+
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function fmtDate(d) {
+    if (!d) return '—';
+    return new Date(d.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  async function loadSales() {
+    try {
+      const resp = await fetch(CRM_SALES_API + '?account_id=' + encodeURIComponent(session.account_id));
+      const data = await resp.json();
+      renderStats(data);
+      renderTable(data.sales || []);
+    } catch (err) {
+      document.getElementById('tableContainer').innerHTML = '<div class="empty-state">Impossible de charger les ventes.</div>';
+    }
+  }
+
+  function renderStats(data) {
+    const total = parseFloat(data.total || 0);
+    const count = data.count || 0;
+    const avg = count > 0 ? (total / count) : 0;
+    document.getElementById('statTotal').textContent = total.toFixed(2);
+    document.getElementById('statCount').textContent = count;
+    document.getElementById('statAvg').textContent = avg.toFixed(2);
+  }
+
+  function renderTable(sales) {
+    const container = document.getElementById('tableContainer');
+    if (sales.length === 0) {
+      container.innerHTML = '<div class="empty-state">Aucune vente enregistrée pour le moment.</div>';
+      return;
+    }
+
+    let html = '<table><thead><tr>' +
+      '<th>Produit</th>' +
+      '<th>Client</th>' +
+      '<th>Canal</th>' +
+      '<th>Statut</th>' +
+      '<th>Date</th>' +
+      '<th>Montant</th>' +
+      '</tr></thead><tbody>';
+
+    sales.forEach(s => {
+      const fullName = ((s.prenom || '') + ' ' + (s.nom || '')).trim() || '—';
+      const isPaid = s.statut_paiement === 'paye';
+      const payChip = isPaid
+        ? '<span class="pay-chip pay-paid">Payé</span>'
+        : '<span class="pay-chip pay-pending">' + esc(s.statut_paiement || 'En attente') + '</span>';
+
+      html += '<tr onclick="window.location.href=\'lead-detail.html?id=' + s.lead_id + '\'">' +
+        '<td><div class="product-name">' + esc(s.produit) + '</div></td>' +
+        '<td>' + esc(fullName) + '<div class="client-name">' + esc(s.email || '') + '</div></td>' +
+        '<td><span class="channel-chip">' + esc(s.canal_vente || '—') + '</span></td>' +
+        '<td>' + payChip + '</td>' +
+        '<td>' + fmtDate(s.date_vente) + '</td>' +
+        '<td class="amount">' + parseFloat(s.montant).toFixed(2) + ' CHF</td>' +
+        '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  loadSales();
+</script>
+
+</body>
+</html>
