@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexa — Devenir praticien</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --green-deep: #0D1A12;
+    --green-mid: #16261A;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --text-soft: #9CA89E;
+    --error: #E0685A;
+    --success: #5A8C5A;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    min-height: 100vh;
+    background: radial-gradient(circle at 20% 20%, var(--green-mid) 0%, var(--green-deep) 55%);
+    font-family: 'Inter', sans-serif;
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+
+  .register-card {
+    position: relative;
+    width: 100%;
+    max-width: 420px;
+    background: linear-gradient(160deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+    border: 1px solid rgba(184, 150, 90, 0.25);
+    border-radius: 18px;
+    padding: 44px 38px 36px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+  }
+
+  .mark { width: 48px; height: 48px; margin: 0 auto 18px; display: block; }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600; font-size: 28px;
+    text-align: center; margin: 0 0 6px; color: var(--cream);
+  }
+  .eyebrow {
+    text-align: center; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--gold); margin: 0 0 26px; font-weight: 600;
+  }
+
+  label { display: block; font-size: 12px; color: var(--text-soft); margin-bottom: 7px; }
+  .field { margin-bottom: 16px; }
+
+  input {
+    width: 100%; padding: 13px 14px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(184, 150, 90, 0.3);
+    border-radius: 10px; color: var(--cream); font-size: 15px;
+    font-family: 'Inter', sans-serif; outline: none;
+    transition: border-color 0.2s, background 0.2s;
+  }
+  input::placeholder { color: rgba(156, 168, 158, 0.5); }
+  input:focus { border-color: var(--gold); background: rgba(255,255,255,0.06); }
+
+  .submit-btn {
+    width: 100%; margin-top: 8px; padding: 14px;
+    border: none; border-radius: 10px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--green-deep); font-size: 15px; font-weight: 600; cursor: pointer;
+    font-family: 'Inter', sans-serif; transition: transform 0.15s;
+  }
+  .submit-btn:hover { transform: translateY(-1px); }
+  .submit-btn:disabled { opacity: 0.6; cursor: wait; transform: none; }
+
+  .msg {
+    display: none; margin-top: 14px; padding: 12px 14px;
+    border-radius: 8px; font-size: 13px; text-align: center; line-height: 1.5;
+  }
+  .msg.error { background: rgba(224, 104, 90, 0.12); border: 1px solid rgba(224, 104, 90, 0.35); color: var(--error); }
+  .msg.success { background: rgba(90, 140, 90, 0.12); border: 1px solid rgba(90, 140, 90, 0.35); color: var(--success); }
+
+  .back-link {
+    display: block; text-align: center; margin-top: 22px;
+    font-size: 13px; color: var(--gold-light); text-decoration: none; cursor: pointer;
+  }
+  .back-link:hover { color: var(--cream); }
+
+  .footer-note { text-align: center; margin-top: 18px; font-size: 11px; color: rgba(156, 168, 158, 0.6); }
+</style>
+</head>
+<body>
+
+<div class="register-card">
+  <svg class="mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="50" rx="46" ry="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+    <circle cx="50" cy="50" r="6" fill="#B8965A"/>
+    <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>
+
+  <h1>Devenir praticien</h1>
+  <p class="eyebrow">Rejoindre Nexa</p>
+
+  <form id="registerForm">
+    <div class="field">
+      <label for="nom">Nom complet / nom de votre pratique</label>
+      <input type="text" id="nom" placeholder="ex: Sara Benali - Ruqya Lumière" required>
+    </div>
+    <div class="field">
+      <label for="login">Adresse e-mail</label>
+      <input type="email" id="login" placeholder="votre@email.com" required>
+    </div>
+    <div class="field">
+      <label for="password">Mot de passe</label>
+      <input type="password" id="password" placeholder="••••••••" required>
+    </div>
+    <div class="field">
+      <label for="passwordConfirm">Confirmer le mot de passe</label>
+      <input type="password" id="passwordConfirm" placeholder="••••••••" required>
+    </div>
+    <button type="submit" class="submit-btn" id="submitBtn">Créer mon compte</button>
+    <div class="msg error" id="errorMsg"></div>
+    <div class="msg success" id="successMsg"></div>
+  </form>
+
+  <a class="back-link" onclick="window.location.href='index.html'">← Retour à la connexion</a>
+  <p class="footer-note">RoqyaSuisse © 2026</p>
+</div>
+
+<script>
+  const CRM_REGISTER_WEBHOOK = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-register';
+
+  const form = document.getElementById('registerForm');
+  const btn = document.getElementById('submitBtn');
+  const errorMsg = document.getElementById('errorMsg');
+  const successMsg = document.getElementById('successMsg');
+
+  form.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const nom = document.getElementById('nom').value.trim();
+    const login = document.getElementById('login').value.trim().toLowerCase();
+    const password = document.getElementById('password').value.trim();
+    const passwordConfirm = document.getElementById('passwordConfirm').value.trim();
+
+    errorMsg.style.display = 'none';
+    successMsg.style.display = 'none';
+
+    if (!nom || !login || !password) {
+      errorMsg.textContent = 'Veuillez remplir tous les champs.';
+      errorMsg.style.display = 'block';
+      return;
+    }
+    if (password.length < 6) {
+      errorMsg.textContent = 'Le mot de passe doit contenir au moins 6 caractères.';
+      errorMsg.style.display = 'block';
+      return;
+    }
+    if (password !== passwordConfirm) {
+      errorMsg.textContent = 'Les mots de passe ne correspondent pas.';
+      errorMsg.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Création en cours…';
+
+    try {
+      const resp = await fetch(CRM_REGISTER_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom_praticien: nom, login, password })
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        successMsg.textContent = '✅ ' + data.message;
+        successMsg.style.display = 'block';
+        form.reset();
+      } else {
+        errorMsg.textContent = data.message || 'Une erreur est survenue.';
+        errorMsg.style.display = 'block';
+      }
+    } catch (err) {
+      errorMsg.textContent = 'Connexion impossible. Réessayez.';
+      errorMsg.style.display = 'block';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Créer mon compte';
+  });
+</script>
+
+</body>
+</html>
