@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexa — Dashboard KPI</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --green-deep: #0D1A12;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --bg-soft: #FAF7F1;
+    --text-main: #2C2C2A;
+    --text-soft: #6B6B68;
+    --border-soft: #E5DECF;
+    --status-paid: #5A8C5A;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg-soft); font-family: 'Inter', sans-serif; color: var(--text-main); min-height: 100vh; }
+
+  .topbar { background: var(--green-deep); color: var(--cream); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--gold); }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-text { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: var(--cream); }
+  .brand-sub { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
+  .nav-link { color: var(--gold-light); text-decoration: none; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .nav-link:hover { color: var(--cream); }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 36px 32px 60px; }
+  .page-header { margin-bottom: 28px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 8px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 36px; margin: 0 0 6px; color: var(--green-deep); }
+  .subtitle { color: var(--text-soft); font-size: 14px; }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
+  .stat-card { background: white; border: 1px solid var(--border-soft); border-radius: 12px; padding: 22px 22px 20px; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold); }
+  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 600; color: var(--green-deep); line-height: 1; margin-bottom: 6px; }
+  .stat-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; }
+
+  .charts-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 20px; }
+  .chart-card { background: white; border: 1px solid var(--border-soft); border-radius: 14px; padding: 24px; }
+  .chart-title { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 600; color: var(--green-deep); margin: 0 0 16px; }
+  .chart-wrap { position: relative; height: 260px; }
+
+  .funnel-row { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+  .funnel-bar-wrap { flex: 1; }
+  .funnel-label { font-size: 12px; color: var(--text-soft); margin-bottom: 4px; display: flex; justify-content: space-between; }
+  .funnel-bar-bg { height: 10px; background: #F0EBE0; border-radius: 6px; overflow: hidden; }
+  .funnel-bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+
+  .loading-state { text-align: center; padding: 80px 24px; color: var(--text-soft); }
+  .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border-soft); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  @media (max-width: 900px) {
+    .charts-grid { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    .page { padding: 24px 16px 50px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="50" rx="46" ry="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+      <circle cx="50" cy="50" r="6" fill="#B8965A"/>
+      <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-text">Nexa</div>
+      <div class="brand-sub">Platform CRM</div>
+    </div>
+  </div>
+  <a class="nav-link" onclick="window.location.href='dashboard.html'">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Tableau de bord
+  </a>
+</div>
+
+<div class="page">
+
+  <div class="page-header">
+    <div class="eyebrow">Analyse de performance</div>
+    <h1>Dashboard KPI</h1>
+    <div class="subtitle" id="subtitleInfo">Chargement des données…</div>
+  </div>
+
+  <div class="stats" id="statsContainer">
+    <div class="stat-card"><div class="stat-value" id="kpiLeads">—</div><div class="stat-label">Leads totaux</div></div>
+    <div class="stat-card"><div class="stat-value" id="kpiSales">—</div><div class="stat-label">Ventes</div></div>
+    <div class="stat-card"><div class="stat-value" id="kpiRevenue">—</div><div class="stat-label">Chiffre d'affaires (CHF)</div></div>
+    <div class="stat-card"><div class="stat-value" id="kpiRate">—</div><div class="stat-label">Taux conversion</div></div>
+    <div class="stat-card"><div class="stat-value" id="kpiAvgBasket">—</div><div class="stat-label">Panier moyen (CHF)</div></div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3 class="chart-title">Évolution des leads (30 derniers jours)</h3>
+      <div class="chart-wrap"><canvas id="leadsChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-title">Sources des leads</h3>
+      <div class="chart-wrap"><canvas id="sourceChart"></canvas></div>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <h3 class="chart-title">Chiffre d'affaires par mois</h3>
+      <div class="chart-wrap"><canvas id="revenueChart"></canvas></div>
+    </div>
+    <div class="chart-card">
+      <h3 class="chart-title">Entonnoir de conversion</h3>
+      <div id="funnelContainer" style="padding-top:8px"></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const CRM_LEADS_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-leads';
+  const CRM_SALES_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-sales';
+  const SESSION_KEY = 'crm_session_user';
+  const SESSION_EXPIRY = 'crm_session_expiry';
+
+  function getSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+      if (!raw || Date.now() >= expiry) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+
+  const session = getSession();
+  if (!session) {
+    window.location.href = 'index.html';
+    throw new Error('No session');
+  }
+  if (localStorage.getItem('crm_force_pwd_change') === '1') {
+    window.location.href = 'change-password.html';
+    throw new Error('Password change required');
+  }
+
+  const GOLD = '#B8965A';
+  const GOLD_LIGHT = '#D4AF7A';
+  const GREEN = '#0D1A12';
+  const BLUE = '#4A7BA6';
+  const PALETTE = ['#B8965A', '#4A7BA6', '#8B6FB0', '#5A8C5A', '#C4604E', '#9C9C9C'];
+
+  async function loadKPIs() {
+    try {
+      const [leadsResp, salesResp] = await Promise.all([
+        fetch(CRM_LEADS_API + '?account_id=' + encodeURIComponent(session.account_id)),
+        fetch(CRM_SALES_API + '?account_id=' + encodeURIComponent(session.account_id))
+      ]);
+      const leadsData = await leadsResp.json();
+      const salesData = await salesResp.json();
+
+      const leads = leadsData.leads || [];
+      const sales = salesData.sales || [];
+
+      renderStats(leads, sales);
+      renderLeadsChart(leads);
+      renderSourceChart(leads);
+      renderRevenueChart(sales);
+      renderFunnel(leads, sales);
+
+      document.getElementById('subtitleInfo').textContent = 'Vue d\'ensemble basée sur ' + leads.length + ' lead(s) et ' + sales.length + ' vente(s)';
+    } catch (err) {
+      document.getElementById('subtitleInfo').textContent = 'Erreur de chargement des données.';
+    }
+  }
+
+  function renderStats(leads, sales) {
+    const totalLeads = leads.length;
+    const totalSales = sales.length;
+    const revenue = sales.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
+    const rate = totalLeads > 0 ? Math.round((totalSales / totalLeads) * 100) : 0;
+    const avgBasket = totalSales > 0 ? (revenue / totalSales) : 0;
+
+    document.getElementById('kpiLeads').textContent = totalLeads;
+    document.getElementById('kpiSales').textContent = totalSales;
+    document.getElementById('kpiRevenue').textContent = revenue.toFixed(0);
+    document.getElementById('kpiRate').textContent = rate + '%';
+    document.getElementById('kpiAvgBasket').textContent = avgBasket.toFixed(0);
+  }
+
+  function lastNDays(n) {
+    const days = [];
+    for (let i = n - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      days.push(d.toISOString().slice(0, 10));
+    }
+    return days;
+  }
+
+  function renderLeadsChart(leads) {
+    const days = lastNDays(30);
+    const counts = days.map(day => leads.filter(l => (l.date_inscription || '').slice(0, 10) === day).length);
+    const labels = days.map(d => {
+      const dt = new Date(d);
+      return dt.getDate() + '/' + (dt.getMonth() + 1);
+    });
+
+    new Chart(document.getElementById('leadsChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'Leads',
+          data: counts,
+          borderColor: GOLD,
+          backgroundColor: 'rgba(184,150,90,0.12)',
+          fill: true,
+          tension: 0.35,
+          pointRadius: 2,
+          borderWidth: 2
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { ticks: { maxTicksLimit: 8, font: { size: 10 } }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { precision: 0, font: { size: 10 } }, grid: { color: '#F0EBE0' } }
+        }
+      }
+    });
+  }
+
+  function renderSourceChart(leads) {
+    const counts = {};
+    leads.forEach(l => {
+      const s = l.source || 'Inconnu';
+      counts[s] = (counts[s] || 0) + 1;
+    });
+    const labels = Object.keys(counts);
+    const data = Object.values(counts);
+
+    if (labels.length === 0) {
+      document.getElementById('sourceChart').parentElement.innerHTML = '<p style="color:#6B6B68;font-size:13px;text-align:center;padding-top:90px">Aucune donnée disponible.</p>';
+      return;
+    }
+
+    new Chart(document.getElementById('sourceChart'), {
+      type: 'doughnut',
+      data: {
+        labels,
+        datasets: [{ data, backgroundColor: PALETTE, borderWidth: 0 }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, padding: 12 } } }
+      }
+    });
+  }
+
+  function renderRevenueChart(sales) {
+    const months = {};
+    sales.forEach(s => {
+      const d = new Date((s.date_vente || '').replace(' ', 'T'));
+      if (isNaN(d)) return;
+      const key = d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+      months[key] = (months[key] || 0) + parseFloat(s.montant || 0);
+    });
+    const labels = Object.keys(months);
+    const data = Object.values(months);
+
+    if (labels.length === 0) {
+      document.getElementById('revenueChart').parentElement.innerHTML = '<p style="color:#6B6B68;font-size:13px;text-align:center;padding-top:90px">Aucune vente enregistrée.</p>';
+      return;
+    }
+
+    new Chart(document.getElementById('revenueChart'), {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [{
+          label: 'CA (CHF)',
+          data,
+          backgroundColor: GOLD,
+          borderRadius: 6,
+          maxBarThickness: 48
+        }]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+          y: { beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: '#F0EBE0' } }
+        }
+      }
+    });
+  }
+
+  function renderFunnel(leads, sales) {
+    const totalLeads = leads.length;
+    const interested = leads.filter(l => l.statut_webinaire === 'present' || l.statut_webinaire === 'inscrit').length;
+    const buyers = leads.filter(l => l.a_achete == 1 || l.a_achete === true).length;
+
+    const steps = [
+      { label: 'Leads totaux', value: totalLeads },
+      { label: 'Engagés (présents/inscrits)', value: interested },
+      { label: 'Clients (achat)', value: buyers }
+    ];
+    const max = Math.max(...steps.map(s => s.value), 1);
+
+    let html = '';
+    steps.forEach(s => {
+      const pct = Math.round((s.value / max) * 100);
+      html += '<div class="funnel-row">' +
+        '<div class="funnel-bar-wrap">' +
+          '<div class="funnel-label"><span>' + s.label + '</span><span><b>' + s.value + '</b></span></div>' +
+          '<div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:' + pct + '%"></div></div>' +
+        '</div>' +
+      '</div>';
+    });
+    document.getElementById('funnelContainer').innerHTML = html;
+  }
+
+  loadKPIs();
+</script>
+
+</body>
+</html>
