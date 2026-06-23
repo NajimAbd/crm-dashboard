@@ -300,21 +300,6 @@
 </style>
 </head>
 <body style="display:none">
-<script>
-  // Anti-flash : si pas de session valide, on redirige AVANT d'afficher quoi que ce soit.
-  (function() {
-    try {
-      var u = localStorage.getItem('crm_session_user');
-      var e = parseInt(localStorage.getItem('crm_session_expiry') || '0');
-      var params = new URLSearchParams(window.location.search);
-      var hasSso = params.get('sso');
-      // S'il y a un jeton SSO, on laisse initSession() gérer (il affichera le body lui-même).
-      if (!hasSso && (!u || Date.now() >= e)) {
-        window.location.replace('index.html');
-      }
-    } catch (err) {}
-  })();
-</script>
 
 <div class="topbar">
   <div class="topbar-left">
