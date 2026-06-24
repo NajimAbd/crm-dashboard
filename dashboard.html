@@ -536,9 +536,9 @@
       '<th>Lead</th>' +
       '<th>Contact</th>' +
       '<th>Source</th>' +
-      '<th>Statut webinaire</th>' +
-      '<th>Statut</th>' +
       '<th>Inscription</th>' +
+      '<th>Inscription pour</th>' +
+      '<th>Tally diagnostic</th>' +
       '</tr></thead><tbody>';
 
     leads.forEach(l => {
@@ -549,30 +549,22 @@
       const source = l.source
         ? '<span class="source-chip' + (isTally ? ' tally' : '') + '">' + (isTally ? '📋 ' : '') + l.source + '</span>'
         : '—';
-      const webStatus = l.statut_webinaire || '—';
-      const statutMap = {
-        client: { label: 'Client', cls: 'status-buyer' },
-        diagnostique: { label: 'Diagnostiqué', cls: 'status-diagnosed' },
-        diagnostic_envoye: { label: 'Diagnostic envoyé', cls: 'status-sent' },
-        chaud: { label: 'Lead chaud 🔥', cls: 'status-hot' },
-        nouveau: { label: 'Prospect', cls: 'status-prospect' }
-      };
-      const statutInfo = statutMap[l.statut_global] || (
-        (l.a_achete == 1 || l.a_achete === true) ? statutMap.client : statutMap.nouveau
-      );
-      const buyerStatus = '<span class="status-chip ' + statutInfo.cls + '">' + statutInfo.label + '</span>';
+      const inscriptionPour = l.campagne || '—';
       const date = l.date_inscription
         ? new Date(l.date_inscription.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
         : '—';
+      const tallyDone = (l.a_rempli_diagnostic == 1 || l.a_rempli_diagnostic === true)
+        ? '<span style="color:#5A8C5A;font-weight:700">✓</span>'
+        : '<span style="color:#C4604E;font-weight:700">✗</span>';
 
       html += '<tr onclick="window.location.href=\'lead-detail.html?id=' + l.id + '\'" style="cursor:pointer">' +
         '<td onclick="event.stopPropagation()"><input type="checkbox" class="leadChk" data-id="' + l.id + '" onclick="toggleLeadSelection(' + l.id + ', this.checked)"></td>' +
         '<td><div class="lead-name">' + escapeHtml(fullName) + '</div></td>' +
         '<td>' + escapeHtml(email) + (whatsapp ? '<div class="lead-meta">' + escapeHtml(whatsapp) + '</div>' : '') + '</td>' +
         '<td>' + source + '</td>' +
-        '<td>' + escapeHtml(webStatus) + '</td>' +
-        '<td>' + buyerStatus + '</td>' +
         '<td>' + date + '</td>' +
+        '<td>' + escapeHtml(inscriptionPour) + '</td>' +
+        '<td style="text-align:center">' + tallyDone + '</td>' +
         '</tr>';
     });
 
