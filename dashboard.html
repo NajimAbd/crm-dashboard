@@ -267,6 +267,8 @@
   .status-buyer { background: rgba(90, 140, 90, 0.15); color: var(--status-paid); }
   .status-prospect { background: rgba(156, 156, 156, 0.15); color: var(--status-cold); }
   .status-diagnosed { background: rgba(184, 150, 90, 0.18); color: #B8965A; }
+  .status-sent { background: rgba(196, 154, 78, 0.18); color: var(--status-pending); }
+  .status-hot { background: rgba(196, 96, 78, 0.18); color: #C4604E; }
 
   .empty-state, .loading-state {
     text-align: center;
@@ -376,6 +378,17 @@
     <div class="filter-tab active" data-filter="all" onclick="setSourceFilter('all')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #0D1A12;background:#0D1A12;color:#F4ECE0">Tous</div>
     <div class="filter-tab" data-filter="tally" onclick="setSourceFilter('tally')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">📋 Diagnostic (Tally)</div>
     <div class="filter-tab" data-filter="social" onclick="setSourceFilter('social')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">Réseaux sociaux</div>
+  </div>
+
+  <div id="diagnosticSendBar" style="display:none;align-items:center;gap:10px;background:#FAF3E5;border:1px solid #E5DECF;border-radius:10px;padding:10px 16px;margin-bottom:16px">
+    <span id="selectedCount" style="font-size:13px;font-weight:600;color:#2C2C2A">0 lead(s) sélectionné(s)</span>
+    <select id="langueDiagnostic" style="padding:7px 10px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">
+      <option value="fr">🇫🇷 Français</option>
+      <option value="ar">🇸🇦 Arabe</option>
+      <option value="al">🇦🇱 Albanais</option>
+      <option value="de">🇩🇪 Allemand</option>
+    </select>
+    <button onclick="sendDiagnosticLinks()" id="sendDiagnosticBtn" style="padding:8px 16px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">Envoyer le lien diagnostic</button>
   </div>
 
   <div class="leads-table-wrap" id="tableContainer">
@@ -519,6 +532,7 @@
     }
 
     let html = '<table><thead><tr>' +
+      '<th style="width:30px"><input type="checkbox" id="selectAllChk" onclick="toggleSelectAll(this)"></th>' +
       '<th>Lead</th>' +
       '<th>Contact</th>' +
       '<th>Source</th>' +
@@ -539,6 +553,8 @@
       const statutMap = {
         client: { label: 'Client', cls: 'status-buyer' },
         diagnostique: { label: 'Diagnostiqué', cls: 'status-diagnosed' },
+        diagnostic_envoye: { label: 'Diagnostic envoyé', cls: 'status-sent' },
+        chaud: { label: 'Lead chaud 🔥', cls: 'status-hot' },
         nouveau: { label: 'Prospect', cls: 'status-prospect' }
       };
       const statutInfo = statutMap[l.statut_global] || (
@@ -550,6 +566,7 @@
         : '—';
 
       html += '<tr onclick="window.location.href=\'lead-detail.html?id=' + l.id + '\'" style="cursor:pointer">' +
+        '<td onclick="event.stopPropagation()"><input type="checkbox" class="leadChk" data-id="' + l.id + '" onclick="toggleLeadSelection(' + l.id + ', this.checked)"></td>' +
         '<td><div class="lead-name">' + escapeHtml(fullName) + '</div></td>' +
         '<td>' + escapeHtml(email) + (whatsapp ? '<div class="lead-meta">' + escapeHtml(whatsapp) + '</div>' : '') + '</td>' +
         '<td>' + source + '</td>' +
@@ -561,6 +578,60 @@
 
     html += '</tbody></table>';
     container.innerHTML = html;
+  }
+
+  let selectedLeadIds = new Set();
+
+  function toggleLeadSelection(id, checked) {
+    if (checked) selectedLeadIds.add(id);
+    else selectedLeadIds.delete(id);
+    updateSendBar();
+  }
+
+  function toggleSelectAll(checkbox) {
+    document.querySelectorAll('.leadChk').forEach(chk => {
+      chk.checked = checkbox.checked;
+      const id = parseInt(chk.dataset.id, 10);
+      if (checkbox.checked) selectedLeadIds.add(id);
+      else selectedLeadIds.delete(id);
+    });
+    updateSendBar();
+  }
+
+  function updateSendBar() {
+    const bar = document.getElementById('diagnosticSendBar');
+    const count = selectedLeadIds.size;
+    document.getElementById('selectedCount').textContent = count + ' lead(s) sélectionné(s)';
+    bar.style.display = count > 0 ? 'flex' : 'none';
+  }
+
+  async function sendDiagnosticLinks() {
+    const langue = document.getElementById('langueDiagnostic').value;
+    const ids = Array.from(selectedLeadIds);
+    if (ids.length === 0) return;
+    const btn = document.getElementById('sendDiagnosticBtn');
+    btn.disabled = true;
+    btn.textContent = 'Envoi en cours…';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-send-diagnostic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_ids: ids, langue, account_id: session.account_id })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        selectedLeadIds.clear();
+        loadLeads();
+      } else {
+        alert('Erreur lors de l\'envoi. Réessayez.');
+        btn.disabled = false;
+        btn.textContent = 'Envoyer le lien diagnostic';
+      }
+    } catch (err) {
+      alert('Erreur de connexion. Réessayez.');
+      btn.disabled = false;
+      btn.textContent = 'Envoyer le lien diagnostic';
+    }
   }
 
   function escapeHtml(s) {
