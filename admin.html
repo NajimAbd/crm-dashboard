@@ -1,306 +1,634 @@
-{
-  "name": "CRM Admin Create Account",
-  "nodes": [
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "crm-admin-create-account",
-        "responseMode": "responseNode",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        -608,
-        -64
-      ],
-      "id": "cd214c8d-4c46-406e-b202-9bc5ff5c07b3",
-      "name": "Webhook",
-      "webhookId": "crm-admin-create-account-hook"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT COUNT(*) as cnt FROM USERS WHERE login = '{{ $('Webhook').first().json.body.login }}';",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.mySql",
-      "typeVersion": 2.5,
-      "position": [
-        -368,
-        -64
-      ],
-      "id": "b9ff071f-8fae-4343-9d12-f903990d950b",
-      "name": "Check Login",
-      "credentials": {
-        "mySql": {
-          "id": "IaVpXULWACrIBLE0",
-          "name": "MySQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "conditions": {
-          "options": {
-            "caseSensitive": true,
-            "leftValue": "",
-            "typeValidation": "loose",
-            "version": 1
-          },
-          "conditions": [
-            {
-              "id": "c1",
-              "leftValue": "={{ $json.cnt }}",
-              "rightValue": 0,
-              "operator": {
-                "type": "number",
-                "operation": "equals"
-              }
-            }
-          ],
-          "combinator": "and"
-        },
-        "options": {}
-      },
-      "type": "n8n-nodes-base.if",
-      "typeVersion": 2,
-      "position": [
-        -128,
-        -64
-      ],
-      "id": "d13cebf6-6403-4ca6-95e4-9403b1d9f94b",
-      "name": "Login disponible ?"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "INSERT INTO ACCOUNTS (nom_praticien, plan, statut, date_expiration) VALUES ('{{ $('Webhook').first().json.body.nom_praticien.replace(/'/g, \"\") }}', '{{ $('Webhook').first().json.body.plan || 'administration' }}', 'actif', {{ $('Webhook').first().json.body.plan === 'test' ? 'DATE_ADD(NOW(), INTERVAL 3 DAY)' : 'NULL' }});",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.mySql",
-      "typeVersion": 2.5,
-      "position": [
-        112,
-        -160
-      ],
-      "id": "91477081-031c-486c-a6a7-3600ed8e5fba",
-      "name": "Insert Account",
-      "credentials": {
-        "mySql": {
-          "id": "IaVpXULWACrIBLE0",
-          "name": "MySQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "SELECT id FROM ACCOUNTS ORDER BY id DESC LIMIT 1;",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.mySql",
-      "typeVersion": 2.5,
-      "position": [
-        352,
-        -160
-      ],
-      "id": "d6b899c4-f610-46ad-b9c0-c0f8be641bb9",
-      "name": "Get New Account Id",
-      "credentials": {
-        "mySql": {
-          "id": "IaVpXULWACrIBLE0",
-          "name": "MySQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "INSERT INTO USERS (account_id, login, mot_de_passe, role, actif, must_change_password) VALUES ({{ $('Get New Account Id').first().json.id }}, '{{ $('Webhook').first().json.body.login.replace(/'/g, \"\") }}', '{{ $('Webhook').first().json.body.password.replace(/'/g, \"\") }}', 'praticien', 'oui', 1);",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.mySql",
-      "typeVersion": 2.5,
-      "position": [
-        592,
-        -160
-      ],
-      "id": "f99bba85-b513-40b4-84a9-17e8b61519f6",
-      "name": "Insert User",
-      "credentials": {
-        "mySql": {
-          "id": "IaVpXULWACrIBLE0",
-          "name": "MySQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "jsCode": "const accountId = $('Get New Account Id').first().json.id;\nreturn [{ json: { success: true, account_id: accountId, message: 'Compte créé et activé avec succès.' } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        832,
-        -160
-      ],
-      "id": "3b597b4a-28f3-4301-b908-21c1c3505d1c",
-      "name": "Prepare Success"
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "={{ JSON.stringify($json) }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        1072,
-        -160
-      ],
-      "id": "1a120ea3-f91d-4af7-902e-ad33d4a96dc7",
-      "name": "Respond Success"
-    },
-    {
-      "parameters": {
-        "jsCode": "return [{ json: { success: false, message: 'Ce nom d utilisateur est déjà utilisé.' } }];"
-      },
-      "type": "n8n-nodes-base.code",
-      "typeVersion": 2,
-      "position": [
-        112,
-        64
-      ],
-      "id": "ca55e62a-7777-45b6-af91-c9e13f90979f",
-      "name": "Prepare Error"
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "={{ JSON.stringify($json) }}",
-        "options": {}
-      },
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.5,
-      "position": [
-        352,
-        64
-      ],
-      "id": "ca063261-77bd-488f-8e4a-3f7d00210232",
-      "name": "Respond Error"
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexa — Panel Admin</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --green-deep: #0D1A12;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --bg-soft: #FAF7F1;
+    --text-main: #2C2C2A;
+    --text-soft: #6B6B68;
+    --border-soft: #E5DECF;
+    --status-active: #5A8C5A;
+    --status-inactive: #C4604E;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg-soft);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    min-height: 100vh;
+  }
+
+  .topbar {
+    background: var(--green-deep);
+    color: var(--cream);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--gold);
+  }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-text { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: var(--cream); }
+  .brand-sub { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
+  .topbar-right { display: flex; align-items: center; gap: 16px; }
+  .nav-link {
+    color: var(--gold-light); text-decoration: none; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .nav-link:hover { color: var(--cream); }
+  .logout-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 14px; background: rgba(224, 104, 90, 0.12);
+    border: 1px solid rgba(224, 104, 90, 0.35); border-radius: 24px;
+    color: #E0685A; cursor: pointer; font-size: 13px; font-family: 'Inter', sans-serif;
+  }
+  .logout-btn:hover { background: rgba(224, 104, 90, 0.22); }
+
+  .page { max-width: 1100px; margin: 0 auto; padding: 36px 32px 60px; }
+
+  .page-header { margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 16px; }
+
+  .add-btn {
+    display: flex; align-items: center; gap: 8px;
+    padding: 11px 20px;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--green-deep); border: none; border-radius: 10px;
+    font-size: 14px; font-weight: 600; cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .add-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(184,150,90,0.3); }
+
+  .modal-overlay {
+    display: none; position: fixed; inset: 0; background: rgba(13, 26, 18, 0.6);
+    align-items: center; justify-content: center; z-index: 999; padding: 20px;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: white; border-radius: 16px; padding: 32px;
+    max-width: 420px; width: 100%; box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+  }
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600;
+    color: var(--green-deep); margin: 0 0 20px;
+  }
+  .modal-field { margin-bottom: 14px; }
+  .modal-field label { display: block; font-size: 12px; color: var(--text-soft); margin-bottom: 6px; }
+  .modal-field input {
+    width: 100%; padding: 11px 13px; border: 1px solid var(--border-soft);
+    border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none;
+  }
+  .modal-field input:focus { border-color: var(--gold); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+  .modal-btn-cancel {
+    flex: 1; padding: 11px; border-radius: 8px; border: 1px solid var(--border-soft);
+    background: white; color: var(--text-soft); cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px;
+  }
+  .modal-btn-confirm {
+    flex: 1; padding: 11px; border-radius: 8px; border: none;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    color: var(--green-deep); cursor: pointer; font-weight: 600; font-family: 'Inter', sans-serif; font-size: 13px;
+  }
+  .modal-msg { font-size: 13px; margin-top: 10px; display: none; padding: 10px; border-radius: 8px; }
+  .modal-msg.error { background: rgba(196, 96, 78, 0.1); color: var(--status-inactive); display: block; }
+  .modal-msg.success { background: rgba(90, 140, 90, 0.1); color: var(--status-active); display: block; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 8px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 36px; margin: 0 0 6px; color: var(--green-deep); }
+  .subtitle { color: var(--text-soft); font-size: 14px; }
+
+  .accounts-table-wrap {
+    background: white; border: 1px solid var(--border-soft); border-radius: 14px; overflow: hidden;
+  }
+  table { width: 100%; border-collapse: collapse; }
+  thead { background: #F4EFE3; }
+  th { text-align: left; padding: 13px 20px; font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; border-bottom: 1px solid var(--border-soft); }
+  td { padding: 16px 20px; border-bottom: 1px solid var(--border-soft); font-size: 14px; vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: #FBF9F4; }
+
+  .account-name { font-weight: 600; color: var(--green-deep); }
+  .plan-chip {
+    display: inline-block; padding: 3px 11px; border-radius: 11px;
+    font-size: 11px; font-weight: 600; text-transform: capitalize;
+    background: rgba(184, 150, 90, 0.12); color: #8B6E3A;
+  }
+  .status-chip {
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: 0.04em;
+  }
+  .status-active { background: rgba(90, 140, 90, 0.15); color: var(--status-active); }
+  .status-inactive { background: rgba(196, 96, 78, 0.15); color: var(--status-inactive); }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+
+  .stat-mini { font-size: 13px; color: var(--text-soft); }
+  .stat-mini b { color: var(--text-main); }
+
+  .log-type-chip {
+    display: inline-block; padding: 3px 11px; border-radius: 11px;
+    font-size: 11px; font-weight: 600;
+  }
+  .log-create { background: rgba(90, 140, 90, 0.15); color: var(--status-active); }
+  .log-update { background: rgba(184, 150, 90, 0.18); color: #8B6E3A; }
+  .log-delete { background: rgba(196, 96, 78, 0.15); color: var(--status-inactive); }
+  .log-toggle { background: rgba(108, 122, 173, 0.15); color: #5A6BA8; }
+  .log-other { background: #EFEAE0; color: var(--text-soft); }
+  .log-desc { color: var(--text-main); }
+
+  .toggle-btn {
+    padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid; font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+  .toggle-btn.to-deactivate { background: white; border-color: var(--status-inactive); color: var(--status-inactive); }
+  .toggle-btn.to-deactivate:hover { background: rgba(196, 96, 78, 0.08); }
+  .toggle-btn.to-activate { background: white; border-color: var(--status-active); color: var(--status-active); }
+  .toggle-btn.to-activate:hover { background: rgba(90, 140, 90, 0.08); }
+  .toggle-btn:disabled { opacity: 0.5; cursor: wait; }
+
+  .account-name-link { cursor: pointer; }
+  .account-name-link:hover { color: var(--gold); text-decoration: underline; }
+
+  .actions-cell { display: flex; gap: 8px; flex-wrap: wrap; }
+  .btn-delete {
+    padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--status-inactive);
+    background: var(--status-inactive); color: white; font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-delete:hover { opacity: 0.85; }
+  .btn-delete:disabled { opacity: 0.5; cursor: wait; }
+
+  .modal-field select {
+    width: 100%; padding: 11px 13px; border: 1px solid var(--border-soft);
+    border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none;
+    background: white;
+  }
+  .modal-field select:focus { border-color: var(--gold); }
+
+  .loading-state { text-align: center; padding: 80px 24px; color: var(--text-soft); }
+  .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border-soft); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--green-deep); color: var(--cream);
+    padding: 12px 20px; border-radius: 10px; font-size: 13px;
+    border-left: 3px solid var(--gold);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    opacity: 0; transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 720px) {
+    .page { padding: 24px 16px 50px; }
+    table { font-size: 12px; }
+    th, td { padding: 10px 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="50" rx="46" ry="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+      <circle cx="50" cy="50" r="6" fill="#B8965A"/>
+      <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-text">Nexa</div>
+      <div class="brand-sub">Panel Admin</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <a class="nav-link" onclick="window.location.href='dashboard.html'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Mon tableau de bord
+    </a>
+    <button class="logout-btn" onclick="logout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Déconnexion
+    </button>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">Administration</div>
+      <h1>Entrepreneurs</h1>
+      <div class="subtitle" id="subtitleCount">Chargement…</div>
+    </div>
+    <button class="add-btn" onclick="openCreateModal()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Créer un compte
+    </button>
+  </div>
+
+  <div class="accounts-table-wrap" id="tableContainer">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div>Chargement des comptes…</div>
+    </div>
+  </div>
+
+  <div class="page-header" style="margin-top: 44px;">
+    <div>
+      <div class="eyebrow">Historique</div>
+      <h1 style="font-size: 26px;">Journal d'activité</h1>
+      <div class="subtitle" id="logsCount">Chargement…</div>
+    </div>
+  </div>
+
+  <div class="accounts-table-wrap" id="logsContainer">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div>Chargement du journal…</div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="createModal">
+  <div class="modal-box">
+    <h3 class="modal-title" id="modalTitle">Créer un compte praticien</h3>
+    <input type="hidden" id="modalAccountId" value="">
+    <div class="modal-field">
+      <label>Nom complet / entreprise</label>
+      <input type="text" id="newNom" placeholder="ex: Karim Doctor - Cabinet Medical">
+    </div>
+    <div class="modal-field" id="fieldPlan">
+      <label>Plan</label>
+      <select id="newPlan">
+        <option value="test">Découverte (3 jours)</option>
+        <option value="administration">Administration</option>
+        <option value="production">Production</option>
+        <option value="premium">Premium (Administration & Production)</option>
+      </select>
+    </div>
+    <div class="modal-field" id="fieldLogin">
+      <label>Adresse e-mail du client</label>
+      <input type="email" id="newLogin" placeholder="client@email.com">
+    </div>
+    <div class="modal-field" id="fieldPassword">
+      <label>Mot de passe temporaire</label>
+      <input type="text" id="newPassword" value="Admin@1234@.">
+    </div>
+    <div class="modal-msg" id="createMsg"></div>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="closeCreateModal()">Annuler</button>
+      <button class="modal-btn-confirm" id="createConfirmBtn" onclick="submitAccountModal()">Créer le compte</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const CRM_ADMIN_LIST = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-accounts';
+  const CRM_ADMIN_TOGGLE = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-toggle';
+  const CRM_ADMIN_LOGS = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-logs';
+  const SESSION_KEY = 'crm_session_user';
+  const SESSION_EXPIRY = 'crm_session_expiry';
+
+  function getSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+      if (!raw || Date.now() >= expiry) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+  function logout() {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_EXPIRY);
+    window.location.href = 'index.html';
+  }
+
+  const session = getSession();
+  if (!session) {
+    window.location.href = 'index.html';
+  } else if (session.role !== 'super_admin') {
+    document.body.innerHTML = '<div style="display:flex;align-items:center;justify-content:center;height:100vh;font-family:Inter,sans-serif;color:#6B6B68;text-align:center;padding:24px">' +
+      '<div><h2 style="color:#0D1A12;font-family:\'Cormorant Garamond\',serif">Accès réservé</h2><p>Cette page est réservée aux administrateurs.</p>' +
+      '<a href="dashboard.html" style="color:#B8965A">Retour au tableau de bord</a></div></div>';
+    throw new Error('Access denied');
+  }
+
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  let allAccounts = [];
+
+  async function loadAccounts() {
+    try {
+      const resp = await fetch(CRM_ADMIN_LIST);
+      const data = await resp.json();
+      allAccounts = data.accounts || [];
+      document.getElementById('subtitleCount').textContent = allAccounts.length + ' entrepreneur(s)';
+      renderTable();
+    } catch (err) {
+      document.getElementById('tableContainer').innerHTML = '<div class="loading-state">Erreur de chargement.</div>';
     }
-  ],
-  "pinData": {},
-  "connections": {
-    "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Check Login",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Check Login": {
-      "main": [
-        [
-          {
-            "node": "Login disponible ?",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Login disponible ?": {
-      "main": [
-        [
-          {
-            "node": "Insert Account",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Prepare Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Insert Account": {
-      "main": [
-        [
-          {
-            "node": "Get New Account Id",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Get New Account Id": {
-      "main": [
-        [
-          {
-            "node": "Insert User",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Insert User": {
-      "main": [
-        [
-          {
-            "node": "Prepare Success",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Success": {
-      "main": [
-        [
-          {
-            "node": "Respond Success",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Prepare Error": {
-      "main": [
-        [
-          {
-            "node": "Respond Error",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
+  }
+
+  function renderTable() {
+    let html = '<table><thead><tr>' +
+      '<th>Praticien</th>' +
+      '<th>Plan</th>' +
+      '<th>Statut</th>' +
+      '<th>Activité</th>' +
+      '<th>Créé le</th>' +
+      '<th></th>' +
+      '</tr></thead><tbody>';
+
+    allAccounts.forEach(a => {
+      const isActive = a.statut === 'actif';
+      const statusHtml = isActive
+        ? '<span class="status-chip status-active"><span class="status-dot"></span>Actif</span>'
+        : '<span class="status-chip status-inactive"><span class="status-dot"></span>Inactif</span>';
+      const created = a.created_at
+        ? new Date(a.created_at.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—';
+      const btnClass = isActive ? 'to-deactivate' : 'to-activate';
+      const btnLabel = isActive ? 'Désactiver' : 'Activer';
+      const nextStatus = isActive ? 'inactif' : 'actif';
+
+      html += '<tr>' +
+        '<td><div class="account-name account-name-link" onclick="openEditModal(' + a.id + ')">' + esc(a.nom_praticien) + '</div></td>' +
+        '<td><span class="plan-chip">' + esc(a.plan) + '</span></td>' +
+        '<td>' + statusHtml + '</td>' +
+        '<td><span class="stat-mini"><b>' + a.total_leads + '</b> leads · <b>' + a.total_users + '</b> compte(s)</span></td>' +
+        '<td>' + created + '</td>' +
+        '<td><div class="actions-cell">' +
+          '<button class="toggle-btn ' + btnClass + '" onclick="toggleStatus(' + a.id + ', \'' + nextStatus + '\', this)">' + btnLabel + '</button>' +
+          '<button class="btn-delete" onclick="confirmDelete(' + a.id + ', \'' + esc(a.nom_praticien).replace(/'/g, "\\'") + '\', this)">Supprimer</button>' +
+        '</div></td>' +
+        '</tr>';
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('tableContainer').innerHTML = html;
+  }
+
+  async function toggleStatus(accountId, newStatus, btn) {
+    btn.disabled = true;
+    const oldLabel = btn.textContent;
+    btn.textContent = '…';
+    try {
+      const resp = await fetch(CRM_ADMIN_TOGGLE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: accountId, statut: newStatus })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast('Statut mis à jour avec succès');
+        await loadAccounts();
+      } else {
+        showToast('Erreur lors de la mise à jour');
+        btn.disabled = false;
+        btn.textContent = oldLabel;
+      }
+    } catch (err) {
+      showToast('Erreur de connexion');
+      btn.disabled = false;
+      btn.textContent = oldLabel;
     }
-  },
-  "active": true,
-  "settings": {
-    "executionOrder": "v1",
-    "binaryMode": "separate",
-    "availableInMCP": false
-  },
-  "versionId": "d1de6f28-2604-4cb4-9d20-9abc7a5dcc10",
-  "meta": {
-    "instanceId": "6d303c32990b6e9e47080efa65ff4a1ee64e1c0647f34ae21145a548ee5af385"
-  },
-  "nodeGroups": [],
-  "id": "oTKDf7yE9pRAcSxx",
-  "tags": []
-}
+  }
+
+  function openCreateModal() {
+    document.getElementById('modalAccountId').value = '';
+    document.getElementById('newNom').value = '';
+    document.getElementById('newPlan').value = 'administration';
+    document.getElementById('newLogin').value = '';
+    document.getElementById('newPassword').value = 'Admin@1234@.';
+    document.getElementById('fieldLogin').style.display = 'block';
+    document.getElementById('fieldPassword').style.display = 'block';
+    document.getElementById('modalTitle').textContent = 'Créer un compte praticien';
+    document.getElementById('createConfirmBtn').textContent = 'Créer le compte';
+    document.getElementById('createMsg').style.display = 'none';
+    document.getElementById('createModal').classList.add('show');
+  }
+
+  function openEditModal(id) {
+    const acc = allAccounts.find(a => a.id === id);
+    if (!acc) return;
+    document.getElementById('modalAccountId').value = acc.id;
+    document.getElementById('newNom').value = acc.nom_praticien;
+    document.getElementById('newPlan').value = acc.plan;
+    document.getElementById('fieldLogin').style.display = 'none';
+    document.getElementById('fieldPassword').style.display = 'none';
+    document.getElementById('modalTitle').textContent = 'Modifier le compte';
+    document.getElementById('createConfirmBtn').textContent = 'Enregistrer les modifications';
+    document.getElementById('createMsg').style.display = 'none';
+    document.getElementById('createModal').classList.add('show');
+  }
+
+  function closeCreateModal() {
+    document.getElementById('createModal').classList.remove('show');
+  }
+
+  async function submitAccountModal() {
+    const editId = document.getElementById('modalAccountId').value;
+    const nom = document.getElementById('newNom').value.trim();
+    const plan = document.getElementById('newPlan').value;
+    const msgEl = document.getElementById('createMsg');
+    const btn = document.getElementById('createConfirmBtn');
+
+    if (!nom) {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = 'Veuillez renseigner le nom.';
+      msgEl.style.display = 'block';
+      return;
+    }
+
+    if (editId) {
+      btn.disabled = true;
+      btn.textContent = 'Enregistrement…';
+      try {
+        const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-update-account', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ account_id: editId, nom_praticien: nom, plan })
+        });
+        const data = await resp.json();
+        if (data.success) {
+          msgEl.className = 'modal-msg success';
+          msgEl.textContent = data.message || 'Compte mis à jour.';
+          msgEl.style.display = 'block';
+          showToast('Compte mis à jour avec succès');
+          await loadAccounts();
+          setTimeout(closeCreateModal, 1200);
+        } else {
+          msgEl.className = 'modal-msg error';
+          msgEl.textContent = data.message || 'Une erreur est survenue.';
+          msgEl.style.display = 'block';
+        }
+      } catch (err) {
+        msgEl.className = 'modal-msg error';
+        msgEl.textContent = 'Erreur de connexion.';
+        msgEl.style.display = 'block';
+      }
+      btn.disabled = false;
+      btn.textContent = 'Enregistrer les modifications';
+      return;
+    }
+
+    const login = document.getElementById('newLogin').value.trim();
+    const password = document.getElementById('newPassword').value.trim();
+
+    if (!login || !password) {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = 'Veuillez remplir tous les champs.';
+      msgEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Création…';
+
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-create-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nom_praticien: nom, login, password, plan })
+      });
+      const data = await resp.json();
+
+      if (data.success) {
+        msgEl.className = 'modal-msg success';
+        msgEl.textContent = data.message;
+        msgEl.style.display = 'block';
+        showToast('Compte créé avec succès');
+        await loadAccounts();
+        setTimeout(closeCreateModal, 1200);
+      } else {
+        msgEl.className = 'modal-msg error';
+        msgEl.textContent = data.message || 'Une erreur est survenue.';
+        msgEl.style.display = 'block';
+      }
+    } catch (err) {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = 'Erreur de connexion.';
+      msgEl.style.display = 'block';
+    }
+
+    btn.disabled = false;
+    btn.textContent = 'Créer le compte';
+  }
+
+  async function confirmDelete(id, nom, btn) {
+    if (!confirm('Supprimer définitivement le compte "' + nom + '" et toutes ses données (leads, ventes, rendez-vous, etc.) ? Cette action est irréversible.')) {
+      return;
+    }
+    btn.disabled = true;
+    const oldLabel = btn.textContent;
+    btn.textContent = '…';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-delete-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: id })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast('Compte supprimé');
+        await loadAccounts();
+      } else {
+        showToast('Erreur lors de la suppression');
+        btn.disabled = false;
+        btn.textContent = oldLabel;
+      }
+    } catch (err) {
+      showToast('Erreur de connexion');
+      btn.disabled = false;
+      btn.textContent = oldLabel;
+    }
+  }
+
+  function logTypeMeta(type) {
+    const map = {
+      admin_create: { label: 'Compte créé', cls: 'log-create' },
+      admin_update: { label: 'Compte modifié', cls: 'log-update' },
+      admin_delete: { label: 'Compte supprimé', cls: 'log-delete' },
+      admin_toggle: { label: 'Statut changé', cls: 'log-toggle' },
+      login: { label: 'Connexion', cls: 'log-other' },
+      lead_added: { label: 'Lead ajouté', cls: 'log-create' },
+      sale_made: { label: 'Vente réalisée', cls: 'log-create' }
+    };
+    return map[type] || { label: type, cls: 'log-other' };
+  }
+
+  async function loadLogs() {
+    try {
+      const resp = await fetch(CRM_ADMIN_LOGS);
+      const data = await resp.json();
+      const logs = data.logs || [];
+      document.getElementById('logsCount').textContent = logs.length + ' entrée(s)';
+      renderLogs(logs);
+    } catch (err) {
+      document.getElementById('logsContainer').innerHTML = '<div class="loading-state">Erreur de chargement du journal.</div>';
+      document.getElementById('logsCount').textContent = '—';
+    }
+  }
+
+  function renderLogs(logs) {
+    if (!logs.length) {
+      document.getElementById('logsContainer').innerHTML = '<div class="loading-state">Aucune activité enregistrée pour le moment.</div>';
+      return;
+    }
+    let html = '<table><thead><tr>' +
+      '<th>Action</th>' +
+      '<th>Compte</th>' +
+      '<th>Détail</th>' +
+      '<th>Date</th>' +
+      '</tr></thead><tbody>';
+
+    logs.forEach(l => {
+      const meta = logTypeMeta(l.type);
+      const when = l.created_at
+        ? new Date(l.created_at.replace(' ', 'T')).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : '—';
+      html += '<tr>' +
+        '<td><span class="log-type-chip ' + meta.cls + '">' + esc(meta.label) + '</span></td>' +
+        '<td>' + esc(l.nom_praticien || '—') + '</td>' +
+        '<td class="log-desc">' + esc(l.description || '') + '</td>' +
+        '<td>' + when + '</td>' +
+        '</tr>';
+    });
+
+    html += '</tbody></table>';
+    document.getElementById('logsContainer').innerHTML = html;
+  }
+
+  loadAccounts();
+  loadLogs();
+</script>
+
+</body>
+</html>
