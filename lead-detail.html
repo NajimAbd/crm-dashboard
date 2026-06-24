@@ -329,9 +329,9 @@
     if (l.date_diagnostic) html += '<span>🩺 Diagnostiqué le ' + fmtDate(l.date_diagnostic) + '</span>';
     html += '</div>';
     html += '<div class="source-tags">';
-    if (l.source) html += '<span class="tag">' + esc(l.source) + '</span>';
-    if (l.campagne) html += '<span class="tag">' + esc(l.campagne) + '</span>';
-    if (l.statut_webinaire) html += '<span class="tag">' + esc(l.statut_webinaire) + '</span>';
+    if (l.source) html += '<span class="tag">Source : ' + esc(l.source) + '</span>';
+    if (l.campagne) html += '<span class="tag">Campagne : ' + esc(l.campagne) + '</span>';
+    if (l.statut_webinaire) html += '<span class="tag">Webinaire : ' + esc(l.statut_webinaire) + '</span>';
     html += '</div>';
     html += '</div>';
     html += '<div>' + buyerChip + '</div>';
