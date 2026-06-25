@@ -541,6 +541,17 @@
       '<th>Tally diagnostic</th>' +
       '</tr></thead><tbody>';
 
+    const typeInscriptionLabels = {
+      webinaire: 'Webinaire',
+      formation: 'Formation',
+      challenge: 'Challenge',
+      bootcamp: 'Bootcamp',
+      roqya: 'Demande Roqya',
+      diagnostic: 'Demande diagnostic',
+      diagnostique: 'Demande diagnostic',
+      roqya_maison: 'Roqya maison'
+    };
+
     leads.forEach(l => {
       const fullName = ((l.prenom || '') + ' ' + (l.nom || '')).trim() || '—';
       const email = l.email || '—';
@@ -549,7 +560,7 @@
       const source = l.source
         ? '<span class="source-chip' + (isTally ? ' tally' : '') + '">' + (isTally ? '📋 ' : '') + l.source + '</span>'
         : '—';
-      const inscriptionPour = l.campagne || '—';
+      const inscriptionPour = typeInscriptionLabels[l.type_inscription] || '—';
       const date = l.date_inscription
         ? new Date(l.date_inscription.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
         : '—';
@@ -557,13 +568,25 @@
         ? '<span style="color:#5A8C5A;font-weight:700">✓</span>'
         : '<span style="color:#C4604E;font-weight:700">✗</span>';
 
+      const statutMap = {
+        client: { label: 'Client', cls: 'status-buyer' },
+        diagnostique: { label: 'Diagnostiqué', cls: 'status-diagnosed' },
+        diagnostic_envoye: { label: 'Diagnostic envoyé', cls: 'status-sent' },
+        chaud: { label: 'Lead chaud 🔥', cls: 'status-hot' },
+        nouveau: { label: 'Prospect', cls: 'status-prospect' }
+      };
+      const statutInfo = statutMap[l.statut_global] || (
+        (l.a_achete == 1 || l.a_achete === true) ? statutMap.client : statutMap.nouveau
+      );
+      const statutBadge = '<span class="status-chip ' + statutInfo.cls + '" style="font-size:10px;padding:2px 8px;margin-top:4px;display:inline-block">' + statutInfo.label + '</span>';
+
       html += '<tr onclick="window.location.href=\'lead-detail.html?id=' + l.id + '\'" style="cursor:pointer">' +
         '<td onclick="event.stopPropagation()"><input type="checkbox" class="leadChk" data-id="' + l.id + '" onclick="toggleLeadSelection(' + l.id + ', this.checked)"></td>' +
-        '<td><div class="lead-name">' + escapeHtml(fullName) + '</div></td>' +
+        '<td><div class="lead-name">' + escapeHtml(fullName) + '</div>' + statutBadge + '</td>' +
         '<td>' + escapeHtml(email) + (whatsapp ? '<div class="lead-meta">' + escapeHtml(whatsapp) + '</div>' : '') + '</td>' +
         '<td>' + source + '</td>' +
         '<td>' + date + '</td>' +
-        '<td>' + escapeHtml(inscriptionPour) + '</td>' +
+        '<td>' + inscriptionPour + '</td>' +
         '<td style="text-align:center">' + tallyDone + '</td>' +
         '</tr>';
     });
