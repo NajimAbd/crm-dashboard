@@ -333,6 +333,17 @@
     if (l.campagne) html += '<span class="tag">Campagne : ' + esc(l.campagne) + '</span>';
     if (l.statut_webinaire) html += '<span class="tag">Webinaire : ' + esc(l.statut_webinaire) + '</span>';
     html += '</div>';
+    html += '<div class="diagnostic-action" style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
+    html += '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">';
+    html += '<input type="checkbox" id="diagnosticAccepteChk" ' + (l.diagnostic_accepte == 1 ? 'checked' : '') + ' onchange="toggleDiagnosticAccepte(' + l.id + ', this.checked)"> Diagnostic accepté';
+    html += '</label>';
+    html += '<div id="sendDiagnosticWrap" style="display:' + (l.diagnostic_accepte == 1 ? 'flex' : 'none') + ';align-items:center;gap:8px">';
+    html += '<select id="langueDiagDetail" style="padding:6px 9px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">';
+    html += '<option value="fr">🇫🇷 Français</option><option value="ar">🇸🇦 Arabe</option><option value="al">🇦🇱 Albanais</option><option value="de">🇩🇪 Allemand</option>';
+    html += '</select>';
+    html += '<button onclick="sendDiagnosticLink(' + l.id + ')" id="sendDiagBtnDetail" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">Envoyer le lien diagnostic</button>';
+    html += '</div>';
+    html += '</div>';
     html += '</div>';
     html += '<div>' + buyerChip + '</div>';
     html += '</div>';
@@ -430,6 +441,45 @@
     });
 
     document.getElementById('pageContent').innerHTML = html;
+  }
+
+  async function toggleDiagnosticAccepte(leadId, checked) {
+    document.getElementById('sendDiagnosticWrap').style.display = checked ? 'flex' : 'none';
+    try {
+      await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-toggle-diagnostic-accepte', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, account_id: session.account_id, accepted: checked })
+      });
+    } catch (err) {
+      // silencieux — l'état visuel reste correct, la prochaine sauvegarde réussira
+    }
+  }
+
+  async function sendDiagnosticLink(leadId) {
+    const langue = document.getElementById('langueDiagDetail').value;
+    const btn = document.getElementById('sendDiagBtnDetail');
+    btn.disabled = true;
+    btn.textContent = 'Envoi en cours…';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-send-diagnostic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_ids: [leadId], langue, account_id: session.account_id })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        btn.textContent = 'Lien envoyé ✓';
+      } else {
+        btn.disabled = false;
+        btn.textContent = 'Envoyer le lien diagnostic';
+        alert('Erreur lors de l\'envoi. Réessayez.');
+      }
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = 'Envoyer le lien diagnostic';
+      alert('Erreur de connexion. Réessayez.');
+    }
   }
 
   function sectionWrap(emoji, title, count, bodyFn) {
