@@ -188,6 +188,32 @@
   }
   .btn-manage-pwd:hover { background: #FAF7F1; border-color: var(--gold); }
 
+  .floating-panel {
+    display: none;
+    position: fixed;
+    top: 100px; right: 60px;
+    width: 320px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 24px 60px rgba(0,0,0,0.3);
+    border: 1px solid var(--border-soft);
+    z-index: 1100;
+  }
+  .floating-panel.show { display: block; }
+  .floating-panel-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--border-soft);
+    cursor: move; user-select: none;
+    font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 17px;
+    color: var(--green-deep); background: #FAF7F1; border-radius: 12px 12px 0 0;
+  }
+  .floating-close {
+    border: none; background: transparent; cursor: pointer; font-size: 15px;
+    color: var(--text-soft); line-height: 1; padding: 4px;
+  }
+  .floating-close:hover { color: var(--status-inactive); }
+  .floating-panel-body { padding: 18px 18px 20px; }
+
   .modal-field select {
     width: 100%; padding: 11px 13px; border: 1px solid var(--border-soft);
     border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none;
@@ -324,9 +350,12 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="irisPasswordModal">
-  <div class="modal-box">
-    <h3 class="modal-title">Mot de passe Iris Studio</h3>
+<div class="floating-panel" id="irisPasswordModal">
+  <div class="floating-panel-header" onmousedown="startDrag(event, 'irisPasswordModal')">
+    <span>Mot de passe Iris Studio</span>
+    <button type="button" class="floating-close" onclick="closeIrisPasswordModal()">✕</button>
+  </div>
+  <div class="floating-panel-body">
     <input type="hidden" id="irisLogin" value="">
     <div class="modal-field">
       <label>Compte (e-mail)</label>
@@ -344,9 +373,12 @@
   </div>
 </div>
 
-<div class="modal-overlay" id="nexaPasswordModal">
-  <div class="modal-box">
-    <h3 class="modal-title">Mot de passe Nexa</h3>
+<div class="floating-panel" id="nexaPasswordModal">
+  <div class="floating-panel-header" onmousedown="startDrag(event, 'nexaPasswordModal')">
+    <span>Mot de passe Nexa</span>
+    <button type="button" class="floating-close" onclick="closeNexaPasswordModal()">✕</button>
+  </div>
+  <div class="floating-panel-body">
     <input type="hidden" id="nexaAccountId" value="">
     <div class="modal-field">
       <label>Compte (e-mail)</label>
@@ -363,6 +395,7 @@
     </div>
   </div>
 </div>
+
 
 <script>
   const CRM_ADMIN_LIST = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-accounts';
@@ -552,6 +585,35 @@
   }
 
   // === Mot de passe Iris Studio (plans premium / production) ===
+  // === Déplacement des panneaux flottants (Iris / Nexa) ===
+  let dragState = null;
+  function startDrag(e, panelId) {
+    const panel = document.getElementById(panelId);
+    const rect = panel.getBoundingClientRect();
+    dragState = { panelId, offsetX: e.clientX - rect.left, offsetY: e.clientY - rect.top };
+    panel.style.left = rect.left + 'px';
+    panel.style.top = rect.top + 'px';
+    panel.style.right = 'auto';
+    document.addEventListener('mousemove', onDragMove);
+    document.addEventListener('mouseup', stopDrag);
+    e.preventDefault();
+  }
+  function onDragMove(e) {
+    if (!dragState) return;
+    const panel = document.getElementById(dragState.panelId);
+    let left = e.clientX - dragState.offsetX;
+    let top = e.clientY - dragState.offsetY;
+    left = Math.max(8, Math.min(left, window.innerWidth - panel.offsetWidth - 8));
+    top = Math.max(8, Math.min(top, window.innerHeight - 40));
+    panel.style.left = left + 'px';
+    panel.style.top = top + 'px';
+  }
+  function stopDrag() {
+    dragState = null;
+    document.removeEventListener('mousemove', onDragMove);
+    document.removeEventListener('mouseup', stopDrag);
+  }
+
   function openIrisPasswordModal(id) {
     const acc = allAccounts.find(a => a.id === id);
     if (!acc) return;
