@@ -515,10 +515,17 @@
     <div class="print-meta-sub">Généré le <span id="printDate">—</span></div>
   </div>
 
-  <div class="page-header">
-    <div class="eyebrow">Tableau de bord</div>
-    <h1 id="welcome">Bonjour</h1>
-    <div class="subtitle" id="welcomeSub">Vue d'ensemble de votre activité</div>
+  <div class="page-header" style="display:flex;align-items:flex-start;gap:18px">
+    <!-- LOGO ENTREPRENEUR (placeholder) — à remplacer par <img id="entrepriseLogo" src="URL_DU_LOGO_REEL" style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex-shrink:0"> -->
+    <div id="entrepriseLogo" style="width:56px;height:56px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:4px">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0D1A12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9h0M9 13h0M9 17h0"/></svg>
+    </div>
+    <div>
+      <div class="eyebrow">Tableau de bord</div>
+      <h1 id="welcome">Bonjour</h1>
+      <div class="subtitle" id="welcomeEmail" style="font-size:12px;color:var(--text-soft);margin:-2px 0 6px"></div>
+      <div class="subtitle" id="welcomeSub">Vue d'ensemble de votre activité</div>
+    </div>
   </div>
 
   <div class="stats" id="stats">
@@ -673,7 +680,8 @@
     if (session.role === 'super_admin') {
       document.getElementById('adminLink').style.display = 'flex';
     }
-    document.getElementById('welcome').textContent = 'Bienvenue, ' + (session.login.charAt(0).toUpperCase() + session.login.slice(1));
+    document.getElementById('welcome').textContent = 'Bienvenue, ' + (session.nom_praticien || session.login.charAt(0).toUpperCase() + session.login.slice(1));
+    document.getElementById('welcomeEmail').textContent = session.login;
 
     loadLeads();
   }
