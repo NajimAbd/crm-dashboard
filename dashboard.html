@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nexa — Tableau de bord</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Cairo:wght@400;600&display=swap');
 
   :root {
     --green-deep: #0D1A12;
@@ -680,7 +680,12 @@
     if (session.role === 'super_admin') {
       document.getElementById('adminLink').style.display = 'flex';
     }
-    document.getElementById('welcome').textContent = 'Bienvenue, ' + (session.nom_praticien || session.login.charAt(0).toUpperCase() + session.login.slice(1));
+    const praticienName = session.nom_praticien || (session.login.charAt(0).toUpperCase() + session.login.slice(1));
+    const isArabicName = /[\u0600-\u06FF\u0750-\u077F]/.test(praticienName);
+    document.getElementById('welcome').innerHTML = 'Bienvenue, ' +
+      (isArabicName
+        ? '<span style="font-family:\'Cairo\',sans-serif;font-weight:400" dir="rtl">' + escapeHtml(praticienName) + '</span>'
+        : escapeHtml(praticienName));
     document.getElementById('welcomeEmail').textContent = session.login;
 
     loadLeads();
