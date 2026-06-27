@@ -291,6 +291,80 @@
   }
   @keyframes spin { to { transform: rotate(360deg); } }
 
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--green-deep); color: var(--cream);
+    padding: 12px 20px; border-radius: 10px; font-size: 13px;
+    border-left: 3px solid var(--gold);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    opacity: 0; transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 1100;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .btn-icon-delete {
+    border: none;
+    background: transparent;
+    color: #C4604E;
+    opacity: 0.55;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .btn-icon-delete:hover { opacity: 1; background: rgba(196, 96, 78, 0.12); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 26, 18, 0.55);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: white;
+    border-radius: 14px;
+    padding: 28px 26px;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  }
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--green-deep);
+    margin-bottom: 10px;
+  }
+  .modal-text {
+    font-size: 14px;
+    color: var(--text-soft);
+    line-height: 1.55;
+    margin-bottom: 22px;
+  }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  .btn-modal-cancel {
+    padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border-soft);
+    background: white; color: var(--text-main); font-weight: 500; font-size: 13px;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .btn-modal-cancel:hover { background: #FAF7F1; }
+  .btn-modal-confirm {
+    padding: 9px 18px; border-radius: 8px; border: none;
+    background: #C4604E; color: white; font-weight: 600; font-size: 13px;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .btn-modal-confirm:hover { background: #B0533F; }
+  .btn-modal-confirm:disabled { opacity: 0.6; cursor: wait; }
+
   @media (max-width: 720px) {
     .topbar { padding: 14px 16px; }
     .page { padding: 24px 16px 50px; }
@@ -400,10 +474,26 @@
 
 </div>
 
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="deleteModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">Supprimer ce lead ?</div>
+    <div class="modal-text">
+      Tu es sur le point de supprimer définitivement <strong id="deleteModalName" style="color:var(--text-main)"></strong> et toutes ses données associées (diagnostics, ventes, rendez-vous, appels). Cette action est irréversible.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDeleteModal()">Annuler</button>
+      <button class="btn-modal-confirm" id="confirmDeleteBtn" onclick="executeDeleteLead()">Supprimer</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const CRM_API_LEADS = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-leads';
   const CRM_CREATE_SSO = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-create-sso-token';
   const CRM_VERIFY_SSO = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-verify-sso-token';
+  const CRM_DELETE_LEAD = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-delete-lead';
   const SESSION_KEY = 'crm_session_user';
   const SESSION_EXPIRY = 'crm_session_expiry';
 
@@ -539,6 +629,7 @@
       '<th>Inscription</th>' +
       '<th>Inscription pour</th>' +
       '<th>Tally diagnostic</th>' +
+      '<th style="width:44px"></th>' +
       '</tr></thead><tbody>';
 
     const typeInscriptionLabels = {
@@ -588,6 +679,11 @@
         '<td>' + date + '</td>' +
         '<td>' + inscriptionPour + '</td>' +
         '<td style="text-align:center">' + tallyDone + '</td>' +
+        '<td onclick="event.stopPropagation()" style="text-align:center">' +
+          '<button class="btn-icon-delete" title="Supprimer ce lead" onclick="openDeleteModal(' + l.id + ', \'' + escapeHtml(fullName) + '\')">' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+          '</button>' +
+        '</td>' +
         '</tr>';
     });
 
@@ -652,6 +748,54 @@
   function escapeHtml(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // === Suppression d'un lead ===
+  let leadIdToDelete = null;
+
+  function openDeleteModal(id, name) {
+    leadIdToDelete = id;
+    document.getElementById('deleteModalName').textContent = name;
+    document.getElementById('deleteModalOverlay').classList.add('show');
+  }
+
+  function closeDeleteModal() {
+    leadIdToDelete = null;
+    document.getElementById('deleteModalOverlay').classList.remove('show');
+  }
+
+  async function executeDeleteLead() {
+    if (!leadIdToDelete) return;
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = true;
+    btn.textContent = 'Suppression…';
+    try {
+      const resp = await fetch(CRM_DELETE_LEAD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadIdToDelete, account_id: session.account_id })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        closeDeleteModal();
+        showToast('Lead supprimé');
+        selectedLeadIds.delete(leadIdToDelete);
+        loadLeads();
+      } else {
+        showToast(data.message || 'Erreur lors de la suppression');
+      }
+    } catch (err) {
+      showToast('Erreur de connexion');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Supprimer';
   }
 
   // === Source filter ===
