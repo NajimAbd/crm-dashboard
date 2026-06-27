@@ -373,6 +373,29 @@
     table { font-size: 12px; }
     th, td { padding: 10px 12px; }
   }
+
+  .btn-restore {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--gold);
+    background: rgba(184, 150, 90, 0.1);
+    color: #8B6E3A;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-restore:hover { background: rgba(184, 150, 90, 0.2); }
+  .jours-restants { font-size: 12px; color: var(--text-soft); }
+  .jours-restants.urgent { color: #C4604E; font-weight: 600; }
+
+  @media print {
+    .topbar, .stats, .filter-tab, .search-box, button, .modal-overlay, .toast,
+    th:first-child, td:first-child, th:last-child, td:last-child, #diagnosticSendBar { display: none !important; }
+    .page { padding: 0; max-width: 100%; }
+    .leads-table-wrap { border: none; }
+    body { background: white; }
+  }
 </style>
 </head>
 <body style="display:none">
@@ -442,9 +465,15 @@
 
   <div class="section-header">
     <h2 class="section-title">Mes leads</h2>
-    <div class="search-box">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      <input type="text" id="searchInput" placeholder="Rechercher un lead…">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button onclick="window.print()" style="display:flex;align-items:center;gap:6px;padding:9px 14px;border-radius:8px;border:1px solid var(--border-soft);background:white;color:var(--text-main);font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        Imprimer
+      </button>
+      <div class="search-box">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input type="text" id="searchInput" placeholder="Rechercher un lead…">
+      </div>
     </div>
   </div>
 
@@ -452,6 +481,7 @@
     <div class="filter-tab active" data-filter="all" onclick="setSourceFilter('all')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #0D1A12;background:#0D1A12;color:#F4ECE0">Tous</div>
     <div class="filter-tab" data-filter="tally" onclick="setSourceFilter('tally')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">📋 Diagnostic (Tally)</div>
     <div class="filter-tab" data-filter="social" onclick="setSourceFilter('social')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">Réseaux sociaux</div>
+    <div class="filter-tab" data-filter="trash" onclick="setSourceFilter('trash')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">🗑️ Corbeille (15j)</div>
   </div>
 
   <div id="diagnosticSendBar" style="display:none;align-items:center;gap:10px;background:#FAF3E5;border:1px solid #E5DECF;border-radius:10px;padding:10px 16px;margin-bottom:16px">
@@ -478,13 +508,13 @@
 
 <div class="modal-overlay" id="deleteModalOverlay">
   <div class="modal-box">
-    <div class="modal-title">Supprimer ce lead ?</div>
+    <div class="modal-title">Déplacer ce lead vers la corbeille ?</div>
     <div class="modal-text">
-      Tu es sur le point de supprimer définitivement <strong id="deleteModalName" style="color:var(--text-main)"></strong> et toutes ses données associées (diagnostics, ventes, rendez-vous, appels). Cette action est irréversible.
+      <strong id="deleteModalName" style="color:var(--text-main)"></strong> sera retiré de ta liste de leads. Il restera récupérable dans la corbeille pendant 15 jours, puis sera supprimé définitivement (avec ses diagnostics, ventes, rendez-vous et appels) si tu ne le restaures pas.
     </div>
     <div class="modal-actions">
       <button class="btn-modal-cancel" onclick="closeDeleteModal()">Annuler</button>
-      <button class="btn-modal-confirm" id="confirmDeleteBtn" onclick="executeDeleteLead()">Supprimer</button>
+      <button class="btn-modal-confirm" id="confirmDeleteBtn" onclick="executeDeleteLead()">Déplacer vers la corbeille</button>
     </div>
   </div>
 </div>
@@ -494,6 +524,8 @@
   const CRM_CREATE_SSO = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-create-sso-token';
   const CRM_VERIFY_SSO = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-verify-sso-token';
   const CRM_DELETE_LEAD = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-delete-lead';
+  const CRM_RESTORE_LEAD = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-restore-lead';
+  const CRM_TRASH_LEADS = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-trash-leads';
   const SESSION_KEY = 'crm_session_user';
   const SESSION_EXPIRY = 'crm_session_expiry';
 
@@ -775,7 +807,7 @@
     if (!leadIdToDelete) return;
     const btn = document.getElementById('confirmDeleteBtn');
     btn.disabled = true;
-    btn.textContent = 'Suppression…';
+    btn.textContent = 'Déplacement…';
     try {
       const resp = await fetch(CRM_DELETE_LEAD, {
         method: 'POST',
@@ -785,7 +817,7 @@
       const data = await resp.json();
       if (data.success) {
         closeDeleteModal();
-        showToast('Lead supprimé');
+        showToast('Lead déplacé vers la corbeille');
         selectedLeadIds.delete(leadIdToDelete);
         loadLeads();
       } else {
@@ -795,11 +827,13 @@
       showToast('Erreur de connexion');
     }
     btn.disabled = false;
-    btn.textContent = 'Supprimer';
+    btn.textContent = 'Déplacer vers la corbeille';
   }
 
   // === Source filter ===
   let currentSourceFilter = 'all';
+  let trashLeads = [];
+
   function setSourceFilter(f) {
     currentSourceFilter = f;
     document.querySelectorAll('.filter-tab').forEach(t => {
@@ -808,7 +842,13 @@
       t.style.color = active ? '#F4ECE0' : '#6B6B68';
       t.style.borderColor = active ? '#0D1A12' : '#E5DECF';
     });
-    applyFilters();
+    document.getElementById('searchInput').closest('.search-box').style.display = (f === 'trash') ? 'none' : '';
+    document.getElementById('stats').style.display = (f === 'trash') ? 'none' : '';
+    if (f === 'trash') {
+      loadTrashLeads();
+    } else {
+      applyFilters();
+    }
   }
 
   function applyFilters() {
@@ -828,6 +868,86 @@
     }
 
     renderTable(filtered);
+  }
+
+  async function loadTrashLeads() {
+    const container = document.getElementById('tableContainer');
+    container.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Chargement de la corbeille…</div></div>';
+    try {
+      const resp = await fetch(CRM_TRASH_LEADS + '?account_id=' + encodeURIComponent(session.account_id));
+      const data = await resp.json();
+      trashLeads = data.leads || [];
+      renderTrashTable(trashLeads);
+    } catch (err) {
+      container.innerHTML = '<div class="empty-state">Impossible de charger la corbeille.</div>';
+    }
+  }
+
+  function renderTrashTable(leads) {
+    const container = document.getElementById('tableContainer');
+    if (leads.length === 0) {
+      container.innerHTML =
+        '<div class="empty-state">' +
+          '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+          '<div>La corbeille est vide.</div>' +
+        '</div>';
+      return;
+    }
+
+    let html = '<table><thead><tr>' +
+      '<th>Lead</th>' +
+      '<th>Contact</th>' +
+      '<th>Supprimé le</th>' +
+      '<th>Jours restants</th>' +
+      '<th style="width:140px"></th>' +
+      '</tr></thead><tbody>';
+
+    leads.forEach(l => {
+      const fullName = ((l.prenom || '') + ' ' + (l.nom || '')).trim() || '—';
+      const email = l.email || '—';
+      const whatsapp = l.whatsapp || '';
+      const delDate = l.deleted_at
+        ? new Date(l.deleted_at.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—';
+      const jr = l.jours_restants != null ? l.jours_restants : '—';
+      const urgent = (l.jours_restants != null && l.jours_restants <= 3) ? ' urgent' : '';
+
+      html += '<tr>' +
+        '<td><div class="lead-name">' + escapeHtml(fullName) + '</div></td>' +
+        '<td>' + escapeHtml(email) + (whatsapp ? '<div class="lead-meta">' + escapeHtml(whatsapp) + '</div>' : '') + '</td>' +
+        '<td>' + delDate + '</td>' +
+        '<td><span class="jours-restants' + urgent + '">' + jr + ' j</span></td>' +
+        '<td style="text-align:right"><button class="btn-restore" onclick="executeRestoreLead(' + l.id + ', this)">↩ Restaurer</button></td>' +
+        '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  async function executeRestoreLead(id, btn) {
+    btn.disabled = true;
+    btn.textContent = 'Restauration…';
+    try {
+      const resp = await fetch(CRM_RESTORE_LEAD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: id, account_id: session.account_id })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast('Lead restauré');
+        loadTrashLeads();
+      } else {
+        showToast(data.message || 'Erreur lors de la restauration');
+        btn.disabled = false;
+        btn.textContent = '↩ Restaurer';
+      }
+    } catch (err) {
+      showToast('Erreur de connexion');
+      btn.disabled = false;
+      btn.textContent = '↩ Restaurer';
+    }
   }
 
   // === Search filter ===
