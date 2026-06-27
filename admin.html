@@ -170,6 +170,16 @@
   .btn-delete:hover { opacity: 0.85; }
   .btn-delete:disabled { opacity: 0.5; cursor: wait; }
 
+  .btn-iris {
+    padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
+    cursor: pointer; border: 1px solid #5A6BA8;
+    background: white; color: #5A6BA8; font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-iris:hover { background: rgba(90, 107, 168, 0.08); }
+  .btn-iris:disabled { opacity: 0.5; cursor: wait; }
+  .modal-field input[readonly] { background: #F4EFE3; color: var(--text-soft); }
+
   .modal-field select {
     width: 100%; padding: 11px 13px; border: 1px solid var(--border-soft);
     border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none;
@@ -299,6 +309,26 @@
   </div>
 </div>
 
+<div class="modal-overlay" id="irisPasswordModal">
+  <div class="modal-box">
+    <h3 class="modal-title">Mot de passe Iris Studio</h3>
+    <input type="hidden" id="irisLogin" value="">
+    <div class="modal-field">
+      <label>Compte (e-mail)</label>
+      <input type="text" id="irisLoginDisplay" readonly>
+    </div>
+    <div class="modal-field">
+      <label>Nouveau mot de passe Iris</label>
+      <input type="text" id="irisNewPassword" placeholder="ex: Iris@2026!">
+    </div>
+    <div class="modal-msg" id="irisMsg"></div>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="closeIrisPasswordModal()">Annuler</button>
+      <button class="modal-btn-confirm" id="irisConfirmBtn" onclick="submitIrisPassword()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
 <script>
   const CRM_ADMIN_LIST = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-accounts';
   const CRM_ADMIN_TOGGLE = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-toggle';
@@ -377,6 +407,10 @@
       const btnClass = isActive ? 'to-deactivate' : 'to-activate';
       const btnLabel = isActive ? 'Désactiver' : 'Activer';
       const nextStatus = isActive ? 'inactif' : 'actif';
+      const hasIrisAccess = a.plan === 'premium' || a.plan === 'production';
+      const irisBtn = hasIrisAccess
+        ? '<button class="btn-iris" onclick="openIrisPasswordModal(' + a.id + ')">🔑 Iris</button>'
+        : '';
 
       html += '<tr>' +
         '<td><div class="account-name account-name-link" onclick="openEditModal(' + a.id + ')">' + esc(a.nom_praticien) + '</div></td>' +
@@ -385,6 +419,7 @@
         '<td><span class="stat-mini"><b>' + a.total_leads + '</b> leads · <b>' + a.total_users + '</b> compte(s)</span></td>' +
         '<td>' + created + '</td>' +
         '<td><div class="actions-cell">' +
+          irisBtn +
           '<button class="toggle-btn ' + btnClass + '" onclick="toggleStatus(' + a.id + ', \'' + nextStatus + '\', this)">' + btnLabel + '</button>' +
           '<button class="btn-delete" onclick="confirmDelete(' + a.id + ', \'' + esc(a.nom_praticien).replace(/'/g, "\\'") + '\', this)">Supprimer</button>' +
         '</div></td>' +
@@ -457,6 +492,60 @@
 
   function closeCreateModal() {
     document.getElementById('createModal').classList.remove('show');
+  }
+
+  // === Mot de passe Iris Studio (plans premium / production) ===
+  function openIrisPasswordModal(id) {
+    const acc = allAccounts.find(a => a.id === id);
+    if (!acc) return;
+    document.getElementById('irisLogin').value = acc.login || '';
+    document.getElementById('irisLoginDisplay').value = acc.login || '';
+    document.getElementById('irisNewPassword').value = '';
+    document.getElementById('irisMsg').style.display = 'none';
+    document.getElementById('irisPasswordModal').classList.add('show');
+  }
+
+  function closeIrisPasswordModal() {
+    document.getElementById('irisPasswordModal').classList.remove('show');
+  }
+
+  async function submitIrisPassword() {
+    const login = document.getElementById('irisLogin').value;
+    const newPassword = document.getElementById('irisNewPassword').value.trim();
+    const msgEl = document.getElementById('irisMsg');
+    const btn = document.getElementById('irisConfirmBtn');
+
+    if (!newPassword) {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = 'Veuillez saisir un mot de passe.';
+      msgEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Enregistrement…';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-set-iris-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login, new_password: newPassword })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        closeIrisPasswordModal();
+        showToast('Mot de passe Iris mis à jour');
+      } else {
+        msgEl.className = 'modal-msg error';
+        msgEl.textContent = data.message || 'Erreur lors de la mise à jour.';
+        msgEl.style.display = 'block';
+      }
+    } catch (err) {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = 'Erreur de connexion.';
+      msgEl.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Enregistrer';
   }
 
   async function submitAccountModal() {
