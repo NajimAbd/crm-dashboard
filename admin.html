@@ -180,6 +180,14 @@
   .btn-iris:disabled { opacity: 0.5; cursor: wait; }
   .modal-field input[readonly] { background: #F4EFE3; color: var(--text-soft); }
 
+  .btn-manage-pwd {
+    flex: 1; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; border: 1px solid var(--border-soft);
+    background: white; color: var(--text-main); font-family: 'Inter', sans-serif;
+    transition: all 0.15s;
+  }
+  .btn-manage-pwd:hover { background: #FAF7F1; border-color: var(--gold); }
+
   .modal-field select {
     width: 100%; padding: 11px 13px; border: 1px solid var(--border-soft);
     border-radius: 8px; font-size: 14px; font-family: 'Inter', sans-serif; outline: none;
@@ -301,6 +309,13 @@
       <label id="passwordLabel">Mot de passe temporaire</label>
       <input type="text" id="newPassword" value="Admin@1234@." placeholder="">
     </div>
+    <div class="modal-field" id="fieldPasswordManage" style="display:none">
+      <label>Mots de passe</label>
+      <div style="display:flex;gap:10px">
+        <button type="button" class="btn-manage-pwd" onclick="manageIrisFromEdit()">🔧 Iris</button>
+        <button type="button" class="btn-manage-pwd" onclick="manageNexaFromEdit()">🔧 Nexa</button>
+      </div>
+    </div>
     <div class="modal-msg" id="createMsg"></div>
     <div class="modal-actions">
       <button class="modal-btn-cancel" onclick="closeCreateModal()">Annuler</button>
@@ -325,6 +340,26 @@
     <div class="modal-actions">
       <button class="modal-btn-cancel" onclick="closeIrisPasswordModal()">Annuler</button>
       <button class="modal-btn-confirm" id="irisConfirmBtn" onclick="submitIrisPassword()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="nexaPasswordModal">
+  <div class="modal-box">
+    <h3 class="modal-title">Mot de passe Nexa</h3>
+    <input type="hidden" id="nexaAccountId" value="">
+    <div class="modal-field">
+      <label>Compte (e-mail)</label>
+      <input type="text" id="nexaLoginDisplay" readonly>
+    </div>
+    <div class="modal-field">
+      <label>Nouveau mot de passe Nexa</label>
+      <input type="text" id="nexaNewPassword" placeholder="ex: Nexa@2026!">
+    </div>
+    <div class="modal-msg" id="nexaMsg"></div>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="closeNexaPasswordModal()">Annuler</button>
+      <button class="modal-btn-confirm" id="nexaConfirmBtn" onclick="submitNexaPassword()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -407,10 +442,6 @@
       const btnClass = isActive ? 'to-deactivate' : 'to-activate';
       const btnLabel = isActive ? 'Désactiver' : 'Activer';
       const nextStatus = isActive ? 'inactif' : 'actif';
-      const hasIrisAccess = a.plan === 'premium' || a.plan === 'production';
-      const irisBtn = hasIrisAccess
-        ? '<button class="btn-iris" onclick="openIrisPasswordModal(' + a.id + ')">🔑 Iris</button>'
-        : '';
 
       html += '<tr>' +
         '<td><div class="account-name account-name-link" onclick="openEditModal(' + a.id + ')">' + esc(a.nom_praticien) + '</div></td>' +
@@ -419,7 +450,6 @@
         '<td><span class="stat-mini"><b>' + a.total_leads + '</b> leads · <b>' + a.total_users + '</b> compte(s)</span></td>' +
         '<td>' + created + '</td>' +
         '<td><div class="actions-cell">' +
-          irisBtn +
           '<button class="toggle-btn ' + btnClass + '" onclick="toggleStatus(' + a.id + ', \'' + nextStatus + '\', this)">' + btnLabel + '</button>' +
           '<button class="btn-delete" onclick="confirmDelete(' + a.id + ', \'' + esc(a.nom_praticien).replace(/'/g, "\\'") + '\', this)">Supprimer</button>' +
         '</div></td>' +
@@ -466,6 +496,7 @@
     document.getElementById('newPassword').placeholder = '';
     document.getElementById('fieldLogin').style.display = 'block';
     document.getElementById('fieldPassword').style.display = 'block';
+    document.getElementById('fieldPasswordManage').style.display = 'none';
     document.getElementById('modalTitle').textContent = 'Créer un compte praticien';
     document.getElementById('createConfirmBtn').textContent = 'Créer le compte';
     document.getElementById('createMsg').style.display = 'none';
@@ -479,11 +510,9 @@
     document.getElementById('newNom').value = acc.nom_praticien;
     document.getElementById('newPlan').value = acc.plan;
     document.getElementById('newLogin').value = acc.login || '';
-    document.getElementById('newPassword').value = '';
-    document.getElementById('passwordLabel').textContent = 'Nouveau mot de passe temporaire (laisser vide pour ne pas changer)';
-    document.getElementById('newPassword').placeholder = 'Laisser vide pour ne pas changer';
     document.getElementById('fieldLogin').style.display = 'block';
-    document.getElementById('fieldPassword').style.display = 'block';
+    document.getElementById('fieldPassword').style.display = 'none';
+    document.getElementById('fieldPasswordManage').style.display = 'block';
     document.getElementById('modalTitle').textContent = 'Modifier le compte';
     document.getElementById('createConfirmBtn').textContent = 'Enregistrer les modifications';
     document.getElementById('createMsg').style.display = 'none';
@@ -492,6 +521,18 @@
 
   function closeCreateModal() {
     document.getElementById('createModal').classList.remove('show');
+  }
+
+  function manageIrisFromEdit() {
+    const id = parseInt(document.getElementById('modalAccountId').value, 10);
+    closeCreateModal();
+    openIrisPasswordModal(id);
+  }
+
+  function manageNexaFromEdit() {
+    const id = parseInt(document.getElementById('modalAccountId').value, 10);
+    closeCreateModal();
+    openNexaPasswordModal(id);
   }
 
   // === Mot de passe Iris Studio (plans premium / production) ===
@@ -548,6 +589,62 @@
     btn.textContent = 'Enregistrer';
   }
 
+  // === Mot de passe Nexa (depuis le modal d'édition) ===
+  function openNexaPasswordModal(id) {
+    const acc = allAccounts.find(a => a.id === id);
+    if (!acc) return;
+    document.getElementById('nexaAccountId').value = acc.id;
+    document.getElementById('nexaLoginDisplay').value = acc.login || '';
+    document.getElementById('nexaNewPassword').value = '';
+    document.getElementById('nexaMsg').style.display = 'none';
+    document.getElementById('nexaPasswordModal').classList.add('show');
+  }
+
+  function closeNexaPasswordModal() {
+    document.getElementById('nexaPasswordModal').classList.remove('show');
+  }
+
+  async function submitNexaPassword() {
+    const id = parseInt(document.getElementById('nexaAccountId').value, 10);
+    const acc = allAccounts.find(a => a.id === id);
+    const newPassword = document.getElementById('nexaNewPassword').value.trim();
+    const msgEl = document.getElementById('nexaMsg');
+    const btn = document.getElementById('nexaConfirmBtn');
+
+    if (!acc) return;
+    if (!newPassword) {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = 'Veuillez saisir un mot de passe.';
+      msgEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Enregistrement…';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-update-account', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: acc.id, nom_praticien: acc.nom_praticien, plan: acc.plan, login: acc.login, new_password: newPassword })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        closeNexaPasswordModal();
+        showToast('Mot de passe Nexa mis à jour');
+      } else {
+        msgEl.className = 'modal-msg error';
+        msgEl.textContent = data.message || 'Erreur lors de la mise à jour.';
+        msgEl.style.display = 'block';
+      }
+    } catch (err) {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = 'Erreur de connexion.';
+      msgEl.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Enregistrer';
+  }
+
   async function submitAccountModal() {
     const editId = document.getElementById('modalAccountId').value;
     const nom = document.getElementById('newNom').value.trim();
@@ -564,7 +661,6 @@
 
     if (editId) {
       const editLogin = document.getElementById('newLogin').value.trim();
-      const editPassword = document.getElementById('newPassword').value.trim();
 
       if (!editLogin) {
         msgEl.className = 'modal-msg error';
@@ -579,7 +675,7 @@
         const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-update-account', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ account_id: editId, nom_praticien: nom, plan, login: editLogin, new_password: editPassword })
+          body: JSON.stringify({ account_id: editId, nom_praticien: nom, plan, login: editLogin, new_password: '' })
         });
         const data = await resp.json();
         if (data.success) {
