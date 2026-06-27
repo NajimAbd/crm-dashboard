@@ -525,13 +525,29 @@
 
   function manageIrisFromEdit() {
     const id = parseInt(document.getElementById('modalAccountId').value, 10);
-    closeCreateModal();
+    const plan = document.getElementById('newPlan').value;
+    const msgEl = document.getElementById('createMsg');
+    if (plan === 'administration') {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = "Le plan Administration ne donne pas accès à Iris. Passe ce compte en Production ou Premium avant de définir ce mot de passe.";
+      msgEl.style.display = 'block';
+      return;
+    }
+    msgEl.style.display = 'none';
     openIrisPasswordModal(id);
   }
 
   function manageNexaFromEdit() {
     const id = parseInt(document.getElementById('modalAccountId').value, 10);
-    closeCreateModal();
+    const plan = document.getElementById('newPlan').value;
+    const msgEl = document.getElementById('createMsg');
+    if (plan === 'production') {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = "Le plan Production ne donne pas accès à Nexa. Passe ce compte en Administration ou Premium avant de définir ce mot de passe.";
+      msgEl.style.display = 'block';
+      return;
+    }
+    msgEl.style.display = 'none';
     openNexaPasswordModal(id);
   }
 
