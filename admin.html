@@ -188,6 +188,15 @@
   }
   .btn-manage-pwd:hover { background: #FAF7F1; border-color: var(--gold); }
 
+  .pwd-wrap { position: relative; display: flex; align-items: center; }
+  .pwd-wrap input { width: 100%; padding-right: 42px; }
+  .pwd-eye {
+    position: absolute; right: 8px;
+    border: none; background: transparent; cursor: pointer;
+    color: var(--text-soft); padding: 4px; display: flex; align-items: center;
+  }
+  .pwd-eye:hover { color: var(--green-deep); }
+
   .floating-panel {
     display: none;
     position: fixed;
@@ -312,7 +321,7 @@
 
 <div class="modal-overlay" id="createModal">
   <div class="modal-box">
-    <h3 class="modal-title" id="modalTitle">Créer un compte praticien</h3>
+    <h3 class="modal-title" id="modalTitle">Créer un compte client</h3>
     <input type="hidden" id="modalAccountId" value="">
     <div class="modal-field">
       <label>Nom complet / entreprise</label>
@@ -333,7 +342,13 @@
     </div>
     <div class="modal-field" id="fieldPassword">
       <label id="passwordLabel">Mot de passe temporaire</label>
-      <input type="text" id="newPassword" value="Admin@1234@." placeholder="">
+      <div class="pwd-wrap">
+        <input type="password" id="newPassword" value="Admin@1234@." placeholder="">
+        <button type="button" class="pwd-eye" onclick="togglePwd('newPassword', this)" aria-label="Afficher le mot de passe">
+          <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
     </div>
     <div class="modal-field" id="fieldPasswordManage" style="display:none">
       <label>Mots de passe</label>
@@ -363,7 +378,13 @@
     </div>
     <div class="modal-field">
       <label>Nouveau mot de passe Iris</label>
-      <input type="text" id="irisNewPassword" placeholder="ex: Iris@2026!">
+      <div class="pwd-wrap">
+        <input type="password" id="irisNewPassword" placeholder="ex: Iris@2026!">
+        <button type="button" class="pwd-eye" onclick="togglePwd('irisNewPassword', this)" aria-label="Afficher le mot de passe">
+          <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
     </div>
     <div class="modal-msg" id="irisMsg"></div>
     <div class="modal-actions">
@@ -386,7 +407,13 @@
     </div>
     <div class="modal-field">
       <label>Nouveau mot de passe Nexa</label>
-      <input type="text" id="nexaNewPassword" placeholder="ex: Nexa@2026!">
+      <div class="pwd-wrap">
+        <input type="password" id="nexaNewPassword" placeholder="ex: Nexa@2026!">
+        <button type="button" class="pwd-eye" onclick="togglePwd('nexaNewPassword', this)" aria-label="Afficher le mot de passe">
+          <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
     </div>
     <div class="modal-msg" id="nexaMsg"></div>
     <div class="modal-actions">
@@ -431,6 +458,21 @@
   function esc(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function togglePwd(inputId, btn) {
+    const input = document.getElementById(inputId);
+    const open = btn.querySelector('.eye-open');
+    const closed = btn.querySelector('.eye-closed');
+    if (input.type === 'password') {
+      input.type = 'text';
+      open.style.display = 'none';
+      closed.style.display = 'block';
+    } else {
+      input.type = 'password';
+      open.style.display = 'block';
+      closed.style.display = 'none';
+    }
   }
 
   function showToast(msg) {
@@ -530,7 +572,7 @@
     document.getElementById('fieldLogin').style.display = 'block';
     document.getElementById('fieldPassword').style.display = 'block';
     document.getElementById('fieldPasswordManage').style.display = 'none';
-    document.getElementById('modalTitle').textContent = 'Créer un compte praticien';
+    document.getElementById('modalTitle').textContent = 'Créer un compte client';
     document.getElementById('createConfirmBtn').textContent = 'Créer le compte';
     document.getElementById('createMsg').style.display = 'none';
     document.getElementById('createModal').classList.add('show');
