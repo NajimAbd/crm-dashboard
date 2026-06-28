@@ -130,6 +130,7 @@
   }
   .status-active { background: rgba(90, 140, 90, 0.15); color: var(--status-active); }
   .status-inactive { background: rgba(196, 96, 78, 0.15); color: var(--status-inactive); }
+  .status-expired { background: rgba(184, 150, 90, 0.18); color: #8B6E1E; }
   .status-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
 
   .stat-mini { font-size: 13px; color: var(--text-soft); }
@@ -508,9 +509,17 @@
 
     allAccounts.forEach(a => {
       const isActive = a.statut === 'actif';
-      const statusHtml = isActive
-        ? '<span class="status-chip status-active"><span class="status-dot"></span>Actif</span>'
-        : '<span class="status-chip status-inactive"><span class="status-dot"></span>Inactif</span>';
+      const isExpired = a.date_expiration && new Date(a.date_expiration.replace(' ', 'T')) < new Date();
+
+      let statusHtml;
+      if (isExpired) {
+        statusHtml = '<span class="status-chip status-expired"><span class="status-dot"></span>Expiré</span>';
+      } else if (isActive) {
+        statusHtml = '<span class="status-chip status-active"><span class="status-dot"></span>Actif</span>';
+      } else {
+        statusHtml = '<span class="status-chip status-inactive"><span class="status-dot"></span>Inactif</span>';
+      }
+
       const created = a.created_at
         ? new Date(a.created_at.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
         : '—';
