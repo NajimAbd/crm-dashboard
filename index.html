@@ -1,4 +1,3 @@
-fait
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -200,7 +199,7 @@ fait
   const CRM_LOGIN_WEBHOOK = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-login';
   const SESSION_KEY = 'crm_session_user';
   const SESSION_EXPIRY = 'crm_session_expiry';
-  const SESSION_DURATION = 8 * 60 * 60 * 1000; // 8 heures
+  const SESSION_DURATION = 60 * 60 * 1000; // 1 heure d'inactivité
 
   function isSessionValid() {
     const user = localStorage.getItem(SESSION_KEY);
