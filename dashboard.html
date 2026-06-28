@@ -602,6 +602,7 @@
   const CRM_TRASH_LEADS = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-trash-leads';
   const SESSION_KEY = 'crm_session_user';
   const SESSION_EXPIRY = 'crm_session_expiry';
+  const SESSION_DURATION = 60 * 60 * 1000; // 1 heure d'inactivité
 
   // === Auth check ===
   function getSession() {
@@ -616,6 +617,13 @@
     localStorage.removeItem(SESSION_KEY);
     localStorage.removeItem(SESSION_EXPIRY);
     window.location.href = 'index.html';
+  }
+
+  // Remet le compteur d'inactivité à zéro (prolonge la session de 1h)
+  function refreshSession() {
+    if (localStorage.getItem(SESSION_KEY)) {
+      localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+    }
   }
 
   async function goToIris() {
@@ -657,7 +665,7 @@
             localStorage.setItem(SESSION_KEY, JSON.stringify({
               login: data.login, role: data.role, account_id: data.account_id, nom_praticien: data.nom_praticien
             }));
-            localStorage.setItem(SESSION_EXPIRY, Date.now() + 8 * 60 * 60 * 1000);
+            localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
           }
         } catch (e) {}
       }
@@ -688,7 +696,23 @@
         : escapeHtml(praticienName));
     document.getElementById('welcomeEmail').textContent = session.login;
 
+    startActivityTracking();
     loadLeads();
+  }
+
+  // === Surveillance d'activité : prolonge la session quand l'utilisateur agit,
+  //     déconnecte automatiquement après 1h d'inactivité ===
+  function startActivityTracking() {
+    // À chaque action, repousser l'expiration d'1h
+    ['click', 'keydown', 'scroll', 'mousemove', 'touchstart'].forEach(evt => {
+      document.addEventListener(evt, refreshSession, { passive: true });
+    });
+    // Vérifier chaque minute si la session a expiré
+    setInterval(() => {
+      if (!getSession()) {
+        logout();
+      }
+    }, 60 * 1000);
   }
 
   async function loadLeads() {
