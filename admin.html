@@ -198,6 +198,17 @@
   }
   .pwd-eye:hover { color: var(--green-deep); }
 
+  .btn-log-export, .btn-log-clear {
+    display: flex; align-items: center; gap: 7px;
+    padding: 9px 15px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: 'Inter', sans-serif; transition: all 0.15s;
+  }
+  .btn-log-export { border: 1px solid var(--border-soft); background: white; color: var(--text-main); }
+  .btn-log-export:hover { background: #FAF7F1; border-color: var(--gold); }
+  .btn-log-clear { border: 1px solid #E0B4AC; background: white; color: #C4604E; }
+  .btn-log-clear:hover:not(:disabled) { background: rgba(196, 96, 78, 0.08); }
+  .btn-log-clear:disabled { opacity: 0.45; cursor: not-allowed; }
+
   .floating-panel {
     display: none;
     position: fixed;
@@ -301,11 +312,21 @@
     </div>
   </div>
 
-  <div class="page-header" style="margin-top: 44px;">
+  <div class="page-header" style="margin-top: 44px; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; flex-wrap:wrap">
     <div>
       <div class="eyebrow">Historique</div>
       <h1 style="font-size: 26px;">Journal d'activité</h1>
       <div class="subtitle" id="logsCount">Chargement…</div>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center">
+      <button class="btn-log-export" onclick="exportLogsCSV()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exporter (CSV)
+      </button>
+      <button class="btn-log-clear" id="btnClearLogs" onclick="openClearLogsModal()" disabled title="Exportez d'abord le journal">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+        Vider le journal
+      </button>
     </div>
   </div>
 
@@ -420,6 +441,20 @@
     <div class="modal-actions">
       <button class="modal-btn-cancel" onclick="closeNexaPasswordModal()">Annuler</button>
       <button class="modal-btn-confirm" id="nexaConfirmBtn" onclick="submitNexaPassword()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="clearLogsModal">
+  <div class="modal-box">
+    <h3 class="modal-title">Vider le journal d'activité ?</h3>
+    <p style="font-size:14px; color:var(--text-soft); line-height:1.55; margin:0 0 22px">
+      Toutes les entrées du journal seront <strong style="color:var(--text-main)">définitivement supprimées</strong>. Cette action est irréversible. Assurez-vous d'avoir exporté le journal en CSV au préalable.
+    </p>
+    <div class="modal-msg" id="clearLogsMsg"></div>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="closeClearLogsModal()">Annuler</button>
+      <button class="modal-btn-confirm" id="clearLogsConfirmBtn" onclick="submitClearLogs()" style="background:#C4604E">Vider définitivement</button>
     </div>
   </div>
 </div>
@@ -914,11 +949,14 @@
     return map[type] || { label: type, cls: 'log-other' };
   }
 
+  let allLogs = [];
+
   async function loadLogs() {
     try {
       const resp = await fetch(CRM_ADMIN_LOGS);
       const data = await resp.json();
       const logs = data.logs || [];
+      allLogs = logs;
       document.getElementById('logsCount').textContent = logs.length + ' entrée(s)';
       renderLogs(logs);
     } catch (err) {
@@ -954,6 +992,86 @@
 
     html += '</tbody></table>';
     document.getElementById('logsContainer').innerHTML = html;
+  }
+
+  // === Export CSV du journal ===
+  function exportLogsCSV() {
+    if (!allLogs.length) {
+      showToast('Aucune activité à exporter');
+      return;
+    }
+    const header = ['Action', 'Compte', 'Détail', 'Date'];
+    const rows = allLogs.map(l => {
+      const meta = logTypeMeta(l.type);
+      const when = l.created_at
+        ? new Date(l.created_at.replace(' ', 'T')).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        : '';
+      return [meta.label, l.nom_praticien || '', l.description || '', when];
+    });
+
+    const escapeCsv = v => {
+      const s = String(v == null ? '' : v);
+      return (s.includes('"') || s.includes(',') || s.includes('\n'))
+        ? '"' + s.replace(/"/g, '""') + '"'
+        : s;
+    };
+
+    const csv = '\uFEFF' + [header, ...rows].map(r => r.map(escapeCsv).join(',')).join('\r\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const today = new Date().toISOString().slice(0, 10);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'journal-activite-nexa-' + today + '.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+
+    // Débloquer le bouton de suppression après export
+    document.getElementById('btnClearLogs').disabled = false;
+    document.getElementById('btnClearLogs').title = '';
+    showToast('Journal exporté (' + allLogs.length + ' entrées)');
+  }
+
+  // === Vidage du journal ===
+  function openClearLogsModal() {
+    document.getElementById('clearLogsMsg').style.display = 'none';
+    document.getElementById('clearLogsModal').classList.add('show');
+  }
+  function closeClearLogsModal() {
+    document.getElementById('clearLogsModal').classList.remove('show');
+  }
+  async function submitClearLogs() {
+    const btn = document.getElementById('clearLogsConfirmBtn');
+    const msgEl = document.getElementById('clearLogsMsg');
+    btn.disabled = true;
+    btn.textContent = 'Suppression…';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-clear-logs', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ confirm: true })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        closeClearLogsModal();
+        showToast('Journal vidé');
+        document.getElementById('btnClearLogs').disabled = true;
+        document.getElementById('btnClearLogs').title = "Exportez d'abord le journal";
+        loadLogs();
+      } else {
+        msgEl.className = 'modal-msg error';
+        msgEl.textContent = data.message || 'Erreur lors de la suppression.';
+        msgEl.style.display = 'block';
+      }
+    } catch (err) {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = 'Erreur de connexion.';
+      msgEl.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Vider définitivement';
   }
 
   loadAccounts();
