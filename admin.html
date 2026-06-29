@@ -496,6 +496,11 @@
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  function planLabel(p) {
+    var m = { test: 'Découverte', administration: 'Administration', production: 'Production', premium: 'Premium' };
+    return m[p] || p;
+  }
+
   function togglePwd(inputId, btn) {
     const input = document.getElementById(inputId);
     const open = btn.querySelector('.eye-open');
@@ -564,7 +569,7 @@
 
       html += '<tr>' +
         '<td><div class="account-name account-name-link" onclick="openEditModal(' + a.id + ')">' + esc(a.nom_praticien) + '</div></td>' +
-        '<td><span class="plan-chip">' + esc(a.plan) + '</span></td>' +
+        '<td><span class="plan-chip">' + esc(planLabel(a.plan)) + '</span></td>' +
         '<td>' + statusHtml + '</td>' +
         '<td><span class="stat-mini"><b>' + a.total_leads + '</b> leads · <b>' + a.total_users + '</b> compte(s)</span></td>' +
         '<td>' + created + '</td>' +
