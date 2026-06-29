@@ -977,7 +977,9 @@
     }
     let html = '<table><thead><tr>' +
       '<th>Action</th>' +
-      '<th>Compte</th>' +
+      '<th>Entrepreneur</th>' +
+      '<th>Email</th>' +
+      '<th>Plan</th>' +
       '<th>Détail</th>' +
       '<th>Date</th>' +
       '</tr></thead><tbody>';
@@ -990,6 +992,8 @@
       html += '<tr>' +
         '<td><span class="log-type-chip ' + meta.cls + '">' + esc(meta.label) + '</span></td>' +
         '<td>' + esc(l.nom_praticien || '—') + '</td>' +
+        '<td>' + esc(l.target_login || '—') + '</td>' +
+        '<td>' + (l.target_plan ? '<span class="plan-chip">' + esc(planLabel(l.target_plan)) + '</span>' : '—') + '</td>' +
         '<td class="log-desc">' + esc(l.description || '') + '</td>' +
         '<td>' + when + '</td>' +
         '</tr>';
@@ -1005,13 +1009,13 @@
       showToast('Aucune activité à exporter');
       return;
     }
-    const header = ['Action', 'Compte', 'Détail', 'Date'];
+    const header = ['Action', 'Entrepreneur', 'Email', 'Plan', 'Détail', 'Date'];
     const rows = allLogs.map(l => {
       const meta = logTypeMeta(l.type);
       const when = l.created_at
         ? new Date(l.created_at.replace(' ', 'T')).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         : '';
-      return [meta.label, l.nom_praticien || '', l.description || '', when];
+      return [meta.label, l.nom_praticien || '', l.target_login || '', planLabel(l.target_plan || ''), l.description || '', when];
     });
 
     const escapeCsv = v => {
