@@ -752,25 +752,23 @@
     if (ssoToken) {
       let planBlocked = false;
       let blockedLogin = '';
-      if (localStorage.getItem('crm_real_login_done') === '1') {
-        try {
-          const resp = await fetch(CRM_VERIFY_SSO, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token: ssoToken, target: 'nexa' })
-          });
-          const data = await resp.json();
-          if (data.blocked) {
-            planBlocked = true;
-            blockedLogin = data.login || '';
-          } else if (data.success) {
-            localStorage.setItem(SESSION_KEY, JSON.stringify({
-              login: data.login, role: data.role, account_id: data.account_id, nom_praticien: data.nom_praticien
-            }));
-            localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
-          }
-        } catch (e) {}
-      }
+      try {
+        const resp = await fetch(CRM_VERIFY_SSO, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: ssoToken, target: 'nexa' })
+        });
+        const data = await resp.json();
+        if (data.blocked) {
+          planBlocked = true;
+          blockedLogin = data.login || '';
+        } else if (data.success && localStorage.getItem('crm_real_login_done') === '1') {
+          localStorage.setItem(SESSION_KEY, JSON.stringify({
+            login: data.login, role: data.role, account_id: data.account_id, nom_praticien: data.nom_praticien
+          }));
+          localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+        }
+      } catch (e) {}
       window.history.replaceState({}, document.title, window.location.pathname);
       if (planBlocked) {
         showNexaBlockedOverlay(blockedLogin);
