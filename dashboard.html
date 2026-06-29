@@ -597,6 +597,7 @@
   const CRM_API_LEADS = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-leads';
   const CRM_CREATE_SSO = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-create-sso-token';
   const CRM_VERIFY_SSO = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-verify-sso-token';
+  const CRM_DEMANDE_DEBLOCAGE = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-demande-deblocage';
   const CRM_DELETE_LEAD = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-delete-lead';
   const CRM_RESTORE_LEAD = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-restore-lead';
   const CRM_TRASH_LEADS = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-trash-leads';
@@ -648,7 +649,8 @@
   let session;
 
   // === Écran de blocage : plan sans accès Nexa (ex. Production) ===
-  function showNexaBlockedOverlay() {
+  function showNexaBlockedOverlay(loginRef) {
+    var safeLogin = String(loginRef || '').replace(/"/g, '');
     document.body.style.display = '';
     const ov = document.createElement('div');
     ov.setAttribute('dir', 'ltr');
@@ -663,8 +665,8 @@
         <p style="font-size:15px;line-height:1.7;color:rgba(244,236,224,0.82);margin:0 0 14px">Ton offre actuelle te donne accès à <strong style="color:#F4ECE0">Iris Studio</strong>, ton atelier de création de contenu.</p>
         <p style="font-size:15px;line-height:1.7;color:rgba(244,236,224,0.82);margin:0 0 14px"><strong style="color:#B8965A">Nexa</strong>, c'est ton centre de pilotage commercial. Tous tes leads, tes clients, tes ventes et tes rendez-vous réunis au même endroit — pour ne plus jamais perdre un prospect et transformer chaque contact en client.</p>
         <p style="font-size:15px;line-height:1.7;color:rgba(244,236,224,0.82);margin:0 0 28px">Les entrepreneurs qui activent Nexa arrêtent de gérer leur activité de mémoire… et commencent à la piloter avec des chiffres clairs.</p>
-        <a href="mailto:info.najim1@gmail.com?subject=Activer%20le%20module%20Nexa%20-%20passage%20en%20Premium&body=Bonjour%2C%0D%0A%0D%0AJe%20souhaite%20activer%20le%20module%20Nexa%20et%20passer%20en%20formule%20Premium.%0D%0A%0D%0AMerci%20de%20me%20recontacter." style="display:inline-flex;align-items:center;justify-content:center;gap:9px;background:linear-gradient(135deg,#C9A86A 0%,#B8965A 100%);color:#0D1A12;font-weight:700;font-size:15px;text-decoration:none;padding:14px 30px;border-radius:10px;box-shadow:0 8px 22px rgba(184,150,90,0.35)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>Débloquer Nexa &amp; passer en Premium</a>
-        <div style="margin-top:10px;font-size:12px;color:rgba(244,236,224,0.5)">Ouvre un message pré-rempli vers notre service commercial</div>
+        <button type="button" id="nexaUnlockBtn" data-login="${safeLogin}" onclick="requestUnlock('nexa', this)" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;border:none;cursor:pointer;background:linear-gradient(135deg,#C9A86A 0%,#B8965A 100%);color:#0D1A12;font-weight:700;font-size:15px;font-family:'Inter',sans-serif;padding:14px 30px;border-radius:10px;box-shadow:0 8px 22px rgba(184,150,90,0.35)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>Débloquer Nexa &amp; passer en Premium</button>
+        <div id="nexaUnlockHint" style="margin-top:10px;font-size:12px;color:rgba(244,236,224,0.5)">Un clic suffit — ta demande part directement à notre service.</div>
         <div style="margin-top:18px">
           <a href="https://www.contentviral.ch" style="color:rgba(244,236,224,0.6);font-size:13px;text-decoration:none">← Revenir à Iris Studio</a>
         </div>
@@ -675,6 +677,39 @@
     document.body.appendChild(ov);
   }
 
+  // === Envoi de la demande de déblocage au service (via n8n) ===
+  async function requestUnlock(module, btn) {
+    var login = btn.getAttribute('data-login') || '';
+    var hint = document.getElementById(module === 'iris' ? 'irisUnlockHint' : 'nexaUnlockHint');
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+    btn.style.cursor = 'default';
+    var original = btn.innerHTML;
+    btn.innerHTML = 'Envoi en cours…';
+    try {
+      var resp = await fetch(CRM_DEMANDE_DEBLOCAGE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: login, module: module })
+      });
+      var data = await resp.json();
+      if (data && data.success) {
+        btn.innerHTML = '✓ Demande envoyée';
+        btn.style.background = 'rgba(184,150,90,0.25)';
+        btn.style.color = '#F4ECE0';
+        if (hint) hint.textContent = 'Merci ! Notre service te recontacte rapidement pour activer ton accès.';
+      } else {
+        throw new Error('no success');
+      }
+    } catch (e) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+      btn.innerHTML = original;
+      if (hint) hint.innerHTML = 'Envoi impossible pour le moment. Écris-nous : <a href="mailto:info.najim1@gmail.com" style="color:#B8965A">info.najim1@gmail.com</a>';
+    }
+  }
+
   async function initSession() {
     // === Jeton SSO entrant (venant d'Iris) ===
     // N'est honoré que si ce site a déjà été authentifié une fois avec un vrai login.
@@ -682,6 +717,7 @@
     const ssoToken = params.get('sso');
     if (ssoToken) {
       let planBlocked = false;
+      let blockedLogin = '';
       if (localStorage.getItem('crm_real_login_done') === '1') {
         try {
           const resp = await fetch(CRM_VERIFY_SSO, {
@@ -692,6 +728,7 @@
           const data = await resp.json();
           if (data.blocked) {
             planBlocked = true;
+            blockedLogin = data.login || '';
           } else if (data.success) {
             localStorage.setItem(SESSION_KEY, JSON.stringify({
               login: data.login, role: data.role, account_id: data.account_id, nom_praticien: data.nom_praticien
@@ -702,7 +739,7 @@
       }
       window.history.replaceState({}, document.title, window.location.pathname);
       if (planBlocked) {
-        showNexaBlockedOverlay();
+        showNexaBlockedOverlay(blockedLogin);
         throw new Error('Plan blocked');
       }
     }
