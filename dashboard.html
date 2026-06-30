@@ -484,10 +484,6 @@
     </a>
   </div>
   <div class="topbar-right">
-    <div class="user-chip" onclick="window.location.href='change-password.html'" style="cursor:pointer" title="Changer mon mot de passe">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-      <span id="userName">…</span>
-    </div>
     <a class="iris-btn" onclick="goToIris()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:linear-gradient(135deg,#c084fc 0%,#9333ea 100%);border:none;border-radius:24px;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 2px 8px rgba(147,51,234,0.4);transition:filter .15s ease" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"/></svg>
       ← Iris
@@ -804,7 +800,6 @@
 
     // === Display user name ===
     document.body.style.display = '';
-    document.getElementById('userName').textContent = session.nom_praticien || session.login;
     if (session.role === 'super_admin') {
       document.getElementById('adminLink').style.display = 'flex';
     } else {
@@ -828,9 +823,10 @@
     const subEl = document.getElementById('welcomeSub');
     if (metier) {
       subEl.textContent = metier;
-      subEl.style.color = '#B8965A';
+      subEl.style.color = '#0D1A12';
+      subEl.style.fontFamily = "'Cormorant Garamond', serif";
       subEl.style.fontWeight = '600';
-      subEl.style.fontSize = '15px';
+      subEl.style.fontSize = '24px';
     }
 
     startActivityTracking();
