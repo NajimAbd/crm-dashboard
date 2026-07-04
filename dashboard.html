@@ -23,6 +23,36 @@
   }
 
   * { box-sizing: border-box; }
+
+  /* ==== FILTRES TYPE CLIENT & TEMPERATURE (v1) ==== */
+  .type-tab, .temp-tab {
+    padding: 5px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-soft);
+    background: white;
+    color: var(--text-soft);
+    transition: all .15s ease;
+    user-select: none;
+  }
+  .type-tab:hover, .temp-tab:hover { border-color: var(--gold); color: var(--gold); }
+  .type-tab.active { background: var(--gold); border-color: var(--gold); color: var(--green-deep); }
+  .temp-tab.active { background: var(--green-mid); border-color: var(--green-mid); color: var(--cream); }
+  .type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    background: rgba(184,150,90,.14);
+    color: #8A6D38;
+    border: 1px solid rgba(184,150,90,.35);
+  }
+  .vip-crown { font-size: 12px; margin-left: 4px; }
+  .temp-dot { font-size: 11px; margin-left: 6px; }
   body {
     margin: 0;
     background: var(--bg-soft);
@@ -556,6 +586,26 @@
     <div class="filter-tab" data-filter="trash" onclick="setSourceFilter('trash')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">🗑️ Corbeille (15j)</div>
   </div>
 
+  <div id="typeFilterRow" style="display:flex;align-items:center;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+    <span style="font-size:12px;font-weight:600;color:#6B6B68;letter-spacing:.4px;text-transform:uppercase;margin-right:2px">Type :</span>
+    <div class="type-tab active" data-type="all" onclick="setTypeFilter('all')">Tous</div>
+    <div class="type-tab" data-type="SW" onclick="setTypeFilter('SW')" title="Show Webinaire">SW</div>
+    <div class="type-tab" data-type="SC" onclick="setTypeFilter('SC')" title="Show Challenge">SC</div>
+    <div class="type-tab" data-type="SB" onclick="setTypeFilter('SB')" title="Show Bootcamp">SB</div>
+    <div class="type-tab" data-type="RP" onclick="setTypeFilter('RP')" title="Roqya Personne">RP</div>
+    <div class="type-tab" data-type="RM" onclick="setTypeFilter('RM')" title="Roqya Maison / Bureau">RM</div>
+    <div class="type-tab" data-type="DD" onclick="setTypeFilter('DD')" title="Diagnostic payant (DTAP)">DD</div>
+    <div class="type-tab" data-type="Fr" onclick="setTypeFilter('Fr')" title="Formation Academy">Fr</div>
+    <div class="type-tab" data-type="AA" onclick="setTypeFilter('AA')" title="Achat / location application">AA</div>
+    <div class="type-tab" data-type="AP" onclick="setTypeFilter('AP')" title="Achat produits">AP</div>
+    <span style="width:1px;height:20px;background:#E5DECF;margin:0 6px"></span>
+    <div class="temp-tab active" data-temp="all" onclick="setTempFilter('all')">Tous</div>
+    <div class="temp-tab" data-temp="Froid" onclick="setTempFilter('Froid')">❄️ Froid</div>
+    <div class="temp-tab" data-temp="Tiede" onclick="setTempFilter('Tiede')">🌤️ Tiède</div>
+    <div class="temp-tab" data-temp="Chaud" onclick="setTempFilter('Chaud')">🔥 Chaud</div>
+    <div class="temp-tab" data-temp="vip" onclick="setTempFilter('vip')" title="Tickets VIP">👑 VIP</div>
+  </div>
+
   <div id="diagnosticSendBar" style="display:none;align-items:center;gap:10px;background:#FAF3E5;border:1px solid #E5DECF;border-radius:10px;padding:10px 16px;margin-bottom:16px">
     <span id="selectedCount" style="font-size:13px;font-weight:600;color:#2C2C2A">0 lead(s) sélectionné(s)</span>
     <select id="langueDiagnostic" style="padding:7px 10px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">
@@ -893,6 +943,7 @@
     let html = '<table><thead><tr>' +
       '<th class="col-checkbox" style="width:30px"><input type="checkbox" id="selectAllChk" onclick="toggleSelectAll(this)"></th>' +
       '<th>Lead</th>' +
+      '<th>Type</th>' +
       '<th>Contact</th>' +
       '<th>Source</th>' +
       '<th>Inscription</th>' +
@@ -940,9 +991,18 @@
       );
       const statutBadge = '<span class="status-chip ' + statutInfo.cls + '" style="font-size:10px;padding:2px 8px;margin-top:4px;display:inline-block">' + statutInfo.label + '</span>';
 
+      const typeLabels = { SW:'Webinaire', SC:'Challenge', SB:'Bootcamp', RP:'Roqya Personne', RM:'Roqya Maison', DD:'Diagnostic', Fr:'Formation', AA:'Application', AP:'Produits' };
+      const typeBadge = l.type_client
+        ? '<span class="type-badge" title="' + (typeLabels[l.type_client] || '') + '">' + l.type_client + '</span>'
+        : '<span style="color:#C9C9C6">—</span>';
+      const vipCrown = (l.is_vip == 1 || l.is_vip === true) ? '<span class="vip-crown" title="Ticket VIP">👑</span>' : '';
+      const tempIcons = { Froid: '❄️', Tiede: '🌤️', Chaud: '🔥' };
+      const tempDot = tempIcons[l.statut_suivi] ? '<span class="temp-dot" title="' + l.statut_suivi + '">' + tempIcons[l.statut_suivi] + '</span>' : '';
+
       html += '<tr onclick="window.location.href=\'lead-detail.html?id=' + l.id + '\'" style="cursor:pointer">' +
         '<td class="col-checkbox" onclick="event.stopPropagation()"><input type="checkbox" class="leadChk" data-id="' + l.id + '" onclick="toggleLeadSelection(' + l.id + ', this.checked)"></td>' +
-        '<td><div class="lead-name">' + escapeHtml(fullName) + '</div>' + statutBadge + '</td>' +
+        '<td><div class="lead-name">' + escapeHtml(fullName) + vipCrown + tempDot + '</div>' + statutBadge + '</td>' +
+        '<td>' + typeBadge + '</td>' +
         '<td>' + escapeHtml(email) + (whatsapp ? '<div class="lead-meta">' + escapeHtml(whatsapp) + '</div>' : '') + '</td>' +
         '<td>' + source + '</td>' +
         '<td>' + date + '</td>' +
@@ -1092,11 +1152,32 @@
     });
     document.getElementById('searchInput').closest('.search-box').style.display = (f === 'trash') ? 'none' : '';
     document.getElementById('stats').style.display = (f === 'trash') ? 'none' : '';
+    document.getElementById('typeFilterRow').style.display = (f === 'trash') ? 'none' : 'flex';
     if (f === 'trash') {
       loadTrashLeads();
     } else {
       applyFilters();
     }
+  }
+
+  // === Filtres Type client & Temperature (v1) ===
+  let currentTypeFilter = 'all';
+  let currentTempFilter = 'all';
+
+  function setTypeFilter(t) {
+    currentTypeFilter = t;
+    document.querySelectorAll('.type-tab').forEach(el => {
+      el.classList.toggle('active', el.dataset.type === t);
+    });
+    applyFilters();
+  }
+
+  function setTempFilter(t) {
+    currentTempFilter = t;
+    document.querySelectorAll('.temp-tab').forEach(el => {
+      el.classList.toggle('active', el.dataset.temp === t);
+    });
+    applyFilters();
   }
 
   function applyFilters() {
@@ -1112,6 +1193,16 @@
         const s = (l.source || '').toLowerCase();
         return s !== 'tally' && !s.includes('ads');
       });
+    }
+
+    if (currentTypeFilter !== 'all') {
+      filtered = filtered.filter(l => l.type_client === currentTypeFilter);
+    }
+
+    if (currentTempFilter === 'vip') {
+      filtered = filtered.filter(l => l.is_vip == 1 || l.is_vip === true);
+    } else if (currentTempFilter !== 'all') {
+      filtered = filtered.filter(l => (l.statut_suivi || 'Froid') === currentTempFilter);
     }
 
     if (q) {
