@@ -995,7 +995,7 @@
       const typeBadge = l.type_client
         ? '<span class="type-badge" title="' + (typeLabels[l.type_client] || '') + '">' + l.type_client + '</span>'
         : '<span style="color:#C9C9C6">—</span>';
-      const vipCrown = (l.is_vip == 1 || l.is_vip === true) ? '<span class="vip-crown" title="Ticket VIP">👑</span>' : '';
+      const vipCrown = ((l.is_vip == 1 || l.is_vip === true) && ['SW','SC','SB'].includes(l.type_client)) ? '<span class="vip-crown" title="Ticket VIP">👑</span>' : '';
       const tempIcons = { Froid: '❄️', Tiede: '🌤️', Chaud: '🔥' };
       const tempDot = tempIcons[l.statut_suivi] ? '<span class="temp-dot" title="' + l.statut_suivi + '">' + tempIcons[l.statut_suivi] + '</span>' : '';
 
@@ -1200,7 +1200,7 @@
     }
 
     if (currentTempFilter === 'vip') {
-      filtered = filtered.filter(l => l.is_vip == 1 || l.is_vip === true);
+      filtered = filtered.filter(l => (l.is_vip == 1 || l.is_vip === true) && ['SW','SC','SB'].includes(l.type_client));
     } else if (currentTempFilter !== 'all') {
       filtered = filtered.filter(l => (l.statut_suivi || 'Froid') === currentTempFilter);
     }
