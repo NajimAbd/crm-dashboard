@@ -370,18 +370,29 @@
     // ===== HEADER =====
     html += '<div class="lead-header">';
     html += '<div>';
+    const isShowType = ['SW','SC','SB'].includes(l.type_client);
     html += '<h1 class="lead-name">' + esc(fullName)
       + (l.type_client ? ' <span class="type-badge" title="' + (typeLabels[l.type_client] || '') + '">' + esc(l.type_client) + '</span>' : '')
-      + ((l.is_vip == 1 || l.is_vip === true) ? ' <span title="Ticket VIP" style="font-size:20px">👑</span>' : '')
+      + ((isShowType && (l.is_vip == 1 || l.is_vip === true)) ? ' <span title="Ticket VIP" style="font-size:20px">👑</span>' : '')
       + (tempIcons[l.statut_suivi] ? ' <span title="' + esc(l.statut_suivi) + '" style="font-size:18px">' + tempIcons[l.statut_suivi] + '</span>' : '')
       + '</h1>';
-    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:8px 0 4px">';
-    html += '<span class="header-chip">💰 Total payé : <b>' + (parseFloat(l.montant_total_paye || 0)).toFixed(2) + ' CHF</b></span>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 6px">';
+    html += '<span class="header-chip" style="background:#F2EEE4;border-color:#B8965A"><b>💰 Total payé : ' + (parseFloat(l.montant_total_paye || 0)).toFixed(2) + ' CHF</b></span>';
     html += '<span class="header-chip">🧾 ' + (l.nombre_paiements || 0) + ' paiement(s)</span>';
     if (l.type_client) html += '<span class="header-chip">🏷️ ' + esc(typeLabels[l.type_client] || l.type_client) + '</span>';
     if (l.roqya_status && l.roqya_status !== 'none') html += '<span class="header-chip">🕌 Roqya : ' + esc(l.roqya_status === 'in_progress' ? 'en cours' : 'terminée') + '</span>';
     if (l.tally_type) html += '<span class="header-chip">📋 ' + esc(l.tally_type) + '</span>';
     html += '</div>';
+
+    // ==== Bannière obligation Diagnostic Tally (RP / RM) ====
+    const tallyObligatoire = ['RP','RM'].includes(l.type_client) || l.tally_exige == 1;
+    if (tallyObligatoire) {
+      if (l.a_rempli_diagnostic == 1) {
+        html += '<div style="margin:8px 0;padding:11px 16px;border-radius:10px;background:#EDF4ED;border:1px solid #5A8C5A;color:#3E6B3E;font-size:13px;font-weight:600">✅ Diagnostic Tally obligatoire — REMPLI' + (l.date_diagnostic ? ' le ' + fmtDate(l.date_diagnostic) : '') + '</div>';
+      } else {
+        html += '<div style="margin:8px 0;padding:11px 16px;border-radius:10px;background:#FBEFEB;border:1px solid #C4604E;color:#A33F2E;font-size:13px;font-weight:700">⚠️ DIAGNOSTIC TALLY OBLIGATOIRE pour ce client (Roqya) — pas encore rempli. Envoie-lui le lien ci-dessous. 👇</div>';
+      }
+    }
     html += '<div class="lead-contact">';
     if (l.email) html += '<span>✉️ ' + esc(l.email) + '</span>';
     if (l.whatsapp) html += '<span>📱 ' + esc(l.whatsapp) + '</span>';
