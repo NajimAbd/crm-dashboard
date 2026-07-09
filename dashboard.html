@@ -999,8 +999,14 @@
       const tempIcons = { Froid: '❄️', Tiede: '🌤️', Chaud: '🔥' };
       const tempDot = tempIcons[l.statut_suivi] ? '<span class="temp-dot" title="' + l.statut_suivi + '">' + tempIcons[l.statut_suivi] + '</span>' : '';
 
+      const eligibleTypes = ['SW', 'RP', 'RM', 'DD'];
+      const isEligible = eligibleTypes.includes(l.type_client);
+      const checkboxCell = isEligible
+        ? '<input type="checkbox" class="leadChk" data-id="' + l.id + '" onclick="toggleLeadSelection(' + l.id + ', this.checked)">'
+        : '';
+
       html += '<tr onclick="window.location.href=\'lead-detail.html?id=' + l.id + '\'" style="cursor:pointer">' +
-        '<td class="col-checkbox" onclick="event.stopPropagation()"><input type="checkbox" class="leadChk" data-id="' + l.id + '" onclick="toggleLeadSelection(' + l.id + ', this.checked)"></td>' +
+        '<td class="col-checkbox" onclick="event.stopPropagation()">' + checkboxCell + '</td>' +
         '<td><div class="lead-name">' + escapeHtml(fullName) + vipCrown + tempDot + '</div>' + statutBadge + '</td>' +
         '<td>' + typeBadge + '</td>' +
         '<td>' + escapeHtml(email) + (whatsapp ? '<div class="lead-meta">' + escapeHtml(whatsapp) + '</div>' : '') + '</td>' +
