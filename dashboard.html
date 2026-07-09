@@ -941,14 +941,13 @@
     }
 
     let html = '<table><thead><tr>' +
-      '<th class="col-checkbox" style="width:30px"><input type="checkbox" id="selectAllChk" onclick="toggleSelectAll(this)"></th>' +
       '<th>Lead</th>' +
       '<th>Type</th>' +
       '<th>Contact</th>' +
       '<th>Source</th>' +
       '<th>Inscription</th>' +
       '<th>Inscription pour</th>' +
-      '<th>Tally diagnostic</th>' +
+      '<th style="text-align:center">Test Diagnostic-Tally</th>' +
       '<th class="col-actions" style="width:44px"></th>' +
       '</tr></thead><tbody>';
 
@@ -975,9 +974,8 @@
       const date = l.date_inscription
         ? new Date(l.date_inscription.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
         : '—';
-      const tallyDone = (l.a_rempli_diagnostic == 1 || l.a_rempli_diagnostic === true)
-        ? '<span style="color:#5A8C5A;font-weight:700">✓</span>'
-        : '<span style="color:#C4604E;font-weight:700">✗</span>';
+      const isDone = (l.a_rempli_diagnostic == 1 || l.a_rempli_diagnostic === true);
+      const isExige = (l.tally_exige == 1 || l.tally_exige === true);
 
       const statutMap = {
         client: { label: 'Client', cls: 'status-buyer' },
@@ -999,21 +997,30 @@
       const tempIcons = { Froid: '❄️', Tiede: '🌤️', Chaud: '🔥' };
       const tempDot = tempIcons[l.statut_suivi] ? '<span class="temp-dot" title="' + l.statut_suivi + '">' + tempIcons[l.statut_suivi] + '</span>' : '';
 
-      const eligibleTypes = ['SW', 'RP', 'RM', 'DD'];
-      const isEligible = eligibleTypes.includes(l.type_client);
-      const checkboxCell = isEligible
-        ? '<input type="checkbox" class="leadChk" data-id="' + l.id + '" onclick="toggleLeadSelection(' + l.id + ', this.checked)">'
-        : '';
+      // Colonne unifiée "Test Diagnostic-Tally" :
+      // - Déjà rempli -> coche colorée (vert = demandé par le client, rouge = obligatoire/imposé)
+      // - Pas encore rempli, type éligible -> case à cocher pour sélection d'envoi groupé
+      const eligibleTypes = ['SW', 'SC', 'SB', 'RP', 'RM', 'DD'];
+      const isEligible = eligibleTypes.includes(l.type_client) || (l.type_client == null && isDone);
+      let diagnosticCell;
+      if (isDone) {
+        const color = isExige ? '#C4604E' : '#5A8C5A';
+        const title = isExige ? 'Diagnostic obligatoire — rempli' : 'Diagnostic demandé par le client — rempli';
+        diagnosticCell = '<span style="color:' + color + ';font-weight:700;font-size:15px" title="' + title + '">✓</span>';
+      } else if (isEligible) {
+        diagnosticCell = '<input type="checkbox" class="leadChk" data-id="' + l.id + '" onclick="toggleLeadSelection(' + l.id + ', this.checked)" title="Cocher si le client accepte le diagnostic">';
+      } else {
+        diagnosticCell = '<span style="color:#C9C9C6">—</span>';
+      }
 
       html += '<tr onclick="window.location.href=\'lead-detail.html?id=' + l.id + '\'" style="cursor:pointer">' +
-        '<td class="col-checkbox" onclick="event.stopPropagation()">' + checkboxCell + '</td>' +
         '<td><div class="lead-name">' + escapeHtml(fullName) + vipCrown + tempDot + '</div>' + statutBadge + '</td>' +
         '<td>' + typeBadge + '</td>' +
         '<td>' + escapeHtml(email) + (whatsapp ? '<div class="lead-meta">' + escapeHtml(whatsapp) + '</div>' : '') + '</td>' +
         '<td>' + source + '</td>' +
         '<td>' + date + '</td>' +
         '<td>' + inscriptionPour + '</td>' +
-        '<td style="text-align:center">' + tallyDone + '</td>' +
+        '<td style="text-align:center" onclick="event.stopPropagation()">' + diagnosticCell + '</td>' +
         '<td class="col-actions" onclick="event.stopPropagation()" style="text-align:center">' +
           '<button class="btn-icon-delete" title="Supprimer ce lead" onclick="openDeleteModal(' + l.id + ', \'' + escapeHtml(fullName) + '\')">' +
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
