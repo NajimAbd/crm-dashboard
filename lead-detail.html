@@ -328,6 +328,82 @@
     return '#9C9C9C';
   }
 
+  // Affiche joliment la Synthèse Ayrika. Si ce n'est pas du JSON valide
+  // (ancien format texte), affiche le texte tel quel comme avant.
+  function renderAyrika(raw) {
+    let a;
+    try { a = (typeof raw === 'object') ? raw : JSON.parse(raw); }
+    catch (e) {
+      return '<div class="ayrika-block" style="border-left-color:#5A8C5A"><div class="ayrika-title" style="color:#3E6B3E">✨ Synthèse Ayrika</div>' + esc(raw) + '</div>';
+    }
+
+    const statutMap = {
+      'a_valider_par_praticien': { txt: 'À valider par le praticien', bg: '#C49A4E' },
+      'hypothese_retenue': { txt: 'Hypothèse retenue', bg: '#5A8C5A' },
+      'alerte': { txt: '⚠ ALERTE — orientation professionnelle', bg: '#C4604E' }
+    };
+    const st = statutMap[a.statut] || { txt: esc(a.statut || '—'), bg: '#9C9C9C' };
+
+    let h = '<div class="ayrika-block" style="border-left-color:#5A8C5A">';
+    h += '<div class="ayrika-title" style="color:#3E6B3E">✨ Synthèse Ayrika</div>';
+
+    // Badge statut
+    h += '<div style="display:inline-block;padding:5px 12px;border-radius:20px;background:' + st.bg + ';color:#fff;font-size:12px;font-weight:600;margin-bottom:12px">' + st.txt + '</div>';
+
+    // Cas alerte : affichage minimal
+    if (a.statut === 'alerte') {
+      h += '<div style="margin-top:8px;font-size:13px;color:#A33F2E">' + esc(a.action_requise || 'Orientation immédiate vers un professionnel de santé.') + '</div></div>';
+      return h;
+    }
+
+    // Synthèse
+    if (a.synthese) {
+      h += '<div style="margin-bottom:14px;font-size:13.5px;line-height:1.6;color:#2C2C2A;background:#F7F4EE;padding:12px 14px;border-radius:8px">' + esc(a.synthese) + '</div>';
+    }
+
+    // Hypothèses en présence
+    if (Array.isArray(a.hypotheses_en_presence) && a.hypotheses_en_presence.length) {
+      h += '<div style="font-weight:600;font-size:13px;color:#3E6B3E;margin:10px 0 8px">Hypothèses en présence</div>';
+      // trie par score décroissant
+      const hyps = a.hypotheses_en_presence.slice().sort((x, y) => (y.score || 0) - (x.score || 0));
+      hyps.forEach((hyp, i) => {
+        const sc = hyp.score || 0;
+        const scColor = sc >= 70 ? '#5A8C5A' : (sc >= 55 ? '#C49A4E' : '#9C9C9C');
+        h += '<div style="margin-bottom:10px;border:1px solid #E5DECF;border-radius:8px;overflow:hidden">';
+        h += '<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:#FAF7F1">';
+        h += '<div style="min-width:38px;height:38px;border-radius:8px;background:' + scColor + ';color:#fff;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:15px">' + sc + '</div>';
+        h += '<div style="font-weight:600;font-size:13px;color:#2C2C2A">' + (i === 0 ? '★ ' : '') + esc(hyp.type || '—') + '</div>';
+        h += '</div>';
+        if (Array.isArray(hyp.arguments_cles) && hyp.arguments_cles.length) {
+          h += '<ul style="margin:0;padding:8px 12px 10px 28px;font-size:12.5px;line-height:1.5;color:#4A4A47">';
+          hyp.arguments_cles.forEach(arg => { h += '<li style="margin-bottom:3px">' + esc(arg) + '</li>'; });
+          h += '</ul>';
+        }
+        h += '</div>';
+      });
+    }
+
+    // Recommandation professionnelle
+    if (a.recommandation_professionnelle) {
+      h += '<div style="margin:10px 0;padding:8px 12px;border-radius:8px;background:#FBEFEB;border:1px solid #E0B0A5;color:#A33F2E;font-size:12.5px;font-weight:600">⚕ Recommandation : consultation professionnelle conseillée</div>';
+    }
+
+    // Convergences / divergences
+    function listBlock(title, arr, color) {
+      if (!Array.isArray(arr) || !arr.length) return '';
+      let s = '<div style="font-weight:600;font-size:12.5px;color:' + color + ';margin:10px 0 5px">' + title + '</div>';
+      s += '<ul style="margin:0;padding:0 0 0 18px;font-size:12.5px;line-height:1.5;color:#4A4A47">';
+      arr.forEach(x => { s += '<li style="margin-bottom:3px">' + esc(x) + '</li>'; });
+      s += '</ul>';
+      return s;
+    }
+    h += listBlock('✓ Éléments convergents', a.elements_convergents, '#3E6B3E');
+    h += listBlock('⟷ Éléments divergents (à clarifier)', a.elements_divergents, '#B8860B');
+
+    h += '</div>';
+    return h;
+  }
+
   async function loadLeadDetail() {
     try {
       const url = CRM_DETAIL_API + '?lead_id=' + encodeURIComponent(leadId) + '&account_id=' + encodeURIComponent(session.account_id);
@@ -442,7 +518,7 @@
         if (d.traditional_analysis) block += '<div class="ayrika-block"><div class="ayrika-title">🕌 Analyse traditionnelle (Roqya)</div>' + esc(d.traditional_analysis) + '</div>';
         if (d.psychological_analysis) block += '<div class="ayrika-block"><div class="ayrika-title">🧠 Analyse psychologique</div>' + esc(d.psychological_analysis) + '</div>';
         if (d.emotional_analysis) block += '<div class="ayrika-block"><div class="ayrika-title">💬 Langage & émotions</div>' + esc(d.emotional_analysis) + '</div>';
-        if (d.ayrika_analysis) block += '<div class="ayrika-block" style="border-left-color:#5A8C5A"><div class="ayrika-title" style="color:#3E6B3E">✨ Synthèse Ayrika</div>' + esc(d.ayrika_analysis) + '</div>';
+        if (d.ayrika_analysis) block += renderAyrika(d.ayrika_analysis);
         if (d.recommended_action || d.recommended_program) {
           block += '<div class="ayrika-block" style="background:#F2EEE4"><div class="ayrika-title">🎯 Recommandation</div>' +
             (d.recommended_action ? '<b>Action :</b> ' + esc(d.recommended_action) + '<br>' : '') +
