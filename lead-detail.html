@@ -484,12 +484,17 @@
     html += '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">';
     html += '<input type="checkbox" id="diagnosticAccepteChk" ' + (l.diagnostic_accepte == 1 ? 'checked' : '') + ' onchange="toggleDiagnosticAccepte(' + l.id + ', this.checked)"> Diagnostic accepté';
     html += '</label>';
-    html += '<div id="sendDiagnosticWrap" style="display:' + (l.diagnostic_accepte == 1 ? 'flex' : 'none') + ';align-items:center;gap:8px">';
-    html += '<select id="langueDiagDetail" style="padding:6px 9px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">';
-    html += '<option value="fr">🇫🇷 Français</option><option value="ar">🇸🇦 Arabe</option><option value="al">🇦🇱 Albanais</option><option value="de">🇩🇪 Allemand</option>';
-    html += '</select>';
-    html += '<button onclick="sendDiagnosticLink(' + l.id + ')" id="sendDiagBtnDetail" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">Envoyer le lien diagnostic</button>';
-    html += '</div>';
+    const dejaEnvoye = (l.statut_tally === 'envoye');
+    if (dejaEnvoye) {
+      html += '<span style="display:' + (l.diagnostic_accepte == 1 ? 'inline-flex' : 'none') + ';align-items:center;gap:6px;font-size:12.5px;color:#3E6B3E;background:#E9F2E9;padding:5px 10px;border-radius:6px" id="sendDiagnosticWrap">✓ Lien déjà envoyé — en attente de réponse du client</span>';
+    } else {
+      html += '<div id="sendDiagnosticWrap" style="display:' + (l.diagnostic_accepte == 1 ? 'flex' : 'none') + ';align-items:center;gap:8px">';
+      html += '<select id="langueDiagDetail" style="padding:6px 9px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">';
+      html += '<option value="fr">🇫🇷 Français</option><option value="ar">🇸🇦 Arabe</option><option value="al">🇦🇱 Albanais</option><option value="de">🇩🇪 Allemand</option>';
+      html += '</select>';
+      html += '<button onclick="sendDiagnosticLink(' + l.id + ')" id="sendDiagBtnDetail" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">Envoyer le lien diagnostic</button>';
+      html += '</div>';
+    }
     html += '</div>';
     html += '</div>';
     html += '<div>' + buyerChip + '</div>';
