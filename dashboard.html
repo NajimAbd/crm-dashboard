@@ -1002,13 +1002,14 @@
       // - Pas encore rempli, type éligible -> case à cocher pour sélection d'envoi groupé
       const eligibleTypes = ['SW', 'SC', 'SB', 'RP', 'RM', 'DD'];
       const isEligible = eligibleTypes.includes(l.type_client) || (l.type_client == null && isDone);
+      const isAccepted = (l.diagnostic_accepte == 1 || l.diagnostic_accepte === true);
       let diagnosticCell;
       if (isDone) {
         const color = isExige ? '#C4604E' : '#5A8C5A';
         const title = isExige ? 'Diagnostic obligatoire — rempli' : 'Diagnostic demandé par le client — rempli';
         diagnosticCell = '<span style="color:' + color + ';font-weight:700;font-size:15px" title="' + title + '">✓</span>';
       } else if (isEligible) {
-        diagnosticCell = '<input type="checkbox" class="leadChk" data-id="' + l.id + '" onclick="toggleLeadSelection(' + l.id + ', this.checked)" title="Cocher si le client accepte le diagnostic">';
+        diagnosticCell = '<input type="checkbox" class="leadChk" data-id="' + l.id + '" ' + (isAccepted ? 'checked' : '') + ' onclick="onDiagnosticCheckboxClick(' + l.id + ', this.checked)" title="Cocher si le client accepte le diagnostic">';
       } else {
         diagnosticCell = '<span style="color:#C9C9C6">—</span>';
       }
@@ -1039,6 +1040,21 @@
     if (checked) selectedLeadIds.add(id);
     else selectedLeadIds.delete(id);
     updateSendBar();
+  }
+
+  async function onDiagnosticCheckboxClick(id, checked) {
+    // Sélectionne immédiatement pour l'envoi groupé
+    toggleLeadSelection(id, checked);
+    // Persiste en base pour que la case soit mémorisée (survit au rechargement)
+    try {
+      await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-toggle-diagnostic-accepte', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: id, account_id: session.account_id, accepted: checked })
+      });
+    } catch (err) {
+      // silencieux — l'état visuel reste correct, la prochaine sauvegarde réussira
+    }
   }
 
   function toggleSelectAll(checkbox) {
@@ -1074,6 +1090,9 @@
       const data = await resp.json();
       if (data.success) {
         selectedLeadIds.clear();
+        btn.disabled = false;
+        btn.textContent = 'Envoyer le lien diagnostic';
+        updateSendBar();
         loadLeads();
       } else {
         alert('Erreur lors de l\'envoi. Réessayez.');
