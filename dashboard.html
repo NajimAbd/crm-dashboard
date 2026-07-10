@@ -1003,13 +1003,20 @@
       const eligibleTypes = ['SW', 'SC', 'SB', 'RP', 'RM', 'DD'];
       const isEligible = eligibleTypes.includes(l.type_client) || (l.type_client == null && isDone);
       const isAccepted = (l.diagnostic_accepte == 1 || l.diagnostic_accepte === true);
+      const isSent = (l.statut_tally === 'envoye');
       let diagnosticCell;
       if (isDone) {
         const color = isExige ? '#C4604E' : '#5A8C5A';
         const title = isExige ? 'Diagnostic obligatoire — rempli' : 'Diagnostic demandé par le client — rempli';
         diagnosticCell = '<span style="color:' + color + ';font-weight:700;font-size:15px" title="' + title + '">✓</span>';
       } else if (isEligible) {
-        diagnosticCell = '<input type="checkbox" class="leadChk" data-id="' + l.id + '" ' + (isAccepted ? 'checked' : '') + ' onclick="onDiagnosticCheckboxClick(' + l.id + ', this.checked)" title="Cocher si le client accepte le diagnostic">';
+        if (isAccepted && isSent) {
+          diagnosticCell = '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:#5A8C5A;color:#fff;font-weight:700;font-size:12px" title="Accepté et lien envoyé — en attente du client">✓</span>';
+        } else if (isAccepted && !isSent) {
+          diagnosticCell = '<input type="checkbox" class="leadChk" data-id="' + l.id + '" checked onclick="onDiagnosticCheckboxClick(' + l.id + ', this.checked)" title="Accepté, pas encore envoyé" style="accent-color:#3B6EA5">';
+        } else {
+          diagnosticCell = '<input type="checkbox" class="leadChk" data-id="' + l.id + '" onclick="onDiagnosticCheckboxClick(' + l.id + ', this.checked)" title="Cocher si le client accepte le diagnostic">';
+        }
       } else {
         diagnosticCell = '<span style="color:#C9C9C6">—</span>';
       }
