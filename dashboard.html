@@ -301,6 +301,16 @@
   .status-diagnosed { background: rgba(184, 150, 90, 0.18); color: #B8965A; }
   .status-sent { background: rgba(196, 154, 78, 0.18); color: var(--status-pending); }
   .status-hot { background: rgba(196, 96, 78, 0.18); color: #C4604E; }
+  .status-alerte {
+    background: #C4604E;
+    color: #fff;
+    font-weight: 700;
+    animation: pulse-alerte 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-alerte {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
 
   .empty-state, .loading-state {
     text-align: center;
@@ -987,7 +997,11 @@
       const statutInfo = statutMap[l.statut_global] || (
         (l.a_achete == 1 || l.a_achete === true) ? statutMap.client : statutMap.nouveau
       );
-      const statutBadge = '<span class="status-chip ' + statutInfo.cls + '" style="font-size:10px;padding:2px 8px;margin-top:4px;display:inline-block">' + statutInfo.label + '</span>';
+      let statutBadge = '<span class="status-chip ' + statutInfo.cls + '" style="font-size:10px;padding:2px 8px;margin-top:4px;display:inline-block">' + statutInfo.label + '</span>';
+      // Priorité absolue : cas d'alerte urgente (idéation suicidaire etc.) détecté par Ayrika
+      if (l.diagnostic_status === 'alerte_urgente') {
+        statutBadge = '<span class="status-chip status-alerte" style="font-size:10px;padding:2px 8px;margin-top:4px;display:inline-block" title="Cas urgent détecté — contacter le client rapidement">⚠ ALERTE URGENTE</span>';
+      }
 
       const typeLabels = { SW:'Webinaire', SC:'Challenge', SB:'Bootcamp', RP:'Roqya Personne', RM:'Roqya Maison', DD:'Diagnostic', Fr:'Formation', AA:'Application', AP:'Produits' };
       const typeBadge = l.type_client
