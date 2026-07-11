@@ -337,6 +337,29 @@
       return '<div class="ayrika-block" style="border-left-color:#5A8C5A"><div class="ayrika-title" style="color:#3E6B3E">✨ Synthèse Ayrika</div>' + esc(raw) + '</div>';
     }
 
+    // Cas alerte enregistré en base : soit statut='alerte', soit un tableau de signaux rouges (format Enregistrer Alerte)
+    const estAlerte = (a.statut === 'alerte') || Array.isArray(a) || (a && a.signaux) || (a && a[0] && a[0].signaux);
+    if (estAlerte) {
+      let signaux = [];
+      if (Array.isArray(a)) signaux = a;
+      else if (a.signaux) signaux = a.signaux;
+      else if (a.signaux_rouges_detail) signaux = a.signaux_rouges_detail;
+      let h = '<div class="ayrika-block" style="border-left-color:#C4604E;background:#FBEFEB">';
+      h += '<div class="ayrika-title" style="color:#A33F2E">⚠ Synthèse Ayrika — ALERTE</div>';
+      h += '<div style="display:inline-block;padding:5px 12px;border-radius:20px;background:#C4604E;color:#fff;font-size:12px;font-weight:700;margin-bottom:10px">⚠ ORIENTATION IMMÉDIATE VERS UN PROFESSIONNEL DE SANTÉ</div>';
+      h += '<div style="font-size:13px;color:#A33F2E;line-height:1.6">Ayrika a détecté un ou plusieurs signaux critiques nécessitant une prise en charge prioritaire. Il est recommandé de contacter cette personne rapidement, avec bienveillance, avant toute autre démarche.</div>';
+      if (signaux.length) {
+        h += '<div style="margin-top:10px;font-size:12.5px;color:#7A2E1F"><b>Signaux détectés :</b><ul style="margin:5px 0 0;padding-left:18px">';
+        signaux.forEach(function(s){
+          const items = Array.isArray(s.signaux) ? s.signaux : [s];
+          items.forEach(function(it){ h += '<li style="margin-bottom:3px">' + esc(typeof it === 'string' ? it : (it.signaux || JSON.stringify(it))) + '</li>'; });
+        });
+        h += '</ul></div>';
+      }
+      h += '</div>';
+      return h;
+    }
+
     const statutMap = {
       'a_valider_par_praticien': { txt: 'À valider par le praticien', bg: '#C49A4E' },
       'hypothese_retenue': { txt: 'Hypothèse retenue', bg: '#5A8C5A' },
@@ -350,11 +373,6 @@
     // Badge statut
     h += '<div style="display:inline-block;padding:5px 12px;border-radius:20px;background:' + st.bg + ';color:#fff;font-size:12px;font-weight:600;margin-bottom:12px">' + st.txt + '</div>';
 
-    // Cas alerte : affichage minimal
-    if (a.statut === 'alerte') {
-      h += '<div style="margin-top:8px;font-size:13px;color:#A33F2E">' + esc(a.action_requise || 'Orientation immédiate vers un professionnel de santé.') + '</div></div>';
-      return h;
-    }
 
     // Synthèse
     if (a.synthese) {
