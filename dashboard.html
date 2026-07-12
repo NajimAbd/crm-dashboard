@@ -569,10 +569,22 @@
   </div>
 
   <div class="stats" id="stats">
-    <div class="stat-card"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Leads totaux</div></div>
-    <div class="stat-card"><div class="stat-value" id="statBuyers">—</div><div class="stat-label">Clients acheteurs</div></div>
-    <div class="stat-card"><div class="stat-value" id="statRate">—</div><div class="stat-label">Taux conversion</div></div>
-    <div class="stat-card"><div class="stat-value" id="statNew">—</div><div class="stat-label">Nouveaux (7 j)</div></div>
+    <div class="stat-card" onclick="filterAndScroll('argent_dort')" style="cursor:pointer" title="Diagnostics remplis dont le résultat n'a pas encore été envoyé — recontacte-les !">
+      <div class="stat-value" id="statArgentDort" style="color:#B8965A">—</div>
+      <div class="stat-label">💰 Argent qui dort</div>
+    </div>
+    <div class="stat-card" onclick="filterAndScroll('chauds')" style="cursor:pointer" title="Leads chauds à rappeler en priorité">
+      <div class="stat-value" id="statChauds" style="color:#C4604E">—</div>
+      <div class="stat-label">🔥 Leads chauds</div>
+    </div>
+    <div class="stat-card" onclick="filterAndScroll('alertes')" style="cursor:pointer" title="Cas urgents détectés par Ayrika — à traiter en priorité">
+      <div class="stat-value" id="statAlertes" style="color:#A33F2E">—</div>
+      <div class="stat-label">⚠ Alertes urgentes</div>
+    </div>
+    <div class="stat-card" title="Diagnostics remplis / leads reçus">
+      <div class="stat-value" id="statConversion">—</div>
+      <div class="stat-label">📊 Taux diagnostic</div>
+    </div>
   </div>
 
   <div class="section-header">
@@ -922,20 +934,56 @@
 
   function renderStats(leads) {
     const total = leads.length;
-    const buyers = leads.filter(l => l.statut_global === 'client' || l.a_achete == 1 || l.a_achete === true).length;
-    const rate = total > 0 ? Math.round(buyers / total * 100) : 0;
 
-    const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-    const newLeads = leads.filter(l => {
-      if (!l.date_inscription) return false;
-      const d = new Date(l.date_inscription.replace(' ', 'T'));
-      return d.getTime() >= sevenDaysAgo;
-    }).length;
+    // 💰 ARGENT QUI DORT : ont rempli le diagnostic, résultat pas encore envoyé
+    // Ce sont les plus rentables : ils ont montré leur douleur, ils attendent ta réponse.
+    const argentDort = leads.filter(l =>
+      (l.a_rempli_diagnostic == 1 || l.a_rempli_diagnostic === true) &&
+      l.statut_global !== 'resultat_envoye' &&
+      l.statut_global !== 'client' &&
+      !(l.a_achete == 1 || l.a_achete === true)
+    ).length;
 
-    document.getElementById('statTotal').textContent = total;
-    document.getElementById('statBuyers').textContent = buyers;
-    document.getElementById('statRate').textContent = rate + '%';
-    document.getElementById('statNew').textContent = newLeads;
+    // 🔥 LEADS CHAUDS : signalés chauds, pas encore clients
+    const chauds = leads.filter(l =>
+      (l.statut_suivi === 'Chaud' || l.statut_global === 'chaud') &&
+      l.statut_global !== 'client' &&
+      !(l.a_achete == 1 || l.a_achete === true)
+    ).length;
+
+    // ⚠ ALERTES URGENTES : cas critiques détectés par Ayrika
+    const alertes = leads.filter(l => l.diagnostic_status === 'alerte_urgente').length;
+
+    // 📊 TAUX DIAGNOSTIC : combien de leads reçus ont effectivement rempli le questionnaire
+    const remplis = leads.filter(l => l.a_rempli_diagnostic == 1 || l.a_rempli_diagnostic === true).length;
+    const tauxDiag = total > 0 ? Math.round(remplis / total * 100) : 0;
+
+    document.getElementById('statArgentDort').textContent = argentDort;
+    document.getElementById('statChauds').textContent = chauds;
+    document.getElementById('statAlertes').textContent = alertes;
+    document.getElementById('statConversion').textContent = tauxDiag + '%';
+  }
+
+  // Clic sur une carte : filtre la liste sur les leads concernés
+  function filterAndScroll(type) {
+    let filtres = allLeads;
+    if (type === 'argent_dort') {
+      filtres = allLeads.filter(l =>
+        (l.a_rempli_diagnostic == 1 || l.a_rempli_diagnostic === true) &&
+        l.statut_global !== 'resultat_envoye' && l.statut_global !== 'client' &&
+        !(l.a_achete == 1 || l.a_achete === true)
+      );
+    } else if (type === 'chauds') {
+      filtres = allLeads.filter(l =>
+        (l.statut_suivi === 'Chaud' || l.statut_global === 'chaud') &&
+        l.statut_global !== 'client' && !(l.a_achete == 1 || l.a_achete === true)
+      );
+    } else if (type === 'alertes') {
+      filtres = allLeads.filter(l => l.diagnostic_status === 'alerte_urgente');
+    }
+    renderTable(filtres);
+    const el = document.getElementById('tableContainer');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function renderTable(leads) {
