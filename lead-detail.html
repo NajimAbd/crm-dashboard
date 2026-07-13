@@ -250,6 +250,48 @@
     .lead-header { padding: 20px; }
     .diag-grid { grid-template-columns: 1fr; }
   }
+
+  /* ==== Synthèse Ayrika V2 : Expertise du Terrain / Équipe Experts IA ==== */
+  .ayrika-v2-header {
+    display: flex; align-items: center; gap: 8px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-weight: 700; font-size: 14px;
+    background: var(--gold); color: var(--green-deep);
+    margin: 14px 0 10px;
+  }
+  .ayrika-v2-body {
+    font-size: 13.5px; line-height: 1.65; color: var(--text-main);
+    padding: 4px 4px 6px;
+  }
+  .ayrika-v2-subbtn {
+    display: inline-block;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 700; font-size: 12.5px;
+    background: #F2E9D2; color: #8A6D38;
+    border: 1px solid rgba(184,150,90,.4);
+    margin: 10px 8px 6px 0;
+  }
+  .ayrika-v2-subbody {
+    background: #FBF9F4;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 13px; line-height: 1.6;
+  }
+  .ayrika-v2-alert {
+    background: #FBEFEB; border: 1px solid #E0B0A5; color: #A33F2E;
+    border-radius: 8px; padding: 10px 14px; margin: 10px 0; font-size: 13px; font-weight: 600;
+  }
+
+  @media print {
+    .topbar, .back-link, button, select, input[type="checkbox"] { display: none !important; }
+    body { background: white; }
+    .section { border: none; box-shadow: none; }
+    .page { padding: 0; max-width: 100%; }
+  }
 </style>
 </head>
 <body>
@@ -328,8 +370,9 @@
     return '#9C9C9C';
   }
 
-  // Affiche joliment la Synthèse Ayrika. Si ce n'est pas du JSON valide
-  // (ancien format texte), affiche le texte tel quel comme avant.
+  // Affiche joliment la Synthèse Ayrika.
+  // Détecte automatiquement le format : V2 (expertise_terrain / equipe_experts_ia)
+  // ou ancien format (hypotheses_en_presence / 9-12 couches) pour les diagnostics déjà en base.
   function renderAyrika(raw) {
     let a;
     try { a = (typeof raw === 'object') ? raw : JSON.parse(raw); }
@@ -338,7 +381,7 @@
     }
 
     // Ancien format d'alerte pure (tableau de signaux) — compat rétro
-    if (Array.isArray(a) || (a && a.signaux && !a.hypotheses_en_presence)) {
+    if (Array.isArray(a) || (a && a.signaux && !a.hypotheses_en_presence && !a.expertise_terrain)) {
       let sig = Array.isArray(a) ? a : (a.signaux || []);
       let flat = [];
       sig.forEach(function(s){ const it = Array.isArray(s.signaux) ? s.signaux : [s]; it.forEach(function(x){ flat.push(typeof x==='string'?x:(x.signaux||'')); }); });
@@ -350,10 +393,139 @@
       return hh;
     }
 
+    if (a && a.expertise_terrain) return renderAyrikaV2(a);
+    return renderAyrikaLegacy(a);
+  }
+
+  function listBlock(title, arr, color) {
+    if (!Array.isArray(arr) || !arr.length) return '';
+    let s = '<div style="font-weight:600;font-size:12.5px;color:' + color + ';margin:10px 0 5px">' + title + '</div>';
+    s += '<ul style="margin:0;padding:0 0 0 18px;font-size:12.5px;line-height:1.5;color:#4A4A47">';
+    arr.forEach(x => { s += '<li style="margin-bottom:3px">' + esc(x) + '</li>'; });
+    s += '</ul>';
+    return s;
+  }
+
+  // ==== Nouveau format V2 : Expertise du Terrain + Équipe Experts IA (+ 3 sous-analyses) ====
+  function renderAyrikaV2(a) {
     let h = '<div class="ayrika-block" style="border-left-color:#5A8C5A">';
     h += '<div class="ayrika-title" style="color:#3E6B3E">✨ Synthèse Ayrika</div>';
 
-    // 1. ALERTES EN TÊTE (si présentes) — mais l'analyse continue en dessous
+    // Alertes en tête — l'analyse continue toujours en dessous
+    const alertes = Array.isArray(a.alertes) ? a.alertes : [];
+    if (a.a_des_alertes || alertes.length) {
+      h += '<div class="ayrika-v2-alert">⚠ ALERTES — orientation professionnelle prioritaire';
+      if (alertes.length) {
+        h += '<ul style="margin:6px 0 0;padding-left:18px;font-weight:400">';
+        alertes.forEach(al => { h += '<li style="margin-bottom:2px">' + esc(al) + '</li>'; });
+        h += '</ul>';
+      }
+      h += '</div>';
+    }
+
+    // ---- 1. Expertise du Terrain ----
+    const terrain = a.expertise_terrain || {};
+    h += '<div class="ayrika-v2-header">🕌 Expertise du Terrain</div>';
+    h += '<div class="ayrika-v2-body">';
+    if (terrain.resume) h += '<div style="margin-bottom:10px">' + esc(terrain.resume) + '</div>';
+    if (Array.isArray(terrain.signes_identifies) && terrain.signes_identifies.length) {
+      h += '<div style="font-weight:600;font-size:12.5px;color:#8A6D38;margin:8px 0 5px">Signes identifiés</div>';
+      h += '<ul style="margin:0;padding-left:18px">';
+      terrain.signes_identifies.forEach(s => {
+        h += '<li style="margin-bottom:4px"><b>' + esc(s.signe || '') + '</b>' +
+             (s.correspondance_grille ? ' — correspondance ' + esc(s.correspondance_grille) : '') +
+             (s.explication ? '<br><span style="color:#6B6B68">' + esc(s.explication) + '</span>' : '') + '</li>';
+      });
+      h += '</ul>';
+    }
+    h += listBlock('Éléments clés', terrain.elements_cles, '#8A6D38');
+    h += '</div>';
+
+    // ---- 2. Équipe Experts IA ----
+    const equipe = a.equipe_experts_ia || {};
+    const synth = equipe.synthese || {};
+    h += '<div class="ayrika-v2-header">🧠 Équipe Experts IA</div>';
+    h += '<div class="ayrika-v2-body">';
+    if (synth.synthese) h += '<div style="margin-bottom:10px">' + esc(synth.synthese) + '</div>';
+    h += listBlock('✓ Éléments convergents', synth.elements_convergents, '#3E6B3E');
+    h += listBlock('⟷ Éléments divergents (à clarifier)', synth.elements_divergents, '#B8860B');
+
+    // Détail des 7 experts (repliable)
+    if (Array.isArray(equipe.experts) && equipe.experts.length) {
+      h += '<details style="margin-top:10px"><summary style="cursor:pointer;font-weight:600;font-size:12.5px;color:#8A6D38">Voir le détail des 7 experts</summary>';
+      equipe.experts.forEach(ex => {
+        h += '<div style="margin:8px 0;padding:8px 10px;background:#FAF7F1;border-radius:6px">';
+        h += '<div style="font-weight:600;font-size:12.5px;color:#2C2C2A">' + esc(ex.expert || '—') + '</div>';
+        if (ex.resume) h += '<div style="font-size:12.5px;color:#4A4A47;margin-top:3px">' + esc(ex.resume) + '</div>';
+        h += '</div>';
+      });
+      h += '</details>';
+    }
+    h += '</div>';
+
+    h += '<hr style="border:none;border-top:1px solid var(--border-soft);margin:14px 0">';
+
+    // ---- 3 sous-boutons : Douleurs / Besoin Ardon / Mots ----
+    const uid = 'ayrika_' + Math.random().toString(36).slice(2, 9);
+
+    // A. Douleurs Identifiées
+    const douleurs = a.douleurs_identifiees || {};
+    h += '<span class="ayrika-v2-subbtn" onclick="var e=document.getElementById(\'' + uid + '_douleurs\'); e.style.display = e.style.display===\'none\'?\'block\':\'none\';">💥 Douleurs identifiées</span>';
+    h += '<div id="' + uid + '_douleurs" class="ayrika-v2-subbody" style="display:none">';
+    if (douleurs.synthese) h += '<div style="margin-bottom:8px">' + esc(douleurs.synthese) + '</div>';
+    if (Array.isArray(douleurs.douleurs) && douleurs.douleurs.length) {
+      douleurs.douleurs.forEach(d => {
+        h += '<div style="margin-bottom:10px;padding:8px 10px;background:#F7F1E6;border-radius:6px">';
+        h += '<div style="font-weight:600;color:#8A5A00">' + esc(d.douleur || '') + '</div>';
+        if (d.classification_maslow) h += '<div style="margin-top:3px"><b>Maslow :</b> ' + esc(d.classification_maslow) + '</div>';
+        if (d.classification_autre_ecole) h += '<div><b>Autre école :</b> ' + esc(d.classification_autre_ecole) + '</div>';
+        if (d.propagation_possible) h += '<div><b>Propagation possible :</b> ' + esc(d.propagation_possible) + '</div>';
+        if (d.evolution_si_non_traite) h += '<div><b>Évolution si non traité :</b> ' + esc(d.evolution_si_non_traite) + '</div>';
+        h += '</div>';
+      });
+    }
+    h += '</div>';
+
+    // B. Besoin Ardon
+    const ardon = a.besoin_ardon || {};
+    h += '<span class="ayrika-v2-subbtn" onclick="var e=document.getElementById(\'' + uid + '_ardon\'); e.style.display = e.style.display===\'none\'?\'block\':\'none\';">🎯 Besoin Ardon (recherche par lead)</span>';
+    h += '<div id="' + uid + '_ardon" class="ayrika-v2-subbody" style="display:none">';
+    if (ardon.besoin_principal) h += '<div style="margin-bottom:6px"><b>Besoin principal :</b> ' + esc(ardon.besoin_principal) + '</div>';
+    h += listBlock('Besoins secondaires', ardon.besoins_secondaires, '#8A6D38');
+    if (ardon.transformation_recherchee) h += '<div style="margin:6px 0"><b>Transformation recherchée :</b> ' + esc(ardon.transformation_recherchee) + '</div>';
+    if (ardon.message_qui_resonnerait) h += '<div style="margin:6px 0"><b>Message qui résonnerait :</b> ' + esc(ardon.message_qui_resonnerait) + '</div>';
+    if (Array.isArray(ardon.tableau_analyse) && ardon.tableau_analyse.length) {
+      h += '<table style="width:100%;border-collapse:collapse;margin-top:8px;font-size:12px">';
+      h += '<tr style="text-align:left;color:#8A6D38"><th style="padding:4px">Élément</th><th style="padding:4px">Observation</th><th style="padding:4px">Besoin potentiel</th><th style="padding:4px">Confiance</th></tr>';
+      ardon.tableau_analyse.forEach(row => {
+        h += '<tr style="border-top:1px solid var(--border-soft)"><td style="padding:4px">' + esc(row.element_analyse) + '</td><td style="padding:4px">' + esc(row.observation_discours) + '</td><td style="padding:4px">' + esc(row.besoin_potentiel) + '</td><td style="padding:4px">' + esc(row.niveau_confiance) + '%</td></tr>';
+      });
+      h += '</table>';
+    }
+    h += listBlock('Points à approfondir', ardon.points_a_approfondir, '#8A6D38');
+    h += '</div>';
+
+    // C. Identification des Mots
+    const mots = a.identification_mots || {};
+    h += '<span class="ayrika-v2-subbtn" onclick="var e=document.getElementById(\'' + uid + '_mots\'); e.style.display = e.style.display===\'none\'?\'block\':\'none\';">💬 Identification des mots</span>';
+    h += '<div id="' + uid + '_mots" class="ayrika-v2-subbody" style="display:none">';
+    if (Array.isArray(mots.mots_phrases_cles) && mots.mots_phrases_cles.length) {
+      mots.mots_phrases_cles.forEach(m => {
+        h += '<div style="margin-bottom:8px"><b>« ' + esc(m.mot_ou_phrase) + ' »</b><br><span style="color:#6B6B68">' + esc(m.pourquoi_ca_resonne) + '</span></div>';
+      });
+    }
+    if (mots.message_type_suggere) h += '<div style="margin-top:8px;padding:8px 10px;background:#F7F1E6;border-radius:6px"><b>Message suggéré :</b> ' + esc(mots.message_type_suggere) + '</div>';
+    h += '</div>';
+
+    h += '</div>';
+    return h;
+  }
+
+  // ==== Ancien format (hypotheses_en_presence / 9-12 couches) — conservé pour les diagnostics déjà en base ====
+  function renderAyrikaLegacy(a) {
+    let h = '<div class="ayrika-block" style="border-left-color:#5A8C5A">';
+    h += '<div class="ayrika-title" style="color:#3E6B3E">✨ Synthèse Ayrika</div>';
+
     const alertes = Array.isArray(a.alertes) ? a.alertes : [];
     if (a.a_des_alertes || alertes.length) {
       h += '<div style="background:#FBEFEB;border:1px solid #E0B0A5;border-radius:8px;padding:10px 12px;margin-bottom:14px">';
@@ -366,7 +538,6 @@
       h += '</div>';
     }
 
-    // 2. Badge statut
     const statutMap = {
       'a_valider_par_praticien': { txt: 'À valider par le praticien', bg: '#C49A4E' },
       'hypothese_retenue': { txt: 'Hypothèse retenue', bg: '#5A8C5A' }
@@ -374,17 +545,12 @@
     const st = statutMap[a.statut] || { txt: esc(a.statut || '—'), bg: '#9C9C9C' };
     h += '<div style="display:inline-block;padding:5px 12px;border-radius:20px;background:' + st.bg + ';color:#fff;font-size:12px;font-weight:600;margin-bottom:12px">' + st.txt + '</div>';
 
-
-
-    // Synthèse
     if (a.synthese) {
       h += '<div style="margin-bottom:14px;font-size:13.5px;line-height:1.6;color:#2C2C2A;background:#F7F4EE;padding:12px 14px;border-radius:8px">' + esc(a.synthese) + '</div>';
     }
 
-    // Hypothèses en présence
     if (Array.isArray(a.hypotheses_en_presence) && a.hypotheses_en_presence.length) {
       h += '<div style="font-weight:600;font-size:13px;color:#3E6B3E;margin:10px 0 8px">Hypothèses en présence</div>';
-      // trie par score décroissant
       const hyps = a.hypotheses_en_presence.slice().sort((x, y) => (y.score || 0) - (x.score || 0));
       hyps.forEach((hyp, i) => {
         const sc = hyp.score || 0;
@@ -403,22 +569,10 @@
       });
     }
 
-    // Recommandation professionnelle
     if (a.recommandation_professionnelle) {
       h += '<div style="margin:10px 0;padding:8px 12px;border-radius:8px;background:#FBEFEB;border:1px solid #E0B0A5;color:#A33F2E;font-size:12.5px;font-weight:600">⚕ Recommandation : consultation professionnelle conseillée</div>';
     }
 
-    // Convergences / divergences
-    function listBlock(title, arr, color) {
-      if (!Array.isArray(arr) || !arr.length) return '';
-      let s = '<div style="font-weight:600;font-size:12.5px;color:' + color + ';margin:10px 0 5px">' + title + '</div>';
-      s += '<ul style="margin:0;padding:0 0 0 18px;font-size:12.5px;line-height:1.5;color:#4A4A47">';
-      arr.forEach(x => { s += '<li style="margin-bottom:3px">' + esc(x) + '</li>'; });
-      s += '</ul>';
-      return s;
-    }
-
-    // Douleurs et causes profondes (le plus précieux pour le praticien) — encadré doré
     if ((Array.isArray(a.douleurs) && a.douleurs.length) || (Array.isArray(a.causes_profondes) && a.causes_profondes.length)) {
       h += '<div style="background:#F7F1E6;border:1px solid #E5D5B5;border-radius:8px;padding:11px 13px;margin:12px 0">';
       h += listBlock('💥 Douleurs identifiées', a.douleurs, '#8A5A00');
@@ -537,7 +691,10 @@
     }
     html += '</div>';
     html += '</div>';
-    html += '<div>' + buyerChip + '</div>';
+    html += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">';
+    html += buyerChip;
+    html += '<button onclick="window.print()" style="padding:8px 18px;border:none;border-radius:6px;background:var(--gold);color:var(--green-deep);font-weight:700;font-size:13px;cursor:pointer">🖨️ Imprimer</button>';
+    html += '</div>';
     html += '</div>';
 
     // ===== DIAGNOSTIC =====
@@ -550,8 +707,7 @@
             '<div class="score-badge" style="background:' + color + '">' + esc(d.score_gravite) + '</div>' +
             '<div><div class="diag-label">Score de gravité (sur 10)</div></div>' +
           '</div>' +
-          '<div class="diag-item"><div class="diag-label">Problème principal</div><div class="diag-value">' + esc(d.probleme_principal || d.main_problem || '—') + '</div></div>' +
-          '<div class="diag-item"><div class="diag-label">Symptômes</div><div class="diag-value">' + esc(d.symptomes || d.symptoms_selected || '—') + '</div></div>' +
+          '<div class="diag-item" style="grid-column:1 / -1"><div class="diag-label">Symptômes</div><div class="diag-value">' + esc(d.symptomes || d.symptoms_selected || '—') + '</div></div>' +
           '<div class="diag-item" style="grid-column:1 / -1"><div class="diag-label">Attente du client</div><div class="diag-value">' + esc(d.attente_client || d.desired_result || '—') + '</div></div>' +
           ((d.urgency_level || d.motivation_score) ?
             '<div class="diag-item"><div class="diag-label">Urgence</div><div class="diag-value">' + esc(d.urgency_level || '—') + ' / 10</div></div>' +
