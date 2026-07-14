@@ -373,11 +373,38 @@
   // Affiche joliment la Synthèse Ayrika.
   // Détecte automatiquement le format : V2 (expertise_terrain / equipe_experts_ia)
   // ou ancien format (hypotheses_en_presence / 9-12 couches) pour les diagnostics déjà en base.
+  // Nettoie les caractères de contrôle non échappés qui cassent JSON.parse
+  // (Ayrika peut produire des \n, \t ou caractères invisibles à l'intérieur des chaînes JSON)
+  function sanitizeJsonString(s) {
+    let out = '';
+    let inString = false;
+    let escaped = false;
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+      const code = s.charCodeAt(i);
+      if (escaped) { out += ch; escaped = false; continue; }
+      if (ch === '\\') { out += ch; escaped = true; continue; }
+      if (ch === '"') { inString = !inString; out += ch; continue; }
+      if (inString && code < 0x20) {
+        if (code === 10) out += '\\n';
+        else if (code === 13) out += '\\r';
+        else if (code === 9)  out += '\\t';
+        // autres caractères de contrôle : supprimés
+        continue;
+      }
+      out += ch;
+    }
+    return out;
+  }
+
   function renderAyrika(raw) {
     let a;
     try { a = (typeof raw === 'object') ? raw : JSON.parse(raw); }
-    catch (e) {
-      return '<div class="ayrika-block" style="border-left-color:#5A8C5A"><div class="ayrika-title" style="color:#3E6B3E">✨ Synthèse Ayrika</div>' + esc(raw) + '</div>';
+    catch (e1) {
+      try { a = JSON.parse(sanitizeJsonString(String(raw))); }
+      catch (e2) {
+        return '<div class="ayrika-block" style="border-left-color:#5A8C5A"><div class="ayrika-title" style="color:#3E6B3E">✨ Synthèse Ayrika</div>' + esc(raw) + '</div>';
+      }
     }
 
     // Ancien format d'alerte pure (tableau de signaux) — compat rétro
