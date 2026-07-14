@@ -702,16 +702,15 @@
       html += '<input type="checkbox" id="diagnosticAccepteChk" ' + (l.diagnostic_accepte == 1 ? 'checked' : '') + ' onchange="toggleDiagnosticAccepte(' + l.id + ', this.checked)"> Diagnostic accepté';
       html += '</label>';
       const dejaEnvoye = (l.statut_tally === 'envoye');
+      html += '<div id="sendDiagnosticWrap" style="display:' + (l.diagnostic_accepte == 1 ? 'flex' : 'none') + ';align-items:center;gap:8px;flex-wrap:wrap">';
       if (dejaEnvoye) {
-        html += '<span style="display:' + (l.diagnostic_accepte == 1 ? 'inline-flex' : 'none') + ';align-items:center;gap:6px;font-size:12.5px;color:#3E6B3E;background:#E9F2E9;padding:5px 10px;border-radius:6px" id="sendDiagnosticWrap">✓ Lien déjà envoyé — en attente de réponse du client</span>';
-      } else {
-        html += '<div id="sendDiagnosticWrap" style="display:' + (l.diagnostic_accepte == 1 ? 'flex' : 'none') + ';align-items:center;gap:8px">';
-        html += '<select id="langueDiagDetail" style="padding:6px 9px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">';
-        html += '<option value="fr">🇫🇷 Français</option><option value="ar">🇸🇦 Arabe</option><option value="al">🇦🇱 Albanais</option><option value="de">🇩🇪 Allemand</option>';
-        html += '</select>';
-        html += '<button onclick="sendDiagnosticLink(' + l.id + ')" id="sendDiagBtnDetail" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">Envoyer le lien diagnostic</button>';
-        html += '</div>';
+        html += '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#3E6B3E;background:#E9F2E9;padding:5px 10px;border-radius:6px">\u2713 Lien d\u00e9j\u00e0 envoy\u00e9 \u2014 en attente de r\u00e9ponse du client</span>';
       }
+      html += '<select id="langueDiagDetail" style="padding:6px 9px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">';
+      html += '<option value="fr">\ud83c\uddeb\ud83c\uddf7 Fran\u00e7ais</option><option value="ar">\ud83c\uddf8\ud83c\udde6 Arabe</option><option value="al">\ud83c\udde6\ud83c\uddf1 Albanais</option><option value="de">\ud83c\udde9\ud83c\uddea Allemand</option>';
+      html += '</select>';
+      html += '<button onclick="sendDiagnosticLink(' + l.id + ')" id="sendDiagBtnDetail" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">' + (dejaEnvoye ? 'Renvoyer le lien' : 'Envoyer le lien diagnostic') + '</button>';
+      html += '</div>';
     }
     html += '</div>';
     html += '</div>';
@@ -838,11 +837,13 @@
       });
       const data = await resp.json();
       if (data.success) {
-        btn.textContent = 'Lien envoyé ✓';
+        btn.textContent = 'Lien envoy\u00e9 \u2713';
+        // On r\u00e9active le bouton : le client peut avoir perdu l'email et demander un renvoi
+        setTimeout(() => { btn.disabled = false; btn.textContent = 'Renvoyer le lien'; }, 2500);
       } else {
         btn.disabled = false;
         btn.textContent = 'Envoyer le lien diagnostic';
-        alert('Erreur lors de l\'envoi. Réessayez.');
+        alert('Erreur lors de l\'envoi. R\u00e9essayez.');
       }
     } catch (err) {
       btn.disabled = false;
