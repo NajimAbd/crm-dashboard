@@ -411,6 +411,23 @@
     return out;
   }
 
+  // Décode les séquences \uXXXX qui seraient restées littérales dans les chaînes
+  // (cas de double-échappement à l'écriture : "marié" -> "u00e9" à l'écran).
+  function decodeUnicodeEscapes(v) {
+    if (typeof v === 'string') {
+      return v.replace(/\\?u([0-9a-fA-F]{4})/g, function(m, hex) {
+        return String.fromCharCode(parseInt(hex, 16));
+      });
+    }
+    if (Array.isArray(v)) return v.map(decodeUnicodeEscapes);
+    if (v && typeof v === 'object') {
+      const o = {};
+      for (const k in v) o[k] = decodeUnicodeEscapes(v[k]);
+      return o;
+    }
+    return v;
+  }
+
   function renderAyrika(raw) {
     let a;
     try { a = (typeof raw === 'object') ? raw : JSON.parse(raw); }
@@ -420,6 +437,7 @@
         return '<div class="ayrika-block" style="border-left-color:#5A8C5A"><div class="ayrika-title" style="color:#3E6B3E">✨ Synthèse Ayrika</div>' + esc(raw) + '</div>';
       }
     }
+    a = decodeUnicodeEscapes(a);
 
     // Ancien format d'alerte pure (tableau de signaux) — compat rétro
     if (Array.isArray(a) || (a && a.signaux && !a.hypotheses_en_presence && !a.expertise_terrain)) {
