@@ -223,12 +223,6 @@
   .timeline-amount { font-weight: 700; color: var(--status-paid); font-size: 14px; }
 
   /* Analyse IA */
-  .ai-block { background: #FBF9F4; border-radius: 10px; padding: 16px 18px; margin-bottom: 12px; }
-  .ai-block:last-child { margin-bottom: 0; }
-  .ai-row { display: flex; gap: 10px; margin-bottom: 8px; font-size: 13px; }
-  .ai-row:last-child { margin-bottom: 0; }
-  .ai-tag-good { color: var(--status-paid); }
-  .ai-tag-bad { color: var(--status-error); }
 
   .loading-state {
     text-align: center;
@@ -305,6 +299,7 @@
     body { background: white; }
     .section { border: none; box-shadow: none; }
     .page { padding: 0; max-width: 100%; }
+    body.printing-ventes .page > *:not(#ventes-section) { display: none !important; }
   }
 </style>
 </head>
@@ -376,12 +371,6 @@
   function fmtDateTime(d) {
     if (!d) return '—';
     return new Date(d.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
-  }
-
-  function scoreColor(score) {
-    if (score >= 80) return '#5A8C5A';
-    if (score >= 50) return '#C49A4E';
-    return '#9C9C9C';
   }
 
   // Affiche joliment la Synthèse Ayrika.
@@ -751,24 +740,6 @@
       return block;
     });
 
-    // ===== ANALYSE IA =====
-    html += sectionWrap('🤖', 'Analyse IA', data.analyses.length, () => {
-      if (data.analyses.length === 0) return '<div class="empty-row">Aucune analyse IA pour ce lead.</div>';
-      // Déduplique par id pour éviter les doublons de données de test
-      const seen = new Set();
-      const unique = data.analyses.filter(a => { if (seen.has(a.id)) return false; seen.add(a.id); return true; });
-      return unique.map(a => {
-        const color = scoreColor(a.score_chaud);
-        return '<div class="ai-block">' +
-          '<div class="ai-row"><div class="score-badge" style="background:' + color + '">' + esc(a.score_chaud) + '</div><div><strong>Score chaud</strong><br><span style="color:var(--text-soft);font-size:12px">' + fmtDate(a.date_analyse) + '</span></div></div>' +
-          '<div class="ai-row">' + esc(a.analyse_psycho || '—') + '</div>' +
-          (a.points_douleur ? '<div class="ai-row"><strong>Points de douleur :</strong>&nbsp;' + esc(a.points_douleur) + '</div>' : '') +
-          (a.mots_a_utiliser ? '<div class="ai-row ai-tag-good">✓ Mots à utiliser : ' + esc(a.mots_a_utiliser) + '</div>' : '') +
-          (a.mots_a_eviter ? '<div class="ai-row ai-tag-bad">✗ Mots à éviter : ' + esc(a.mots_a_eviter) + '</div>' : '') +
-        '</div>';
-      }).join('');
-    });
-
     // ===== VENTES =====
     html += sectionWrap('💰', 'Ventes', data.sales.length, () => {
       if (data.sales.length === 0) return '<div class="empty-row">Aucune vente enregistrée.</div>';
@@ -782,6 +753,11 @@
           '<div class="timeline-amount">' + parseFloat(s.montant).toFixed(2) + ' CHF</div>' +
         '</div>'
       ).join('');
+    }, {
+      id: 'ventes-section',
+      headerExtra: data.sales.length > 0
+        ? '<button onclick="printVentes()" style="margin-left:auto;padding:5px 12px;border:none;border-radius:6px;background:var(--gold);color:var(--green-deep);font-weight:700;font-size:12px;cursor:pointer">🖨️ Imprimer les paiements</button>'
+        : ''
     });
 
     // ===== RENDEZ-VOUS =====
@@ -896,16 +872,24 @@
     }
   }
 
-  function sectionWrap(emoji, title, count, bodyFn) {
-    return '<div class="section">' +
+  function sectionWrap(emoji, title, count, bodyFn, opts) {
+    opts = opts || {};
+    return '<div class="section"' + (opts.id ? ' id="' + opts.id + '"' : '') + '>' +
       '<div class="section-head">' +
         '<span style="font-size:18px">' + emoji + '</span>' +
         '<h2 class="section-title">' + title + '</h2>' +
         '<span class="section-count">' + count + '</span>' +
+        (opts.headerExtra || '') +
       '</div>' +
       '<div class="section-body">' + bodyFn() + '</div>' +
     '</div>';
   }
+
+  function printVentes() {
+    document.body.classList.add('printing-ventes');
+    window.print();
+  }
+  window.addEventListener('afterprint', () => document.body.classList.remove('printing-ventes'));
 </script>
 
 </body>
