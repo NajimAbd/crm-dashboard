@@ -546,6 +546,14 @@
       const typeNoms = { taureau: '\ud83d\udc02 Le Taureau', perroquet: '\ud83e\udd9c Le Perroquet', brebis: '\ud83d\udc11 La Brebis', hibou: '\ud83e\udd89 Le Hibou' };
       h += proseBlock('Type de client : ' + (typeNoms[String(mots.type_client).toLowerCase()] || mots.type_client) + (mots.pourquoi_ce_type ? ' \u2014 ' + mots.pourquoi_ce_type : ''));
     }
+    if (Array.isArray(mots.besoins) && mots.besoins.length) {
+      mots.besoins.forEach((b, i) => {
+        h += proseBlock('Besoin ' + (i + 1) + ' : ' + (b.besoin || '') + (b.pourquoi ? ' \u2014 ' + b.pourquoi : ''));
+        if (Array.isArray(b.phrases_a_utiliser) && b.phrases_a_utiliser.length) {
+          h += proseBlock('Les mots \u00e0 utiliser avec lui : \u00ab ' + b.phrases_a_utiliser.join(' \u00bb \u2014 \u00ab ') + ' \u00bb');
+        }
+      });
+    }
     if (Array.isArray(mots.mots_remedes) && mots.mots_remedes.length) {
       h += proseBlock('Mots-rem\u00e8des : ' + mots.mots_remedes.join(' \u2022 '));
     }
