@@ -478,51 +478,60 @@
     h += proseBlock(terrain.resume);
     h += '</div>';
 
-    // ---- 2. Equipe Experts IA ----
-    const equipe = a.equipe_experts_ia || {};
-    const synth = equipe.synthese || {};
-    h += '<div class="ayrika-v2-header">\u00c9quipe Experts IA</div>';
-    h += '<div class="ayrika-v2-body">';
-    h += proseBlock(synth.synthese);
-    h += '</div>';
+    // ---- 2. Psychologue Expert (V3) — ou ancienne Équipe Experts IA (V2 en base) ----
+    if (a.psychologue_expert) {
+      const psy = a.psychologue_expert || {};
+      h += '<div class="ayrika-v2-header">Psychologue Expert</div>';
+      h += '<div class="ayrika-v2-body">';
+      h += proseBlock(psy.resume);
+      if (Array.isArray(psy.questions_a_poser) && psy.questions_a_poser.length) {
+        h += proseBlock('Questions \u00e0 poser en s\u00e9ance : ' + psy.questions_a_poser.join(' \u2014 '));
+      }
+      h += '</div>';
+    } else {
+      const equipe = a.equipe_experts_ia || {};
+      const synth = equipe.synthese || {};
+      h += '<div class="ayrika-v2-header">\u00c9quipe Experts IA</div>';
+      h += '<div class="ayrika-v2-body">';
+      h += proseBlock(synth.synthese);
+      h += '</div>';
+    }
 
     h += '<hr class="ayrika-v2-sep">';
 
-    // ---- Sous-analyse A : Douleurs identifiees ----
+    // ---- Sous-analyse A : Douleurs identifiees (ancien format V2 uniquement) ----
     const douleurs = a.douleurs_identifiees || {};
-    h += '<div class="ayrika-v2-subhead">\ud83d\udca5 Douleurs identifi\u00e9es</div>';
-    h += '<div class="ayrika-v2-subbody">';
-    h += proseBlock(douleurs.synthese);
-    if (Array.isArray(douleurs.douleurs) && douleurs.douleurs.length) {
-      douleurs.douleurs.forEach(d => {
-        let txt = [];
-        if (d.douleur) txt.push(d.douleur);
-        if (d.classification_maslow) txt.push('Selon Maslow : ' + d.classification_maslow + '.');
-        if (d.classification_autre_ecole) txt.push('Selon une autre \u00e9cole : ' + d.classification_autre_ecole + '.');
-        if (d.propagation_possible) txt.push('Propagation possible : ' + d.propagation_possible + '.');
-        if (d.evolution_si_non_traite) txt.push('\u00c9volution si la cause n\'est pas trait\u00e9e : ' + d.evolution_si_non_traite + '.');
-        h += proseBlock(txt.join(' '));
-      });
+    if (douleurs.synthese || (Array.isArray(douleurs.douleurs) && douleurs.douleurs.length)) {
+      h += '<div class="ayrika-v2-subhead">\ud83d\udca5 Douleurs identifi\u00e9es</div>';
+      h += '<div class="ayrika-v2-subbody">';
+      h += proseBlock(douleurs.synthese);
+      if (Array.isArray(douleurs.douleurs) && douleurs.douleurs.length) {
+        douleurs.douleurs.forEach(d => {
+          let txt = [];
+          if (d.douleur) txt.push(d.douleur);
+          if (d.classification_maslow) txt.push('Selon Maslow : ' + d.classification_maslow + '.');
+          if (d.classification_autre_ecole) txt.push('Selon une autre \u00e9cole : ' + d.classification_autre_ecole + '.');
+          if (d.propagation_possible) txt.push('Propagation possible : ' + d.propagation_possible + '.');
+          if (d.evolution_si_non_traite) txt.push('\u00c9volution si la cause n\'est pas trait\u00e9e : ' + d.evolution_si_non_traite + '.');
+          h += proseBlock(txt.join(' '));
+        });
+      }
+      h += '</div>';
     }
-    h += '</div>';
 
-    // ---- Sous-analyse B : Besoin Ardon ----
+    // ---- Sous-analyse B : Besoin Ardent ----
     const ardon = a.besoin_ardon || {};
-    h += '<div class="ayrika-v2-subhead">Besoin Ardon rechercher par lead</div>';
+    h += '<div class="ayrika-v2-subhead">Besoin Ardent recherch\u00e9 par le lead</div>';
     h += '<div class="ayrika-v2-subbody">';
+    if (ardon.besoin_ardent) h += proseBlock(ardon.besoin_ardent);
     if (ardon.besoin_principal) h += proseBlock('Besoin principal : ' + ardon.besoin_principal);
     if (Array.isArray(ardon.besoins_secondaires) && ardon.besoins_secondaires.length) {
       h += proseBlock('Besoins secondaires : ' + ardon.besoins_secondaires.join(' ; ') + '.');
     }
     if (ardon.transformation_recherchee) h += proseBlock('Transformation recherch\u00e9e : ' + ardon.transformation_recherchee);
     if (ardon.message_qui_resonnerait) h += proseBlock('Message qui r\u00e9sonnerait : ' + ardon.message_qui_resonnerait);
-    if (Array.isArray(ardon.tableau_analyse) && ardon.tableau_analyse.length) {
-      h += '<table class="ayrika-v2-table">';
-      h += '<tr><th>\u00c9l\u00e9ment analys\u00e9</th><th>Observation dans le discours</th><th>Besoin potentiel</th><th>Confiance</th></tr>';
-      ardon.tableau_analyse.forEach(row => {
-        h += '<tr><td>' + esc(row.element_analyse) + '</td><td>' + esc(row.observation_discours) + '</td><td>' + esc(row.besoin_potentiel) + '</td><td>' + esc(row.niveau_confiance) + '%</td></tr>';
-      });
-      h += '</table>';
+    if (Array.isArray(ardon.questions_a_approfondir) && ardon.questions_a_approfondir.length) {
+      h += proseBlock('Questions \u00e0 approfondir : ' + ardon.questions_a_approfondir.join(' \u2014 '));
     }
     if (Array.isArray(ardon.points_a_approfondir) && ardon.points_a_approfondir.length) {
       h += proseBlock('Points \u00e0 approfondir lors de l\'entretien : ' + ardon.points_a_approfondir.join(' ') );
@@ -535,7 +544,7 @@
     h += '<div class="ayrika-v2-subbody">';
     if (Array.isArray(mots.mots_phrases_cles) && mots.mots_phrases_cles.length) {
       mots.mots_phrases_cles.forEach(m => {
-        h += proseBlock('\u00ab ' + (m.mot_ou_phrase || '') + ' \u00bb \u2014 ' + (m.pourquoi_ca_resonne || ''));
+        h += proseBlock('\u00ab ' + (m.mot_ou_phrase || '') + ' \u00bb \u2014 ' + (m.pourquoi || m.pourquoi_ca_resonne || ''));
       });
     }
     h += proseBlock(mots.message_type_suggere);
