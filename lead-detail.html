@@ -542,6 +542,13 @@
     const mots = a.identification_mots || {};
     h += '<div class="ayrika-v2-subhead">Identification des Mots d\'Impact li\u00e9s aux Besoins du Client</div>';
     h += '<div class="ayrika-v2-subbody">';
+    if (mots.type_client) {
+      const typeNoms = { taureau: '\ud83d\udc02 Le Taureau', perroquet: '\ud83e\udd9c Le Perroquet', brebis: '\ud83d\udc11 La Brebis', hibou: '\ud83e\udd89 Le Hibou' };
+      h += proseBlock('Type de client : ' + (typeNoms[String(mots.type_client).toLowerCase()] || mots.type_client) + (mots.pourquoi_ce_type ? ' \u2014 ' + mots.pourquoi_ce_type : ''));
+    }
+    if (Array.isArray(mots.mots_remedes) && mots.mots_remedes.length) {
+      h += proseBlock('Mots-rem\u00e8des : ' + mots.mots_remedes.join(' \u2022 '));
+    }
     if (Array.isArray(mots.mots_phrases_cles) && mots.mots_phrases_cles.length) {
       mots.mots_phrases_cles.forEach(m => {
         h += proseBlock('\u00ab ' + (m.mot_ou_phrase || '') + ' \u00bb \u2014 ' + (m.pourquoi || m.pourquoi_ca_resonne || ''));
