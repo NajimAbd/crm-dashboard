@@ -1,291 +1,1439 @@
-{
-  "name": "CRM Vider Corbeille",
-  "nodes": [
-    {
-      "parameters": {
-        "httpMethod": "POST",
-        "path": "crm-empty-trash",
-        "responseMode": "responseNode",
-        "options": {
-          "allowedOrigins": "*"
-        }
-      },
-      "name": "Webhook - Vider Corbeille",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 2,
-      "position": [
-        0,
-        0
-      ],
-      "id": "vider-webhook-001"
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "DELETE FROM DIAGNOSTICS WHERE lead_id IN (SELECT id FROM (SELECT id FROM LEADS WHERE deleted_at IS NOT NULL AND account_id = {{ $('Webhook - Vider Corbeille').first().json.body.account_id }}) tmp)",
-        "options": {}
-      },
-      "name": "Vider DIAGNOSTICS",
-      "type": "n8n-nodes-base.mySql",
-      "typeVersion": 2.4,
-      "position": [
-        300,
-        0
-      ],
-      "id": "vider-diagnostics",
-      "alwaysOutputData": true,
-      "onError": "continueRegularOutput",
-      "credentials": {
-        "mySql": {
-          "id": "IaVpXULWACrIBLE0",
-          "name": "MySQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "DELETE FROM ANALYSES_IA WHERE lead_id IN (SELECT id FROM (SELECT id FROM LEADS WHERE deleted_at IS NOT NULL AND account_id = {{ $('Webhook - Vider Corbeille').first().json.body.account_id }}) tmp)",
-        "options": {}
-      },
-      "name": "Vider ANALYSES_IA",
-      "type": "n8n-nodes-base.mySql",
-      "typeVersion": 2.4,
-      "position": [
-        600,
-        0
-      ],
-      "id": "vider-analyses_ia",
-      "alwaysOutputData": true,
-      "onError": "continueRegularOutput",
-      "credentials": {
-        "mySql": {
-          "id": "IaVpXULWACrIBLE0",
-          "name": "MySQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "DELETE FROM PAIEMENTS WHERE lead_id IN (SELECT id FROM (SELECT id FROM LEADS WHERE deleted_at IS NOT NULL AND account_id = {{ $('Webhook - Vider Corbeille').first().json.body.account_id }}) tmp)",
-        "options": {}
-      },
-      "name": "Vider PAIEMENTS",
-      "type": "n8n-nodes-base.mySql",
-      "typeVersion": 2.4,
-      "position": [
-        900,
-        0
-      ],
-      "id": "vider-paiements",
-      "alwaysOutputData": true,
-      "onError": "continueRegularOutput",
-      "credentials": {
-        "mySql": {
-          "id": "IaVpXULWACrIBLE0",
-          "name": "MySQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "DELETE FROM APPOINTMENTS WHERE lead_id IN (SELECT id FROM (SELECT id FROM LEADS WHERE deleted_at IS NOT NULL AND account_id = {{ $('Webhook - Vider Corbeille').first().json.body.account_id }}) tmp)",
-        "options": {}
-      },
-      "name": "Vider APPOINTMENTS",
-      "type": "n8n-nodes-base.mySql",
-      "typeVersion": 2.4,
-      "position": [
-        1200,
-        0
-      ],
-      "id": "vider-appointments",
-      "alwaysOutputData": true,
-      "onError": "continueRegularOutput",
-      "credentials": {
-        "mySql": {
-          "id": "IaVpXULWACrIBLE0",
-          "name": "MySQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "DELETE FROM CALLS WHERE lead_id IN (SELECT id FROM (SELECT id FROM LEADS WHERE deleted_at IS NOT NULL AND account_id = {{ $('Webhook - Vider Corbeille').first().json.body.account_id }}) tmp)",
-        "options": {}
-      },
-      "name": "Vider CALLS",
-      "type": "n8n-nodes-base.mySql",
-      "typeVersion": 2.4,
-      "position": [
-        1500,
-        0
-      ],
-      "id": "vider-calls",
-      "alwaysOutputData": true,
-      "onError": "continueRegularOutput",
-      "credentials": {
-        "mySql": {
-          "id": "IaVpXULWACrIBLE0",
-          "name": "MySQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "DELETE FROM EMAIL_LOGS WHERE lead_id IN (SELECT id FROM (SELECT id FROM LEADS WHERE deleted_at IS NOT NULL AND account_id = {{ $('Webhook - Vider Corbeille').first().json.body.account_id }}) tmp)",
-        "options": {}
-      },
-      "name": "Vider EMAIL_LOGS",
-      "type": "n8n-nodes-base.mySql",
-      "typeVersion": 2.4,
-      "position": [
-        1800,
-        0
-      ],
-      "id": "vider-email_logs",
-      "alwaysOutputData": true,
-      "onError": "continueRegularOutput",
-      "credentials": {
-        "mySql": {
-          "id": "IaVpXULWACrIBLE0",
-          "name": "MySQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "executeQuery",
-        "query": "DELETE FROM LEADS WHERE deleted_at IS NOT NULL AND account_id = {{ $('Webhook - Vider Corbeille').first().json.body.account_id }}",
-        "options": {}
-      },
-      "name": "Vider LEADS",
-      "type": "n8n-nodes-base.mySql",
-      "typeVersion": 2.4,
-      "position": [
-        2100,
-        0
-      ],
-      "id": "vider-leads",
-      "alwaysOutputData": true,
-      "credentials": {
-        "mySql": {
-          "id": "IaVpXULWACrIBLE0",
-          "name": "MySQL account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "respondWith": "text",
-        "responseBody": "={{ JSON.stringify({success: true, message: 'Corbeille vidée'}) }}",
-        "options": {}
-      },
-      "name": "Répondre - Corbeille vidée",
-      "type": "n8n-nodes-base.respondToWebhook",
-      "typeVersion": 1.1,
-      "position": [
-        2400,
-        0
-      ],
-      "id": "vider-respond"
-    }
-  ],
-  "connections": {
-    "Webhook - Vider Corbeille": {
-      "main": [
-        [
-          {
-            "node": "Vider DIAGNOSTICS",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Vider DIAGNOSTICS": {
-      "main": [
-        [
-          {
-            "node": "Vider ANALYSES_IA",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Vider ANALYSES_IA": {
-      "main": [
-        [
-          {
-            "node": "Vider PAIEMENTS",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Vider PAIEMENTS": {
-      "main": [
-        [
-          {
-            "node": "Vider APPOINTMENTS",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Vider APPOINTMENTS": {
-      "main": [
-        [
-          {
-            "node": "Vider CALLS",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Vider CALLS": {
-      "main": [
-        [
-          {
-            "node": "Vider EMAIL_LOGS",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Vider EMAIL_LOGS": {
-      "main": [
-        [
-          {
-            "node": "Vider LEADS",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Vider LEADS": {
-      "main": [
-        [
-          {
-            "node": "Répondre - Corbeille vidée",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    }
-  },
-  "settings": {
-    "executionOrder": "v1"
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexa — Tableau de bord</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&family=Cairo:wght@400;600&display=swap');
+
+  :root {
+    --green-deep: #0D1A12;
+    --green-mid: #16261A;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --bg-soft: #FAF7F1;
+    --text-main: #2C2C2A;
+    --text-soft: #6B6B68;
+    --border-soft: #E5DECF;
+    --status-paid: #5A8C5A;
+    --status-pending: #C49A4E;
+    --status-cold: #9C9C9C;
   }
-}
+
+  * { box-sizing: border-box; }
+
+  /* ==== FILTRES TYPE CLIENT & TEMPERATURE (v1) ==== */
+  .type-tab, .temp-tab {
+    padding: 5px 12px;
+    border-radius: 16px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid var(--border-soft);
+    background: white;
+    color: var(--text-soft);
+    transition: all .15s ease;
+    user-select: none;
+  }
+  .type-tab:hover, .temp-tab:hover { border-color: var(--gold); color: var(--gold); }
+  .type-tab.active { background: var(--gold); border-color: var(--gold); color: var(--green-deep); }
+  .temp-tab.active { background: var(--green-mid); border-color: var(--green-mid); color: var(--cream); }
+  .type-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .5px;
+    background: rgba(184,150,90,.14);
+    color: #8A6D38;
+    border: 1px solid rgba(184,150,90,.35);
+  }
+  .vip-crown { font-size: 12px; margin-left: 4px; }
+  .temp-dot { font-size: 11px; margin-left: 6px; }
+  body {
+    margin: 0;
+    background: var(--bg-soft);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    min-height: 100vh;
+  }
+
+  /* ==== TOP BAR ==== */
+  .topbar {
+    background: var(--green-deep);
+    color: var(--cream);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--gold);
+  }
+
+  .topbar-left { flex: 1; display: flex; align-items: center; gap: 14px; }
+
+  .topbar-center { display: flex; align-items: center; gap: 20px; }
+
+  .brand-mark {
+    width: 34px; height: 34px;
+  }
+
+  .brand-text {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 22px;
+    color: var(--cream);
+    letter-spacing: 0.01em;
+  }
+
+  .brand-sub {
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    margin-top: 2px;
+  }
+
+  .topbar-right { flex: 1; display: flex; align-items: center; justify-content: flex-end; gap: 14px; }
+
+  .user-chip {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 7px 14px;
+    background: rgba(184, 150, 90, 0.12);
+    border: 1px solid rgba(184, 150, 90, 0.3);
+    border-radius: 24px;
+    font-size: 13px;
+    color: var(--cream);
+  }
+
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: rgba(224, 104, 90, 0.12);
+    border: 1px solid rgba(224, 104, 90, 0.35);
+    border-radius: 24px;
+    color: #E0685A;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+    transition: background 0.2s;
+  }
+  .logout-btn:hover { background: rgba(224, 104, 90, 0.22); }
+
+  /* ==== PAGE LAYOUT ==== */
+  .page {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 36px 32px 60px;
+  }
+
+  .page-header {
+    margin-bottom: 32px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 38px;
+    margin: 0 0 6px;
+    color: var(--green-deep);
+  }
+  .subtitle {
+    color: var(--text-soft);
+    font-size: 14px;
+  }
+
+  /* ==== STATS ==== */
+  .stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 0.5fr;
+    gap: 16px;
+    margin-bottom: 36px;
+  }
+  .stat-card {
+    background: white;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 22px 22px 20px;
+    position: relative;
+    overflow: hidden;
+  }
+  .stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0;
+    width: 3px; height: 100%;
+    background: var(--gold);
+  }
+  .stat-value {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 36px;
+    font-weight: 600;
+    color: var(--green-deep);
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+  .stat-label {
+    font-size: 11px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    font-weight: 600;
+  }
+
+  /* ==== LEADS TABLE ==== */
+  .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--green-deep);
+    margin: 0;
+  }
+  .search-box {
+    position: relative;
+  }
+  .search-box input {
+    padding: 9px 14px 9px 36px;
+    border: 1px solid var(--border-soft);
+    border-radius: 8px;
+    font-size: 13px;
+    background: white;
+    outline: none;
+    width: 240px;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.2s;
+  }
+  .search-box input:focus { border-color: var(--gold); }
+  .search-box svg {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-soft);
+  }
+
+  .leads-table-wrap {
+    background: white;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  thead {
+    background: #F4EFE3;
+  }
+  th {
+    text-align: left;
+    padding: 12px 18px;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-soft);
+    font-weight: 600;
+    border-bottom: 1px solid var(--border-soft);
+  }
+  td {
+    padding: 14px 18px;
+    border-bottom: 1px solid var(--border-soft);
+    font-size: 13px;
+  }
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr { transition: background 0.15s; }
+  tbody tr:hover { background: #FBF9F4; }
+
+  .lead-name {
+    font-weight: 600;
+    color: var(--green-deep);
+  }
+  .lead-meta {
+    font-size: 12px;
+    color: var(--text-soft);
+    margin-top: 2px;
+  }
+  .source-chip {
+    display: inline-block;
+    padding: 2px 9px;
+    border-radius: 12px;
+    font-size: 11px;
+    background: rgba(184, 150, 90, 0.12);
+    color: #8B6E3A;
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+  .source-chip.tally {
+    background: rgba(74, 123, 166, 0.18);
+    color: #3E6A93;
+    font-weight: 700;
+  }
+  .status-chip {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  .status-buyer { background: rgba(90, 140, 90, 0.15); color: var(--status-paid); }
+  .status-prospect { background: rgba(156, 156, 156, 0.15); color: var(--status-cold); }
+  .status-diagnosed { background: rgba(184, 150, 90, 0.18); color: #B8965A; }
+  .status-sent { background: rgba(196, 154, 78, 0.18); color: var(--status-pending); }
+  .status-hot { background: rgba(196, 96, 78, 0.18); color: #C4604E; }
+  .status-alerte {
+    background: #C4604E;
+    color: #fff;
+    font-weight: 700;
+    animation: pulse-alerte 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse-alerte {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.55; }
+  }
+
+  .empty-state, .loading-state {
+    text-align: center;
+    padding: 80px 24px;
+    color: var(--text-soft);
+  }
+  .empty-state svg, .loading-state svg {
+    margin-bottom: 16px;
+    opacity: 0.4;
+  }
+
+  /* spinner */
+  .spinner {
+    width: 28px; height: 28px;
+    border: 2.5px solid var(--border-soft);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--green-deep); color: var(--cream);
+    padding: 12px 20px; border-radius: 10px; font-size: 13px;
+    border-left: 3px solid var(--gold);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    opacity: 0; transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 1100;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .btn-icon-delete {
+    border: none;
+    background: transparent;
+    color: #C4604E;
+    opacity: 0.55;
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s;
+  }
+  .btn-icon-delete:hover { opacity: 1; background: rgba(196, 96, 78, 0.12); }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(13, 26, 18, 0.55);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.show { display: flex; }
+  .modal-box {
+    background: white;
+    border-radius: 14px;
+    padding: 28px 26px;
+    max-width: 380px;
+    width: 90%;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.25);
+  }
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--green-deep);
+    margin-bottom: 10px;
+  }
+  .modal-text {
+    font-size: 14px;
+    color: var(--text-soft);
+    line-height: 1.55;
+    margin-bottom: 22px;
+  }
+  .modal-actions { display: flex; justify-content: flex-end; gap: 10px; }
+  .btn-modal-cancel {
+    padding: 9px 18px; border-radius: 8px; border: 1px solid var(--border-soft);
+    background: white; color: var(--text-main); font-weight: 500; font-size: 13px;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .btn-modal-cancel:hover { background: #FAF7F1; }
+  .btn-modal-confirm {
+    padding: 9px 18px; border-radius: 8px; border: none;
+    background: #C4604E; color: white; font-weight: 600; font-size: 13px;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .btn-modal-confirm:hover { background: #B0533F; }
+  .btn-modal-confirm:disabled { opacity: 0.6; cursor: wait; }
+
+  @media (max-width: 720px) {
+    .topbar { padding: 14px 16px; }
+    .page { padding: 24px 16px 50px; }
+    .search-box input { width: 180px; }
+    h1 { font-size: 28px; }
+    table { font-size: 12px; }
+    th, td { padding: 10px 12px; }
+  }
+
+  .btn-restore {
+    padding: 6px 12px;
+    border-radius: 6px;
+    border: 1px solid var(--gold);
+    background: rgba(184, 150, 90, 0.1);
+    color: #8B6E3A;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+  .btn-restore:hover { background: rgba(184, 150, 90, 0.2); }
+  .jours-restants { font-size: 12px; color: var(--text-soft); }
+  .jours-restants.urgent { color: #C4604E; font-weight: 600; }
+
+  /* ==== EN-TÊTE / PIED D'IMPRESSION (invisibles à l'écran) ==== */
+  .print-header, .print-footer { display: none; }
+
+  @media print {
+    @page { margin: 14mm 12mm; }
+
+    /* Masquer tout ce qui n'a pas sa place sur papier */
+    .topbar, .filter-tab, .search-box, button, .modal-overlay, .toast,
+    .page-header, #diagnosticSendBar,
+    .col-checkbox, .col-actions { display: none !important; }
+
+    body { background: white; }
+    .page { padding: 0; max-width: 100%; }
+
+    /* En-tête de marque imprimé */
+    .print-header {
+      display: block;
+      margin-bottom: 16px;
+      padding-bottom: 12px;
+      border-bottom: 2px solid var(--gold);
+    }
+    .print-header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .print-logo { width: 30px; height: 30px; flex-shrink: 0; }
+    .print-brand { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 19px; color: var(--green-deep); line-height: 1.1; }
+    .print-brand span { display: block; font-family: 'Inter', sans-serif; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-top: 2px; }
+    .print-title { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 25px; color: var(--green-deep); margin-bottom: 8px; }
+    .print-meta-row { display: flex; flex-wrap: wrap; gap: 4px 18px; font-size: 12px; color: var(--text-main); }
+    .print-meta-row b { color: var(--green-deep); }
+    .print-meta-sub { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
+
+    /* Stats restylées pour le papier (gardées car utiles a une vue d'ensemble) */
+    .stats { display: grid !important; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 22px; }
+    .stat-card { border: 1px solid #D8D2C2; box-shadow: none; padding: 12px 14px 10px; break-inside: avoid; }
+    .stat-card::before { background: var(--gold); }
+    .stat-value { font-size: 24px; }
+
+    .section-title { display: none; }
+    .leads-table-wrap { border: none; }
+    table { font-size: 11px; }
+    th, td { padding: 7px 9px; }
+    thead { background: #F4EFE3 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    tbody tr { break-inside: avoid; }
+    .status-chip, .source-chip { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+    .print-footer {
+      display: block;
+      margin-top: 22px;
+      padding-top: 10px;
+      border-top: 1px solid #D8D2C2;
+      font-size: 10px;
+      color: var(--text-soft);
+      text-align: center;
+    }
+  }
+</style>
+</head>
+<body style="display:none">
+
+<div class="topbar">
+  <div class="topbar-left">
+    <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="50" rx="46" ry="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+      <circle cx="50" cy="50" r="6" fill="#B8965A"/>
+      <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-text">Nexa</div>
+      <div class="brand-sub">Platform CRM</div>
+    </div>
+  </div>
+  <div class="topbar-center">
+    <a class="nav-link" onclick="window.location.href='kpi.html'" style="display:flex;align-items:center;gap:6px;color:#D4AF7A;text-decoration:none;font-size:13px;cursor:pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+      KPI
+    </a>
+    <a class="nav-link" onclick="window.location.href='webinars.html'" style="display:flex;align-items:center;gap:6px;color:#D4AF7A;text-decoration:none;font-size:13px;cursor:pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg>
+      Webinaires
+    </a>
+    <a class="nav-link" onclick="window.location.href='calendar.html'" style="display:flex;align-items:center;gap:6px;color:#D4AF7A;text-decoration:none;font-size:13px;cursor:pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Calendrier
+    </a>
+    <a class="nav-link" onclick="window.location.href='sales.html'" style="display:flex;align-items:center;gap:6px;color:#D4AF7A;text-decoration:none;font-size:13px;cursor:pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+      Mes ventes
+    </a>
+    <a id="adminLink" href="admin.html" style="display:none;align-items:center;gap:6px;color:#D4AF7A;text-decoration:none;font-size:13px;cursor:pointer">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+      Panel Admin
+    </a>
+  </div>
+  <div class="topbar-right">
+    <a class="iris-btn" onclick="goToIris()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;background:linear-gradient(135deg,#c084fc 0%,#9333ea 100%);border:none;border-radius:24px;color:#ffffff;text-decoration:none;font-size:13px;font-weight:700;cursor:pointer;font-family:'Inter',sans-serif;box-shadow:0 2px 8px rgba(147,51,234,0.4);transition:filter .15s ease" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='brightness(1)'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9L12 3z"/></svg>
+      ← Iris
+    </a>
+    <button class="logout-btn" onclick="logout()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Déconnexion
+    </button>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="print-header">
+    <div class="print-header-top">
+      <svg class="print-logo" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="50" cy="50" rx="46" ry="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+        <circle cx="50" cy="50" r="6" fill="#B8965A"/>
+        <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
+      </svg>
+      <div class="print-brand">Nexa<span>Platform CRM</span></div>
+    </div>
+    <div class="print-title">Vue d'ensemble de l'activité</div>
+    <div class="print-meta-row">
+      <span>Praticien : <b id="printPraticien">—</b></span>
+      <span>Filtre : <b id="printFilterLabel">Tous les leads</b></span>
+      <span><b id="printCount">0</b> lead(s) affiché(s)</span>
+    </div>
+    <div class="print-meta-sub">Généré le <span id="printDate">—</span></div>
+  </div>
+
+  <div class="page-header" style="display:flex;align-items:flex-start;gap:18px">
+    <!-- LOGO ENTREPRENEUR (placeholder) — à remplacer par <img id="entrepriseLogo" src="URL_DU_LOGO_REEL" style="width:56px;height:56px;border-radius:50%;object-fit:cover;flex-shrink:0"> -->
+    <div id="entrepriseLogo" style="width:56px;height:56px;border-radius:50%;background:var(--gold);display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:4px">
+      <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0D1A12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9h0M9 13h0M9 17h0"/></svg>
+    </div>
+    <div>
+      <div class="eyebrow">Tableau de bord</div>
+      <h1 id="welcome">Bonjour</h1>
+      <div class="subtitle" id="welcomeEmail" style="font-size:12px;color:var(--text-soft);margin:-2px 0 6px"></div>
+      <div class="subtitle" id="welcomeSub">Vue d'ensemble de votre activité</div>
+    </div>
+  </div>
+
+  <div class="stats" id="stats">
+    <div class="stat-card" onclick="filterAndScroll('argent_dort')" style="cursor:pointer" title="Diagnostics remplis dont le résultat n'a pas encore été envoyé — recontacte-les !">
+      <div class="stat-value" id="statArgentDort" style="color:#B8965A">—</div>
+      <div class="stat-label">💰 Argent qui dort</div>
+    </div>
+    <div class="stat-card" onclick="filterAndScroll('chauds')" style="cursor:pointer" title="Leads chauds à rappeler en priorité">
+      <div class="stat-value" id="statChauds" style="color:#C4604E">—</div>
+      <div class="stat-label">🔥 Leads chauds</div>
+    </div>
+    <div class="stat-card" onclick="filterAndScroll('alertes')" style="cursor:pointer" title="Cas urgents détectés par Ayrika — à traiter en priorité">
+      <div class="stat-value" id="statAlertes" style="color:#A33F2E">—</div>
+      <div class="stat-label">⚠ Alertes urgentes</div>
+    </div>
+    <div class="stat-card" title="Diagnostics remplis / leads reçus">
+      <div class="stat-value" id="statConversion">—</div>
+      <div class="stat-label">📊 Taux diagnostic</div>
+    </div>
+  </div>
+
+  <div class="section-header">
+    <h2 class="section-title">Mes leads</h2>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
+    <div class="filter-tab active" data-filter="all" onclick="setSourceFilter('all')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #0D1A12;background:#0D1A12;color:#F4ECE0">Tous</div>
+    <div class="filter-tab" id="filterTally" data-filter="tally" onclick="setSourceFilter('tally')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">📋 Tally</div>
+    <div class="filter-tab" data-filter="social" onclick="setSourceFilter('social')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">📱 Réseaux sociaux</div>
+    <div class="filter-tab" data-filter="ads" onclick="setSourceFilter('ads')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">🎯 Ads</div>
+    <div style="flex:1 1 auto"></div>
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="searchInput" placeholder="Rechercher un lead…">
+    </div>
+    <button onclick="window.print()" style="display:flex;align-items:center;gap:6px;padding:7px 14px;border-radius:20px;border:1px solid var(--border-soft);background:white;color:var(--text-main);font-size:13px;font-weight:500;cursor:pointer;font-family:'Inter',sans-serif">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+      Imprimer
+    </button>
+    <div class="filter-tab" data-filter="trash" onclick="setSourceFilter('trash')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">🗑️ Corbeille (30j)</div>
+  </div>
+
+  <div id="typeFilterRow" style="display:flex;align-items:center;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+    <span style="font-size:12px;font-weight:600;color:#6B6B68;letter-spacing:.4px;text-transform:uppercase;margin-right:2px">Type :</span>
+    <div class="type-tab active" data-type="all" onclick="setTypeFilter('all')">Tous</div>
+    <div class="type-tab" data-type="SW" onclick="setTypeFilter('SW')" title="Show Webinaire">SW</div>
+    <div class="type-tab" data-type="SC" onclick="setTypeFilter('SC')" title="Show Challenge">SC</div>
+    <div class="type-tab" data-type="SB" onclick="setTypeFilter('SB')" title="Show Bootcamp">SB</div>
+    <div class="type-tab" data-type="RP" onclick="setTypeFilter('RP')" title="Roqya Personne">RP</div>
+    <div class="type-tab" data-type="RM" onclick="setTypeFilter('RM')" title="Roqya Maison / Bureau">RM</div>
+    <div class="type-tab" data-type="DD" onclick="setTypeFilter('DD')" title="Diagnostic payant (DTAP)">DD</div>
+    <div class="type-tab" data-type="Fr" onclick="setTypeFilter('Fr')" title="Formation Academy">Fr</div>
+    <div class="type-tab" data-type="AA" onclick="setTypeFilter('AA')" title="Achat / location application">AA</div>
+    <div class="type-tab" data-type="AP" onclick="setTypeFilter('AP')" title="Achat produits">AP</div>
+    <span style="width:1px;height:20px;background:#E5DECF;margin:0 6px"></span>
+    <div class="temp-tab active" data-temp="all" onclick="setTempFilter('all')">Tous</div>
+    <div class="temp-tab" data-temp="Froid" onclick="setTempFilter('Froid')">❄️ Froid</div>
+    <div class="temp-tab" data-temp="Tiede" onclick="setTempFilter('Tiede')">🌤️ Tiède</div>
+    <div class="temp-tab" data-temp="Chaud" onclick="setTempFilter('Chaud')">🔥 Chaud</div>
+    <div class="temp-tab" data-temp="vip" onclick="setTempFilter('vip')" title="Tickets VIP">👑 VIP</div>
+  </div>
+
+  <div id="diagnosticSendBar" style="display:none;align-items:center;gap:10px;background:#FAF3E5;border:1px solid #E5DECF;border-radius:10px;padding:10px 16px;margin-bottom:16px">
+    <span id="selectedCount" style="font-size:13px;font-weight:600;color:#2C2C2A">0 lead(s) sélectionné(s)</span>
+    <select id="langueDiagnostic" style="padding:7px 10px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">
+      <option value="fr">🇫🇷 Français</option>
+      <option value="ar">🇸🇦 Arabe</option>
+      <option value="al">🇦🇱 Albanais</option>
+      <option value="de">🇩🇪 Allemand</option>
+    </select>
+    <button onclick="sendDiagnosticLinks()" id="sendDiagnosticBtn" style="padding:8px 16px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">Envoyer le lien diagnostic</button>
+  </div>
+
+  <div class="leads-table-wrap" id="tableContainer">
+    <div class="loading-state">
+      <div class="spinner"></div>
+      <div>Chargement des leads…</div>
+    </div>
+  </div>
+
+  <div class="print-footer">Nexa Platform CRM — Document généré automatiquement, à usage interne</div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="modal-overlay" id="deleteModalOverlay">
+  <div class="modal-box">
+    <div class="modal-title">Déplacer ce lead vers la corbeille ?</div>
+    <div class="modal-text">
+      <strong id="deleteModalName" style="color:var(--text-main)"></strong> sera retiré de ta liste de leads. Il restera récupérable dans la corbeille pendant 30 jours, puis sera supprimé définitivement (avec ses diagnostics, ventes, rendez-vous et appels) si tu ne le restaures pas.
+    </div>
+    <div class="modal-actions">
+      <button class="btn-modal-cancel" onclick="closeDeleteModal()">Annuler</button>
+      <button class="btn-modal-confirm" id="confirmDeleteBtn" onclick="executeDeleteLead()">Déplacer vers la corbeille</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const CRM_API_LEADS = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-leads';
+  const CRM_CREATE_SSO = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-create-sso-token';
+  const CRM_VERIFY_SSO = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-verify-sso-token';
+  const CRM_DEMANDE_DEBLOCAGE = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-demande-deblocage';
+  const CRM_DELETE_LEAD = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-delete-lead';
+  const CRM_RESTORE_LEAD = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-restore-lead';
+  const CRM_TRASH_LEADS = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-trash-leads';
+  const SESSION_KEY = 'crm_session_user';
+  const SESSION_EXPIRY = 'crm_session_expiry';
+  const SESSION_DURATION = 60 * 60 * 1000; // 1 heure d'inactivité
+
+  // === Auth check ===
+  function getSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+      if (!raw || Date.now() >= expiry) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+  function logout() {
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(SESSION_EXPIRY);
+    window.location.href = 'index.html';
+  }
+
+  // Remet le compteur d'inactivité à zéro (prolonge la session de 1h)
+  function refreshSession() {
+    if (localStorage.getItem(SESSION_KEY)) {
+      localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+    }
+  }
+
+  async function goToIris() {
+    const session = getSession();
+    if (!session) return;
+    try {
+      const resp = await fetch(CRM_CREATE_SSO, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: session.login })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        window.open('https://www.contentviral.ch/?sso=' + encodeURIComponent(data.token), '_blank');
+        return;
+      }
+    } catch (e) {}
+    window.open('https://www.contentviral.ch', '_blank');
+  }
+
+  let allLeads = [];
+  let session;
+
+  // === Écran de blocage : plan sans accès Nexa (ex. Production) ===
+  function showNexaBlockedOverlay(loginRef, nomRef) {
+    var safeLogin = String(loginRef || '').replace(/"/g, '');
+    var safeNom = String(nomRef || '').replace(/"/g, '');
+    document.body.style.display = '';
+    const ov = document.createElement('div');
+    ov.setAttribute('dir', 'ltr');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(120% 120% at 50% 0%,#13251a 0%,#0D1A12 60%,#070f0a 100%);font-family:\'Inter\',sans-serif;overflow:auto';
+    ov.innerHTML = `
+      <div style="max-width:520px;width:100%;text-align:center;background:rgba(255,255,255,0.03);border:1px solid rgba(184,150,90,0.28);border-radius:20px;padding:44px 38px;box-shadow:0 30px 80px rgba(0,0,0,0.5)">
+        <div style="width:64px;height:64px;margin:0 auto 22px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(184,150,90,0.12);border:1px solid rgba(184,150,90,0.4)">
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#B8965A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        </div>
+        <div style="font-family:'Cormorant Garamond',serif;font-size:30px;font-weight:600;color:#F4ECE0;line-height:1.2;margin-bottom:6px">Le module Nexa n'est pas<br>encore activé sur ton compte</div>
+        <div style="font-size:11px;letter-spacing:0.18em;text-transform:uppercase;color:#B8965A;font-weight:600;margin-bottom:22px">Réservé à la formule Premium</div>
+        <p style="font-size:15px;line-height:1.7;color:rgba(244,236,224,0.82);margin:0 0 14px">Ton offre actuelle te donne accès à <strong style="color:#F4ECE0">Iris Studio</strong>, ton atelier de création de contenu.</p>
+        <p style="font-size:15px;line-height:1.7;color:rgba(244,236,224,0.82);margin:0 0 14px"><strong style="color:#B8965A">Nexa</strong>, c'est ton centre de pilotage commercial. Tous tes leads, tes clients, tes ventes et tes rendez-vous réunis au même endroit — pour ne plus jamais perdre un prospect et transformer chaque contact en client.</p>
+        <p style="font-size:15px;line-height:1.7;color:rgba(244,236,224,0.82);margin:0 0 28px">Les entrepreneurs qui activent Nexa arrêtent de gérer leur activité de mémoire… et commencent à la piloter avec des chiffres clairs.</p>
+        <div id="nexaUnlockZone">
+          <button type="button" id="nexaUnlockBtn" data-login="${safeLogin}" data-nom="${safeNom}" onclick="previewUnlock('nexa', this)" style="display:inline-flex;align-items:center;justify-content:center;gap:9px;border:none;cursor:pointer;background:linear-gradient(135deg,#C9A86A 0%,#B8965A 100%);color:#0D1A12;font-weight:700;font-size:15px;font-family:'Inter',sans-serif;padding:14px 30px;border-radius:10px;box-shadow:0 8px 22px rgba(184,150,90,0.35)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 5L2 7"/></svg>Débloquer Nexa &amp; passer en Premium</button>
+          <div id="nexaUnlockHint" style="margin-top:10px;font-size:12px;color:rgba(244,236,224,0.5)">Tu pourras vérifier ta demande avant l'envoi.</div>
+        </div>
+        <div style="margin-top:18px">
+          <a href="https://www.contentviral.ch" style="color:rgba(244,236,224,0.6);font-size:13px;text-decoration:none">← Revenir à Iris Studio</a>
+        </div>
+        <div style="margin-top:26px;padding-top:18px;border-top:1px solid rgba(244,236,224,0.1);font-size:12px;color:rgba(244,236,224,0.45)">
+          Une question ? Écris au service : <a href="mailto:info.najim1@gmail.com" style="color:#B8965A;text-decoration:none">info.najim1@gmail.com</a>
+        </div>
+      </div>`;
+    document.body.appendChild(ov);
+  }
+
+  // === Aperçu de la demande avant envoi ===
+  var _unlockZoneBackup = {};
+  function previewUnlock(module, btn) {
+    var zoneId = module === 'iris' ? 'irisUnlockZone' : 'nexaUnlockZone';
+    var hintId = module === 'iris' ? 'irisUnlockHint' : 'nexaUnlockHint';
+    var zone = document.getElementById(zoneId);
+    if (!zone) return;
+    _unlockZoneBackup[zoneId] = zone.innerHTML;
+    var login = btn.getAttribute('data-login') || '';
+    var nom = btn.getAttribute('data-nom') || '';
+    var moduleLabel = module === 'iris' ? 'Iris Studio' : 'Nexa';
+    var theme = module === 'iris'
+      ? { grad: 'linear-gradient(135deg,#F5DFA6 0%,#E8C77A 50%,#B8965A 100%)', text: '#F5DFA6', soft: 'rgba(245,223,166,0.82)', accent: '#E8C77A' }
+      : { grad: 'linear-gradient(135deg,#C9A86A 0%,#B8965A 100%)', text: '#F4ECE0', soft: 'rgba(244,236,224,0.82)', accent: '#B8965A' };
+    var nomLine = nom ? '<div><span style="color:' + theme.accent + '">Nom :</span> ' + nom + '</div>' : '';
+    var labelStyle = 'display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid rgba(184,150,90,0.25);border-radius:10px;margin-bottom:8px;font-size:13.5px;color:' + theme.soft + ';line-height:1.5';
+    zone.innerHTML =
+      '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(184,150,90,0.3);border-radius:14px;padding:20px;text-align:left">' +
+        '<div style="font-weight:700;color:' + theme.text + ';margin-bottom:12px;text-align:center;font-size:15px">Aperçu de ta demande</div>' +
+        '<div style="font-size:13.5px;color:' + theme.soft + ';line-height:1.9;margin-bottom:14px">' +
+          '<div><span style="color:' + theme.accent + '">Module :</span> ' + moduleLabel + '</div>' +
+          nomLine +
+          '<div><span style="color:' + theme.accent + '">Email / login :</span> ' + login + '</div>' +
+        '</div>' +
+        '<div style="font-size:12px;color:' + theme.accent + ';margin-bottom:8px;font-weight:600">Choisis ta demande :</div>' +
+        '<label style="' + labelStyle + '"><input type="radio" name="unlockChoice" value="premium" checked style="margin-top:2px;accent-color:' + theme.accent + '"><span>Je souhaite activer le module ' + moduleLabel + ' et passer en formule Premium.</span></label>' +
+        '<label style="' + labelStyle + '"><input type="radio" name="unlockChoice" value="essai" style="margin-top:2px;accent-color:' + theme.accent + '"><span>Je souhaite avoir une période d\'essai pour la plateforme.</span></label>' +
+        '<button type="button" data-login="' + login + '" onclick="requestUnlock(\'' + module + '\', this)" style="width:100%;margin-top:12px;display:inline-flex;align-items:center;justify-content:center;gap:9px;border:none;cursor:pointer;background:' + theme.grad + ';color:#0D1A12;font-weight:700;font-size:15px;padding:13px;border-radius:10px;box-shadow:0 8px 22px rgba(184,150,90,0.35)"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22l-4-9-9-4 20-7z"/></svg>Confirmer l\'envoi</button>' +
+        '<div style="text-align:center;margin-top:10px"><a onclick="cancelUnlock(\'' + module + '\')" style="cursor:pointer;color:' + theme.soft + ';font-size:12px;text-decoration:underline">Annuler</a></div>' +
+        '<div id="' + hintId + '" style="margin-top:8px;font-size:12px;color:' + theme.soft + ';text-align:center"></div>' +
+      '</div>';
+  }
+  function cancelUnlock(module) {
+    var zoneId = module === 'iris' ? 'irisUnlockZone' : 'nexaUnlockZone';
+    var zone = document.getElementById(zoneId);
+    if (zone && _unlockZoneBackup[zoneId]) zone.innerHTML = _unlockZoneBackup[zoneId];
+  }
+
+  // === Envoi de la demande de déblocage au service (via n8n) ===
+  async function requestUnlock(module, btn) {
+    var login = btn.getAttribute('data-login') || '';
+    var checked = document.querySelector('input[name="unlockChoice"]:checked');
+    var type = checked ? checked.value : 'premium';
+    var hint = document.getElementById(module === 'iris' ? 'irisUnlockHint' : 'nexaUnlockHint');
+    btn.disabled = true;
+    btn.style.opacity = '0.7';
+    btn.style.cursor = 'default';
+    var original = btn.innerHTML;
+    btn.innerHTML = 'Envoi en cours…';
+    try {
+      var resp = await fetch(CRM_DEMANDE_DEBLOCAGE, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: login, module: module, type: type })
+      });
+      var data = await resp.json();
+      if (data && data.success) {
+        btn.innerHTML = '✓ Demande envoyée';
+        btn.style.background = 'rgba(184,150,90,0.25)';
+        btn.style.color = '#F4ECE0';
+        if (hint) hint.textContent = 'Merci ! Notre service te recontacte rapidement pour activer ton accès.';
+      } else {
+        throw new Error('no success');
+      }
+    } catch (e) {
+      btn.disabled = false;
+      btn.style.opacity = '1';
+      btn.style.cursor = 'pointer';
+      btn.innerHTML = original;
+      if (hint) hint.innerHTML = 'Envoi impossible pour le moment. Écris-nous : <a href="mailto:info.najim1@gmail.com" style="color:#B8965A">info.najim1@gmail.com</a>';
+    }
+  }
+
+  async function initSession() {
+    // === Jeton SSO entrant (venant d'Iris) ===
+    // N'est honoré que si ce site a déjà été authentifié une fois avec un vrai login.
+    const params = new URLSearchParams(window.location.search);
+    const ssoToken = params.get('sso');
+    if (ssoToken) {
+      let planBlocked = false;
+      let blockedLogin = '';
+      let blockedNom = '';
+      try {
+        const resp = await fetch(CRM_VERIFY_SSO, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ token: ssoToken, target: 'nexa' })
+        });
+        const data = await resp.json();
+        if (data.blocked) {
+          planBlocked = true;
+          blockedLogin = data.login || '';
+          blockedNom = data.nom_praticien || '';
+        } else if (data.success && localStorage.getItem('crm_real_login_done') === '1') {
+          localStorage.setItem(SESSION_KEY, JSON.stringify({
+            login: data.login, role: data.role, account_id: data.account_id, nom_praticien: data.nom_praticien
+          }));
+          localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+        }
+      } catch (e) {}
+      window.history.replaceState({}, document.title, window.location.pathname);
+      if (planBlocked) {
+        showNexaBlockedOverlay(blockedLogin, blockedNom);
+        throw new Error('Plan blocked');
+      }
+    }
+
+    session = getSession();
+    if (!session) {
+      window.location.href = 'index.html';
+      throw new Error('No session');
+    }
+    if (localStorage.getItem('crm_force_pwd_change') === '1') {
+      window.location.href = 'change-password.html';
+      throw new Error('Password change required');
+    }
+
+    // === Display user name ===
+    document.body.style.display = '';
+    if (session.role === 'super_admin') {
+      document.getElementById('adminLink').style.display = 'flex';
+    } else {
+      var ftally = document.getElementById('filterTally');
+      if (ftally) ftally.style.display = 'none';
+    }
+    const rawName = session.nom_praticien || (session.login.charAt(0).toUpperCase() + session.login.slice(1));
+    // Séparer "Nom - Métier" : le nom va dans le titre, le métier en dessous
+    let displayName = rawName, metier = '';
+    const dashIdx = rawName.indexOf('-');
+    if (dashIdx > -1) {
+      displayName = rawName.slice(0, dashIdx).trim();
+      metier = rawName.slice(dashIdx + 1).trim();
+    }
+    const isArabicName = /[\u0600-\u06FF\u0750-\u077F]/.test(displayName);
+    document.getElementById('welcome').innerHTML = 'Bienvenue, ' +
+      (isArabicName
+        ? '<span style="font-family:\'Cairo\',sans-serif;font-weight:400" dir="rtl">' + escapeHtml(displayName) + '</span>'
+        : escapeHtml(displayName));
+    document.getElementById('welcomeEmail').style.display = 'none';
+    const subEl = document.getElementById('welcomeSub');
+    if (metier) {
+      subEl.textContent = metier;
+      subEl.style.color = '#0D1A12';
+      subEl.style.fontFamily = "'Cormorant Garamond', serif";
+      subEl.style.fontWeight = '600';
+      subEl.style.fontSize = '24px';
+    }
+
+    startActivityTracking();
+    loadLeads();
+  }
+
+  // === Surveillance d'activité : prolonge la session quand l'utilisateur agit,
+  //     déconnecte automatiquement après 1h d'inactivité ===
+  function startActivityTracking() {
+    // À chaque action, repousser l'expiration d'1h
+    ['click', 'keydown', 'scroll', 'mousemove', 'touchstart'].forEach(evt => {
+      document.addEventListener(evt, refreshSession, { passive: true });
+    });
+    // Vérifier chaque minute si la session a expiré
+    setInterval(() => {
+      if (!getSession()) {
+        logout();
+      }
+    }, 60 * 1000);
+  }
+
+  async function loadLeads() {
+    try {
+      const resp = await fetch(CRM_API_LEADS + '?account_id=' + encodeURIComponent(session.account_id));
+      const data = await resp.json();
+      allLeads = data.leads || [];
+      renderStats(allLeads);
+      renderTable(allLeads);
+    } catch (err) {
+      document.getElementById('tableContainer').innerHTML =
+        '<div class="empty-state">Impossible de charger les leads. Vérifiez votre connexion.</div>';
+    }
+  }
+
+  function renderStats(leads) {
+    const total = leads.length;
+
+    // 💰 ARGENT QUI DORT : ont rempli le diagnostic, résultat pas encore envoyé
+    // Ce sont les plus rentables : ils ont montré leur douleur, ils attendent ta réponse.
+    const argentDort = leads.filter(l =>
+      (l.a_rempli_diagnostic == 1 || l.a_rempli_diagnostic === true) &&
+      l.statut_global !== 'resultat_envoye' &&
+      l.statut_global !== 'client' &&
+      !(l.a_achete == 1 || l.a_achete === true)
+    ).length;
+
+    // 🔥 LEADS CHAUDS : signalés chauds, pas encore clients
+    const chauds = leads.filter(l =>
+      (l.statut_suivi === 'Chaud' || l.statut_global === 'chaud') &&
+      l.statut_global !== 'client' &&
+      !(l.a_achete == 1 || l.a_achete === true)
+    ).length;
+
+    // ⚠ ALERTES URGENTES : cas critiques détectés par Ayrika
+    const alertes = leads.filter(l => l.diagnostic_status === 'alerte_urgente').length;
+
+    // 📊 TAUX DIAGNOSTIC : combien de leads reçus ont effectivement rempli le questionnaire
+    const remplis = leads.filter(l => l.a_rempli_diagnostic == 1 || l.a_rempli_diagnostic === true).length;
+    const tauxDiag = total > 0 ? Math.round(remplis / total * 100) : 0;
+
+    document.getElementById('statArgentDort').textContent = argentDort;
+    document.getElementById('statChauds').textContent = chauds;
+    document.getElementById('statAlertes').textContent = alertes;
+    document.getElementById('statConversion').textContent = tauxDiag + '%';
+  }
+
+  // Clic sur une carte : filtre la liste sur les leads concernés
+  function filterAndScroll(type) {
+    let filtres = allLeads;
+    if (type === 'argent_dort') {
+      filtres = allLeads.filter(l =>
+        (l.a_rempli_diagnostic == 1 || l.a_rempli_diagnostic === true) &&
+        l.statut_global !== 'resultat_envoye' && l.statut_global !== 'client' &&
+        !(l.a_achete == 1 || l.a_achete === true)
+      );
+    } else if (type === 'chauds') {
+      filtres = allLeads.filter(l =>
+        (l.statut_suivi === 'Chaud' || l.statut_global === 'chaud') &&
+        l.statut_global !== 'client' && !(l.a_achete == 1 || l.a_achete === true)
+      );
+    } else if (type === 'alertes') {
+      filtres = allLeads.filter(l => l.diagnostic_status === 'alerte_urgente');
+    }
+    renderTable(filtres);
+    const el = document.getElementById('tableContainer');
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function renderTable(leads) {
+    const container = document.getElementById('tableContainer');
+    updatePrintHeader(leads.length);
+    if (leads.length === 0) {
+      container.innerHTML =
+        '<div class="empty-state">' +
+          '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>' +
+          '<div>Aucun lead pour le moment.</div>' +
+        '</div>';
+      return;
+    }
+
+    let html = '<div style="display:flex;justify-content:flex-end;margin-bottom:12px">' +
+      '<button id="emptyTrashBtn" onclick="executeEmptyTrash(this)" style="padding:8px 16px;border:1px solid #C0392B;border-radius:8px;background:white;color:#C0392B;font-weight:600;font-size:13px;cursor:pointer">\ud83d\uddd1\ufe0f Vider la corbeille maintenant</button>' +
+    '</div>';
+    html += '<table><thead><tr>' +
+      '<th>Lead</th>' +
+      '<th>Type</th>' +
+      '<th>Contact</th>' +
+      '<th>Source</th>' +
+      '<th>Inscription</th>' +
+      '<th>Inscription pour</th>' +
+      '<th style="text-align:center">Test Diagnostic-Tally</th>' +
+      '<th class="col-actions" style="width:44px"></th>' +
+      '</tr></thead><tbody>';
+
+    const typeInscriptionLabels = {
+      webinaire: 'Webinaire',
+      formation: 'Formation',
+      challenge: 'Challenge',
+      bootcamp: 'Bootcamp',
+      roqya: 'Demande Roqya',
+      diagnostic: 'Demande diagnostic',
+      diagnostique: 'Demande diagnostic',
+      roqya_maison: 'Roqya maison'
+    };
+
+    leads.forEach(l => {
+      const fullName = ((l.prenom || '') + ' ' + (l.nom || '')).trim() || '—';
+      const email = l.email || '—';
+      const whatsapp = l.whatsapp || '';
+      const isTally = (l.source || '').toLowerCase() === 'tally';
+      const source = l.source
+        ? '<span class="source-chip' + (isTally ? ' tally' : '') + '">' + (isTally ? '📋 ' : '') + l.source + '</span>'
+        : '—';
+      const inscriptionPour = typeInscriptionLabels[l.type_inscription] || '—';
+      const date = l.date_inscription
+        ? new Date(l.date_inscription.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—';
+      const isDone = (l.a_rempli_diagnostic == 1 || l.a_rempli_diagnostic === true);
+      const isExige = (l.tally_exige == 1 || l.tally_exige === true);
+
+      const statutMap = {
+        client: { label: 'Client', cls: 'status-buyer' },
+        diagnostique: { label: 'Diagnostiqué', cls: 'status-diagnosed' },
+        diagnostic_envoye: { label: 'Diagnostic envoyé', cls: 'status-sent' },
+        chaud: { label: 'Lead chaud 🔥', cls: 'status-hot' },
+        nouveau: { label: 'Prospect', cls: 'status-prospect' }
+      };
+      const statutInfo = statutMap[l.statut_global] || (
+        (l.a_achete == 1 || l.a_achete === true) ? statutMap.client : statutMap.nouveau
+      );
+      let statutBadge = '<span class="status-chip ' + statutInfo.cls + '" style="font-size:10px;padding:2px 8px;margin-top:4px;display:inline-block">' + statutInfo.label + '</span>';
+      // Priorité absolue : cas d'alerte urgente (idéation suicidaire etc.) détecté par Ayrika
+      if (l.diagnostic_status === 'alerte_urgente') {
+        statutBadge = '<span class="status-chip status-alerte" style="font-size:10px;padding:2px 8px;margin-top:4px;display:inline-block" title="Cas urgent détecté — contacter le client rapidement">⚠ ALERTE URGENTE</span>';
+      }
+
+      const typeLabels = { SW:'Webinaire', SC:'Challenge', SB:'Bootcamp', RP:'Roqya Personne', RM:'Roqya Maison', DD:'Diagnostic', Fr:'Formation', AA:'Application', AP:'Produits' };
+      const typeBadge = l.type_client
+        ? '<span class="type-badge" title="' + (typeLabels[l.type_client] || '') + '">' + l.type_client + '</span>'
+        : '<span style="color:#C9C9C6">—</span>';
+      const vipCrown = ((l.is_vip == 1 || l.is_vip === true) && ['SW','SC','SB'].includes(l.type_client)) ? '<span class="vip-crown" title="Ticket VIP">👑</span>' : '';
+      const tempIcons = { Froid: '❄️', Tiede: '🌤️', Chaud: '🔥' };
+      const tempDot = tempIcons[l.statut_suivi] ? '<span class="temp-dot" title="' + l.statut_suivi + '">' + tempIcons[l.statut_suivi] + '</span>' : '';
+
+      // Colonne unifiée "Test Diagnostic-Tally" :
+      // - Déjà rempli -> coche colorée (vert = demandé par le client, rouge = obligatoire/imposé)
+      // - Pas encore rempli, type éligible -> case à cocher pour sélection d'envoi groupé
+      const eligibleTypes = ['SW', 'SC', 'SB', 'RP', 'RM', 'DD'];
+      const isEligible = eligibleTypes.includes(l.type_client) || (l.type_client == null && isDone);
+      const isAccepted = (l.diagnostic_accepte == 1 || l.diagnostic_accepte === true);
+      const isSent = (l.statut_tally === 'envoye');
+      let diagnosticCell;
+      if (isDone) {
+        const color = isExige ? '#C4604E' : '#5A8C5A';
+        const title = isExige ? 'Diagnostic obligatoire — rempli' : 'Diagnostic demandé par le client — rempli';
+        diagnosticCell = '<span style="color:' + color + ';font-weight:700;font-size:15px" title="' + title + '">✓</span>';
+      } else if (isEligible) {
+        if (isAccepted && isSent) {
+          diagnosticCell = '<span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:#5A8C5A;color:#fff;font-weight:700;font-size:12px" title="Accepté et lien envoyé — en attente du client">✓</span>';
+        } else if (isAccepted && !isSent) {
+          diagnosticCell = '<input type="checkbox" class="leadChk" data-id="' + l.id + '" checked onclick="onDiagnosticCheckboxClick(' + l.id + ', this.checked)" title="Accepté, pas encore envoyé" style="accent-color:#3B6EA5">';
+        } else {
+          diagnosticCell = '<input type="checkbox" class="leadChk" data-id="' + l.id + '" onclick="onDiagnosticCheckboxClick(' + l.id + ', this.checked)" title="Cocher si le client accepte le diagnostic">';
+        }
+      } else {
+        diagnosticCell = '<span style="color:#C9C9C6">—</span>';
+      }
+
+      html += '<tr onclick="window.location.href=\'lead-detail.html?id=' + l.id + '\'" style="cursor:pointer">' +
+        '<td><div class="lead-name">' + escapeHtml(fullName) + vipCrown + tempDot + '</div>' + statutBadge + '</td>' +
+        '<td>' + typeBadge + '</td>' +
+        '<td>' + escapeHtml(email) + (whatsapp ? '<div class="lead-meta">' + escapeHtml(whatsapp) + '</div>' : '') + '</td>' +
+        '<td>' + source + '</td>' +
+        '<td>' + date + '</td>' +
+        '<td>' + inscriptionPour + '</td>' +
+        '<td style="text-align:center" onclick="event.stopPropagation()">' + diagnosticCell + '</td>' +
+        '<td class="col-actions" onclick="event.stopPropagation()" style="text-align:center">' +
+          '<button class="btn-icon-delete" title="Supprimer ce lead" onclick="openDeleteModal(' + l.id + ', \'' + escapeHtml(fullName) + '\')">' +
+            '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+          '</button>' +
+        '</td>' +
+        '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  let selectedLeadIds = new Set();
+
+  function toggleLeadSelection(id, checked) {
+    if (checked) selectedLeadIds.add(id);
+    else selectedLeadIds.delete(id);
+    updateSendBar();
+  }
+
+  async function onDiagnosticCheckboxClick(id, checked) {
+    // Sélectionne immédiatement pour l'envoi groupé
+    toggleLeadSelection(id, checked);
+    // Persiste en base pour que la case soit mémorisée (survit au rechargement)
+    try {
+      await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-toggle-diagnostic-accepte', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: id, account_id: session.account_id, accepted: checked })
+      });
+    } catch (err) {
+      // silencieux — l'état visuel reste correct, la prochaine sauvegarde réussira
+    }
+  }
+
+  function toggleSelectAll(checkbox) {
+    document.querySelectorAll('.leadChk').forEach(chk => {
+      chk.checked = checkbox.checked;
+      const id = parseInt(chk.dataset.id, 10);
+      if (checkbox.checked) selectedLeadIds.add(id);
+      else selectedLeadIds.delete(id);
+    });
+    updateSendBar();
+  }
+
+  function updateSendBar() {
+    const bar = document.getElementById('diagnosticSendBar');
+    const count = selectedLeadIds.size;
+    document.getElementById('selectedCount').textContent = count + ' lead(s) sélectionné(s)';
+    bar.style.display = count > 0 ? 'flex' : 'none';
+  }
+
+  async function sendDiagnosticLinks() {
+    const langue = document.getElementById('langueDiagnostic').value;
+    const ids = Array.from(selectedLeadIds);
+    if (ids.length === 0) return;
+    const btn = document.getElementById('sendDiagnosticBtn');
+    btn.disabled = true;
+    btn.textContent = 'Envoi en cours…';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-send-diagnostic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_ids: ids, langue, account_id: session.account_id })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        selectedLeadIds.clear();
+        btn.disabled = false;
+        btn.textContent = 'Envoyer le lien diagnostic';
+        updateSendBar();
+        loadLeads();
+      } else {
+        alert('Erreur lors de l\'envoi. Réessayez.');
+        btn.disabled = false;
+        btn.textContent = 'Envoyer le lien diagnostic';
+      }
+    } catch (err) {
+      alert('Erreur de connexion. Réessayez.');
+      btn.disabled = false;
+      btn.textContent = 'Envoyer le lien diagnostic';
+    }
+  }
+
+  const filterLabels = { all: 'Tous les leads', tally: 'Tally', social: 'Réseaux sociaux', ads: 'Ads', trash: 'Corbeille' };
+
+  function updatePrintHeader(count) {
+    document.getElementById('printPraticien').textContent = (session && (session.nom_praticien || session.login)) || '—';
+    document.getElementById('printFilterLabel').textContent = filterLabels[currentSourceFilter] || 'Tous les leads';
+    document.getElementById('printCount').textContent = count;
+    document.getElementById('printDate').textContent = new Date().toLocaleString('fr-FR', {
+      day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  function escapeHtml(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // === Suppression d'un lead ===
+  let leadIdToDelete = null;
+
+  function openDeleteModal(id, name) {
+    leadIdToDelete = id;
+    document.getElementById('deleteModalName').textContent = name;
+    document.getElementById('deleteModalOverlay').classList.add('show');
+  }
+
+  function closeDeleteModal() {
+    leadIdToDelete = null;
+    document.getElementById('deleteModalOverlay').classList.remove('show');
+  }
+
+  async function executeDeleteLead() {
+    if (!leadIdToDelete) return;
+    const btn = document.getElementById('confirmDeleteBtn');
+    btn.disabled = true;
+    btn.textContent = 'Déplacement…';
+    try {
+      const resp = await fetch(CRM_DELETE_LEAD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadIdToDelete, account_id: session.account_id })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        closeDeleteModal();
+        showToast('Lead déplacé vers la corbeille');
+        selectedLeadIds.delete(leadIdToDelete);
+        loadLeads();
+      } else {
+        showToast(data.message || 'Erreur lors de la suppression');
+      }
+    } catch (err) {
+      showToast('Erreur de connexion');
+    }
+    btn.disabled = false;
+    btn.textContent = 'Déplacer vers la corbeille';
+  }
+
+  // === Source filter ===
+  let currentSourceFilter = 'all';
+  let trashLeads = [];
+
+  function setSourceFilter(f) {
+    currentSourceFilter = f;
+    document.querySelectorAll('.filter-tab').forEach(t => {
+      const active = t.dataset.filter === f;
+      t.style.background = active ? '#0D1A12' : 'white';
+      t.style.color = active ? '#F4ECE0' : '#6B6B68';
+      t.style.borderColor = active ? '#0D1A12' : '#E5DECF';
+    });
+    document.getElementById('searchInput').closest('.search-box').style.display = (f === 'trash') ? 'none' : '';
+    document.getElementById('stats').style.display = (f === 'trash') ? 'none' : '';
+    document.getElementById('typeFilterRow').style.display = (f === 'trash') ? 'none' : 'flex';
+    if (f === 'trash') {
+      loadTrashLeads();
+    } else {
+      applyFilters();
+    }
+  }
+
+  // === Filtres Type client & Temperature (v1) ===
+  let currentTypeFilter = 'all';
+  let currentTempFilter = 'all';
+
+  function setTypeFilter(t) {
+    currentTypeFilter = t;
+    document.querySelectorAll('.type-tab').forEach(el => {
+      el.classList.toggle('active', el.dataset.type === t);
+    });
+    applyFilters();
+  }
+
+  function setTempFilter(t) {
+    currentTempFilter = t;
+    document.querySelectorAll('.temp-tab').forEach(el => {
+      el.classList.toggle('active', el.dataset.temp === t);
+    });
+    applyFilters();
+  }
+
+  function applyFilters() {
+    const q = document.getElementById('searchInput').value.toLowerCase().trim();
+    let filtered = allLeads;
+
+    if (currentSourceFilter === 'tally') {
+      filtered = filtered.filter(l => (l.source || '').toLowerCase() === 'tally');
+    } else if (currentSourceFilter === 'ads') {
+      filtered = filtered.filter(l => (l.source || '').toLowerCase().includes('ads'));
+    } else if (currentSourceFilter === 'social') {
+      filtered = filtered.filter(l => {
+        const s = (l.source || '').toLowerCase();
+        return s !== 'tally' && !s.includes('ads');
+      });
+    }
+
+    if (currentTypeFilter !== 'all') {
+      filtered = filtered.filter(l => l.type_client === currentTypeFilter);
+    }
+
+    if (currentTempFilter === 'vip') {
+      filtered = filtered.filter(l => (l.is_vip == 1 || l.is_vip === true) && ['SW','SC','SB'].includes(l.type_client));
+    } else if (currentTempFilter !== 'all') {
+      filtered = filtered.filter(l => (l.statut_suivi || 'Froid') === currentTempFilter);
+    }
+
+    if (q) {
+      filtered = filtered.filter(l =>
+        ((l.nom || '') + ' ' + (l.prenom || '') + ' ' + (l.email || '') + ' ' + (l.whatsapp || '')).toLowerCase().includes(q)
+      );
+    }
+
+    renderTable(filtered);
+  }
+
+  async function loadTrashLeads() {
+    const container = document.getElementById('tableContainer');
+    container.innerHTML = '<div class="loading-state"><div class="spinner"></div><div>Chargement de la corbeille…</div></div>';
+    try {
+      const resp = await fetch(CRM_TRASH_LEADS + '?account_id=' + encodeURIComponent(session.account_id));
+      const data = await resp.json();
+      trashLeads = data.leads || [];
+      renderTrashTable(trashLeads);
+    } catch (err) {
+      container.innerHTML = '<div class="empty-state">Impossible de charger la corbeille.</div>';
+    }
+  }
+
+  async function executeEmptyTrash(btn) {
+    const ok = confirm('Vider la corbeille maintenant ?\n\nTous les leads de la corbeille seront supprim\u00e9s D\u00c9FINITIVEMENT (avec leurs diagnostics, paiements, rendez-vous et appels). Cette action est irr\u00e9versible.');
+    if (!ok) return;
+    btn.disabled = true;
+    btn.textContent = 'Suppression\u2026';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-empty-trash', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: session.account_id })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast('Corbeille vid\u00e9e');
+        loadTrashLeads();
+      } else {
+        showToast(data.message || 'Erreur lors du vidage');
+        btn.disabled = false;
+        btn.textContent = '\ud83d\uddd1\ufe0f Vider la corbeille maintenant';
+      }
+    } catch (e) {
+      showToast('Erreur de connexion');
+      btn.disabled = false;
+      btn.textContent = '\ud83d\uddd1\ufe0f Vider la corbeille maintenant';
+    }
+  }
+
+  function renderTrashTable(leads) {
+    const container = document.getElementById('tableContainer');
+    updatePrintHeader(leads.length);
+    if (leads.length === 0) {
+      container.innerHTML =
+        '<div class="empty-state">' +
+          '<svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
+          '<div>La corbeille est vide.</div>' +
+        '</div>';
+      return;
+    }
+
+    let html = '<div style="display:flex;justify-content:flex-end;margin-bottom:12px">' +
+      '<button id="emptyTrashBtn" onclick="executeEmptyTrash(this)" style="padding:8px 16px;border:1px solid #C0392B;border-radius:8px;background:white;color:#C0392B;font-weight:600;font-size:13px;cursor:pointer">\ud83d\uddd1\ufe0f Vider la corbeille maintenant</button>' +
+    '</div>';
+    html += '<table><thead><tr>' +
+      '<th>Lead</th>' +
+      '<th>Contact</th>' +
+      '<th>Supprimé le</th>' +
+      '<th>Jours restants</th>' +
+      '<th class="col-actions" style="width:140px"></th>' +
+      '</tr></thead><tbody>';
+
+    leads.forEach(l => {
+      const fullName = ((l.prenom || '') + ' ' + (l.nom || '')).trim() || '—';
+      const email = l.email || '—';
+      const whatsapp = l.whatsapp || '';
+      const delDate = l.deleted_at
+        ? new Date(l.deleted_at.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })
+        : '—';
+      const jr = l.jours_restants != null ? l.jours_restants : '—';
+      const urgent = (l.jours_restants != null && l.jours_restants <= 3) ? ' urgent' : '';
+
+      html += '<tr>' +
+        '<td><div class="lead-name">' + escapeHtml(fullName) + '</div></td>' +
+        '<td>' + escapeHtml(email) + (whatsapp ? '<div class="lead-meta">' + escapeHtml(whatsapp) + '</div>' : '') + '</td>' +
+        '<td>' + delDate + '</td>' +
+        '<td><span class="jours-restants' + urgent + '">' + jr + ' j</span></td>' +
+        '<td class="col-actions" style="text-align:right"><button class="btn-restore" onclick="executeRestoreLead(' + l.id + ', this)">↩ Restaurer</button></td>' +
+        '</tr>';
+    });
+
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  async function executeRestoreLead(id, btn) {
+    btn.disabled = true;
+    btn.textContent = 'Restauration…';
+    try {
+      const resp = await fetch(CRM_RESTORE_LEAD, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: id, account_id: session.account_id })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast('Lead restauré');
+        loadTrashLeads();
+      } else {
+        showToast(data.message || 'Erreur lors de la restauration');
+        btn.disabled = false;
+        btn.textContent = '↩ Restaurer';
+      }
+    } catch (err) {
+      showToast('Erreur de connexion');
+      btn.disabled = false;
+      btn.textContent = '↩ Restaurer';
+    }
+  }
+
+  // === Search filter ===
+  document.getElementById('searchInput').addEventListener('input', applyFilters);
+
+  initSession().catch(function(){});
+</script>
+
+</body>
+</html>
