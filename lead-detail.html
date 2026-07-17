@@ -780,6 +780,40 @@
       return block;
     });
 
+    // ===== HISTORIQUE DES DIAGNOSTICS =====
+    if (data.diagnostics.length > 0) {
+      html += sectionWrap('\ud83d\uddc2\ufe0f', 'Historique des diagnostics', data.diagnostics.length, () => {
+        const statutLabels = {
+          nouveau: '<span style="color:#8A6D1F;background:#FCF3DC;padding:3px 8px;border-radius:5px;font-size:11.5px;font-weight:600">\u23f3 En attente</span>',
+          analyse: '<span style="color:#3E6B3E;background:#E9F2E9;padding:3px 8px;border-radius:5px;font-size:11.5px;font-weight:600">\u2713 Analys\u00e9</span>',
+          traite: '<span style="color:#3E6B3E;background:#E9F2E9;padding:3px 8px;border-radius:5px;font-size:11.5px;font-weight:600">\u2713 Trait\u00e9</span>',
+          alerte_urgente: '<span style="color:#A33F2E;background:#FBEFEB;padding:3px 8px;border-radius:5px;font-size:11.5px;font-weight:700">\u26a0\ufe0f Alerte</span>',
+          archive: '<span style="color:#6B6B68;background:#EFEDE8;padding:3px 8px;border-radius:5px;font-size:11.5px;font-weight:600">Archiv\u00e9</span>'
+        };
+        const diags = data.diagnostics.slice().sort((x, y) => (y.id || 0) - (x.id || 0));
+        return diags.map((d, i) => {
+          const dDate = d.created_at || d.date_soumission || d.submitted_at || d.date_diagnostic || null;
+          const badge = statutLabels[d.status] || esc(d.status || '');
+          let corps = '<div style="margin-top:10px"><div class="diag-label">Sympt\u00f4mes</div>' +
+            '<div class="diag-value" style="font-size:12.5px">' + esc(d.symptomes || d.symptoms_selected || '\u2014') + '</div></div>';
+          if (d.ayrika_analysis) {
+            corps += renderAyrika(d.ayrika_analysis);
+          } else {
+            corps += '<div style="margin-top:8px;font-size:12.5px;color:#8A6D1F">Analyse pas encore lanc\u00e9e pour cette version.</div>';
+          }
+          return '<details style="border:1px solid #E5E1D8;border-radius:10px;padding:10px 14px;margin-bottom:8px;background:#FCFBF8">' +
+            '<summary style="cursor:pointer;display:flex;align-items:center;gap:10px;flex-wrap:wrap;font-size:13px;list-style:none">' +
+              '<span style="font-weight:700;color:#0D1A12">Diagnostic #' + d.id + (i === 0 ? ' (le plus r\u00e9cent)' : '') + '</span>' +
+              (dDate ? '<span style="color:#6B6B68">' + fmtDate(dDate) + '</span>' : '') +
+              badge +
+              '<span style="margin-left:auto;color:#B8965A;font-weight:600;font-size:12px">Voir \u25be</span>' +
+            '</summary>' +
+            corps +
+          '</details>';
+        }).join('');
+      });
+    }
+
     // ===== VENTES =====
     html += sectionWrap('💰', 'Ventes', data.sales.length, () => {
       if (data.sales.length === 0) return '<div class="empty-row">Aucune vente enregistrée.</div>';
