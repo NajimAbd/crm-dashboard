@@ -695,7 +695,12 @@
     html += '<span class="header-chip">🧾 ' + (l.nombre_paiements || 0) + ' paiement(s)</span>';
     if (l.type_client) html += '<span class="header-chip">🏷️ ' + esc(typeLabels[l.type_client] || l.type_client) + '</span>';
     if (l.roqya_status && l.roqya_status !== 'none') html += '<span class="header-chip">🕌 Roqya : ' + esc(l.roqya_status === 'in_progress' ? 'en cours' : 'terminée') + '</span>';
-    if (l.tally_type) html += '<span class="header-chip">📋 ' + esc(l.tally_type) + '</span>';
+    const tallyTypeEffectif = l.tally_type || (l.type_client === 'DD' ? 'DTAP' : 'DTFF');
+    if (tallyTypeEffectif === 'DTAP') {
+      html += '<span class="header-chip" style="background:#FCF3DC;border-color:#B8965A;color:#8A6D1F;font-weight:700">📋 DTAP — Diagnostic payant</span>';
+    } else {
+      html += '<span class="header-chip" style="background:#E8F3E8;border-color:#5A8C5A;color:#3E6B3E;font-weight:700">📋 DTFF — Diagnostic gratuit</span>';
+    }
     html += '</div>';
 
     // ==== Bannière obligation Diagnostic Tally (RP / RM) ====
