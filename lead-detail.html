@@ -864,16 +864,22 @@
 
     // ===== EMAILS =====
     html += sectionWrap('✉️', 'Historique emails', data.emails.length, () => {
-      if (data.emails.length === 0) return '<div class="empty-row">Aucun email envoyé.</div>';
-      return data.emails.map(e =>
-        '<div class="timeline-item">' +
+      if (data.emails.length === 0) return '<div class="empty-row">Aucun email.</div>';
+      const emailsTries = data.emails.slice().sort((x, y) => (y.id || 0) - (x.id || 0));
+      return emailsTries.map(e => {
+        const recu = (e.direction === 'recu');
+        const dirBadge = recu
+          ? '<span style="color:#3E6B3E;background:#E9F2E9;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">\ud83d\udce9 Re\u00e7u</span>'
+          : '<span style="color:#8A6D1F;background:#FCF3DC;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">\ud83d\udce4 Envoy\u00e9</span>';
+        return '<div class="timeline-item">' +
           '<div class="timeline-icon"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg></div>' +
           '<div class="timeline-content">' +
-            '<div class="timeline-title">' + esc(e.type_email) + '</div>' +
-            '<div class="timeline-meta">' + esc(e.plateforme || '—') + ' · ' + fmtDate(e.date_envoi) + ' · ' + (e.ouvert ? '👁️ Ouvert' : 'Non ouvert') + (e.clique ? ' · 🔗 Cliqué' : '') + '</div>' +
+            '<div class="timeline-title">' + dirBadge + ' ' + esc(e.sujet || e.type_email || '') + '</div>' +
+            (e.extrait ? '<div style="font-size:12px;color:#555;margin:3px 0 2px;line-height:1.45">' + esc(e.extrait) + '</div>' : '') +
+            '<div class="timeline-meta">' + esc(e.plateforme || '—') + ' · ' + fmtDate(e.date_envoi) + (recu ? '' : ' · ' + (e.ouvert ? '👁️ Ouvert' : 'Non ouvert') + (e.clique ? ' · 🔗 Cliqué' : '')) + '</div>' +
           '</div>' +
-        '</div>'
-      ).join('');
+        '</div>';
+      }).join('');
     });
 
     document.getElementById('pageContent').innerHTML = html;
