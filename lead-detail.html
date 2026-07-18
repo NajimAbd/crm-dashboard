@@ -301,6 +301,27 @@
     .page { padding: 0; max-width: 100%; }
     body.printing-ventes .page > *:not(#ventes-section) { display: none !important; }
   }
+  .btn-refresh-3d {
+    padding: 8px 18px;
+    border: 1px solid #9A7B45;
+    border-radius: 8px;
+    background: linear-gradient(180deg, #D4B578 0%, #B8965A 100%);
+    color: #0D1A12;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+    margin-right: 8px;
+    box-shadow: 0 4px 0 #8A6D3F, 0 6px 10px rgba(0,0,0,0.18);
+    transition: transform 0.08s, box-shadow 0.08s;
+  }
+  .btn-refresh-3d:hover { filter: brightness(1.06); }
+  .btn-refresh-3d:active {
+    transform: translateY(4px);
+    box-shadow: 0 0 0 #8A6D3F, 0 2px 4px rgba(0,0,0,0.15);
+  }
+  .btn-refresh-3d:disabled { opacity: 0.75; cursor: wait; transform: translateY(4px); box-shadow: none; }
+  @keyframes spinRefresh { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .spin-refresh { display: inline-block; animation: spinRefresh 0.8s linear infinite; }
 </style>
 </head>
 <body>
@@ -642,6 +663,16 @@
     return h;
   }
 
+  async function refreshLead() {
+    const btn = document.getElementById('refreshLeadBtn');
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spin-refresh">\ud83d\udd04</span> Actualisation\u2026';
+    }
+    await loadLeadDetail();
+    // Après le rechargement, le bouton est recréé par le rendu — rien à restaurer.
+  }
+
   async function loadLeadDetail() {
     try {
       const url = CRM_DETAIL_API + '?lead_id=' + encodeURIComponent(leadId) + '&account_id=' + encodeURIComponent(session.account_id);
@@ -752,7 +783,7 @@
     html += '</div>';
     html += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">';
     html += buyerChip;
-    html += '<button onclick="loadLeadDetail()" title="V\u00e9rifier si le formulaire est arriv\u00e9" style="padding:8px 18px;border:1px solid var(--gold);border-radius:6px;background:white;color:var(--green-deep);font-weight:700;font-size:13px;cursor:pointer;margin-right:8px">\ud83d\udd04 Actualiser</button>';
+    html += '<button onclick="refreshLead()" id="refreshLeadBtn" title="V\u00e9rifier si le formulaire est arriv\u00e9" class="btn-refresh-3d">\ud83d\udd04 Actualiser</button>';
     html += '<button onclick="window.print()" style="padding:8px 18px;border:none;border-radius:6px;background:var(--gold);color:var(--green-deep);font-weight:700;font-size:13px;cursor:pointer">🖨️ Imprimer</button>';
     html += '</div>';
     html += '</div>';
