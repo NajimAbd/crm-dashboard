@@ -754,14 +754,20 @@
     if (l.campagne) html += '<span class="tag">Campagne : ' + esc(l.campagne) + '</span>';
     if (l.statut_webinaire) html += '<span class="tag">Webinaire : ' + esc(l.statut_webinaire) + '</span>';
     html += '</div>';
+    // Diagnostic le plus récent : sert à savoir si l'analyse Ayrika est réellement terminée
+    const latestDiag = data.diagnostics.slice().sort((x, y) => (y.id || 0) - (x.id || 0))[0];
+    const analyseTerminee = !!(latestDiag && latestDiag.ayrika_analysis);
+
     html += '<div class="diagnostic-action" style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
     if (l.a_rempli_diagnostic == 1) {
       // Diagnostic déjà rempli : on propose d'envoyer le RÉSULTAT + RDV, plus jamais le lien Tally
       const resultatEnvoye = (l.statut_global === 'resultat_envoye');
       if (resultatEnvoye) {
         html += '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#3E6B3E;background:#E9F2E9;padding:5px 10px;border-radius:6px">✓ Résultat envoyé au client</span>';
-      } else {
+      } else if (analyseTerminee) {
         html += '<button onclick="sendDiagnosticResult(' + l.id + ')" id="sendResultBtnDetail" style="padding:7px 14px;border:none;border-radius:6px;background:#5A8C5A;color:#fff;font-weight:600;font-size:13px;cursor:pointer">Envoyer résultat + RDV</button>';
+      } else {
+        html += '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#8A6D1F;background:#FCF3DC;padding:5px 10px;border-radius:6px;font-weight:600">⏳ Analyse Ayrika en cours… (2-3 min) — le bouton d\'envoi appara\u00eetra une fois termin\u00e9e</span>';
       }
     } else {
       // Diagnostic pas encore rempli
