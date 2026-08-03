@@ -765,7 +765,17 @@
       if (resultatEnvoye) {
         html += '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#3E6B3E;background:#E9F2E9;padding:5px 10px;border-radius:6px">✓ Résultat envoyé au client</span>';
       } else if (analyseTerminee) {
-        html += '<button onclick="sendDiagnosticResult(' + l.id + ')" id="sendResultBtnDetail" style="padding:7px 14px;border:none;border-radius:6px;background:#5A8C5A;color:#fff;font-weight:600;font-size:13px;cursor:pointer">Envoyer résultat + RDV</button>';
+        html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+        if (l.whatsapp) {
+          html += '<button onclick="sendDiagnosticResult(' + l.id + ', \'whatsapp\')" id="sendResultBtnDetail-whatsapp" class="btn-send-result" style="padding:7px 14px;border:none;border-radius:6px;background:#5A8C5A;color:#fff;font-weight:600;font-size:13px;cursor:pointer">\ud83d\udcf1 Résultat + RDV par WhatsApp</button>';
+        }
+        if (l.email) {
+          html += '<button onclick="sendDiagnosticResult(' + l.id + ', \'email\')" id="sendResultBtnDetail-email" class="btn-send-result" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">\u2709\ufe0f Résultat + RDV par Email</button>';
+        }
+        if (!l.whatsapp && !l.email) {
+          html += '<span style="font-size:12.5px;color:#A33F2E">Aucun contact (email/WhatsApp) enregistr\u00e9 pour ce lead.</span>';
+        }
+        html += '</div>';
       } else {
         html += '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#8A6D1F;background:#FCF3DC;padding:5px 10px;border-radius:6px;font-weight:600">⏳ Analyse Ayrika en cours… (2-3 min) — le bouton d\'envoi appara\u00eetra une fois termin\u00e9e</span>';
       }
@@ -1016,28 +1026,32 @@
     }
   }
 
-  async function sendDiagnosticResult(leadId) {
-    const btn = document.getElementById('sendResultBtnDetail');
+  async function sendDiagnosticResult(leadId, canal) {
+    canal = canal || 'email';
+    const btn = document.getElementById('sendResultBtnDetail-' + canal);
+    const labelIdle = btn.textContent;
+    const labelSent = canal === 'whatsapp' ? 'Résultat envoyé (WhatsApp) ✓' : 'Résultat envoyé (Email) ✓';
     btn.disabled = true;
     btn.textContent = 'Envoi en cours…';
+    document.querySelectorAll('.btn-send-result').forEach(b => { if (b !== btn) b.disabled = true; });
     try {
       const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-send-diagnostic-result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_id: leadId })
+        body: JSON.stringify({ lead_id: leadId, canal })
       });
       const data = await resp.json();
       if (data.success) {
-        btn.textContent = 'Résultat envoyé ✓';
+        btn.textContent = labelSent;
         loadLeadDetail();
       } else {
-        btn.disabled = false;
-        btn.textContent = 'Envoyer résultat + RDV';
+        document.querySelectorAll('.btn-send-result').forEach(b => { b.disabled = false; });
+        btn.textContent = labelIdle;
         alert('Erreur lors de l\'envoi. Réessayez.');
       }
     } catch (err) {
-      btn.disabled = false;
-      btn.textContent = 'Envoyer résultat + RDV';
+      document.querySelectorAll('.btn-send-result').forEach(b => { b.disabled = false; });
+      btn.textContent = labelIdle;
       alert('Erreur de connexion. Réessayez.');
     }
   }
