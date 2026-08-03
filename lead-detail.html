@@ -776,7 +776,16 @@
       html += '<select id="langueDiagDetail" style="padding:6px 9px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">';
       html += '<option value="fr">\ud83c\uddeb\ud83c\uddf7 Fran\u00e7ais</option><option value="ar">\ud83c\uddf8\ud83c\udde6 Arabe</option><option value="al">\ud83c\udde6\ud83c\uddf1 Albanais</option><option value="de">\ud83c\udde9\ud83c\uddea Allemand</option>';
       html += '</select>';
-      html += '<button onclick="sendDiagnosticLink(' + l.id + ')" id="sendDiagBtnDetail" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">' + (dejaEnvoye ? 'Renvoyer le lien' : 'Envoyer le lien diagnostic') + '</button>';
+      const btnLabelBase = dejaEnvoye ? 'Renvoyer' : 'Lui proposer';
+      if (l.whatsapp) {
+        html += '<button onclick="sendDiagnosticLink(' + l.id + ', \'whatsapp\')" id="sendDiagBtnDetail-whatsapp" class="btn-send-diag" style="padding:7px 14px;border:none;border-radius:6px;background:#5A8C5A;color:#fff;font-weight:600;font-size:13px;cursor:pointer">\ud83d\udcf1 ' + btnLabelBase + ' par WhatsApp</button>';
+      }
+      if (l.email) {
+        html += '<button onclick="sendDiagnosticLink(' + l.id + ', \'email\')" id="sendDiagBtnDetail-email" class="btn-send-diag" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">\u2709\ufe0f ' + btnLabelBase + ' par Email</button>';
+      }
+      if (!l.whatsapp && !l.email) {
+        html += '<span style="font-size:12.5px;color:#A33F2E">Aucun contact (email/WhatsApp) enregistr\u00e9 pour ce lead.</span>';
+      }
       html += '</div>';
     }
     html += '</div>';
@@ -929,30 +938,37 @@
     }
   }
 
-  async function sendDiagnosticLink(leadId) {
+  async function sendDiagnosticLink(leadId, canal) {
+    canal = canal || 'email';
     const langue = document.getElementById('langueDiagDetail').value;
-    const btn = document.getElementById('sendDiagBtnDetail');
+    const btn = document.getElementById('sendDiagBtnDetail-' + canal);
+    const labelIdle = canal === 'whatsapp' ? '\ud83d\udcf1 Renvoyer par WhatsApp' : '\u2709\ufe0f Renvoyer par Email';
+    const labelSent = canal === 'whatsapp' ? 'Envoy\u00e9 par WhatsApp \u2713' : 'Envoy\u00e9 par Email \u2713';
+    const labelBusy = 'Envoi en cours\u2026';
+    const labelReset = btn.textContent; // texte d'origine (Lui proposer / Renvoyer) en cas d'erreur
     btn.disabled = true;
-    btn.textContent = 'Envoi en cours…';
+    btn.textContent = labelBusy;
+    // Désactive aussi l'autre bouton pendant l'envoi pour éviter un double clic croisé
+    document.querySelectorAll('.btn-send-diag').forEach(b => { if (b !== btn) b.disabled = true; });
     try {
       const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-send-diagnostic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lead_ids: [leadId], langue, account_id: session.account_id })
+        body: JSON.stringify({ lead_ids: [leadId], langue, canal, account_id: session.account_id })
       });
       const data = await resp.json();
+      document.querySelectorAll('.btn-send-diag').forEach(b => { if (b !== btn) b.disabled = false; });
       if (data.success) {
-        btn.textContent = 'Lien envoy\u00e9 \u2713';
-        // On r\u00e9active le bouton : le client peut avoir perdu l'email et demander un renvoi
-        setTimeout(() => { btn.disabled = false; btn.textContent = 'Renvoyer le lien'; }, 2500);
+        btn.textContent = labelSent;
+        setTimeout(() => { btn.disabled = false; btn.textContent = labelIdle; }, 2500);
       } else {
         btn.disabled = false;
-        btn.textContent = 'Envoyer le lien diagnostic';
+        btn.textContent = labelReset;
         alert('Erreur lors de l\'envoi. R\u00e9essayez.');
       }
     } catch (err) {
-      btn.disabled = false;
-      btn.textContent = 'Envoyer le lien diagnostic';
+      document.querySelectorAll('.btn-send-diag').forEach(b => { b.disabled = false; });
+      btn.textContent = labelReset;
       alert('Erreur de connexion. Réessayez.');
     }
   }
