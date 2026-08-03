@@ -921,10 +921,13 @@
       ).join('');
     });
 
-    // ===== EMAILS =====
-    html += sectionWrap('✉️', 'Historique emails', data.emails.length, () => {
-      if (data.emails.length === 0) return '<div class="empty-row">Aucun email.</div>';
-      const emailsTries = data.emails.slice().sort((x, y) => (y.id || 0) - (x.id || 0));
+    // ===== EMAILS ET WHATSAPP (séparés) =====
+    const emailItems = data.emails.filter(e => (e.plateforme || '').toLowerCase() !== 'whatsapp');
+    const whatsappItems = data.emails.filter(e => (e.plateforme || '').toLowerCase() === 'whatsapp');
+
+    html += sectionWrap('✉️', 'Historique emails', emailItems.length, () => {
+      if (emailItems.length === 0) return '<div class="empty-row">Aucun email.</div>';
+      const emailsTries = emailItems.slice().sort((x, y) => (y.id || 0) - (x.id || 0));
       return emailsTries.map(e => {
         const recu = (e.direction === 'recu');
         const dirBadge = recu
@@ -938,6 +941,27 @@
             '<div class="timeline-meta">' + esc(e.plateforme || '—') + ' · ' + fmtDate(e.date_envoi) + (recu ? '' : ' · ' + (e.ouvert ? '👁️ Ouvert' : 'Non ouvert') + (e.clique ? ' · 🔗 Cliqué' : '')) + '</div>' +
           '</div>' +
         '</div>';
+      }).join('');
+    });
+
+    html += sectionWrap('📱', 'Messages WhatsApp', whatsappItems.length, () => {
+      if (whatsappItems.length === 0) return '<div class="empty-row">Aucun message WhatsApp.</div>';
+      const waTries = whatsappItems.slice().sort((x, y) => (y.id || 0) - (x.id || 0));
+      return waTries.map(e => {
+        const recu = (e.direction === 'recu');
+        const dirBadge = recu
+          ? '<span style="color:#3E6B3E;background:#E9F2E9;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">\ud83d\udce9 Re\u00e7u</span>'
+          : '<span style="color:#8A6D1F;background:#FCF3DC;padding:2px 7px;border-radius:5px;font-size:11px;font-weight:700">\ud83d\udce4 Envoy\u00e9</span>';
+        const extraitCourt = e.extrait ? esc(String(e.extrait).slice(0, 70)) + (String(e.extrait).length > 70 ? '…' : '') : '';
+        return '<details style="border:1px solid #E5E1D8;border-radius:10px;padding:8px 12px;margin-bottom:8px;background:#FCFBF8">' +
+          '<summary style="cursor:pointer;display:flex;align-items:center;gap:8px;flex-wrap:wrap;font-size:13px;list-style:none">' +
+            dirBadge +
+            '<span style="color:#2C2C2A;flex:1;min-width:120px">' + extraitCourt + '</span>' +
+            '<span style="color:#6B6B68;font-size:11.5px">' + fmtDate(e.date_envoi) + '</span>' +
+            '<span style="color:#B8965A;font-weight:600;font-size:12px">Voir \u25be</span>' +
+          '</summary>' +
+          '<div style="margin-top:8px;font-size:12.5px;color:#2C2C2A;line-height:1.5;white-space:pre-wrap">' + esc(e.extrait || '') + '</div>' +
+        '</details>';
       }).join('');
     });
 
