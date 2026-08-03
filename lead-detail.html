@@ -764,29 +764,42 @@
         html += '<button onclick="sendDiagnosticResult(' + l.id + ')" id="sendResultBtnDetail" style="padding:7px 14px;border:none;border-radius:6px;background:#5A8C5A;color:#fff;font-weight:600;font-size:13px;cursor:pointer">Envoyer résultat + RDV</button>';
       }
     } else {
-      // Diagnostic pas encore rempli : on gère l'acceptation + l'envoi du lien Tally
-      html += '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">';
-      html += '<input type="checkbox" id="diagnosticAccepteChk" ' + (l.diagnostic_accepte == 1 ? 'checked' : '') + ' onchange="toggleDiagnosticAccepte(' + l.id + ', this.checked)"> Diagnostic accepté';
-      html += '</label>';
+      // Diagnostic pas encore rempli
       const dejaEnvoye = (l.statut_tally === 'envoye');
-      html += '<div id="sendDiagnosticWrap" style="display:' + (l.diagnostic_accepte == 1 ? 'flex' : 'none') + ';align-items:center;gap:8px;flex-wrap:wrap">';
-      if (dejaEnvoye) {
-        html += '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#3E6B3E;background:#E9F2E9;padding:5px 10px;border-radius:6px">\u2713 Lien d\u00e9j\u00e0 envoy\u00e9 \u2014 en attente de r\u00e9ponse du client</span>';
+      const btnLabelBase = dejaEnvoye ? 'Renvoyer' : 'DT';
+      const boutonsEnvoi = (l.whatsapp || l.email)
+        ? (
+            (l.whatsapp ? '<button onclick="sendDiagnosticLink(' + l.id + ', \'whatsapp\')" id="sendDiagBtnDetail-whatsapp" class="btn-send-diag" style="padding:7px 14px;border:none;border-radius:6px;background:#5A8C5A;color:#fff;font-weight:600;font-size:13px;cursor:pointer">\ud83d\udcf1 ' + btnLabelBase + ' par WhatsApp</button>' : '') +
+            (l.email ? '<button onclick="sendDiagnosticLink(' + l.id + ', \'email\')" id="sendDiagBtnDetail-email" class="btn-send-diag" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">\u2709\ufe0f ' + btnLabelBase + ' par Email</button>' : '')
+          )
+        : '<span style="font-size:12.5px;color:#A33F2E">Aucun contact (email/WhatsApp) enregistr\u00e9 pour ce lead.</span>';
+
+      if (isShowType) {
+        // Leads Show (SW/SC/SB) : tu proposes à l'oral, tu coches seulement si la personne a accepté
+        html += '<label style="display:flex;align-items:center;gap:6px;font-size:13px;cursor:pointer">';
+        html += '<input type="checkbox" id="diagnosticAccepteChk" ' + (l.diagnostic_accepte == 1 ? 'checked' : '') + ' onchange="toggleDiagnosticAccepte(' + l.id + ', this.checked)"> Diagnostic accepté';
+        html += '</label>';
+        html += '<div id="sendDiagnosticWrap" style="display:' + (l.diagnostic_accepte == 1 ? 'flex' : 'none') + ';align-items:center;gap:8px;flex-wrap:wrap">';
+        if (dejaEnvoye) {
+          html += '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#3E6B3E;background:#E9F2E9;padding:5px 10px;border-radius:6px">\u2713 DT d\u00e9j\u00e0 envoy\u00e9 \u2014 en attente de r\u00e9ponse du client</span>';
+        }
+        html += '<select id="langueDiagDetail" style="padding:6px 9px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">';
+        html += '<option value="fr">\ud83c\uddeb\ud83c\uddf7 Fran\u00e7ais</option><option value="ar">\ud83c\uddf8\ud83c\udde6 Arabe</option><option value="al">\ud83c\udde6\ud83c\uddf1 Albanais</option><option value="de">\ud83c\udde9\ud83c\uddea Allemand</option>';
+        html += '</select>';
+        html += boutonsEnvoi;
+        html += '</div>';
+      } else {
+        // Contact direct (WhatsApp, autre) : pas d'acceptation préalable à cocher, tu réponds directement
+        html += '<div id="sendDiagnosticWrap" style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
+        if (dejaEnvoye) {
+          html += '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#3E6B3E;background:#E9F2E9;padding:5px 10px;border-radius:6px">\u2713 DT d\u00e9j\u00e0 envoy\u00e9 \u2014 en attente de r\u00e9ponse du client</span>';
+        }
+        html += '<select id="langueDiagDetail" style="padding:6px 9px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">';
+        html += '<option value="fr">\ud83c\uddeb\ud83c\uddf7 Fran\u00e7ais</option><option value="ar">\ud83c\uddf8\ud83c\udde6 Arabe</option><option value="al">\ud83c\udde6\ud83c\uddf1 Albanais</option><option value="de">\ud83c\udde9\ud83c\uddea Allemand</option>';
+        html += '</select>';
+        html += boutonsEnvoi;
+        html += '</div>';
       }
-      html += '<select id="langueDiagDetail" style="padding:6px 9px;border-radius:6px;border:1px solid #E5DECF;font-size:13px">';
-      html += '<option value="fr">\ud83c\uddeb\ud83c\uddf7 Fran\u00e7ais</option><option value="ar">\ud83c\uddf8\ud83c\udde6 Arabe</option><option value="al">\ud83c\udde6\ud83c\uddf1 Albanais</option><option value="de">\ud83c\udde9\ud83c\uddea Allemand</option>';
-      html += '</select>';
-      const btnLabelBase = dejaEnvoye ? 'Renvoyer' : 'Lui proposer';
-      if (l.whatsapp) {
-        html += '<button onclick="sendDiagnosticLink(' + l.id + ', \'whatsapp\')" id="sendDiagBtnDetail-whatsapp" class="btn-send-diag" style="padding:7px 14px;border:none;border-radius:6px;background:#5A8C5A;color:#fff;font-weight:600;font-size:13px;cursor:pointer">\ud83d\udcf1 ' + btnLabelBase + ' par WhatsApp</button>';
-      }
-      if (l.email) {
-        html += '<button onclick="sendDiagnosticLink(' + l.id + ', \'email\')" id="sendDiagBtnDetail-email" class="btn-send-diag" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">\u2709\ufe0f ' + btnLabelBase + ' par Email</button>';
-      }
-      if (!l.whatsapp && !l.email) {
-        html += '<span style="font-size:12.5px;color:#A33F2E">Aucun contact (email/WhatsApp) enregistr\u00e9 pour ce lead.</span>';
-      }
-      html += '</div>';
     }
     html += '</div>';
     html += '</div>';
@@ -943,7 +956,7 @@
     const langue = document.getElementById('langueDiagDetail').value;
     const btn = document.getElementById('sendDiagBtnDetail-' + canal);
     const labelIdle = canal === 'whatsapp' ? '\ud83d\udcf1 Renvoyer par WhatsApp' : '\u2709\ufe0f Renvoyer par Email';
-    const labelSent = canal === 'whatsapp' ? 'Envoy\u00e9 par WhatsApp \u2713' : 'Envoy\u00e9 par Email \u2713';
+    const labelSent = canal === 'whatsapp' ? 'DT envoy\u00e9 (WhatsApp) \u2713' : 'DT envoy\u00e9 (Email) \u2713';
     const labelBusy = 'Envoi en cours\u2026';
     const labelReset = btn.textContent; // texte d'origine (Lui proposer / Renvoyer) en cas d'erreur
     btn.disabled = true;
