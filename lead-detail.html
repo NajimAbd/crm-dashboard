@@ -852,12 +852,15 @@
         '<div class="diag-label">Sympt\u00f4mes</div>' +
         '<div class="diag-value">' + esc(d.symptomes || d.symptoms_selected || '\u2014') + '</div>' +
       '</div>';
+      window.__pendingDiag = d;
+      window.__leadInfo = l;
       if (d.ayrika_analysis) {
         block += renderAyrika(d.ayrika_analysis);
+        block += '<div style="grid-column:1 / -1;margin-top:10px">' +
+          '<button onclick="launchAyrika(' + l.id + ')" id="launchAyrikaBtn" class="btn-tip" data-tip="Relance une nouvelle analyse Ayrika sur ce diagnostic (\u00e9crase l\u2019analyse actuelle)" style="padding:6px 12px;border:1px solid #B8965A;border-radius:6px;background:transparent;color:#8A6D1F;font-weight:600;font-size:12.5px;cursor:pointer">\ud83d\udd04 Refaire l\u2019analyse</button>' +
+        '</div>';
       } else {
         // Formulaire arrivé mais analyse pas encore lancée : bouton de lancement manuel
-        window.__pendingDiag = d;
-        window.__leadInfo = l;
         block += '<div style="grid-column:1 / -1;display:flex;align-items:center;gap:12px;margin-top:10px;flex-wrap:wrap">' +
           '<span style="display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:#8A6D1F;background:#FCF3DC;padding:5px 10px;border-radius:6px;font-weight:600">\u23f3 En attente d\u2019analyse</span>' +
           '<button onclick="launchAyrika(' + l.id + ')" id="launchAyrikaBtn" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">\ud83d\ude80 Lancer l\u2019analyse Ayrika</button>' +
@@ -1093,6 +1096,7 @@
 
   async function launchAyrika(leadId) {
     const btn = document.getElementById('launchAyrikaBtn');
+    const labelIdle = btn.textContent; // garde le bon libellé (Lancer ou Refaire) pour le restaurer en cas d'erreur
     btn.disabled = true;
     btn.textContent = '\u23f3 Analyse en cours\u2026 (2-3 min)';
     try {
@@ -1115,12 +1119,12 @@
         loadLeadDetail();
       } else {
         btn.disabled = false;
-        btn.textContent = '\ud83d\ude80 Lancer l\u2019analyse Ayrika';
+        btn.textContent = labelIdle;
         alert('Erreur lors de l\u2019analyse. R\u00e9essayez.');
       }
     } catch (err) {
       btn.disabled = false;
-      btn.textContent = '\ud83d\ude80 Lancer l\u2019analyse Ayrika';
+      btn.textContent = labelIdle;
       alert('Erreur de connexion. R\u00e9essayez.');
     }
   }
