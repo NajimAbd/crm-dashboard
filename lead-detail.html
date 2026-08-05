@@ -727,11 +727,10 @@
     if (l.type_client) html += '<span class="header-chip">🏷️ ' + esc(typeLabels[l.type_client] || l.type_client) + '</span>';
     if (l.roqya_status && l.roqya_status !== 'none') html += '<span class="header-chip">🕌 Roqya : ' + esc(l.roqya_status === 'in_progress' ? 'en cours' : 'terminée') + '</span>';
     const tallyTypeEffectif = l.tally_type || (l.type_client === 'DD' ? 'DTAP' : 'DTFF');
-    if (tallyTypeEffectif === 'DTAP') {
-      html += '<span class="header-chip" style="background:#FCF3DC;border-color:#B8965A;color:#8A6D1F;font-weight:700">📋 DTAP — Diagnostic payant</span>';
-    } else {
-      html += '<span class="header-chip" style="background:#E8F3E8;border-color:#5A8C5A;color:#3E6B3E;font-weight:700">📋 DTFF — Diagnostic gratuit</span>';
-    }
+    html += '<select id="tallyTypeSelect" onchange="setTallyType(' + l.id + ', this.value)" title="Type de diagnostic Tally" style="padding:5px 10px;border-radius:6px;border:1px solid ' + (tallyTypeEffectif === 'DTAP' ? '#B8965A' : '#5A8C5A') + ';font-weight:700;font-size:12.5px;cursor:pointer;background:' + (tallyTypeEffectif === 'DTAP' ? '#FCF3DC' : '#E8F3E8') + ';color:' + (tallyTypeEffectif === 'DTAP' ? '#8A6D1F' : '#3E6B3E') + '">';
+    html += '<option value="DTFF" ' + (tallyTypeEffectif === 'DTFF' ? 'selected' : '') + '>📋 DTFF — Diagnostic gratuit</option>';
+    html += '<option value="DTAP" ' + (tallyTypeEffectif === 'DTAP' ? 'selected' : '') + '>📋 DTAP — Diagnostic payant</option>';
+    html += '</select>';
     html += '</div>';
 
     // ==== Bannière obligation Diagnostic Tally (RP / RM) ====
@@ -785,8 +784,8 @@
       const btnLabelBase = dejaEnvoye ? 'Renvoyer' : 'DT';
       const boutonsEnvoi = (l.whatsapp || l.email)
         ? (
-            (l.whatsapp ? '<button onclick="sendDiagnosticLink(' + l.id + ', \'whatsapp\')" id="sendDiagBtnDetail-whatsapp" class="btn-send-diag" style="padding:7px 14px;border:none;border-radius:6px;background:#5A8C5A;color:#fff;font-weight:600;font-size:13px;cursor:pointer">\ud83d\udcf1 ' + btnLabelBase + ' par WhatsApp</button>' : '') +
-            (l.email ? '<button onclick="sendDiagnosticLink(' + l.id + ', \'email\')" id="sendDiagBtnDetail-email" class="btn-send-diag" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:600;font-size:13px;cursor:pointer">\u2709\ufe0f ' + btnLabelBase + ' par Email</button>' : '')
+            (l.whatsapp ? '<button onclick="sendDiagnosticLink(' + l.id + ', \'whatsapp\')" id="sendDiagBtnDetail-whatsapp" class="btn-send-diag" title="' + (dejaEnvoye ? 'Renvoyer' : 'Envoyer') + ' le Diagnostic Tally par WhatsApp" style="padding:7px 14px;border:none;border-radius:6px;background:#5A8C5A;color:#fff;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:0.3px">\ud83d\udcf1 DT/W</button>' : '') +
+            (l.email ? '<button onclick="sendDiagnosticLink(' + l.id + ', \'email\')" id="sendDiagBtnDetail-email" class="btn-send-diag" title="' + (dejaEnvoye ? 'Renvoyer' : 'Envoyer') + ' le Diagnostic Tally par Email" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:700;font-size:13px;cursor:pointer;letter-spacing:0.3px">\u2709\ufe0f DT/E</button>' : '')
           )
         : '<span style="font-size:12.5px;color:#A33F2E">Aucun contact (email/WhatsApp) enregistr\u00e9 pour ce lead.</span>';
 
@@ -821,8 +820,8 @@
     html += '</div>';
     html += '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:10px">';
     html += buyerChip;
-    html += '<button onclick="refreshLead()" id="refreshLeadBtn" title="V\u00e9rifier si le formulaire est arriv\u00e9" class="btn-refresh-3d">\ud83d\udd04 Actualiser</button>';
-    html += '<button onclick="window.print()" style="padding:8px 18px;border:none;border-radius:6px;background:var(--gold);color:var(--green-deep);font-weight:700;font-size:13px;cursor:pointer">🖨️ Imprimer</button>';
+    html += '<button onclick="refreshLead()" id="refreshLeadBtn" title="V\u00e9rifier si le formulaire est arriv\u00e9" class="btn-refresh-3d" style="width:150px;text-align:center">\ud83d\udd04 Actualiser</button>';
+    html += '<button onclick="window.print()" style="width:150px;text-align:center;padding:8px 18px;border:none;border-radius:6px;background:var(--gold);color:var(--green-deep);font-weight:700;font-size:13px;cursor:pointer">🖨️ Imprimer</button>';
     html += '</div>';
     html += '</div>';
 
@@ -978,6 +977,24 @@
     document.getElementById('pageContent').innerHTML = html;
   }
 
+  async function setTallyType(leadId, value) {
+    try {
+      await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-set-tally-type', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId, account_id: session.account_id, tally_type: value })
+      });
+      // Remet à jour visuellement les couleurs du menu selon le choix
+      const sel = document.getElementById('tallyTypeSelect');
+      const isPaid = value === 'DTAP';
+      sel.style.borderColor = isPaid ? '#B8965A' : '#5A8C5A';
+      sel.style.background = isPaid ? '#FCF3DC' : '#E8F3E8';
+      sel.style.color = isPaid ? '#8A6D1F' : '#3E6B3E';
+    } catch (err) {
+      alert('Erreur de connexion. Le changement n\'a peut-\u00eatre pas \u00e9t\u00e9 enregistr\u00e9.');
+    }
+  }
+
   async function toggleDiagnosticAccepte(leadId, checked) {
     document.getElementById('sendDiagnosticWrap').style.display = checked ? 'flex' : 'none';
     try {
@@ -995,8 +1012,8 @@
     canal = canal || 'email';
     const langue = document.getElementById('langueDiagDetail').value;
     const btn = document.getElementById('sendDiagBtnDetail-' + canal);
-    const labelIdle = canal === 'whatsapp' ? '\ud83d\udcf1 Renvoyer par WhatsApp' : '\u2709\ufe0f Renvoyer par Email';
-    const labelSent = canal === 'whatsapp' ? 'DT envoy\u00e9 (WhatsApp) \u2713' : 'DT envoy\u00e9 (Email) \u2713';
+    const labelIdle = canal === 'whatsapp' ? '\ud83d\udcf1 DT/W' : '\u2709\ufe0f DT/E';
+    const labelSent = canal === 'whatsapp' ? 'DT/W envoy\u00e9 \u2713' : 'DT/E envoy\u00e9 \u2713';
     const labelBusy = 'Envoi en cours\u2026';
     const labelReset = btn.textContent; // texte d'origine (Lui proposer / Renvoyer) en cas d'erreur
     btn.disabled = true;
