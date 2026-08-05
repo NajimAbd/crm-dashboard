@@ -786,10 +786,10 @@
       } else if (analyseTerminee) {
         html += '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">';
         html += l.whatsapp
-          ? '<button onclick="sendDiagnosticResult(' + l.id + ', \'whatsapp\')" id="sendResultBtnDetail-whatsapp" class="btn-send-result btn-tip" data-tip="Envoyer le r\u00e9sultat du diagnostic + lien RDV par WhatsApp" style="padding:7px 14px;border:none;border-radius:6px;background:#5A8C5A;color:#fff;font-weight:700;font-size:13px;cursor:pointer">\ud83d\udcf1 RDV/W</button>'
+          ? '<button onclick="openResultPreview(' + l.id + ', \'whatsapp\')" id="sendResultBtnDetail-whatsapp" class="btn-send-result btn-tip" data-tip="Envoyer le r\u00e9sultat du diagnostic + lien RDV par WhatsApp" style="padding:7px 14px;border:none;border-radius:6px;background:#5A8C5A;color:#fff;font-weight:700;font-size:13px;cursor:pointer">\ud83d\udcf1 RDV/W</button>'
           : '<button disabled class="btn-tip" data-tip="Aucun num\u00e9ro WhatsApp enregistr\u00e9 pour ce lead" style="padding:7px 14px;border:none;border-radius:6px;background:#D8D4C8;color:#8A8577;font-weight:700;font-size:13px;cursor:not-allowed">\ud83d\udcf1 RDV/W</button>';
         html += l.email
-          ? '<button onclick="sendDiagnosticResult(' + l.id + ', \'email\')" id="sendResultBtnDetail-email" class="btn-send-result btn-tip" data-tip="Envoyer le r\u00e9sultat du diagnostic + lien RDV par Email" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:700;font-size:13px;cursor:pointer">\u2709\ufe0f RDV/E</button>'
+          ? '<button onclick="openResultPreview(' + l.id + ', \'email\')" id="sendResultBtnDetail-email" class="btn-send-result btn-tip" data-tip="Envoyer le r\u00e9sultat du diagnostic + lien RDV par Email" style="padding:7px 14px;border:none;border-radius:6px;background:#B8965A;color:#0D1A12;font-weight:700;font-size:13px;cursor:pointer">\u2709\ufe0f RDV/E</button>'
           : '<button disabled class="btn-tip" data-tip="Aucun email enregistr\u00e9 pour ce lead" style="padding:7px 14px;border:none;border-radius:6px;background:#D8D4C8;color:#8A8577;font-weight:700;font-size:13px;cursor:not-allowed">\u2709\ufe0f RDV/E</button>';
         html += '</div>';
       } else {
@@ -1064,32 +1064,98 @@
     }
   }
 
-  async function sendDiagnosticResult(leadId, canal) {
+  async function openResultPreview(leadId, canal) {
     canal = canal || 'email';
     const btn = document.getElementById('sendResultBtnDetail-' + canal);
     const labelIdle = btn.textContent;
-    const labelSent = canal === 'whatsapp' ? 'RDV/W envoyé ✓' : 'RDV/E envoyé ✓';
     btn.disabled = true;
-    btn.textContent = 'Envoi en cours…';
-    document.querySelectorAll('.btn-send-result').forEach(b => { if (b !== btn) b.disabled = true; });
+    btn.textContent = 'Chargement…';
     try {
-      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-send-diagnostic-result', {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-preview-diagnostic-result', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ lead_id: leadId, canal })
       });
       const data = await resp.json();
-      if (data.success) {
+      btn.disabled = false;
+      btn.textContent = labelIdle;
+      showResultPreviewModal(leadId, canal, data);
+    } catch (err) {
+      btn.disabled = false;
+      btn.textContent = labelIdle;
+      alert('Erreur de connexion. Réessayez.');
+    }
+  }
+
+  function showResultPreviewModal(leadId, canal, data) {
+    const old = document.getElementById('previewModalOverlay');
+    if (old) old.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'previewModalOverlay';
+    overlay.style.cssText = 'position:fixed;inset:0;background:rgba(13,26,18,0.55);z-index:1000;display:flex;align-items:center;justify-content:center;padding:20px';
+
+    const isWa = canal === 'whatsapp';
+    const box = document.createElement('div');
+    box.style.cssText = 'background:#FCFBF8;border-radius:14px;max-width:560px;width:100%;max-height:88vh;overflow:auto;padding:24px;box-shadow:0 20px 60px rgba(0,0,0,0.3)';
+
+    let inner = '<h3 style="margin:0 0 4px;font-family:Georgia,serif;color:#0D1A12">' +
+      (isWa ? '📱 Aperçu — message WhatsApp' : '✉️ Aperçu — email') +
+      '</h3>' +
+      '<p style="font-size:12.5px;color:#6B6B68;margin:0 0 16px">Relis, modifie si besoin, puis envoie.</p>';
+
+    if (isWa) {
+      inner += '<textarea id="previewText" style="width:100%;min-height:220px;padding:12px;border:1px solid #E5DECF;border-radius:8px;font-size:13.5px;font-family:inherit;line-height:1.5;box-sizing:border-box">' + esc(data.message_text || '') + '</textarea>';
+    } else {
+      inner += '<label style="font-size:12px;font-weight:700;color:#8A6D1F;display:block;margin-bottom:4px">Objet</label>' +
+        '<input id="previewSubject" type="text" value="' + esc(data.subject || '') + '" style="width:100%;padding:9px 12px;border:1px solid #E5DECF;border-radius:8px;font-size:13.5px;box-sizing:border-box;margin-bottom:14px">' +
+        '<label style="font-size:12px;font-weight:700;color:#8A6D1F;display:block;margin-bottom:4px">Résumé personnalisé (le reste de l\u2019email — mise en forme, bouton Calendly, signature — ne change pas)</label>' +
+        '<textarea id="previewText" style="width:100%;min-height:160px;padding:12px;border:1px solid #E5DECF;border-radius:8px;font-size:13.5px;font-family:inherit;line-height:1.5;box-sizing:border-box">' + esc(data.resume_text || '') + '</textarea>';
+    }
+
+    inner += '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:18px">' +
+      '<button onclick="document.getElementById(\'previewModalOverlay\').remove()" style="padding:9px 16px;border:1px solid #D8D2C2;border-radius:8px;background:transparent;color:#555;font-weight:600;font-size:13px;cursor:pointer">Annuler</button>' +
+      '<button onclick="confirmSendResult(' + leadId + ', \'' + canal + '\')" id="confirmSendBtn" style="padding:9px 18px;border:none;border-radius:8px;background:#5A8C5A;color:#fff;font-weight:700;font-size:13px;cursor:pointer">Envoyer</button>' +
+    '</div>';
+
+    box.innerHTML = inner;
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
+  }
+
+  async function confirmSendResult(leadId, canal) {
+    const confirmBtn = document.getElementById('confirmSendBtn');
+    confirmBtn.disabled = true;
+    confirmBtn.textContent = 'Envoi en cours…';
+
+    const payload = { lead_id: leadId, canal };
+    if (canal === 'whatsapp') {
+      payload.message_text = document.getElementById('previewText').value;
+    } else {
+      payload.subject = document.getElementById('previewSubject').value;
+      payload.resume_text = document.getElementById('previewText').value;
+    }
+
+    const btn = document.getElementById('sendResultBtnDetail-' + canal);
+    const labelSent = canal === 'whatsapp' ? 'RDV/W envoyé ✓' : 'RDV/E envoyé ✓';
+
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-send-diagnostic-result', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      document.getElementById('previewModalOverlay').remove();
+      if (data.success && btn) {
         btn.textContent = labelSent;
         loadLeadDetail();
-      } else {
-        document.querySelectorAll('.btn-send-result').forEach(b => { b.disabled = false; });
-        btn.textContent = labelIdle;
+      } else if (!data.success) {
         alert('Erreur lors de l\'envoi. Réessayez.');
       }
     } catch (err) {
-      document.querySelectorAll('.btn-send-result').forEach(b => { b.disabled = false; });
-      btn.textContent = labelIdle;
+      confirmBtn.disabled = false;
+      confirmBtn.textContent = 'Envoyer';
       alert('Erreur de connexion. Réessayez.');
     }
   }
