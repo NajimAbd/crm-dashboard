@@ -159,7 +159,7 @@
   /* ==== STATS ==== */
   .stats {
     display: grid;
-    grid-template-columns: 1fr 1fr 1fr 0.5fr;
+    grid-template-columns: 1fr 1fr 1fr 0.5fr 0.7fr;
     gap: 16px;
     margin-bottom: 36px;
   }
@@ -462,7 +462,7 @@
     .print-meta-sub { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
 
     /* Stats restylées pour le papier (gardées car utiles a une vue d'ensemble) */
-    .stats { display: grid !important; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 22px; }
+    .stats { display: grid !important; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 22px; }
     .stat-card { border: 1px solid #D8D2C2; box-shadow: none; padding: 12px 14px 10px; break-inside: avoid; }
     .stat-card::before { background: var(--gold); }
     .stat-value { font-size: 24px; }
@@ -568,6 +568,8 @@
     </div>
   </div>
 
+  <div id="rdvImminentNotice"></div>
+
   <div class="stats" id="stats">
     <div class="stat-card" onclick="filterAndScroll('argent_dort')" style="cursor:pointer" title="Diagnostics remplis dont le résultat n'a pas encore été envoyé — recontacte-les !">
       <div class="stat-value" id="statArgentDort" style="color:#B8965A">—</div>
@@ -584,6 +586,10 @@
     <div class="stat-card" title="Diagnostics remplis / leads reçus">
       <div class="stat-value" id="statConversion">—</div>
       <div class="stat-label">📊 Taux diagnostic</div>
+    </div>
+    <div class="stat-card" onclick="window.location.href='calendar.html'" style="cursor:pointer" title="Nombre de rendez-vous à venir (Calendly)">
+      <div class="stat-value" id="statRdvPlanifies" style="color:#5A8C5A">—</div>
+      <div class="stat-label">📅 RDV planifiés</div>
     </div>
   </div>
 
@@ -902,6 +908,7 @@
 
     startActivityTracking();
     loadLeads();
+    loadAppointmentsStats();
   }
 
   // === Surveillance d'activité : prolonge la session quand l'utilisateur agit,
@@ -917,6 +924,36 @@
         logout();
       }
     }, 60 * 1000);
+  }
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  async function loadAppointmentsStats() {
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-appointments-stats?account_id=' + encodeURIComponent(session.account_id));
+      const data = await resp.json();
+      const countEl = document.getElementById('statRdvPlanifies');
+      if (countEl) countEl.textContent = data.count_planifies != null ? data.count_planifies : '0';
+
+      const noticeEl = document.getElementById('rdvImminentNotice');
+      if (noticeEl) {
+        if (data.imminent && data.prochain_rdv) {
+          const d = new Date(String(data.prochain_rdv.date_rdv).replace(' ', 'T'));
+          const heure = d.toLocaleTimeString('fr-CH', { hour: '2-digit', minute: '2-digit' });
+          const jour = d.toLocaleDateString('fr-CH', { day: '2-digit', month: '2-digit' });
+          noticeEl.innerHTML = '<div style="display:flex;align-items:center;gap:10px;background:#FCF3DC;border:1px solid #B8965A;border-radius:10px;padding:12px 16px;margin-bottom:16px;font-size:14px;color:#8A6D1F;font-weight:600">' +
+            '🔔 RDV proche : <strong>' + esc(data.prochain_rdv.lead_nom || data.prochain_rdv.titre || '') + '</strong> le ' + jour + ' à ' + heure +
+          '</div>';
+        } else {
+          noticeEl.innerHTML = '';
+        }
+      }
+    } catch (err) {
+      const countEl = document.getElementById('statRdvPlanifies');
+      if (countEl) countEl.textContent = '—';
+    }
   }
 
   async function loadLeads() {
