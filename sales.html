@@ -118,6 +118,8 @@
     font-family: 'Inter', sans-serif;
   }
   .filter-clear:hover { color: var(--green-deep); }
+  .export-btn { background: white; border: 1px solid var(--border-soft); color: var(--green-deep); font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 14px; border-radius: 8px; cursor: pointer; transition: all 0.15s; }
+  .export-btn:hover { background: var(--bg-soft); border-color: var(--gold); }
 
   .modal-overlay {
     display: none; position: fixed; inset: 0; background: rgba(13,26,18,0.55);
@@ -227,6 +229,7 @@
     <input type="date" id="filterDateFrom" style="display:none;" onchange="applyFilters()">
     <input type="date" id="filterDateTo" style="display:none;" onchange="applyFilters()">
     <button class="filter-clear" onclick="clearFilters()">Réinitialiser</button>
+    <button class="export-btn" onclick="exportCSV()">⬇ Exporter</button>
   </div>
 
   <div class="stats">
@@ -340,6 +343,7 @@
   let allSales = [];
   let salesChart = null;
   let canalChart = null;
+  let currentFilteredSales = [];
   const CANAL_COLORS = ['#B8965A', '#0D1A12', '#8B6E3A', '#5A8C5A', '#C49A4E', '#6B6B68', '#D4AF7A', '#4A6741'];
 
   function onPeriodeChange() {
@@ -416,6 +420,7 @@
     renderChart(filtered);
     renderCanalChart(filtered);
     renderTable(filtered);
+    currentFilteredSales = filtered;
   }
 
   function clearFilters() {
@@ -428,6 +433,47 @@
     document.getElementById('filterDateFrom').value = '';
     document.getElementById('filterDateTo').value = '';
     applyFilters();
+  }
+
+  function csvEscape(value) {
+    const str = (value === null || value === undefined) ? '' : String(value);
+    if (str.includes(';') || str.includes('"') || str.includes('\n')) {
+      return '"' + str.replace(/"/g, '""') + '"';
+    }
+    return str;
+  }
+
+  function exportCSV() {
+    const sales = currentFilteredSales || [];
+    if (sales.length === 0) {
+      alert('Aucune vente à exporter avec les filtres actuels.');
+      return;
+    }
+    const headers = ['Produit', 'Client', 'Email', 'Canal', 'Statut', 'Date', 'Montant CHF'];
+    const rows = sales.map(s => {
+      const fullName = ((s.prenom || '') + ' ' + (s.nom || '')).trim() || '—';
+      const statutLabel = (STATUT_LABELS[s.statut_paiement] || { label: s.statut_paiement || '' }).label;
+      return [
+        s.produit || '',
+        fullName,
+        s.email || '',
+        s.canal_vente || '',
+        statutLabel,
+        fmtDate(s.date_vente),
+        parseFloat(s.montant || 0).toFixed(2)
+      ].map(csvEscape).join(';');
+    });
+    const csvContent = '\uFEFF' + [headers.join(';'), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    const today = new Date().toISOString().slice(0, 10);
+    link.href = url;
+    link.download = 'ventes-roqyasuisse-' + today + '.csv';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   }
 
   function renderFilteredStats(sales) {
