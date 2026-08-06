@@ -64,6 +64,48 @@
   @media (max-width: 640px) {
     .page { padding: 24px 16px 50px; }
   }
+
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin: 40px 0 16px; }
+  .section-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; color: var(--green-deep); margin: 0; }
+  .config-btn { background: white; border: 1px solid var(--border-soft); color: var(--text-soft); font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .config-btn:hover { border-color: var(--gold); color: var(--green-deep); }
+
+  .finance-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 20px; }
+  .finance-card { background: white; border: 1px solid var(--border-soft); border-radius: 14px; padding: 22px; }
+  .finance-card-title { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-soft); font-weight: 700; margin-bottom: 16px; }
+  .finance-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border-soft); }
+  .finance-row:last-child { border-bottom: none; }
+  .finance-row-label { font-size: 13px; color: var(--text-soft); }
+  .finance-row-value { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; color: var(--green-deep); }
+  .finance-row-value.big { font-size: 26px; }
+  .finance-row-value.good { color: var(--status-paid); }
+  .finance-row-value.warn { color: #C4604E; }
+  .finance-hint { font-size: 11px; color: var(--text-soft); margin-top: 10px; line-height: 1.5; }
+  .ratio-badge { display: inline-block; padding: 3px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; margin-left: 8px; }
+  .ratio-good { background: rgba(90,140,90,0.15); color: var(--status-paid); }
+  .ratio-warn { background: rgba(196,96,78,0.15); color: #C4604E; }
+  .ratio-neutral { background: rgba(184,150,90,0.15); color: var(--gold); }
+
+  @media (max-width: 900px) {
+    .finance-grid { grid-template-columns: 1fr; }
+  }
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(13,26,18,0.5); z-index: 100; align-items: center; justify-content: center; padding: 20px; }
+  .modal-overlay.open { display: flex; }
+  .modal-box { background: white; border-radius: 16px; padding: 28px; max-width: 460px; width: 100%; max-height: 85vh; overflow-y: auto; }
+  .modal-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; color: var(--green-deep); margin: 0 0 18px; }
+  .modal-label { font-size: 12px; font-weight: 600; color: var(--text-main); margin: 16px 0 6px; display: block; }
+  .modal-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border-soft); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; }
+  .modal-check-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; }
+  .cost-row { display: flex; gap: 8px; margin-bottom: 8px; }
+  .cost-row input[type="text"] { flex: 2; }
+  .cost-row input[type="number"] { flex: 1; }
+  .cost-remove { background: none; border: none; color: #C4604E; cursor: pointer; font-size: 18px; padding: 0 6px; }
+  .add-cost-btn { background: none; border: 1px dashed var(--border-soft); color: var(--text-soft); font-size: 12px; padding: 8px; width: 100%; border-radius: 8px; cursor: pointer; margin-top: 4px; }
+  .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
+  .modal-btn { flex: 1; padding: 10px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; border: none; }
+  .modal-btn-primary { background: var(--green-deep); color: white; }
+  .modal-btn-secondary { background: var(--bg-soft); color: var(--text-main); border: 1px solid var(--border-soft); }
 </style>
 </head>
 <body>
@@ -100,6 +142,63 @@
     <div class="stat-card"><div class="stat-value" id="kpiRevenue">—</div><div class="stat-label">Chiffre d'affaires (CHF)</div></div>
     <div class="stat-card"><div class="stat-value" id="kpiRate">—</div><div class="stat-label">Taux conversion</div></div>
     <div class="stat-card"><div class="stat-value" id="kpiAvgBasket">—</div><div class="stat-label">Panier moyen (CHF)</div></div>
+  </div>
+
+  <div class="section-header">
+    <h2 class="section-title">Santé financière</h2>
+    <button class="config-btn" onclick="openFinanceConfig()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Configurer
+    </button>
+  </div>
+
+  <div class="finance-grid" id="financeGrid">
+    <div class="finance-card">
+      <div class="finance-card-title">Trésorerie</div>
+      <div class="finance-row"><span class="finance-row-label">CA encaissé (Payé)</span><span class="finance-row-value good" id="finEncaisse">—</span></div>
+      <div class="finance-row"><span class="finance-row-label">En attente</span><span class="finance-row-value" id="finAttente">—</span></div>
+      <div class="finance-row"><span class="finance-row-label">Charges récurrentes</span><span class="finance-row-value warn" id="finCharges">—</span></div>
+      <div class="finance-row"><span class="finance-row-label">Marge nette estimée</span><span class="finance-row-value big" id="finMarge">—</span></div>
+      <div class="finance-hint">Marge nette = CA encaissé − frais Stripe (~2.9%) − charges récurrentes − dépense pub.</div>
+    </div>
+
+    <div class="finance-card">
+      <div class="finance-card-title">Coût d'acquisition (Ads)</div>
+      <div class="finance-row"><span class="finance-row-label">Dépense pub (période)</span><span class="finance-row-value" id="finAdSpend">—</span></div>
+      <div class="finance-row"><span class="finance-row-label">Nouveaux clients (ads)</span><span class="finance-row-value" id="finAdClients">—</span></div>
+      <div class="finance-row"><span class="finance-row-label">CAC (coût / client)</span><span class="finance-row-value" id="finCAC">—</span></div>
+      <div class="finance-row"><span class="finance-row-label">ROAS</span><span class="finance-row-value big" id="finROAS">—</span></div>
+      <div class="finance-hint" id="finAdsHint">Configurez vos canaux publicitaires et votre budget pour activer ce module.</div>
+    </div>
+
+    <div class="finance-card">
+      <div class="finance-card-title">Ratio LTV : CAC</div>
+      <div class="finance-row"><span class="finance-row-label">Panier moyen (LTV proxy)</span><span class="finance-row-value" id="finLTV">—</span></div>
+      <div class="finance-row"><span class="finance-row-label">CAC</span><span class="finance-row-value" id="finCAC2">—</span></div>
+      <div class="finance-row"><span class="finance-row-label">Ratio</span><span class="finance-row-value big" id="finRatio">—<span id="finRatioBadge"></span></span></div>
+      <div class="finance-hint">Règle d'or : viser un ratio ≥ 3:1. En dessous de 1:1, chaque client acquis vous coûte plus qu'il ne rapporte.</div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="financeModal">
+    <div class="modal-box">
+      <div class="modal-title">Configurer la santé financière</div>
+
+      <label class="modal-label">Dépense publicitaire du mois (CHF)</label>
+      <input type="number" class="modal-input" id="cfgAdSpend" placeholder="Ex: 500" min="0" step="1">
+
+      <label class="modal-label">Canaux considérés comme "Ads" (payants)</label>
+      <div id="cfgChannels"></div>
+
+      <label class="modal-label">Charges récurrentes mensuelles</label>
+      <div id="cfgCostsList"></div>
+      <button class="add-cost-btn" onclick="addCostRow()">+ Ajouter une charge</button>
+
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeFinanceConfig()">Annuler</button>
+        <button class="modal-btn modal-btn-primary" onclick="saveFinanceConfig()">Enregistrer</button>
+      </div>
+    </div>
   </div>
 
   <div class="charts-grid">
@@ -157,6 +256,11 @@
   const BLUE = '#4A7BA6';
   const PALETTE = ['#B8965A', '#4A7BA6', '#8B6FB0', '#5A8C5A', '#C4604E', '#9C9C9C'];
 
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
   async function loadKPIs() {
     try {
       const [leadsResp, salesResp] = await Promise.all([
@@ -168,12 +272,15 @@
 
       const leads = leadsData.leads || [];
       const sales = salesData.sales || [];
+      allSalesGlobal = sales;
+      allLeadsGlobal = leads;
 
       renderStats(leads, sales);
       renderLeadsChart(leads);
       renderSourceChart(leads);
       renderRevenueChart(sales);
       renderFunnel(leads, sales);
+      renderFinanceModule(sales);
 
       document.getElementById('subtitleInfo').textContent = 'Vue d\'ensemble basée sur ' + leads.length + ' lead(s) et ' + sales.length + ' vente(s)';
     } catch (err) {
@@ -193,6 +300,144 @@
     document.getElementById('kpiRevenue').textContent = revenue.toFixed(0);
     document.getElementById('kpiRate').textContent = rate + '%';
     document.getElementById('kpiAvgBasket').textContent = avgBasket.toFixed(0);
+  }
+
+  // ===== MODULE SANTÉ FINANCIÈRE =====
+  let allSalesGlobal = [];
+  let allLeadsGlobal = [];
+  const FIN_CONFIG_KEY = 'crm_finance_config_' + (session ? session.account_id : 'default');
+  const STRIPE_FEE_RATE = 0.029;
+
+  function getFinanceConfig() {
+    try {
+      const raw = localStorage.getItem(FIN_CONFIG_KEY);
+      if (!raw) return { adSpend: 0, adChannels: [], costs: [] };
+      return JSON.parse(raw);
+    } catch (e) {
+      return { adSpend: 0, adChannels: [], costs: [] };
+    }
+  }
+
+  function saveFinanceConfigToStorage(cfg) {
+    localStorage.setItem(FIN_CONFIG_KEY, JSON.stringify(cfg));
+  }
+
+  function getUniqueChannels(sales) {
+    const set = new Set();
+    sales.forEach(s => { if (s.canal_vente) set.add(s.canal_vente); });
+    return Array.from(set);
+  }
+
+  function openFinanceConfig() {
+    const cfg = getFinanceConfig();
+    document.getElementById('cfgAdSpend').value = cfg.adSpend || '';
+
+    const channels = getUniqueChannels(allSalesGlobal);
+    const channelsHtml = channels.length === 0
+      ? '<div style="font-size:12px;color:var(--text-soft);">Aucun canal détecté pour le moment.</div>'
+      : channels.map(c => {
+          const checked = (cfg.adChannels || []).includes(c) ? 'checked' : '';
+          return '<label class="modal-check-row"><input type="checkbox" value="' + esc(c) + '" class="cfg-channel-cb" ' + checked + '> ' + esc(c) + '</label>';
+        }).join('');
+    document.getElementById('cfgChannels').innerHTML = channelsHtml;
+
+    const costsList = document.getElementById('cfgCostsList');
+    costsList.innerHTML = '';
+    const costs = (cfg.costs && cfg.costs.length > 0) ? cfg.costs : [];
+    costs.forEach(c => addCostRow(c.name, c.amount));
+    if (costs.length === 0) addCostRow('', '');
+
+    document.getElementById('financeModal').classList.add('open');
+  }
+
+  function closeFinanceConfig() {
+    document.getElementById('financeModal').classList.remove('open');
+  }
+
+  function addCostRow(name, amount) {
+    const list = document.getElementById('cfgCostsList');
+    const row = document.createElement('div');
+    row.className = 'cost-row';
+    row.innerHTML =
+      '<input type="text" class="modal-input cost-name" placeholder="Nom (ex: Calendly)" value="' + esc(name || '') + '">' +
+      '<input type="number" class="modal-input cost-amount" placeholder="CHF" min="0" step="0.5" value="' + esc(amount || '') + '">' +
+      '<button class="cost-remove" onclick="this.parentElement.remove()">✕</button>';
+    list.appendChild(row);
+  }
+
+  function saveFinanceConfig() {
+    const adSpend = parseFloat(document.getElementById('cfgAdSpend').value) || 0;
+    const adChannels = Array.from(document.querySelectorAll('.cfg-channel-cb:checked')).map(cb => cb.value);
+    const costRows = document.querySelectorAll('#cfgCostsList .cost-row');
+    const costs = Array.from(costRows).map(row => ({
+      name: row.querySelector('.cost-name').value.trim(),
+      amount: parseFloat(row.querySelector('.cost-amount').value) || 0
+    })).filter(c => c.name || c.amount);
+
+    saveFinanceConfigToStorage({ adSpend, adChannels, costs });
+    closeFinanceConfig();
+    renderFinanceModule(allSalesGlobal);
+  }
+
+  function renderFinanceModule(sales) {
+    const cfg = getFinanceConfig();
+    const paid = sales.filter(s => s.statut_paiement === 'paye');
+    const pending = sales.filter(s => s.statut_paiement === 'en_attente');
+
+    const revenueEncaisse = paid.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
+    const revenueAttente = pending.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
+    const totalCosts = (cfg.costs || []).reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
+    const stripeFees = revenueEncaisse * STRIPE_FEE_RATE;
+    const adSpend = parseFloat(cfg.adSpend) || 0;
+    const margeNette = revenueEncaisse - stripeFees - totalCosts - adSpend;
+
+    document.getElementById('finEncaisse').textContent = revenueEncaisse.toFixed(0) + ' CHF';
+    document.getElementById('finAttente').textContent = revenueAttente.toFixed(0) + ' CHF';
+    document.getElementById('finCharges').textContent = '−' + totalCosts.toFixed(0) + ' CHF';
+    const margeEl = document.getElementById('finMarge');
+    margeEl.textContent = margeNette.toFixed(0) + ' CHF';
+    margeEl.className = 'finance-row-value big ' + (margeNette >= 0 ? 'good' : 'warn');
+
+    // Bloc Ads / CAC / ROAS
+    const adChannels = cfg.adChannels || [];
+    const adSales = adChannels.length > 0 ? paid.filter(s => adChannels.includes(s.canal_vente)) : [];
+    const adRevenue = adSales.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
+    const adClientsCount = adSales.length;
+    const cac = (adSpend > 0 && adClientsCount > 0) ? (adSpend / adClientsCount) : null;
+    const roas = (adSpend > 0) ? (adRevenue / adSpend) : null;
+
+    document.getElementById('finAdSpend').textContent = adSpend > 0 ? adSpend.toFixed(0) + ' CHF' : '—';
+    document.getElementById('finAdClients').textContent = adChannels.length > 0 ? adClientsCount : '—';
+    document.getElementById('finCAC').textContent = cac !== null ? cac.toFixed(0) + ' CHF' : '—';
+    const roasEl = document.getElementById('finROAS');
+    roasEl.textContent = roas !== null ? roas.toFixed(1) + 'x' : '—';
+    roasEl.className = 'finance-row-value big ' + (roas !== null ? (roas >= 3 ? 'good' : (roas < 1 ? 'warn' : '')) : '');
+
+    const adsHint = document.getElementById('finAdsHint');
+    if (adChannels.length === 0) {
+      adsHint.textContent = 'Configurez vos canaux publicitaires et votre budget pour activer ce module.';
+    } else if (adSpend === 0) {
+      adsHint.textContent = 'Ajoutez votre budget publicitaire dans "Configurer" pour calculer le CAC et le ROAS.';
+    } else {
+      adsHint.textContent = 'ROAS ≥ 3x est généralement considéré comme sain pour un service premium.';
+    }
+
+    // Bloc LTV:CAC
+    const avgBasket = paid.length > 0 ? (revenueEncaisse / paid.length) : 0;
+    document.getElementById('finLTV').textContent = avgBasket > 0 ? avgBasket.toFixed(0) + ' CHF' : '—';
+    document.getElementById('finCAC2').textContent = cac !== null ? cac.toFixed(0) + ' CHF' : '—';
+    const ratioEl = document.getElementById('finRatio');
+    const badgeEl = document.getElementById('finRatioBadge');
+    if (cac !== null && cac > 0 && avgBasket > 0) {
+      const ratio = avgBasket / cac;
+      ratioEl.childNodes[0].textContent = ratio.toFixed(1) + ':1';
+      badgeEl.textContent = ratio >= 3 ? 'Sain' : (ratio >= 1 ? 'Moyen' : 'Risqué');
+      badgeEl.className = 'ratio-badge ' + (ratio >= 3 ? 'ratio-good' : (ratio >= 1 ? 'ratio-neutral' : 'ratio-warn'));
+    } else {
+      ratioEl.childNodes[0].textContent = '—';
+      badgeEl.textContent = '';
+      badgeEl.className = '';
+    }
   }
 
   function lastNDays(n) {
