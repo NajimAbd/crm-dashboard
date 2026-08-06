@@ -44,7 +44,8 @@
   .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 32px; }
   .stat-card { background: white; border: 1px solid var(--border-soft); border-radius: 12px; padding: 22px 22px 20px; position: relative; overflow: hidden; }
   .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold); }
-  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 600; color: var(--green-deep); line-height: 1; margin-bottom: 6px; }
+  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 600; color: var(--green-deep); line-height: 1; margin-bottom: 6px; letter-spacing: 0.01em; }
+  .stat-value .decimals { font-size: 20px; color: var(--text-soft); font-weight: 500; }
   .stat-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; }
 
   .chart-card { background: white; border: 1px solid var(--border-soft); border-radius: 14px; padding: 22px 24px 14px; margin-bottom: 20px; }
@@ -305,6 +306,18 @@
     if (s === null || s === undefined) return '';
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+  function fmtNum(n) {
+    const num = parseFloat(n || 0);
+    const fixed = num.toFixed(2);
+    const [intPart, decPart] = fixed.split('.');
+    const withSpaces = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, '\u00A0');
+    return withSpaces + '.' + decPart;
+  }
+  function fmtNumHtml(n) {
+    const formatted = fmtNum(n);
+    const [intPart, decPart] = formatted.split('.');
+    return intPart + '<span class="decimals">.' + decPart + '</span>';
+  }
   function fmtDate(d) {
     if (!d) return '—';
     return new Date(d.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
@@ -405,9 +418,9 @@
     const total = paid.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
     const count = sales.length;
     const avg = paid.length > 0 ? (total / paid.length) : 0;
-    document.getElementById('statTotal').textContent = total.toFixed(2);
+    document.getElementById('statTotal').innerHTML = fmtNumHtml(total);
     document.getElementById('statCount').textContent = count;
-    document.getElementById('statAvg').textContent = avg.toFixed(2);
+    document.getElementById('statAvg').innerHTML = fmtNumHtml(avg);
   }
 
   function renderChart(sales) {
@@ -486,7 +499,7 @@
         '<td><span class="channel-chip">' + esc(s.canal_vente || '—') + '</span></td>' +
         '<td>' + payChip + '</td>' +
         '<td>' + fmtDate(s.date_vente) + '</td>' +
-        '<td class="amount">' + parseFloat(s.montant).toFixed(2) + ' CHF</td>' +
+        '<td class="amount">' + fmtNum(s.montant) + ' CHF</td>' +
         '</tr>';
     });
 
