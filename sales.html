@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nexa — Ventes</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
 
@@ -45,6 +46,10 @@
   .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold); }
   .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 600; color: var(--green-deep); line-height: 1; margin-bottom: 6px; }
   .stat-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; }
+
+  .chart-card { background: white; border: 1px solid var(--border-soft); border-radius: 14px; padding: 22px 24px 14px; margin-bottom: 20px; }
+  .chart-card-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; color: var(--green-deep); margin-bottom: 14px; }
+  .chart-canvas-wrap { position: relative; height: 220px; }
 
   .sales-table-wrap { background: white; border: 1px solid var(--border-soft); border-radius: 14px; overflow: hidden; }
   table { width: 100%; border-collapse: collapse; }
@@ -194,6 +199,16 @@
       <option value="paye">Payé</option>
       <option value="en_attente">En attente</option>
     </select>
+    <select id="filterPeriode" onchange="onPeriodeChange()">
+      <option value="all">Toute la période</option>
+      <option value="7">7 derniers jours</option>
+      <option value="30" selected>30 derniers jours</option>
+      <option value="90">3 derniers mois</option>
+      <option value="365">12 derniers mois</option>
+      <option value="custom">Personnalisé…</option>
+    </select>
+    <input type="date" id="filterDateFrom" style="display:none;" onchange="applyFilters()">
+    <input type="date" id="filterDateTo" style="display:none;" onchange="applyFilters()">
     <button class="filter-clear" onclick="clearFilters()">Réinitialiser</button>
   </div>
 
@@ -201,6 +216,11 @@
     <div class="stat-card"><div class="stat-value" id="statTotal">—</div><div class="stat-label">Chiffre d'affaires (CHF)</div></div>
     <div class="stat-card"><div class="stat-value" id="statCount">—</div><div class="stat-label">Ventes totales</div></div>
     <div class="stat-card"><div class="stat-value" id="statAvg">—</div><div class="stat-label">Panier moyen (CHF)</div></div>
+  </div>
+
+  <div class="chart-card">
+    <div class="chart-card-title">Évolution du chiffre d'affaires</div>
+    <div class="chart-canvas-wrap"><canvas id="salesChart"></canvas></div>
   </div>
 
   <div class="sales-table-wrap" id="tableContainer">
@@ -291,12 +311,41 @@
   }
 
   let allSales = [];
+  let salesChart = null;
+
+  function onPeriodeChange() {
+    const val = document.getElementById('filterPeriode').value;
+    const fromInput = document.getElementById('filterDateFrom');
+    const toInput = document.getElementById('filterDateTo');
+    if (val === 'custom') {
+      fromInput.style.display = 'inline-block';
+      toInput.style.display = 'inline-block';
+    } else {
+      fromInput.style.display = 'none';
+      toInput.style.display = 'none';
+    }
+    applyFilters();
+  }
+
+  function getDateRange() {
+    const val = document.getElementById('filterPeriode').value;
+    if (val === 'all') return { from: null, to: null };
+    if (val === 'custom') {
+      const from = document.getElementById('filterDateFrom').value || null;
+      const to = document.getElementById('filterDateTo').value || null;
+      return { from, to };
+    }
+    const days = parseInt(val, 10);
+    const to = new Date();
+    const from = new Date();
+    from.setDate(from.getDate() - days);
+    return { from: from.toISOString().slice(0, 10), to: to.toISOString().slice(0, 10) };
+  }
 
   async function loadSales() {
     try {
       const resp = await fetch(CRM_SALES_API + '?account_id=' + encodeURIComponent(session.account_id));
       const data = await resp.json();
-      renderStats(data);
       allSales = data.sales || [];
       populateCanalFilter(allSales);
       applyFilters();
@@ -318,6 +367,7 @@
     const search = document.getElementById('filterSearch').value.trim().toLowerCase();
     const canal = document.getElementById('filterCanal').value;
     const statut = document.getElementById('filterStatut').value;
+    const { from, to } = getDateRange();
 
     const filtered = allSales.filter(s => {
       if (canal && s.canal_vente !== canal) return false;
@@ -326,8 +376,15 @@
         const haystack = ((s.prenom || '') + ' ' + (s.nom || '') + ' ' + (s.email || '') + ' ' + (s.produit || '')).toLowerCase();
         if (!haystack.includes(search)) return false;
       }
+      if (s.date_vente) {
+        const saleDate = s.date_vente.slice(0, 10);
+        if (from && saleDate < from) return false;
+        if (to && saleDate > to) return false;
+      }
       return true;
     });
+    renderFilteredStats(filtered);
+    renderChart(filtered);
     renderTable(filtered);
   }
 
@@ -335,16 +392,69 @@
     document.getElementById('filterSearch').value = '';
     document.getElementById('filterCanal').value = '';
     document.getElementById('filterStatut').value = '';
+    document.getElementById('filterPeriode').value = '30';
+    document.getElementById('filterDateFrom').style.display = 'none';
+    document.getElementById('filterDateTo').style.display = 'none';
+    document.getElementById('filterDateFrom').value = '';
+    document.getElementById('filterDateTo').value = '';
     applyFilters();
   }
 
-  function renderStats(data) {
-    const total = parseFloat(data.total || 0);
-    const count = data.count || 0;
-    const avg = count > 0 ? (total / count) : 0;
+  function renderFilteredStats(sales) {
+    const paid = sales.filter(s => s.statut_paiement === 'paye');
+    const total = paid.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
+    const count = sales.length;
+    const avg = paid.length > 0 ? (total / paid.length) : 0;
     document.getElementById('statTotal').textContent = total.toFixed(2);
     document.getElementById('statCount').textContent = count;
     document.getElementById('statAvg').textContent = avg.toFixed(2);
+  }
+
+  function renderChart(sales) {
+    const byDay = {};
+    sales.forEach(s => {
+      if (s.statut_paiement !== 'paye' || !s.date_vente) return;
+      const day = s.date_vente.slice(0, 10);
+      byDay[day] = (byDay[day] || 0) + parseFloat(s.montant || 0);
+    });
+    const days = Object.keys(byDay).sort();
+    const labels = days.map(d => new Date(d).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' }));
+    const values = days.map(d => byDay[d]);
+
+    const ctx = document.getElementById('salesChart').getContext('2d');
+    if (salesChart) salesChart.destroy();
+
+    if (days.length === 0) {
+      salesChart = null;
+      ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height);
+      return;
+    }
+
+    salesChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [{
+          label: 'CA (CHF)',
+          data: values,
+          borderColor: '#B8965A',
+          backgroundColor: 'rgba(184, 150, 90, 0.12)',
+          fill: true,
+          tension: 0.3,
+          pointBackgroundColor: '#0D1A12',
+          pointRadius: 3,
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: { legend: { display: false } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 11 }, color: '#6B6B68' } },
+          y: { beginAtZero: true, ticks: { font: { family: 'Inter', size: 11 }, color: '#6B6B68' }, grid: { color: '#E5DECF' } }
+        }
+      }
+    });
   }
 
   function renderTable(sales) {
