@@ -77,6 +77,9 @@
   .pay-chip { display: inline-block; padding: 3px 10px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
   .pay-paid { background: rgba(90, 140, 90, 0.15); color: var(--status-paid); }
   .pay-pending { background: rgba(196, 154, 78, 0.15); color: var(--status-pending); }
+  .pay-refunded { background: rgba(139, 110, 58, 0.15); color: #8B6E3A; }
+  .pay-failed { background: rgba(196, 90, 78, 0.15); color: #C4604E; }
+  .pay-cancelled { background: rgba(107, 107, 104, 0.15); color: #6B6B68; }
 
   .empty-state, .loading-state { text-align: center; padding: 80px 24px; color: var(--text-soft); }
   .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border-soft); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
@@ -209,6 +212,9 @@
       <option value="">Tous les statuts</option>
       <option value="paye">Payé</option>
       <option value="en_attente">En attente</option>
+      <option value="rembourse">Remboursé</option>
+      <option value="echoue">Échoué</option>
+      <option value="annule">Annulé</option>
     </select>
     <select id="filterPeriode" onchange="onPeriodeChange()">
       <option value="all">Toute la période</option>
@@ -284,6 +290,9 @@
       <select id="fStatut">
         <option value="paye">Payé</option>
         <option value="en_attente">En attente</option>
+        <option value="rembourse">Remboursé</option>
+        <option value="echoue">Échoué</option>
+        <option value="annule">Annulé</option>
       </select>
     </div>
     <div class="modal-actions">
@@ -478,6 +487,18 @@
     });
   }
 
+  const STATUT_LABELS = {
+    paye: { label: 'Payé', cls: 'pay-paid' },
+    en_attente: { label: 'En attente', cls: 'pay-pending' },
+    rembourse: { label: 'Remboursé', cls: 'pay-refunded' },
+    echoue: { label: 'Échoué', cls: 'pay-failed' },
+    annule: { label: 'Annulé', cls: 'pay-cancelled' },
+  };
+  function payChipHtml(statut) {
+    const info = STATUT_LABELS[statut] || { label: statut || 'En attente', cls: 'pay-pending' };
+    return '<span class="pay-chip ' + info.cls + '">' + esc(info.label) + '</span>';
+  }
+
   function renderTable(sales) {
     const container = document.getElementById('tableContainer');
     if (sales.length === 0) {
@@ -496,10 +517,7 @@
 
     sales.forEach(s => {
       const fullName = ((s.prenom || '') + ' ' + (s.nom || '')).trim() || '—';
-      const isPaid = s.statut_paiement === 'paye';
-      const payChip = isPaid
-        ? '<span class="pay-chip pay-paid">Payé</span>'
-        : '<span class="pay-chip pay-pending">' + esc(s.statut_paiement || 'En attente') + '</span>';
+      const payChip = payChipHtml(s.statut_paiement);
 
       html += '<tr onclick="window.location.href=\'lead-detail.html?id=' + s.lead_id + '\'">' +
         '<td><div class="product-name">' + esc(s.produit) + '</div></td>' +
