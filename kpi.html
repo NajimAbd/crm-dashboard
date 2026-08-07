@@ -72,7 +72,22 @@
 
   .finance-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; margin-bottom: 20px; }
   .finance-card { background: white; border: 1px solid var(--border-soft); border-radius: 14px; padding: 22px; }
-  .finance-card-title { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-soft); font-weight: 700; margin-bottom: 16px; }
+  .finance-card-title { font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-soft); font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 6px; }
+  .info-icon { display: inline-flex; align-items: center; justify-content: center; width: 16px; height: 16px; border-radius: 50%; background: var(--border-soft); color: var(--text-soft); font-size: 10px; font-weight: 700; cursor: help; position: relative; flex-shrink: 0; text-transform: none; letter-spacing: normal; }
+  .info-icon .tip { visibility: hidden; opacity: 0; position: absolute; bottom: 130%; left: 0; background: #1a1a17; color: #fff; padding: 10px 12px; border-radius: 8px; font-size: 12px; font-weight: 400; text-transform: none; letter-spacing: normal; width: 230px; line-height: 1.5; transition: opacity .15s; z-index: 30; pointer-events: none; }
+  .info-icon:hover .tip { visibility: visible; opacity: 1; }
+  .ai-analysis-btn { display: flex; align-items: center; justify-content: center; gap: 12px; width: 100%; margin-top: 24px; padding: 18px; background: var(--green-deep, #0D1A12); color: #fff; border: none; border-radius: 14px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 15px; font-weight: 700; letter-spacing: 0.02em; transition: opacity .15s; }
+  .ai-analysis-btn:hover { opacity: 0.88; }
+  .ai-analysis-btn svg { flex-shrink: 0; }
+  .ai-modal-box { max-width: 640px; max-height: 80vh; overflow-y: auto; }
+  .ai-analysis-content h4 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gold, #B8965A); margin: 20px 0 8px; }
+  .ai-analysis-content h4:first-child { margin-top: 0; }
+  .ai-analysis-content p, .ai-analysis-content li { font-size: 14px; line-height: 1.6; color: #333; }
+  .ai-analysis-content ul { padding-left: 18px; margin: 6px 0; }
+  .ai-status-badge { display: inline-block; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+  .ai-status-good { background: #E4EFE6; color: #2C6B3F; }
+  .ai-status-warn { background: #FBF0DC; color: #97650F; }
+  .ai-status-bad { background: #FAE3E0; color: #B23A2E; }
   .finance-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border-soft); }
   .finance-row:last-child { border-bottom: none; }
   .finance-row-label { font-size: 13px; color: var(--text-soft); }
@@ -157,7 +172,10 @@
 
   <div class="finance-grid" id="financeGrid">
     <div class="finance-card">
-      <div class="finance-card-title">Trésorerie</div>
+      <div class="finance-card-title">
+        <span class="info-icon">ⓘ<span class="tip">Ce que vous encaissez réellement, moins vos charges et frais, sur la période en cours. C'est votre argent disponible net.</span></span>
+        Trésorerie
+      </div>
       <div class="finance-row"><span class="finance-row-label">CA encaissé (Payé)</span><span class="finance-row-value good" id="finEncaisse">—</span></div>
       <div class="finance-row"><span class="finance-row-label">En attente</span><span class="finance-row-value" id="finAttente">—</span></div>
       <div class="finance-row"><span class="finance-row-label">Charges récurrentes (mensualisées)</span><span class="finance-row-value warn" id="finCharges">—</span></div>
@@ -167,7 +185,10 @@
     </div>
 
     <div class="finance-card">
-      <div class="finance-card-title">Coût d'acquisition (Ads)</div>
+      <div class="finance-card-title">
+        <span class="info-icon">ⓘ<span class="tip">Combien vous coûte, en moyenne, chaque nouveau client obtenu via vos publicités payantes (TikTok, Instagram, Google Ads, etc.).</span></span>
+        Coût d'acquisition (Ads)
+      </div>
       <div class="finance-row"><span class="finance-row-label">Dépense pub (période)</span><span class="finance-row-value" id="finAdSpend">—</span></div>
       <div class="finance-row"><span class="finance-row-label">Nouveaux clients (ads)</span><span class="finance-row-value" id="finAdClients">—</span></div>
       <div class="finance-row"><span class="finance-row-label">CAC (coût / client)</span><span class="finance-row-value" id="finCAC">—</span></div>
@@ -176,13 +197,32 @@
     </div>
 
     <div class="finance-card">
-      <div class="finance-card-title">Ratio LTV : CAC</div>
+      <div class="finance-card-title">
+        <span class="info-icon">ⓘ<span class="tip">Compare ce que rapporte un client (panier moyen) à ce qu'il vous a coûté à acquérir (CAC). Plus ce ratio est élevé, plus votre publicité est rentable.</span></span>
+        Ratio LTV : CAC
+      </div>
       <div class="finance-row"><span class="finance-row-label">Panier moyen (LTV proxy)</span><span class="finance-row-value" id="finLTV">—</span></div>
       <div class="finance-row"><span class="finance-row-label">CAC</span><span class="finance-row-value" id="finCAC2">—</span></div>
       <div class="finance-row"><span class="finance-row-label">Ratio</span><span class="finance-row-value big" id="finRatio">—<span id="finRatioBadge"></span></span></div>
       <div class="finance-hint">Règle d'or : viser un ratio ≥ 3:1. En dessous de 1:1, chaque client acquis vous coûte plus qu'il ne rapporte.</div>
     </div>
   </div>
+
+  <button class="ai-analysis-btn" onclick="openAiAnalysis()">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M9.5 2a5.5 5.5 0 0 0-5.5 5.5c0 1.4.5 2.6 1.3 3.6A4 4 0 0 0 4 14.5 4.5 4.5 0 0 0 8.5 19h.1a3.5 3.5 0 0 0 3.4 3 3.5 3.5 0 0 0 3.4-3h.1a4.5 4.5 0 0 0 4.5-4.5 4 4 0 0 0-1.3-3.4c.8-1 1.3-2.2 1.3-3.6A5.5 5.5 0 0 0 14.5 2c-1 0-2 .3-2.8.9A5.5 5.5 0 0 0 9.5 2Z"/><path d="M9.5 2v20M14.5 2v20"/></svg>
+    Analyse de mon business par un expert
+  </button>
+
+  <div class="modal-overlay" id="aiModal">
+    <div class="modal-box ai-modal-box">
+      <div class="modal-title">Analyse financière experte</div>
+      <div class="ai-analysis-content" id="aiAnalysisContent">Analyse en cours…</div>
+      <div class="modal-actions">
+        <button class="modal-btn modal-btn-secondary" onclick="closeAiAnalysis()">Fermer</button>
+      </div>
+    </div>
+  </div>
+
 
   <div class="modal-overlay" id="financeModal">
     <div class="modal-box">
@@ -508,6 +548,103 @@
       badgeEl.textContent = '';
       badgeEl.className = '';
     }
+
+    // Métriques stockées globalement pour l'analyse experte
+    window.lastFinanceMetrics = {
+      revenueEncaisse, revenueAttente, totalCosts, totalOneOffs, stripeFees, adSpend, margeNette,
+      adChannels, adRevenue, adClientsCount, cac, roas, avgBasket,
+      paidCount: paid.length, ratio: (cac && cac > 0 && avgBasket > 0) ? (avgBasket / cac) : null
+    };
+  }
+
+  function openAiAnalysis() {
+    document.getElementById('aiModal').classList.add('open');
+    const content = document.getElementById('aiAnalysisContent');
+    content.innerHTML = 'Analyse en cours…';
+    setTimeout(() => {
+      content.innerHTML = generateExpertAnalysis(window.lastFinanceMetrics || {}, allSalesGlobal, allLeadsGlobal);
+    }, 400);
+  }
+
+  function closeAiAnalysis() {
+    document.getElementById('aiModal').classList.remove('open');
+  }
+
+  function generateExpertAnalysis(m, sales, leads) {
+    const paid = (sales || []).filter(s => s.statut_paiement === 'paye');
+    const leadsCount = (leads || []).length;
+    const salesCount = paid.length;
+    const tauxConv = leadsCount > 0 ? (salesCount / leadsCount * 100) : 0;
+
+    let statusClass = 'ai-status-good', statusLabel = 'Situation saine';
+    if (m.margeNette !== undefined && m.margeNette < 0) { statusClass = 'ai-status-bad'; statusLabel = 'Marge négative — attention'; }
+    else if (m.margeNette !== undefined && m.margeNette < (m.revenueEncaisse || 0) * 0.15) { statusClass = 'ai-status-warn'; statusLabel = 'Marge fragile'; }
+
+    let html = '<span class="ai-status-badge ' + statusClass + '">' + statusLabel + '</span>';
+
+    // Vue d'ensemble
+    html += '<h4>Vue d\'ensemble</h4><p>';
+    if (m.revenueEncaisse > 0) {
+      html += 'Vous avez encaissé <strong>' + m.revenueEncaisse.toFixed(0) + ' CHF</strong> sur la période, pour une marge nette estimée de <strong>' + (m.margeNette || 0).toFixed(0) + ' CHF</strong>';
+      const margePct = m.revenueEncaisse > 0 ? ((m.margeNette / m.revenueEncaisse) * 100) : 0;
+      html += ' (soit ' + margePct.toFixed(0) + '% de marge nette). ';
+      html += margePct >= 40 ? 'C\'est une marge solide pour un service premium.' : (margePct >= 15 ? 'C\'est correct, mais il y a de la marge de progression (sans mauvais jeu de mots).' : 'C\'est bas — vos charges pèsent lourd par rapport à ce que vous encaissez.');
+    } else {
+      html += 'Aucune vente encaissée sur la période analysée. Impossible d\'évaluer la rentabilité tant qu\'il n\'y a pas de chiffre d\'affaires réel.';
+    }
+    html += '</p>';
+
+    // Acquisition / Ads
+    html += '<h4>Acquisition & publicité</h4><p>';
+    if (!m.adChannels || m.adChannels.length === 0) {
+      html += 'Aucun canal publicitaire n\'est configuré pour l\'instant. Vous ne pouvez donc pas encore mesurer le retour sur vos dépenses marketing — configurez vos canaux Ads dès que vous investissez en publicité payante.';
+    } else if (!m.adSpend) {
+      html += 'Vos canaux Ads sont configurés mais aucun budget publicitaire n\'est renseigné pour la période. Ajoutez le montant dépensé pour obtenir votre CAC et ROAS réels.';
+    } else if (m.roas !== null) {
+      if (m.roas >= 3) html += 'Votre ROAS de <strong>' + m.roas.toFixed(1) + 'x</strong> est excellent : chaque franc dépensé en publicité vous en rapporte ' + m.roas.toFixed(1) + '. C\'est le signal pour <strong>augmenter le budget</strong> tant que la tendance tient — c\'est le principe de base pour scaler une acquisition rentable : quand ça marche, on met plus de carburant.';
+      else if (m.roas >= 1) html += 'Votre ROAS de <strong>' + m.roas.toFixed(1) + 'x</strong> est à l\'équilibre. Vous ne perdez pas d\'argent sur la pub, mais la rentabilité réelle (après charges) est mince. Cherchez à améliorer le taux de conversion ou le panier moyen avant d\'augmenter le budget.';
+      else html += 'Votre ROAS de <strong>' + m.roas.toFixed(1) + 'x</strong> est sous 1 : vous perdez de l\'argent sur cette pub. Il faut soit couper ce canal, soit revoir le ciblage/le message avant de continuer à dépenser.';
+    } else {
+      html += 'Pas assez de données de clients acquis via Ads pour calculer un CAC fiable.';
+    }
+    html += '</p>';
+
+    // LTV:CAC
+    html += '<h4>Rentabilité par client (LTV:CAC)</h4><p>';
+    if (m.ratio !== null && m.ratio !== undefined) {
+      if (m.ratio >= 3) html += 'Ratio de <strong>' + m.ratio.toFixed(1) + ':1</strong> — excellent. Chaque client rapporte largement plus qu\'il ne coûte à acquérir. Vous avez de la marge pour investir plus agressivement en acquisition.';
+      else if (m.ratio >= 1) html += 'Ratio de <strong>' + m.ratio.toFixed(1) + ':1</strong> — correct mais pas confortable. Un imprévu (charge, remboursement) peut vite faire basculer un client en perte nette. Travaillez le panier moyen (upsell, offres packagées) plutôt que d\'augmenter le volume.';
+      else html += 'Ratio sous 1:1 — chaque client acquis vous coûte plus qu\'il ne rapporte. C\'est intenable à moyen terme si le volume augmente. Priorité : augmenter le panier moyen ou baisser le CAC avant de scaler.';
+    } else {
+      html += 'Pas encore assez de données (Ads + paniers) pour calculer ce ratio.';
+    }
+    html += '</p>';
+
+    // Conversion
+    html += '<h4>Conversion leads → clients</h4><p>';
+    if (leadsCount > 0) {
+      html += 'Taux de conversion actuel : <strong>' + tauxConv.toFixed(0) + '%</strong> (' + salesCount + ' vente(s) sur ' + leadsCount + ' lead(s)). ';
+      html += tauxConv >= 20 ? 'C\'est un bon taux pour un service de diagnostic/consultation premium.' : 'Il y a probablement du potentiel non exploité dans vos leads existants — relancez ceux qui n\'ont pas encore été convertis avant de dépenser plus pour en générer de nouveaux.';
+    } else {
+      html += 'Aucun lead enregistré pour l\'instant sur la période.';
+    }
+    html += '</p>';
+
+    // Recommandations
+    html += '<h4>À faire en priorité</h4><ul>';
+    const recos = [];
+    if (m.margeNette !== undefined && m.margeNette < 0) recos.push('Réduire ou renégocier les charges récurrentes avant tout — la marge est actuellement négative.');
+    if (m.roas !== null && m.roas < 1) recos.push('Couper ou retravailler le canal publicitaire le moins rentable.');
+    if (m.ratio !== null && m.ratio < 3 && m.ratio >= 1) recos.push('Augmenter le panier moyen (offre packagée, upsell) plutôt que le volume de clients.');
+    if (leadsCount > 0 && tauxConv < 20) recos.push('Relancer les leads existants non convertis avant d\'investir dans plus d\'acquisition.');
+    if (m.adChannels && m.adChannels.length > 0 && m.roas !== null && m.roas >= 3) recos.push('Augmenter progressivement le budget publicitaire tant que le ROAS reste ≥ 3x.');
+    if (recos.length === 0) recos.push('Continuez à suivre ces indicateurs chaque mois pour repérer les tendances tôt.');
+    recos.forEach(r => html += '<li>' + r + '</li>');
+    html += '</ul>';
+
+    html += '<div class="finance-hint" style="margin-top:16px;">Analyse générée automatiquement selon vos données actuelles — à considérer comme un premier repère, pas un conseil financier professionnel personnalisé.</div>';
+
+    return html;
   }
 
   function lastNDays(n) {
