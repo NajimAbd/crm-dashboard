@@ -97,9 +97,12 @@
   .modal-label { font-size: 12px; font-weight: 600; color: var(--text-main); margin: 16px 0 6px; display: block; }
   .modal-input { width: 100%; padding: 10px 12px; border: 1px solid var(--border-soft); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 14px; }
   .modal-check-row { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 13px; }
-  .cost-row { display: flex; gap: 8px; margin-bottom: 8px; }
-  .cost-row input[type="text"] { flex: 2; }
-  .cost-row input[type="number"] { flex: 1; }
+  .cost-row { display: flex; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+  .cost-row input[type="text"] { flex: 2; min-width: 140px; }
+  .cost-row input[type="number"] { flex: 1; min-width: 80px; }
+  .cost-row select { flex: 1; min-width: 130px; }
+  .cost-row input[type="date"] { flex: 1; min-width: 130px; }
+  .cost-row .cost-remove { flex: 0 0 auto; }
   .cost-remove { background: none; border: none; color: #C4604E; cursor: pointer; font-size: 18px; padding: 0 6px; }
   .add-cost-btn { background: none; border: 1px dashed var(--border-soft); color: var(--text-soft); font-size: 12px; padding: 8px; width: 100%; border-radius: 8px; cursor: pointer; margin-top: 4px; }
   .modal-actions { display: flex; gap: 10px; margin-top: 24px; }
@@ -157,9 +160,10 @@
       <div class="finance-card-title">Trésorerie</div>
       <div class="finance-row"><span class="finance-row-label">CA encaissé (Payé)</span><span class="finance-row-value good" id="finEncaisse">—</span></div>
       <div class="finance-row"><span class="finance-row-label">En attente</span><span class="finance-row-value" id="finAttente">—</span></div>
-      <div class="finance-row"><span class="finance-row-label">Charges récurrentes</span><span class="finance-row-value warn" id="finCharges">—</span></div>
+      <div class="finance-row"><span class="finance-row-label">Charges récurrentes (mensualisées)</span><span class="finance-row-value warn" id="finCharges">—</span></div>
+      <div class="finance-row"><span class="finance-row-label">Achats & déplacements (ce mois)</span><span class="finance-row-value warn" id="finOneOffs">—</span></div>
       <div class="finance-row"><span class="finance-row-label">Marge nette estimée</span><span class="finance-row-value big" id="finMarge">—</span></div>
-      <div class="finance-hint">Marge nette = CA encaissé − frais Stripe (~2.9%) − charges récurrentes − dépense pub.</div>
+      <div class="finance-hint">Marge nette = CA encaissé − frais Stripe (~2.9%) − charges récurrentes (mensualisées) − dépenses ponctuelles du mois − dépense pub.</div>
     </div>
 
     <div class="finance-card">
@@ -190,9 +194,13 @@
       <label class="modal-label">Canaux considérés comme "Ads" (payants)</label>
       <div id="cfgChannels"></div>
 
-      <label class="modal-label">Charges récurrentes mensuelles</label>
+      <label class="modal-label">Charges récurrentes (abonnements)</label>
       <div id="cfgCostsList"></div>
       <button class="add-cost-btn" onclick="addCostRow()">+ Ajouter une charge</button>
+
+      <label class="modal-label" style="margin-top:20px;">Achats & déplacements ponctuels</label>
+      <div id="cfgOneOffsList"></div>
+      <button class="add-cost-btn" onclick="addOneOffRow()">+ Ajouter une dépense</button>
 
       <div class="modal-actions">
         <button class="modal-btn modal-btn-secondary" onclick="closeFinanceConfig()">Annuler</button>
@@ -322,9 +330,19 @@
     localStorage.setItem(FIN_CONFIG_KEY, JSON.stringify(cfg));
   }
 
+  const FIXED_AD_CHANNELS = ['tiktok', 'instagram', 'whatsapp', 'google_ads', 'youtube_ads', 'snapchat_ads', 'influenceurs'];
+
+  const DEFAULT_RECURRING_CHARGES = [
+    'Calendly', 'Tally', 'Hébergement web', 'Nom de domaine', 'Email Titan',
+    'Canva', 'Abonnement Claude', 'Abonnement API ChatGPT', 'Zoom (webinaire)',
+    'Twilio', 'Meta WhatsApp Business', 'Snagit', 'HitPaw Video Converter',
+    'Téléphone (travail)', 'CapCut'
+  ];
+
   function getUniqueChannels(sales) {
     const set = new Set();
-    sales.forEach(s => { if (s.canal_vente) set.add(s.canal_vente); });
+    FIXED_AD_CHANNELS.forEach(c => set.add(c));
+    sales.forEach(s => { if (s.canal_vente && s.canal_vente !== 'stripe') set.add(s.canal_vente); });
     return Array.from(set);
   }
 
@@ -343,9 +361,14 @@
 
     const costsList = document.getElementById('cfgCostsList');
     costsList.innerHTML = '';
-    const costs = (cfg.costs && cfg.costs.length > 0) ? cfg.costs : [];
-    costs.forEach(c => addCostRow(c.name, c.amount));
-    if (costs.length === 0) addCostRow('', '');
+    const costs = (cfg.costs && cfg.costs.length > 0) ? cfg.costs : DEFAULT_RECURRING_CHARGES.map(name => ({ name, amount: '', frequency: 'mensuelle' }));
+    costs.forEach(c => addCostRow(c.name, c.amount, c.frequency));
+
+    const oneOffsList = document.getElementById('cfgOneOffsList');
+    oneOffsList.innerHTML = '';
+    const oneOffs = (cfg.oneOffs && cfg.oneOffs.length > 0) ? cfg.oneOffs : [];
+    oneOffs.forEach(o => addOneOffRow(o.name, o.amount, o.date, o.type));
+    if (oneOffs.length === 0) addOneOffRow('', '', '', 'materiel');
 
     document.getElementById('financeModal').classList.add('open');
   }
@@ -354,13 +377,37 @@
     document.getElementById('financeModal').classList.remove('open');
   }
 
-  function addCostRow(name, amount) {
+  function addCostRow(name, amount, frequency) {
     const list = document.getElementById('cfgCostsList');
     const row = document.createElement('div');
     row.className = 'cost-row';
+    const freq = frequency || 'mensuelle';
     row.innerHTML =
       '<input type="text" class="modal-input cost-name" placeholder="Nom (ex: Calendly)" value="' + esc(name || '') + '">' +
       '<input type="number" class="modal-input cost-amount" placeholder="CHF" min="0" step="0.5" value="' + esc(amount || '') + '">' +
+      '<select class="modal-input cost-frequency">' +
+        '<option value="mensuelle"' + (freq === 'mensuelle' ? ' selected' : '') + '>Mensuelle</option>' +
+        '<option value="annuelle"' + (freq === 'annuelle' ? ' selected' : '') + '>Annuelle</option>' +
+      '</select>' +
+      '<button class="cost-remove" onclick="this.parentElement.remove()">✕</button>';
+    list.appendChild(row);
+  }
+
+  function addOneOffRow(name, amount, date, type) {
+    const list = document.getElementById('cfgOneOffsList');
+    const row = document.createElement('div');
+    row.className = 'cost-row';
+    const t = type || 'materiel';
+    const d = date || new Date().toISOString().slice(0, 10);
+    row.innerHTML =
+      '<input type="text" class="modal-input oneoff-name" placeholder="Nom (ex: Appareil photo)" value="' + esc(name || '') + '">' +
+      '<input type="number" class="modal-input oneoff-amount" placeholder="CHF" min="0" step="0.5" value="' + esc(amount || '') + '">' +
+      '<select class="modal-input oneoff-type">' +
+        '<option value="materiel"' + (t === 'materiel' ? ' selected' : '') + '>Matériel</option>' +
+        '<option value="deplacement"' + (t === 'deplacement' ? ' selected' : '') + '>Déplacement client</option>' +
+        '<option value="autre"' + (t === 'autre' ? ' selected' : '') + '>Autre</option>' +
+      '</select>' +
+      '<input type="date" class="modal-input oneoff-date" value="' + esc(d) + '">' +
       '<button class="cost-remove" onclick="this.parentElement.remove()">✕</button>';
     list.appendChild(row);
   }
@@ -371,10 +418,19 @@
     const costRows = document.querySelectorAll('#cfgCostsList .cost-row');
     const costs = Array.from(costRows).map(row => ({
       name: row.querySelector('.cost-name').value.trim(),
-      amount: parseFloat(row.querySelector('.cost-amount').value) || 0
+      amount: parseFloat(row.querySelector('.cost-amount').value) || 0,
+      frequency: row.querySelector('.cost-frequency').value
     })).filter(c => c.name || c.amount);
 
-    saveFinanceConfigToStorage({ adSpend, adChannels, costs });
+    const oneOffRows = document.querySelectorAll('#cfgOneOffsList .cost-row');
+    const oneOffs = Array.from(oneOffRows).map(row => ({
+      name: row.querySelector('.oneoff-name').value.trim(),
+      amount: parseFloat(row.querySelector('.oneoff-amount').value) || 0,
+      type: row.querySelector('.oneoff-type').value,
+      date: row.querySelector('.oneoff-date').value
+    })).filter(o => o.name || o.amount);
+
+    saveFinanceConfigToStorage({ adSpend, adChannels, costs, oneOffs });
     closeFinanceConfig();
     renderFinanceModule(allSalesGlobal);
   }
@@ -386,14 +442,28 @@
 
     const revenueEncaisse = paid.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
     const revenueAttente = pending.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
-    const totalCosts = (cfg.costs || []).reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
+    // Mensualisation : une charge annuelle est divisée par 12 pour ne pas fausser la marge du mois où elle est payée
+    const totalCosts = (cfg.costs || []).reduce((sum, c) => {
+      const amt = parseFloat(c.amount) || 0;
+      return sum + (c.frequency === 'annuelle' ? amt / 12 : amt);
+    }, 0);
+    // Dépenses ponctuelles : comptées uniquement si datées dans le mois en cours (logique cash, pas d'amortissement)
+    const now = new Date();
+    const curMonth = now.getMonth(), curYear = now.getFullYear();
+    const oneOffsThisMonth = (cfg.oneOffs || []).filter(o => {
+      if (!o.date) return false;
+      const d = new Date(o.date);
+      return d.getMonth() === curMonth && d.getFullYear() === curYear;
+    });
+    const totalOneOffs = oneOffsThisMonth.reduce((sum, o) => sum + (parseFloat(o.amount) || 0), 0);
     const stripeFees = revenueEncaisse * STRIPE_FEE_RATE;
     const adSpend = parseFloat(cfg.adSpend) || 0;
-    const margeNette = revenueEncaisse - stripeFees - totalCosts - adSpend;
+    const margeNette = revenueEncaisse - stripeFees - totalCosts - totalOneOffs - adSpend;
 
     document.getElementById('finEncaisse').textContent = revenueEncaisse.toFixed(0) + ' CHF';
     document.getElementById('finAttente').textContent = revenueAttente.toFixed(0) + ' CHF';
     document.getElementById('finCharges').textContent = '−' + totalCosts.toFixed(0) + ' CHF';
+    document.getElementById('finOneOffs').textContent = totalOneOffs > 0 ? '−' + totalOneOffs.toFixed(0) + ' CHF' : '0 CHF';
     const margeEl = document.getElementById('finMarge');
     margeEl.textContent = margeNette.toFixed(0) + ' CHF';
     margeEl.className = 'finance-row-value big ' + (margeNette >= 0 ? 'good' : 'warn');
