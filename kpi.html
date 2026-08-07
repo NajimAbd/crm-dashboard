@@ -53,6 +53,10 @@
   .funnel-label { font-size: 12px; color: var(--text-soft); margin-bottom: 4px; display: flex; justify-content: space-between; }
   .funnel-bar-bg { height: 10px; background: #F0EBE0; border-radius: 6px; overflow: hidden; }
   .funnel-bar-fill { height: 100%; border-radius: 6px; background: linear-gradient(90deg, var(--gold), var(--gold-light)); }
+  .funnel-meta { display: flex; gap: 12px; margin-top: 5px; }
+  .funnel-conv { font-size: 11px; font-weight: 700; color: var(--green-deep); background: #E4EFE6; padding: 2px 8px; border-radius: 10px; }
+  .funnel-cost { font-size: 11px; font-weight: 700; color: #7A5309; background: #FBF0DC; padding: 2px 8px; border-radius: 10px; }
+  .funnel-meta-hint { font-size: 11px; color: var(--text-soft); margin-top: 10px; line-height: 1.5; }
 
   .loading-state { text-align: center; padding: 80px 24px; color: var(--text-soft); }
   .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border-soft); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
@@ -1000,23 +1004,41 @@
     const interested = leads.filter(l => l.statut_webinaire === 'present' || l.statut_webinaire === 'inscrit').length;
     const buyers = leads.filter(l => l.a_achete == 1 || l.a_achete === true).length;
 
+    const cfg = getFinanceConfig();
+    const adSpend = parseFloat((cfg.adSpendByMonth || {})[monthKey(new Date())]) || 0;
+    const costPerLead = (adSpend > 0 && totalLeads > 0) ? (adSpend / totalLeads) : null;
+    const costPerClient = (adSpend > 0 && buyers > 0) ? (adSpend / buyers) : null;
+
     const steps = [
-      { label: 'Leads totaux', value: totalLeads },
-      { label: 'Engagés (présents/inscrits)', value: interested },
-      { label: 'Clients (achat)', value: buyers }
+      { label: 'Leads totaux', value: totalLeads, pctOfPrev: null, cost: costPerLead, costLabel: 'coût / lead' },
+      { label: 'Engagés (présents/inscrits)', value: interested, pctOfPrev: totalLeads > 0 ? (interested / totalLeads * 100) : null, cost: null, costLabel: '' },
+      { label: 'Clients (achat)', value: buyers, pctOfPrev: interested > 0 ? (buyers / interested * 100) : (totalLeads > 0 ? (buyers / totalLeads * 100) : null), cost: costPerClient, costLabel: 'coût / client' }
     ];
     const max = Math.max(...steps.map(s => s.value), 1);
 
     let html = '';
-    steps.forEach(s => {
+    steps.forEach((s, i) => {
       const pct = Math.round((s.value / max) * 100);
+      let metaHtml = '';
+      if (s.pctOfPrev !== null) {
+        metaHtml += '<span class="funnel-conv">' + s.pctOfPrev.toFixed(0) + '% conversion</span>';
+      }
+      if (s.cost !== null) {
+        metaHtml += '<span class="funnel-cost">' + s.cost.toFixed(0) + ' CHF ' + s.costLabel + '</span>';
+      }
       html += '<div class="funnel-row">' +
         '<div class="funnel-bar-wrap">' +
           '<div class="funnel-label"><span>' + s.label + '</span><span><b>' + s.value + '</b></span></div>' +
           '<div class="funnel-bar-bg"><div class="funnel-bar-fill" style="width:' + pct + '%"></div></div>' +
+          (metaHtml ? '<div class="funnel-meta">' + metaHtml + '</div>' : '') +
         '</div>' +
       '</div>';
     });
+    if (adSpend === 0) {
+      html += '<div class="funnel-meta-hint">Ajoutez votre budget pub du mois dans "Configurer" pour voir le coût par lead et par client.</div>';
+    } else {
+      html += '<div class="funnel-meta-hint">Coût par lead/client calculé sur le budget pub total du mois, tous canaux confondus (moyenne globale, pas seulement Ads).</div>';
+    }
     document.getElementById('funnelContainer').innerHTML = html;
   }
 
