@@ -268,7 +268,7 @@
     <div class="modal-box">
       <div class="modal-title">Configurer la santé financière</div>
 
-      <label class="modal-label">Dépense publicitaire du mois (CHF)</label>
+      <label class="modal-label" id="cfgAdSpendLabel">Dépense publicitaire du mois (CHF)</label>
       <input type="number" class="modal-input" id="cfgAdSpend" placeholder="Ex: 500" min="0" step="1">
 
       <label class="modal-label">Canaux considérés comme "Ads" (payants)</label>
@@ -399,15 +399,31 @@
   function getFinanceConfig() {
     try {
       const raw = localStorage.getItem(FIN_CONFIG_KEY);
-      if (!raw) return { adSpend: 0, adChannels: [], costs: [] };
-      return JSON.parse(raw);
+      if (!raw) return { adSpendByMonth: {}, adChannels: [], costs: [] };
+      const cfg = JSON.parse(raw);
+      // Migration : ancienne clé unique 'adSpend' -> historique par mois (assignée au mois courant)
+      if (!cfg.adSpendByMonth) cfg.adSpendByMonth = {};
+      if (cfg.adSpend && !cfg.adSpendByMonth[monthKey(new Date())]) {
+        cfg.adSpendByMonth[monthKey(new Date())] = cfg.adSpend;
+      }
+      return cfg;
     } catch (e) {
-      return { adSpend: 0, adChannels: [], costs: [] };
+      return { adSpendByMonth: {}, adChannels: [], costs: [] };
     }
   }
 
   function saveFinanceConfigToStorage(cfg) {
     localStorage.setItem(FIN_CONFIG_KEY, JSON.stringify(cfg));
+  }
+
+  const MONTH_NAMES_FR = ['janvier', 'février', 'mars', 'avril', 'mai', 'juin', 'juillet', 'août', 'septembre', 'octobre', 'novembre', 'décembre'];
+
+  function monthKey(d) {
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0');
+  }
+
+  function monthLabel(d) {
+    return MONTH_NAMES_FR[d.getMonth()] + ' ' + d.getFullYear();
   }
 
   const FIXED_AD_CHANNELS = ['tiktok', 'instagram', 'whatsapp', 'google_ads', 'youtube_ads', 'snapchat_ads', 'influenceurs'];
@@ -428,7 +444,9 @@
 
   function openFinanceConfig() {
     const cfg = getFinanceConfig();
-    document.getElementById('cfgAdSpend').value = cfg.adSpend || '';
+    const curKey = monthKey(new Date());
+    document.getElementById('cfgAdSpendLabel').textContent = 'Dépense publicitaire — ' + monthLabel(new Date()) + ' (CHF)';
+    document.getElementById('cfgAdSpend').value = (cfg.adSpendByMonth && cfg.adSpendByMonth[curKey]) || '';
 
     const channels = getUniqueChannels(allSalesGlobal);
     const channelsHtml = channels.length === 0
@@ -493,7 +511,12 @@
   }
 
   function saveFinanceConfig() {
-    const adSpend = parseFloat(document.getElementById('cfgAdSpend').value) || 0;
+    const cfg = getFinanceConfig();
+    const curKey = monthKey(new Date());
+    const adSpendThisMonth = parseFloat(document.getElementById('cfgAdSpend').value) || 0;
+    const adSpendByMonth = Object.assign({}, cfg.adSpendByMonth || {});
+    adSpendByMonth[curKey] = adSpendThisMonth;
+
     const adChannels = Array.from(document.querySelectorAll('.cfg-channel-cb:checked')).map(cb => cb.value);
     const costRows = document.querySelectorAll('#cfgCostsList .cost-row');
     const costs = Array.from(costRows).map(row => ({
@@ -510,7 +533,7 @@
       date: row.querySelector('.oneoff-date').value
     })).filter(o => o.name || o.amount);
 
-    saveFinanceConfigToStorage({ adSpend, adChannels, costs, oneOffs });
+    saveFinanceConfigToStorage({ adSpendByMonth, adChannels, costs, oneOffs });
     closeFinanceConfig();
     renderFinanceModule(allSalesGlobal);
   }
@@ -537,7 +560,7 @@
     });
     const totalOneOffs = oneOffsThisMonth.reduce((sum, o) => sum + (parseFloat(o.amount) || 0), 0);
     const stripeFees = revenueEncaisse * STRIPE_FEE_RATE;
-    const adSpend = parseFloat(cfg.adSpend) || 0;
+    const adSpend = parseFloat((cfg.adSpendByMonth || {})[monthKey(new Date())]) || 0;
     const margeNette = revenueEncaisse - stripeFees - totalCosts - totalOneOffs - adSpend;
 
     document.getElementById('finEncaisse').textContent = revenueEncaisse.toFixed(0) + ' CHF';
@@ -623,21 +646,24 @@
     const revenuePrevMonth = revenueForMonth(prevMonth, prevYear);
     const oneOffsPrevMonth = oneOffsForMonth(prevMonth, prevYear);
     const stripeFeesPrevMonth = revenuePrevMonth * STRIPE_FEE_RATE;
-    // Note : la dépense pub n'est pas historisée par mois, donc elle n'entre pas dans la comparaison du mois précédent (comparaison hors ads pour rester honnête)
-    const margePrevMonth = revenuePrevMonth - stripeFeesPrevMonth - totalCosts - oneOffsPrevMonth;
+    const prevKey = monthKey(prevDate);
+    const adSpendPrevMonth = (cfg.adSpendByMonth || {})[prevKey];
+    const hasAdHistoryPrevMonth = adSpendPrevMonth !== undefined;
+    const margePrevMonth = revenuePrevMonth - stripeFeesPrevMonth - totalCosts - oneOffsPrevMonth - (hasAdHistoryPrevMonth ? parseFloat(adSpendPrevMonth) || 0 : 0);
 
     document.getElementById('heroMarge').textContent = margeNette.toFixed(0) + ' CHF';
     const trendEl = document.getElementById('heroTrend');
     if (revenuePrevMonth > 0 || margePrevMonth !== 0) {
       const delta = margeNette - margePrevMonth;
       const deltaPct = margePrevMonth !== 0 ? (delta / Math.abs(margePrevMonth) * 100) : null;
+      const adsNote = hasAdHistoryPrevMonth ? '' : ' (pub non renseignée le mois dernier, non comparée)';
       if (Math.abs(delta) < 1) {
-        trendEl.textContent = '≈ stable vs mois précédent';
+        trendEl.textContent = '≈ stable vs mois précédent' + adsNote;
         trendEl.className = 'hero-trend flat';
       } else {
         const sign = delta > 0 ? '▲' : '▼';
         const pctTxt = deltaPct !== null ? ' (' + (delta > 0 ? '+' : '') + deltaPct.toFixed(0) + '%)' : '';
-        trendEl.textContent = sign + ' ' + (delta > 0 ? '+' : '') + delta.toFixed(0) + ' CHF' + pctTxt + ' vs mois précédent (hors pub)';
+        trendEl.textContent = sign + ' ' + (delta > 0 ? '+' : '') + delta.toFixed(0) + ' CHF' + pctTxt + ' vs mois précédent' + adsNote;
         trendEl.className = 'hero-trend ' + (delta > 0 ? 'up' : 'down');
       }
     } else {
