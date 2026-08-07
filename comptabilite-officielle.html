@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexa — Comptabilité officielle</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --green-deep: #0D1A12;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --bg-soft: #FAF7F1;
+    --text-main: #2C2C2A;
+    --text-soft: #6B6B68;
+    --border-soft: #E5DECF;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg-soft); font-family: 'Inter', sans-serif; color: var(--text-main); min-height: 100vh; }
+
+  .topbar { background: var(--green-deep); color: var(--cream); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--gold); }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-text { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: var(--cream); }
+  .brand-sub { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
+  .nav-link { color: var(--gold-light); text-decoration: none; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .nav-link:hover { color: var(--cream); }
+  .topbar-links { display: flex; align-items: center; gap: 22px; }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 36px 32px 60px; }
+  .page-header { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 10px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 8px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 36px; margin: 0 0 6px; color: var(--green-deep); }
+  .subtitle { color: var(--text-soft); font-size: 14px; }
+  .legal-note { font-size: 12px; color: var(--text-soft); background: white; border: 1px solid var(--border-soft); border-left: 3px solid var(--gold); border-radius: 8px; padding: 12px 16px; margin-bottom: 26px; line-height: 1.5; }
+
+  .period-picker { display: flex; align-items: center; gap: 8px; }
+  .period-picker select { font-family: 'Inter', sans-serif; font-size: 13px; padding: 9px 12px; border: 1px solid var(--border-soft); border-radius: 8px; background: white; color: var(--text-main); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: white; border: 1px solid var(--border-soft); border-radius: 12px; padding: 22px 22px 20px; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold); }
+  .stat-card.recettes::before { background: #5A8C5A; }
+  .stat-card.depenses::before { background: #C4604E; }
+  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 600; color: var(--green-deep); line-height: 1; margin-bottom: 6px; }
+  .stat-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; }
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 22px; border-bottom: 1px solid var(--border-soft); }
+  .tab-btn { padding: 10px 18px; background: none; border: none; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; color: var(--text-soft); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+  .tab-btn.active { color: var(--green-deep); border-bottom-color: var(--gold); }
+  .tab-panel { display: none; }
+  .tab-panel.active { display: block; }
+
+  .layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .card { background: white; border: 1px solid var(--border-soft); border-radius: 14px; padding: 22px; margin-bottom: 20px; }
+  .card-title { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 600; color: var(--green-deep); margin: 0 0 16px; display: flex; align-items: center; justify-content: space-between; }
+
+  .journal-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .journal-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-soft); padding: 8px 6px; border-bottom: 2px solid var(--border-soft); }
+  .journal-table td { padding: 10px 6px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+  .journal-table tr:last-child td { border-bottom: none; }
+  .amount-in { color: #2C6B3F; font-weight: 600; white-space: nowrap; }
+  .amount-out { color: #B23A2E; font-weight: 600; white-space: nowrap; }
+  .journal-empty { text-align: center; padding: 40px 20px; color: var(--text-soft); font-size: 13px; }
+  .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  .tag.in { background: #E4EFE6; color: #2C6B3F; }
+  .tag.out { background: #FAE3E0; color: #B23A2E; }
+  .row-delete { background: none; border: none; color: #C4604E; cursor: pointer; font-size: 14px; padding: 2px 6px; }
+  .row-delete:hover { opacity: 0.7; }
+
+  .form-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .form-input { flex: 1; min-width: 100px; padding: 9px 11px; border: 1px solid var(--border-soft); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; }
+  .form-label { font-size: 11px; color: var(--text-soft); font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; display: block; margin-bottom: 4px; }
+  .btn-primary { background: var(--green-deep); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: white; border: 1px solid var(--border-soft); color: var(--text-soft); padding: 9px 14px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; }
+  .btn-secondary:hover { border-color: var(--gold); color: var(--green-deep); }
+
+  .type-toggle { display: flex; gap: 6px; margin-bottom: 10px; }
+  .type-toggle button { flex: 1; padding: 8px; border: 1px solid var(--border-soft); background: white; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-soft); }
+  .type-toggle button.active { background: var(--green-deep); color: white; border-color: var(--green-deep); }
+
+  .empty-hint { font-size: 12px; color: var(--text-soft); text-align: center; padding: 16px; }
+  .loading-state { text-align: center; padding: 60px 24px; color: var(--text-soft); }
+  .spinner { width: 26px; height: 26px; border: 2.5px solid var(--border-soft); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .patrimoine-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 700px) { .patrimoine-grid { grid-template-columns: 1fr; } }
+  .patrimoine-col-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--gold); margin-bottom: 12px; }
+  .patrimoine-total-row { display: flex; justify-content: space-between; padding-top: 12px; margin-top: 6px; border-top: 2px solid var(--border-soft); font-weight: 700; color: var(--green-deep); }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--green-deep); color: white; padding: 12px 22px; border-radius: 10px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 100; }
+  .toast.show { opacity: 1; }
+
+  /* --- IMPRESSION / DOCUMENT OFFICIEL --- */
+  .print-header { display: none; }
+  @media print {
+    .topbar, .tabs, .btn-primary, .btn-secondary, .row-delete, .no-print, .form-row, .card-title button { display: none !important; }
+    body { background: white; }
+    .page { padding: 0; max-width: 100%; }
+    .card { border: none; padding: 0; margin-bottom: 26px; break-inside: avoid; }
+    .print-header { display: block; text-align: center; margin-bottom: 26px; border-bottom: 2px solid var(--green-deep); padding-bottom: 14px; }
+    .print-header .ph-brand { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 700; color: var(--green-deep); }
+    .print-header .ph-sub { font-size: 11px; color: var(--text-soft); margin-top: 4px; }
+    .print-header .ph-title { font-size: 16px; font-weight: 700; margin-top: 14px; text-transform: uppercase; letter-spacing: 0.04em; }
+    .tab-panel { display: block !important; }
+    .journal-table { font-size: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar no-print">
+  <div class="topbar-left">
+    <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="50" rx="46" ry="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+      <circle cx="50" cy="50" r="6" fill="#B8965A"/>
+      <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-text">Nexa</div>
+      <div class="brand-sub">Comptabilité officielle</div>
+    </div>
+  </div>
+  <div class="topbar-links">
+    <a class="nav-link" onclick="window.location.href='comptabilite.html'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Pilotage financier
+    </a>
+    <a class="nav-link" onclick="window.location.href='kpi.html'">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+      Dashboard KPI
+    </a>
+  </div>
+</div>
+
+<div class="page">
+
+  <div class="print-header">
+    <div class="ph-brand">RoqyaSuisse — Najim</div>
+    <div class="ph-sub">Comptabilité simplifiée (art. 957 al. 2 CO) — Raison individuelle, Lausanne (VD)</div>
+    <div class="ph-title" id="printTitle">Livre des recettes et dépenses</div>
+  </div>
+
+  <div class="page-header no-print">
+    <div>
+      <div class="eyebrow">Comptabilité conforme</div>
+      <h1>Comptabilité officielle</h1>
+      <div class="subtitle" id="subtitleInfo">Chargement…</div>
+    </div>
+    <div class="period-picker">
+      <select id="yearSelect" onchange="onYearChange()"></select>
+      <button class="btn-secondary" onclick="window.print()">🖨 Imprimer</button>
+    </div>
+  </div>
+
+  <div class="legal-note no-print">
+    Comptabilité simplifiée pour raison individuelle avec CA &lt; 100'000 CHF (art. 957 al. 2 CO) : livre des recettes/dépenses + état du patrimoine annuel. Pas d'assujettissement TVA tant que le seuil de 100'000 CHF n'est pas atteint. Conserver les pièces justificatives 10 ans.
+  </div>
+
+  <div class="stats">
+    <div class="stat-card recettes"><div class="stat-value" id="statRecettes">—</div><div class="stat-label">Recettes de l'année (CHF)</div></div>
+    <div class="stat-card depenses"><div class="stat-value" id="statDepenses">—</div><div class="stat-label">Dépenses de l'année (CHF)</div></div>
+    <div class="stat-card"><div class="stat-value" id="statResultat">—</div><div class="stat-label">Résultat net (CHF)</div></div>
+  </div>
+
+  <div class="tabs no-print">
+    <button class="tab-btn active" id="tabBtnLivre" onclick="switchTab('livre')">Livre comptable</button>
+    <button class="tab-btn" id="tabBtnAmort" onclick="switchTab('amort')">Amortissements</button>
+    <button class="tab-btn" id="tabBtnPatrimoine" onclick="switchTab('patrimoine')">État du patrimoine</button>
+  </div>
+
+  <!-- ONGLET 1 : LIVRE COMPTABLE -->
+  <div class="tab-panel active" id="panelLivre">
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="card-title">Livre des recettes et dépenses — <span id="livreYearLabel"></span></div>
+          <div id="livreContent"><div class="loading-state"><div class="spinner"></div>Chargement…</div></div>
+        </div>
+      </div>
+      <div class="no-print">
+        <div class="card">
+          <div class="card-title">Ajouter une écriture</div>
+          <div class="type-toggle">
+            <button id="typeBtnRecette" class="active" onclick="setEntryType('recette')">Recette</button>
+            <button id="typeBtnDepense" onclick="setEntryType('depense')">Dépense</button>
+          </div>
+          <div class="form-row">
+            <div style="flex:1;"><span class="form-label">Date</span><input type="date" class="form-input" id="entryDate"></div>
+            <div style="flex:1;"><span class="form-label">Montant CHF</span><input type="number" class="form-input" id="entryAmount" min="0" step="0.05" placeholder="0.00"></div>
+          </div>
+          <div class="form-row">
+            <div style="flex:1;"><span class="form-label">Catégorie</span><select class="form-input" id="entryCategory"></select></div>
+          </div>
+          <div class="form-row">
+            <div style="flex:1;"><span class="form-label">Libellé</span><input type="text" class="form-input" id="entryLabel" placeholder="Ex: Consultation — M. Dupont"></div>
+          </div>
+          <div class="form-row">
+            <div style="flex:1;"><span class="form-label">Mode de paiement</span>
+              <select class="form-input" id="entryPaymentMode">
+                <option value="virement">Virement</option>
+                <option value="stripe">Stripe</option>
+                <option value="klarna">Klarna</option>
+                <option value="especes">Espèces</option>
+                <option value="autre">Autre</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div style="flex:1;"><span class="form-label">Référence pièce (optionnel)</span><input type="text" class="form-input" id="entryRef" placeholder="N° facture / reçu"></div>
+          </div>
+          <button class="btn-primary" style="width:100%;" onclick="addEntry()">+ Ajouter l'écriture</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONGLET 2 : AMORTISSEMENTS -->
+  <div class="tab-panel" id="panelAmort">
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="card-title">Tableau des amortissements</div>
+          <div id="amortContent"><div class="loading-state"><div class="spinner"></div>Chargement…</div></div>
+        </div>
+      </div>
+      <div class="no-print">
+        <div class="card">
+          <div class="card-title">Ajouter un bien à amortir</div>
+          <div class="form-row">
+            <div style="flex:1;"><span class="form-label">Désignation</span><input type="text" class="form-input" id="amortName" placeholder="Ex: MacBook Pro M3"></div>
+          </div>
+          <div class="form-row">
+            <div style="flex:1;"><span class="form-label">Date d'achat</span><input type="date" class="form-input" id="amortDate"></div>
+          </div>
+          <div class="form-row">
+            <div style="flex:1;"><span class="form-label">Valeur d'achat CHF</span><input type="number" class="form-input" id="amortValue" min="0" step="1" placeholder="0"></div>
+          </div>
+          <div class="form-row">
+            <div style="flex:1;"><span class="form-label">Taux d'amortissement annuel (%)</span><input type="number" class="form-input" id="amortRate" min="0" max="100" step="1" value="30"></div>
+          </div>
+          <button class="btn-primary" style="width:100%;" onclick="addAmortissement()">+ Ajouter</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONGLET 3 : PATRIMOINE -->
+  <div class="tab-panel" id="panelPatrimoine">
+    <div class="card">
+      <div class="card-title">État du patrimoine au 31 décembre <span id="patrimoineYearLabel"></span></div>
+      <div class="patrimoine-grid">
+        <div>
+          <div class="patrimoine-col-title">Actifs</div>
+          <div class="form-row"><div style="flex:1;"><span class="form-label">Solde bancaire professionnel (CHF)</span><input type="number" class="form-input" id="patSoldeBancaire" step="1"></div></div>
+          <div class="form-row"><div style="flex:1;"><span class="form-label">Matériel (valeur résiduelle, CHF)</span><input type="number" class="form-input" id="patMateriel" step="1"></div></div>
+          <div class="form-row"><div style="flex:1;"><span class="form-label">Créances clients (CHF)</span><input type="number" class="form-input" id="patCreances" step="1"></div></div>
+          <div class="patrimoine-total-row"><span>Total actifs</span><span id="patTotalActifs">0 CHF</span></div>
+        </div>
+        <div>
+          <div class="patrimoine-col-title">Passifs</div>
+          <div class="form-row"><div style="flex:1;"><span class="form-label">Dettes fournisseurs (CHF)</span><input type="number" class="form-input" id="patDettes" step="1"></div></div>
+          <div class="form-row"><div style="flex:1;"><span class="form-label">Avances clients non facturées (CHF)</span><input type="number" class="form-input" id="patAvances" step="1"></div></div>
+          <div class="form-row"><div style="flex:1;"><span class="form-label">Prêts (CHF)</span><input type="number" class="form-input" id="patPrets" step="1"></div></div>
+          <div class="patrimoine-total-row"><span>Total passifs</span><span id="patTotalPassifs">0 CHF</span></div>
+        </div>
+      </div>
+      <div class="patrimoine-total-row" style="margin-top:18px; font-size:16px;"><span>Fortune nette (Actifs − Passifs)</span><span id="patFortuneNette">0 CHF</span></div>
+      <div class="no-print" style="margin-top:18px;">
+        <button class="btn-primary" onclick="savePatrimoine()">Enregistrer l'état du patrimoine</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const LIVRE_LIST_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-livre-list';
+  const LIVRE_CREATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-livre-create';
+  const LIVRE_DELETE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-livre-delete';
+  const AMORT_LIST_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-amort-list';
+  const AMORT_CREATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-amort-create';
+  const AMORT_DELETE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-amort-delete';
+  const PATRIMOINE_GET_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-patrimoine-get';
+  const PATRIMOINE_SAVE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-patrimoine-save';
+
+  const SESSION_KEY = 'crm_session_user';
+  const SESSION_EXPIRY = 'crm_session_expiry';
+
+  const CATEGORIES_RECETTE = ['Consultations Roqya', 'Diagnostics', 'Formations / Academy', 'Produits / supports numériques', 'Autres prestations spirituelles'];
+  const CATEGORIES_DEPENSE = ['Matériel/équipement', 'Logiciels/SaaS', 'Marketing/publicité', 'Déplacement/véhicule', 'Formation professionnelle', 'Frais bancaires/commissions', 'Loyer/local', 'Assurances professionnelles', 'AVS/cotisations sociales', 'Téléphonie/internet', 'Fournitures de bureau', 'Frais de représentation/networking', 'Cotisations professionnelles', 'Autres frais généraux'];
+
+  function getSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+      if (!raw || Date.now() >= expiry) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+
+  const session = getSession();
+  if (!session) {
+    window.location.href = 'index.html';
+    throw new Error('No session');
+  }
+
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  let selectedYear = new Date().getFullYear();
+  let currentEntryType = 'recette';
+  let allEntries = [];
+  let allAmort = [];
+  let currentTab = 'livre';
+
+  function initYearPicker() {
+    const yearSel = document.getElementById('yearSelect');
+    const curYear = new Date().getFullYear();
+    let html = '';
+    for (let y = curYear; y >= curYear - 3; y--) {
+      html += '<option value="' + y + '"' + (y === selectedYear ? ' selected' : '') + '>' + y + '</option>';
+    }
+    yearSel.innerHTML = html;
+    document.getElementById('livreYearLabel').textContent = selectedYear;
+    document.getElementById('patrimoineYearLabel').textContent = selectedYear;
+    document.getElementById('entryDate').value = new Date().toISOString().slice(0,10);
+  }
+
+  function onYearChange() {
+    selectedYear = parseInt(document.getElementById('yearSelect').value);
+    document.getElementById('livreYearLabel').textContent = selectedYear;
+    document.getElementById('patrimoineYearLabel').textContent = selectedYear;
+    loadAll();
+  }
+
+  function switchTab(tab) {
+    currentTab = tab;
+    ['Livre','Amort','Patrimoine'].forEach(t => {
+      document.getElementById('tabBtn' + t).classList.toggle('active', t.toLowerCase() === tab);
+      document.getElementById('panel' + t).classList.toggle('active', t.toLowerCase() === tab);
+    });
+    const titles = { livre: 'Livre des recettes et dépenses', amort: 'Tableau des amortissements', patrimoine: 'État du patrimoine' };
+    document.getElementById('printTitle').textContent = titles[tab] + ' — ' + selectedYear;
+  }
+
+  function setEntryType(type) {
+    currentEntryType = type;
+    document.getElementById('typeBtnRecette').classList.toggle('active', type === 'recette');
+    document.getElementById('typeBtnDepense').classList.toggle('active', type === 'depense');
+    populateCategories();
+  }
+
+  function populateCategories() {
+    const sel = document.getElementById('entryCategory');
+    const list = currentEntryType === 'recette' ? CATEGORIES_RECETTE : CATEGORIES_DEPENSE;
+    sel.innerHTML = list.map(c => '<option value="' + esc(c) + '">' + esc(c) + '</option>').join('');
+  }
+
+  async function loadAll() {
+    document.getElementById('livreContent').innerHTML = '<div class="loading-state"><div class="spinner"></div>Chargement…</div>';
+    document.getElementById('amortContent').innerHTML = '<div class="loading-state"><div class="spinner"></div>Chargement…</div>';
+    try {
+      const [livreResp, amortResp, patResp] = await Promise.all([
+        fetch(LIVRE_LIST_API + '?account_id=' + encodeURIComponent(session.account_id) + '&annee=' + selectedYear),
+        fetch(AMORT_LIST_API + '?account_id=' + encodeURIComponent(session.account_id)),
+        fetch(PATRIMOINE_GET_API + '?account_id=' + encodeURIComponent(session.account_id) + '&annee=' + selectedYear)
+      ]);
+      const livreData = await livreResp.json();
+      const amortData = await amortResp.json();
+      const patData = await patResp.json();
+      allEntries = livreData.entries || [];
+      allAmort = amortData.amortissements || [];
+      document.getElementById('subtitleInfo').textContent = allEntries.length + ' écriture(s) enregistrée(s) pour ' + selectedYear + '.';
+      renderLivre();
+      renderAmort();
+      renderPatrimoine(patData.patrimoine || null);
+    } catch (err) {
+      document.getElementById('subtitleInfo').textContent = 'Erreur de chargement des données.';
+      document.getElementById('livreContent').innerHTML = '<div class="journal-empty">Impossible de charger les données. Réessayez plus tard.</div>';
+    }
+  }
+
+  function renderLivre() {
+    const totalRecettes = allEntries.filter(e => e.type === 'recette').reduce((s, e) => s + parseFloat(e.montant_ht || 0), 0);
+    const totalDepenses = allEntries.filter(e => e.type === 'depense').reduce((s, e) => s + parseFloat(e.montant_ht || 0), 0);
+    const resultat = totalRecettes - totalDepenses;
+    document.getElementById('statRecettes').textContent = totalRecettes.toFixed(2) + ' CHF';
+    document.getElementById('statDepenses').textContent = totalDepenses.toFixed(2) + ' CHF';
+    const resEl = document.getElementById('statResultat');
+    resEl.textContent = resultat.toFixed(2) + ' CHF';
+    resEl.style.color = resultat >= 0 ? '#2C6B3F' : '#B23A2E';
+
+    const content = document.getElementById('livreContent');
+    if (allEntries.length === 0) {
+      content.innerHTML = '<div class="journal-empty">Aucune écriture pour ' + selectedYear + '.</div>';
+      return;
+    }
+    const sorted = [...allEntries].sort((a, b) => (a.date_operation || '').localeCompare(b.date_operation || ''));
+    let html = '<table class="journal-table"><thead><tr><th>Date</th><th>Catégorie</th><th>Libellé</th><th></th><th style="text-align:right;">Montant</th><th class="no-print"></th></tr></thead><tbody>';
+    sorted.forEach(e => {
+      const isIn = e.type === 'recette';
+      html += '<tr>' +
+        '<td>' + esc(formatDateShort(e.date_operation)) + '</td>' +
+        '<td>' + esc(e.categorie) + '</td>' +
+        '<td>' + esc(e.libelle) + (e.reference_piece ? ' <span style="color:var(--text-soft);font-size:11px;">(' + esc(e.reference_piece) + ')</span>' : '') + '</td>' +
+        '<td><span class="tag ' + (isIn ? 'in' : 'out') + '">' + (isIn ? 'Recette' : 'Dépense') + '</span></td>' +
+        '<td style="text-align:right;" class="' + (isIn ? 'amount-in' : 'amount-out') + '">' + (isIn ? '+' : '−') + parseFloat(e.montant_ht).toFixed(2) + ' CHF</td>' +
+        '<td class="no-print"><button class="row-delete" onclick="deleteEntry(' + e.id + ')" title="Supprimer">✕</button></td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    content.innerHTML = html;
+  }
+
+  function renderAmort() {
+    const content = document.getElementById('amortContent');
+    if (allAmort.length === 0) {
+      content.innerHTML = '<div class="journal-empty">Aucun bien amortissable enregistré.</div>';
+      return;
+    }
+    let html = '<table class="journal-table"><thead><tr><th>Désignation</th><th>Achat</th><th style="text-align:right;">Valeur achat</th><th style="text-align:right;">Taux</th><th style="text-align:right;">Valeur résiduelle est.</th><th class="no-print"></th></tr></thead><tbody>';
+    allAmort.forEach(a => {
+      const yearsElapsed = (new Date().getFullYear()) - (new Date(a.date_achat)).getFullYear();
+      const residual = Math.max(0, parseFloat(a.valeur_achat) * Math.pow(1 - (parseFloat(a.taux_amortissement) / 100), Math.max(0, yearsElapsed)));
+      html += '<tr>' +
+        '<td>' + esc(a.designation) + '</td>' +
+        '<td>' + esc(formatDateShort(a.date_achat)) + '</td>' +
+        '<td style="text-align:right;">' + parseFloat(a.valeur_achat).toFixed(0) + ' CHF</td>' +
+        '<td style="text-align:right;">' + parseFloat(a.taux_amortissement).toFixed(0) + ' %</td>' +
+        '<td style="text-align:right;">' + residual.toFixed(0) + ' CHF</td>' +
+        '<td class="no-print"><button class="row-delete" onclick="deleteAmort(' + a.id + ')" title="Supprimer">✕</button></td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    content.innerHTML = html;
+  }
+
+  function renderPatrimoine(pat) {
+    if (pat) {
+      document.getElementById('patSoldeBancaire').value = pat.solde_bancaire_pro || 0;
+      document.getElementById('patMateriel').value = pat.valeur_materiel_residuelle || 0;
+      document.getElementById('patCreances').value = pat.creances_clients || 0;
+      document.getElementById('patDettes').value = pat.dettes_fournisseurs || 0;
+      document.getElementById('patAvances').value = pat.avances_clients_non_facturees || 0;
+      document.getElementById('patPrets').value = pat.prets || 0;
+    } else {
+      ['patSoldeBancaire','patMateriel','patCreances','patDettes','patAvances','patPrets'].forEach(id => document.getElementById(id).value = '');
+    }
+    recalcPatrimoine();
+  }
+
+  function recalcPatrimoine() {
+    const actifs = num('patSoldeBancaire') + num('patMateriel') + num('patCreances');
+    const passifs = num('patDettes') + num('patAvances') + num('patPrets');
+    document.getElementById('patTotalActifs').textContent = actifs.toFixed(2) + ' CHF';
+    document.getElementById('patTotalPassifs').textContent = passifs.toFixed(2) + ' CHF';
+    document.getElementById('patFortuneNette').textContent = (actifs - passifs).toFixed(2) + ' CHF';
+  }
+  function num(id) { return parseFloat(document.getElementById(id).value) || 0; }
+  ['patSoldeBancaire','patMateriel','patCreances','patDettes','patAvances','patPrets'].forEach(id => {
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById(id).addEventListener('input', recalcPatrimoine);
+    });
+  });
+
+  function formatDateShort(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+  }
+
+  async function addEntry() {
+    const date = document.getElementById('entryDate').value;
+    const amount = parseFloat(document.getElementById('entryAmount').value);
+    const categorie = document.getElementById('entryCategory').value;
+    const libelle = document.getElementById('entryLabel').value.trim();
+    const mode = document.getElementById('entryPaymentMode').value;
+    const ref = document.getElementById('entryRef').value.trim();
+
+    if (!date || !amount || amount <= 0 || !libelle) {
+      showToast('Complète la date, le montant et le libellé.');
+      return;
+    }
+    try {
+      const resp = await fetch(LIVRE_CREATE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          account_id: session.account_id,
+          date_operation: date,
+          type: currentEntryType,
+          categorie: categorie,
+          libelle: libelle,
+          montant_ht: amount,
+          mode_paiement: mode,
+          reference_piece: ref || null
+        })
+      });
+      if (!resp.ok) throw new Error('fail');
+      showToast('Écriture ajoutée.');
+      document.getElementById('entryAmount').value = '';
+      document.getElementById('entryLabel').value = '';
+      document.getElementById('entryRef').value = '';
+      loadAll();
+    } catch (err) {
+      showToast('Erreur — écriture non enregistrée.');
+    }
+  }
+
+  async function deleteEntry(id) {
+    if (!confirm('Supprimer cette écriture ?')) return;
+    try {
+      await fetch(LIVRE_DELETE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id })
+      });
+      showToast('Écriture supprimée.');
+      loadAll();
+    } catch (err) {
+      showToast('Erreur de suppression.');
+    }
+  }
+
+  async function addAmortissement() {
+    const designation = document.getElementById('amortName').value.trim();
+    const date = document.getElementById('amortDate').value;
+    const value = parseFloat(document.getElementById('amortValue').value);
+    const rate = parseFloat(document.getElementById('amortRate').value);
+
+    if (!designation || !date || !value || value <= 0) {
+      showToast('Complète la désignation, la date et la valeur.');
+      return;
+    }
+    try {
+      await fetch(AMORT_CREATE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          account_id: session.account_id,
+          designation: designation,
+          date_achat: date,
+          valeur_achat: value,
+          taux_amortissement: rate || 30
+        })
+      });
+      showToast('Bien ajouté au tableau d\\'amortissement.');
+      document.getElementById('amortName').value = '';
+      document.getElementById('amortValue').value = '';
+      loadAll();
+    } catch (err) {
+      showToast('Erreur d\\'enregistrement.');
+    }
+  }
+
+  async function deleteAmort(id) {
+    if (!confirm('Supprimer ce bien ?')) return;
+    try {
+      await fetch(AMORT_DELETE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: id })
+      });
+      showToast('Supprimé.');
+      loadAll();
+    } catch (err) {
+      showToast('Erreur de suppression.');
+    }
+  }
+
+  async function savePatrimoine() {
+    try {
+      await fetch(PATRIMOINE_SAVE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          account_id: session.account_id,
+          annee_fiscale: selectedYear,
+          date_etablissement: new Date().toISOString().slice(0,10),
+          solde_bancaire_pro: num('patSoldeBancaire'),
+          valeur_materiel_residuelle: num('patMateriel'),
+          creances_clients: num('patCreances'),
+          dettes_fournisseurs: num('patDettes'),
+          avances_clients_non_facturees: num('patAvances'),
+          prets: num('patPrets')
+        })
+      });
+      showToast('État du patrimoine enregistré pour ' + selectedYear + '.');
+    } catch (err) {
+      showToast('Erreur d\\'enregistrement.');
+    }
+  }
+
+  initYearPicker();
+  populateCategories();
+  loadAll();
+</script>
+
+</body>
+</html>
