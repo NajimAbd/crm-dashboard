@@ -42,6 +42,10 @@
   .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold); }
   .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 600; color: var(--green-deep); line-height: 1; margin-bottom: 6px; }
   .stat-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; }
+  .stat-delta { font-size: 11px; font-weight: 600; margin-top: 8px; min-height: 14px; }
+  .stat-delta.up { color: #2C6B3F; }
+  .stat-delta.down { color: #B23A2E; }
+  .stat-delta.flat { color: var(--text-soft); }
 
   .charts-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; margin-bottom: 20px; }
   .chart-card { background: white; border: 1px solid var(--border-soft); border-radius: 14px; padding: 24px; }
@@ -214,11 +218,11 @@
   <div id="priorityBanner"></div>
 
   <div class="stats" id="statsContainer">
-    <div class="stat-card"><div class="stat-value" id="kpiLeads">—</div><div class="stat-label">Leads totaux</div></div>
-    <div class="stat-card"><div class="stat-value" id="kpiSales">—</div><div class="stat-label">Ventes</div></div>
-    <div class="stat-card"><div class="stat-value" id="kpiRevenue">—</div><div class="stat-label">Chiffre d'affaires (CHF)</div></div>
-    <div class="stat-card"><div class="stat-value" id="kpiRate">—</div><div class="stat-label">Taux conversion</div></div>
-    <div class="stat-card"><div class="stat-value" id="kpiAvgBasket">—</div><div class="stat-label">Panier moyen (CHF)</div></div>
+    <div class="stat-card"><div class="stat-value" id="kpiLeads">—</div><div class="stat-label">Leads totaux</div><div class="stat-delta flat" id="kpiLeadsDelta"></div></div>
+    <div class="stat-card"><div class="stat-value" id="kpiSales">—</div><div class="stat-label">Ventes</div><div class="stat-delta flat" id="kpiSalesDelta"></div></div>
+    <div class="stat-card"><div class="stat-value" id="kpiRevenue">—</div><div class="stat-label">Chiffre d'affaires (CHF)</div><div class="stat-delta flat" id="kpiRevenueDelta"></div></div>
+    <div class="stat-card"><div class="stat-value" id="kpiRate">—</div><div class="stat-label">Taux conversion</div><div class="stat-delta flat" id="kpiRateDelta"></div></div>
+    <div class="stat-card"><div class="stat-value" id="kpiAvgBasket">—</div><div class="stat-label">Panier moyen (CHF)</div><div class="stat-delta flat" id="kpiAvgBasketDelta"></div></div>
   </div>
 
   <div class="section-header">
@@ -461,6 +465,68 @@
     document.getElementById('kpiRevenue').textContent = revenue.toFixed(0);
     document.getElementById('kpiRate').textContent = rate + '%';
     document.getElementById('kpiAvgBasket').textContent = avgBasket.toFixed(0);
+
+    renderStatDeltas(leads, sales);
+  }
+
+  function renderStatDeltas(leads, sales) {
+    const now = new Date();
+    const curMonth = now.getMonth(), curYear = now.getFullYear();
+    const prevDate = new Date(curYear, curMonth - 1, 1);
+    const prevMonth = prevDate.getMonth(), prevYear = prevDate.getFullYear();
+
+    function inMonth(dateStr, m, y) {
+      if (!dateStr) return false;
+      const d = new Date(String(dateStr).replace(' ', 'T'));
+      return d.getMonth() === m && d.getFullYear() === y;
+    }
+
+    const leadsThis = leads.filter(l => inMonth(l.date_inscription, curMonth, curYear)).length;
+    const leadsPrev = leads.filter(l => inMonth(l.date_inscription, prevMonth, prevYear)).length;
+
+    const paidSales = sales.filter(s => s.statut_paiement === 'paye');
+    const salesThis = paidSales.filter(s => inMonth(s.date_vente, curMonth, curYear));
+    const salesPrev = paidSales.filter(s => inMonth(s.date_vente, prevMonth, prevYear));
+    const salesThisCount = salesThis.length, salesPrevCount = salesPrev.length;
+
+    const revenueThis = salesThis.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
+    const revenuePrev = salesPrev.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
+
+    const rateThis = leadsThis > 0 ? (salesThisCount / leadsThis * 100) : null;
+    const ratePrev = leadsPrev > 0 ? (salesPrevCount / leadsPrev * 100) : null;
+
+    const avgBasketThis = salesThisCount > 0 ? (revenueThis / salesThisCount) : null;
+    const avgBasketPrev = salesPrevCount > 0 ? (revenuePrev / salesPrevCount) : null;
+
+    setDelta('kpiLeadsDelta', leadsThis, leadsPrev, '', 0);
+    setDelta('kpiSalesDelta', salesThisCount, salesPrevCount, '', 0);
+    setDelta('kpiRevenueDelta', revenueThis, revenuePrev, ' CHF', 0);
+    setDelta('kpiRateDelta', rateThis, ratePrev, ' pts', 1, true);
+    setDelta('kpiAvgBasketDelta', avgBasketThis, avgBasketPrev, ' CHF', 0);
+  }
+
+  function setDelta(elId, current, prev, unit, decimals, isPointsDiff) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    if (current === null || prev === null) {
+      el.textContent = 'Pas de donnée le mois dernier';
+      el.className = 'stat-delta flat';
+      return;
+    }
+    const delta = isPointsDiff ? (current - prev) : (current - prev);
+    const showPct = !isPointsDiff && prev >= 3; // évite les % trompeurs sur petit volume (règle de prudence statistique)
+    const pct = (showPct && prev !== 0) ? (delta / Math.abs(prev) * 100) : null;
+
+    if (Math.abs(delta) < (decimals === 0 ? 1 : 0.05)) {
+      el.textContent = '≈ stable vs mois dernier';
+      el.className = 'stat-delta flat';
+      return;
+    }
+    const sign = delta > 0 ? '▲' : '▼';
+    const deltaTxt = (delta > 0 ? '+' : '') + delta.toFixed(decimals) + unit;
+    const pctTxt = pct !== null ? ' (' + (delta > 0 ? '+' : '') + pct.toFixed(0) + '%)' : '';
+    el.textContent = sign + ' ' + deltaTxt + pctTxt + ' vs mois dernier';
+    el.className = 'stat-delta ' + (delta > 0 ? 'up' : 'down');
   }
 
   // ===== MODULE SANTÉ FINANCIÈRE =====
