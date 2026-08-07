@@ -331,6 +331,8 @@
 <script>
   const CRM_LEADS_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-leads';
   const CRM_SALES_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-sales';
+  const CRM_CHARGES_LIST_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-charges-list';
+  const CRM_CHARGES_CREATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-charges-create';
   const SESSION_KEY = 'crm_session_user';
   const SESSION_EXPIRY = 'crm_session_expiry';
 
@@ -364,8 +366,60 @@
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  async function migrateLocalChargesToDbOnce() {
+    const migFlagKey = 'crm_charges_migrated_' + (session ? session.account_id : 'default');
+    if (localStorage.getItem(migFlagKey)) return; // déjà migré, on ne le refait jamais
+
+    const cfg = getFinanceConfig();
+    const costs = cfg.costs || [];
+    const oneOffs = cfg.oneOffs || [];
+    if (costs.length === 0 && oneOffs.length === 0) {
+      localStorage.setItem(migFlagKey, '1');
+      return;
+    }
+
+    try {
+      const requests = [];
+      costs.filter(c => c.name).forEach(c => {
+        requests.push(fetch(CRM_CHARGES_CREATE_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            account_id: session.account_id,
+            type: 'recurrente',
+            name: c.name,
+            amount: c.amount || 0,
+            frequency: c.frequency || 'mensuelle'
+          })
+        }));
+      });
+      oneOffs.filter(o => o.name).forEach(o => {
+        requests.push(fetch(CRM_CHARGES_CREATE_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            account_id: session.account_id,
+            type: 'ponctuelle',
+            name: o.name,
+            amount: o.amount || 0,
+            category: o.type || 'autre',
+            charge_date: o.date || null
+          })
+        }));
+      });
+      await Promise.all(requests);
+      localStorage.setItem(migFlagKey, '1');
+      console.log('Migration charges locales -> base de données : OK (' + requests.length + ' charge(s))');
+    } catch (err) {
+      console.error('Migration charges échouée, sera retentée à la prochaine visite.', err);
+      // On ne pose PAS le flag si ça échoue, pour réessayer automatiquement plus tard
+    }
+  }
+
   async function loadKPIs() {
     try {
+      await migrateLocalChargesToDbOnce();
+
       const [leadsResp, salesResp] = await Promise.all([
         fetch(CRM_LEADS_API + '?account_id=' + encodeURIComponent(session.account_id)),
         fetch(CRM_SALES_API + '?account_id=' + encodeURIComponent(session.account_id))
