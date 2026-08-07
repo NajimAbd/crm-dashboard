@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexa — Comptabilité</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --green-deep: #0D1A12;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --bg-soft: #FAF7F1;
+    --text-main: #2C2C2A;
+    --text-soft: #6B6B68;
+    --border-soft: #E5DECF;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg-soft); font-family: 'Inter', sans-serif; color: var(--text-main); min-height: 100vh; }
+
+  .topbar { background: var(--green-deep); color: var(--cream); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--gold); }
+  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-text { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: var(--cream); }
+  .brand-sub { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
+  .nav-link { color: var(--gold-light); text-decoration: none; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .nav-link:hover { color: var(--cream); }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 36px 32px 60px; }
+  .page-header { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 8px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 36px; margin: 0 0 6px; color: var(--green-deep); }
+  .subtitle { color: var(--text-soft); font-size: 14px; }
+
+  .period-picker { display: flex; align-items: center; gap: 8px; }
+  .period-picker select { font-family: 'Inter', sans-serif; font-size: 13px; padding: 9px 12px; border: 1px solid var(--border-soft); border-radius: 8px; background: white; color: var(--text-main); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: white; border: 1px solid var(--border-soft); border-radius: 12px; padding: 22px 22px 20px; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold); }
+  .stat-card.recettes::before { background: #5A8C5A; }
+  .stat-card.depenses::before { background: #C4604E; }
+  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 600; color: var(--green-deep); line-height: 1; margin-bottom: 6px; }
+  .stat-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; }
+
+  .layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .card { background: white; border: 1px solid var(--border-soft); border-radius: 14px; padding: 22px; margin-bottom: 20px; }
+  .card-title { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 600; color: var(--green-deep); margin: 0 0 16px; display: flex; align-items: center; justify-content: space-between; }
+
+  .journal-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .journal-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-soft); padding: 8px 6px; border-bottom: 2px solid var(--border-soft); }
+  .journal-table td { padding: 10px 6px; border-bottom: 1px solid var(--border-soft); }
+  .journal-table tr:last-child td { border-bottom: none; }
+  .amount-in { color: #2C6B3F; font-weight: 600; }
+  .amount-out { color: #B23A2E; font-weight: 600; }
+  .journal-empty { text-align: center; padding: 40px 20px; color: var(--text-soft); font-size: 13px; }
+  .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  .tag.in { background: #E4EFE6; color: #2C6B3F; }
+  .tag.out { background: #FAE3E0; color: #B23A2E; }
+
+  .form-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .form-input { flex: 1; min-width: 100px; padding: 9px 11px; border: 1px solid var(--border-soft); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; }
+  .btn-primary { background: var(--green-deep); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: white; border: 1px solid var(--border-soft); color: var(--text-soft); padding: 9px 14px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; }
+  .btn-secondary:hover { border-color: var(--gold); color: var(--green-deep); }
+
+  .type-toggle { display: flex; gap: 6px; margin-bottom: 10px; }
+  .type-toggle button { flex: 1; padding: 8px; border: 1px solid var(--border-soft); background: white; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-soft); }
+  .type-toggle button.active { background: var(--green-deep); color: white; border-color: var(--green-deep); }
+
+  .charge-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-soft); font-size: 13px; }
+  .charge-item:last-child { border-bottom: none; }
+  .charge-item-name { font-weight: 600; color: var(--text-main); }
+  .charge-item-meta { font-size: 11px; color: var(--text-soft); }
+  .charge-item-amount { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600; color: var(--green-deep); }
+  .charge-delete { background: none; border: none; color: #C4604E; cursor: pointer; font-size: 16px; padding: 2px 6px; }
+  .charge-delete:hover { opacity: 0.7; }
+
+  .empty-hint { font-size: 12px; color: var(--text-soft); text-align: center; padding: 16px; }
+  .loading-state { text-align: center; padding: 60px 24px; color: var(--text-soft); }
+  .spinner { width: 26px; height: 26px; border: 2.5px solid var(--border-soft); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--green-deep); color: white; padding: 12px 22px; border-radius: 10px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 100; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="50" rx="46" ry="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+      <circle cx="50" cy="50" r="6" fill="#B8965A"/>
+      <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-text">Nexa</div>
+      <div class="brand-sub">Platform CRM</div>
+    </div>
+  </div>
+  <a class="nav-link" onclick="window.location.href='kpi.html'">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+    Retour au dashboard KPI
+  </a>
+</div>
+
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">Suivi financier</div>
+      <h1>Comptabilité</h1>
+      <div class="subtitle" id="subtitleInfo">Chargement…</div>
+    </div>
+    <div class="period-picker">
+      <select id="monthSelect" onchange="onPeriodChange()"></select>
+      <select id="yearSelect" onchange="onPeriodChange()"></select>
+      <button class="btn-secondary" onclick="exportCSV()">Exporter CSV</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card recettes"><div class="stat-value" id="statRecettes">—</div><div class="stat-label">Recettes du mois (CHF)</div></div>
+    <div class="stat-card depenses"><div class="stat-value" id="statDepenses">—</div><div class="stat-label">Dépenses du mois (CHF)</div></div>
+    <div class="stat-card"><div class="stat-value" id="statResultat">—</div><div class="stat-label">Résultat net (CHF)</div></div>
+  </div>
+
+  <div class="layout">
+    <div>
+      <div class="card">
+        <div class="card-title">Journal du mois</div>
+        <div id="journalContent"><div class="loading-state"><div class="spinner"></div>Chargement du journal…</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">Ajouter une dépense</div>
+        <div class="type-toggle">
+          <button id="typeBtnRecurrente" class="active" onclick="setChargeType('recurrente')">Récurrente</button>
+          <button id="typeBtnPonctuelle" onclick="setChargeType('ponctuelle')">Ponctuelle</button>
+        </div>
+        <div class="form-row">
+          <input type="text" class="form-input" id="newChargeName" placeholder="Nom (ex: Calendly)">
+        </div>
+        <div class="form-row">
+          <input type="number" class="form-input" id="newChargeAmount" placeholder="Montant CHF" min="0" step="0.5">
+          <select class="form-input" id="newChargeFrequency">
+            <option value="mensuelle">Mensuelle</option>
+            <option value="annuelle">Annuelle</option>
+          </select>
+          <select class="form-input" id="newChargeCategory" style="display:none;">
+            <option value="materiel">Matériel</option>
+            <option value="deplacement">Déplacement client</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div class="form-row" id="newChargeDateRow" style="display:none;">
+          <input type="date" class="form-input" id="newChargeDate">
+        </div>
+        <button class="btn-primary" style="width:100%;" onclick="addCharge()">+ Ajouter la dépense</button>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Charges récurrentes actives</div>
+        <div id="recurringList"><div class="empty-hint">Chargement…</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">Dépenses ponctuelles (toutes)</div>
+        <div id="oneOffList"><div class="empty-hint">Chargement…</div></div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  const CRM_SALES_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-sales';
+  const CRM_CHARGES_LIST_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-charges-list';
+  const CRM_CHARGES_CREATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-charges-create';
+  const CRM_CHARGES_DELETE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-charges-delete';
+  const SESSION_KEY = 'crm_session_user';
+  const SESSION_EXPIRY = 'crm_session_expiry';
+  const STRIPE_FEE_RATE = 0.029;
+  const MONTH_NAMES_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+  function getSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+      if (!raw || Date.now() >= expiry) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+
+  const session = getSession();
+  if (!session) {
+    window.location.href = 'index.html';
+    throw new Error('No session');
+  }
+
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  let allSales = [];
+  let allCharges = [];
+  let selectedMonth = new Date().getMonth();
+  let selectedYear = new Date().getFullYear();
+  let currentChargeType = 'recurrente';
+
+  function initPeriodPickers() {
+    const monthSel = document.getElementById('monthSelect');
+    monthSel.innerHTML = MONTH_NAMES_FR.map((m, i) => '<option value="' + i + '"' + (i === selectedMonth ? ' selected' : '') + '>' + m + '</option>').join('');
+    const yearSel = document.getElementById('yearSelect');
+    const curYear = new Date().getFullYear();
+    let yearsHtml = '';
+    for (let y = curYear - 2; y <= curYear + 1; y++) {
+      yearsHtml += '<option value="' + y + '"' + (y === selectedYear ? ' selected' : '') + '>' + y + '</option>';
+    }
+    yearSel.innerHTML = yearsHtml;
+  }
+
+  function onPeriodChange() {
+    selectedMonth = parseInt(document.getElementById('monthSelect').value);
+    selectedYear = parseInt(document.getElementById('yearSelect').value);
+    render();
+  }
+
+  function setChargeType(type) {
+    currentChargeType = type;
+    document.getElementById('typeBtnRecurrente').classList.toggle('active', type === 'recurrente');
+    document.getElementById('typeBtnPonctuelle').classList.toggle('active', type === 'ponctuelle');
+    document.getElementById('newChargeFrequency').style.display = type === 'recurrente' ? '' : 'none';
+    document.getElementById('newChargeCategory').style.display = type === 'ponctuelle' ? '' : 'none';
+    document.getElementById('newChargeDateRow').style.display = type === 'ponctuelle' ? '' : 'none';
+    if (type === 'ponctuelle' && !document.getElementById('newChargeDate').value) {
+      document.getElementById('newChargeDate').value = new Date().toISOString().slice(0, 10);
+    }
+  }
+
+  async function loadAll() {
+    try {
+      const [salesResp, chargesResp] = await Promise.all([
+        fetch(CRM_SALES_API + '?account_id=' + encodeURIComponent(session.account_id)),
+        fetch(CRM_CHARGES_LIST_API + '?account_id=' + encodeURIComponent(session.account_id))
+      ]);
+      const salesData = await salesResp.json();
+      const chargesData = await chargesResp.json();
+      allSales = salesData.sales || [];
+      allCharges = chargesData.charges || [];
+      document.getElementById('subtitleInfo').textContent = 'Basé sur ' + allSales.length + ' vente(s) et ' + allCharges.length + ' charge(s) enregistrée(s).';
+      render();
+    } catch (err) {
+      document.getElementById('subtitleInfo').textContent = 'Erreur de chargement des données.';
+      document.getElementById('journalContent').innerHTML = '<div class="journal-empty">Impossible de charger les données. Réessayez plus tard.</div>';
+    }
+  }
+
+  function render() {
+    const paidSales = allSales.filter(s => s.statut_paiement === 'paye').filter(s => {
+      const d = new Date((s.date_vente || '').replace(' ', 'T'));
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+
+    const recurringCharges = allCharges.filter(c => c.type === 'recurrente');
+    const oneOffChargesAll = allCharges.filter(c => c.type === 'ponctuelle');
+    const oneOffThisMonth = oneOffChargesAll.filter(c => {
+      if (!c.charge_date) return false;
+      const d = new Date(c.charge_date);
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+
+    const totalRecettes = paidSales.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
+    const totalRecurringMensualise = recurringCharges.reduce((sum, c) => {
+      const amt = parseFloat(c.amount) || 0;
+      return sum + (c.frequency === 'annuelle' ? amt / 12 : amt);
+    }, 0);
+    const totalOneOffThisMonth = oneOffThisMonth.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0);
+    const stripeFees = totalRecettes * STRIPE_FEE_RATE;
+    const totalDepenses = totalRecurringMensualise + totalOneOffThisMonth + stripeFees;
+    const resultatNet = totalRecettes - totalDepenses;
+
+    document.getElementById('statRecettes').textContent = totalRecettes.toFixed(0) + ' CHF';
+    document.getElementById('statDepenses').textContent = totalDepenses.toFixed(0) + ' CHF';
+    const resultEl = document.getElementById('statResultat');
+    resultEl.textContent = resultatNet.toFixed(0) + ' CHF';
+    resultEl.style.color = resultatNet >= 0 ? '#2C6B3F' : '#B23A2E';
+
+    renderJournal(paidSales, oneOffThisMonth);
+    renderRecurringList(recurringCharges);
+    renderOneOffList(oneOffChargesAll);
+  }
+
+  function renderJournal(paidSales, oneOffThisMonth) {
+    const rows = [];
+    paidSales.forEach(s => {
+      rows.push({
+        date: (s.date_vente || '').slice(0, 10),
+        label: (s.produit || 'Vente') + (s.client_nom ? ' — ' + s.client_nom : (s.client_email ? ' — ' + s.client_email : '')),
+        amount: parseFloat(s.montant || 0),
+        direction: 'in'
+      });
+    });
+    oneOffThisMonth.forEach(c => {
+      rows.push({
+        date: c.charge_date,
+        label: c.name + (c.category ? ' (' + categoryLabel(c.category) + ')' : ''),
+        amount: parseFloat(c.amount || 0),
+        direction: 'out'
+      });
+    });
+    rows.sort((a, b) => (a.date || '').localeCompare(b.date || ''));
+
+    const content = document.getElementById('journalContent');
+    if (rows.length === 0) {
+      content.innerHTML = '<div class="journal-empty">Aucune opération enregistrée pour ' + MONTH_NAMES_FR[selectedMonth] + ' ' + selectedYear + '.</div>';
+      return;
+    }
+
+    let html = '<table class="journal-table"><thead><tr><th>Date</th><th>Description</th><th></th><th style="text-align:right;">Montant</th></tr></thead><tbody>';
+    rows.forEach(r => {
+      html += '<tr>' +
+        '<td>' + esc(formatDateShort(r.date)) + '</td>' +
+        '<td>' + esc(r.label) + '</td>' +
+        '<td><span class="tag ' + r.direction + '">' + (r.direction === 'in' ? 'Recette' : 'Dépense') + '</span></td>' +
+        '<td style="text-align:right;" class="' + (r.direction === 'in' ? 'amount-in' : 'amount-out') + '">' + (r.direction === 'in' ? '+' : '−') + r.amount.toFixed(0) + ' CHF</td>' +
+        '</tr>';
+    });
+    html += '</tbody></table>';
+    html += '<div class="empty-hint" style="text-align:left;margin-top:10px;">Les charges récurrentes (abonnements) ne sont pas listées ligne par ligne ici car leur date exacte de prélèvement n\'est pas suivie — elles sont incluses dans le total "Dépenses du mois" ci-dessus, mensualisées. Voir la liste "Charges récurrentes actives" à droite.</div>';
+    content.innerHTML = html;
+  }
+
+  function renderRecurringList(recurringCharges) {
+    const el = document.getElementById('recurringList');
+    if (recurringCharges.length === 0) {
+      el.innerHTML = '<div class="empty-hint">Aucune charge récurrente enregistrée.</div>';
+      return;
+    }
+    let html = '';
+    recurringCharges.forEach(c => {
+      html += '<div class="charge-item">' +
+        '<div><div class="charge-item-name">' + esc(c.name) + '</div><div class="charge-item-meta">' + (c.frequency === 'annuelle' ? 'Annuelle' : 'Mensuelle') + '</div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<div class="charge-item-amount">' + parseFloat(c.amount).toFixed(0) + ' CHF</div>' +
+        '<button class="charge-delete" onclick="deleteCharge(' + c.id + ')" title="Retirer">✕</button>' +
+        '</div></div>';
+    });
+    el.innerHTML = html;
+  }
+
+  function renderOneOffList(oneOffChargesAll) {
+    const el = document.getElementById('oneOffList');
+    if (oneOffChargesAll.length === 0) {
+      el.innerHTML = '<div class="empty-hint">Aucune dépense ponctuelle enregistrée.</div>';
+      return;
+    }
+    const sorted = [...oneOffChargesAll].sort((a, b) => (b.charge_date || '').localeCompare(a.charge_date || ''));
+    let html = '';
+    sorted.forEach(c => {
+      html += '<div class="charge-item">' +
+        '<div><div class="charge-item-name">' + esc(c.name) + '</div><div class="charge-item-meta">' + esc(categoryLabel(c.category)) + ' — ' + esc(formatDateShort(c.charge_date)) + '</div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+        '<div class="charge-item-amount">' + parseFloat(c.amount).toFixed(0) + ' CHF</div>' +
+        '<button class="charge-delete" onclick="deleteCharge(' + c.id + ')" title="Retirer">✕</button>' +
+        '</div></div>';
+    });
+    el.innerHTML = html;
+  }
+
+  function categoryLabel(cat) {
+    if (cat === 'materiel') return 'Matériel';
+    if (cat === 'deplacement') return 'Déplacement client';
+    return 'Autre';
+  }
+
+  function formatDateShort(dateStr) {
+    if (!dateStr) return '—';
+    const d = new Date(dateStr);
+    if (isNaN(d.getTime())) return dateStr;
+    return String(d.getDate()).padStart(2, '0') + '/' + String(d.getMonth() + 1).padStart(2, '0') + '/' + d.getFullYear();
+  }
+
+  async function addCharge() {
+    const name = document.getElementById('newChargeName').value.trim();
+    const amount = parseFloat(document.getElementById('newChargeAmount').value) || 0;
+    if (!name || amount <= 0) {
+      showToast('Nom et montant requis.');
+      return;
+    }
+    const payload = { account_id: session.account_id, type: currentChargeType, name, amount };
+    if (currentChargeType === 'recurrente') {
+      payload.frequency = document.getElementById('newChargeFrequency').value;
+    } else {
+      payload.category = document.getElementById('newChargeCategory').value;
+      payload.charge_date = document.getElementById('newChargeDate').value || new Date().toISOString().slice(0, 10);
+    }
+    try {
+      const resp = await fetch(CRM_CHARGES_CREATE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast('Dépense ajoutée.');
+        document.getElementById('newChargeName').value = '';
+        document.getElementById('newChargeAmount').value = '';
+        await loadAll();
+      } else {
+        showToast('Erreur lors de l\'ajout.');
+      }
+    } catch (err) {
+      showToast('Erreur réseau.');
+    }
+  }
+
+  async function deleteCharge(id) {
+    if (!confirm('Retirer cette charge ? Elle sera conservée dans l\'historique mais n\'apparaîtra plus dans vos calculs.')) return;
+    try {
+      const resp = await fetch(CRM_CHARGES_DELETE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: String(id) })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast('Charge retirée.');
+        await loadAll();
+      } else {
+        showToast('Erreur lors de la suppression.');
+      }
+    } catch (err) {
+      showToast('Erreur réseau.');
+    }
+  }
+
+  function exportCSV() {
+    const paidSales = allSales.filter(s => s.statut_paiement === 'paye').filter(s => {
+      const d = new Date((s.date_vente || '').replace(' ', 'T'));
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+    const oneOffThisMonth = allCharges.filter(c => c.type === 'ponctuelle' && c.charge_date).filter(c => {
+      const d = new Date(c.charge_date);
+      return d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
+    });
+
+    let csv = 'Date;Description;Type;Montant CHF\n';
+    paidSales.forEach(s => {
+      csv += (s.date_vente || '').slice(0, 10) + ';' + (s.produit || 'Vente') + ';Recette;' + parseFloat(s.montant || 0).toFixed(2) + '\n';
+    });
+    oneOffThisMonth.forEach(c => {
+      csv += c.charge_date + ';' + c.name + ';Dépense;-' + parseFloat(c.amount).toFixed(2) + '\n';
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'comptabilite_' + MONTH_NAMES_FR[selectedMonth] + '_' + selectedYear + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  initPeriodPickers();
+  setChargeType('recurrente');
+  loadAll();
+</script>
+
+</body>
+</html>
