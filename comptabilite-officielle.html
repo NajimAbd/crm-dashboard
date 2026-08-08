@@ -203,10 +203,10 @@
             <div style="flex:1;">
               <span class="form-label">Libellé</span>
               <select class="form-input" id="entryLabel" onchange="document.getElementById('entryLabelCustomRow').style.display = (this.value === 'autre') ? 'block' : 'none';">
-                <option value="Consultation Roqya">Consultation Roqya</option>
-                <option value="Diagnostic">Diagnostic</option>
+                <option value="Nouvelle consultation">Nouvelle consultation</option>
                 <option value="Séance de suivi">Séance de suivi</option>
-                <option value="Formation / Academy">Formation / Academy</option>
+                <option value="Consultation urgente">Consultation urgente</option>
+                <option value="Prestation à distance">Prestation à distance</option>
                 <option value="autre">Autre (personnalisé)</option>
               </select>
               <div id="entryLabelCustomRow" style="display:none;margin-top:8px;">
@@ -565,7 +565,7 @@
       }
 
       document.getElementById('entryAmount').value = '';
-      document.getElementById('entryLabel').value = 'Consultation Roqya';
+      document.getElementById('entryLabel').value = 'Nouvelle consultation';
       document.getElementById('entryLabelCustom').value = '';
       document.getElementById('entryLabelCustomRow').style.display = 'none';
       document.getElementById('entryRef').value = '';
