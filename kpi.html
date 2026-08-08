@@ -126,6 +126,14 @@
   .hero-trend.up { color: #8FCB9C; }
   .hero-trend.down { color: #E8998C; }
   .hero-trend.flat { color: #C9C9BE; }
+  .hero-status { display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-bottom: 10px; }
+  .hero-status .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .hero-status.green { background: rgba(143,203,156,0.15); color: #8FCB9C; }
+  .hero-status.green .dot { background: #4CAF50; box-shadow: 0 0 8px #4CAF50; }
+  .hero-status.orange { background: rgba(232,178,108,0.15); color: #E8B26C; }
+  .hero-status.orange .dot { background: #E8991E; box-shadow: 0 0 8px #E8991E; }
+  .hero-status.red { background: rgba(232,153,140,0.15); color: #E8998C; }
+  .hero-status.red .dot { background: #D64545; box-shadow: 0 0 8px #D64545; }
   .hero-pastilles { display: flex; gap: 16px; flex-wrap: wrap; }
   .hero-pastille { background: rgba(255,255,255,0.08); border-radius: 12px; padding: 14px 22px; min-width: 110px; text-align: center; }
   .hero-pastille-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: #C9C9BE; font-weight: 700; margin-bottom: 6px; }
@@ -228,6 +236,7 @@
 
   <div class="hero-metric" id="heroMetric">
     <div class="hero-main">
+      <div class="hero-status" id="heroStatus" style="display:none;"><span class="dot"></span><span id="heroStatusText"></span></div>
       <div class="hero-label">Marge nette de ce mois</div>
       <div class="hero-value" id="heroMarge">—</div>
       <div class="hero-trend" id="heroTrend"></div>
@@ -824,6 +833,22 @@
     const margePrevMonth = revenuePrevMonth - stripeFeesPrevMonth - totalCosts - oneOffsPrevMonth - (hasAdHistoryPrevMonth ? parseFloat(adSpendPrevMonth) || 0 : 0);
 
     document.getElementById('heroMarge').textContent = margeNette.toFixed(0) + ' CHF';
+
+    // Statut global (rouge/orange/vert)
+    const statusEl = document.getElementById('heroStatus');
+    const statusTextEl = document.getElementById('heroStatusText');
+    let statusColor = 'green', statusText = 'Sain';
+    if (margeNette <= 0 || (roas !== null && roas < 1) || (ratio !== null && ratio !== undefined && ratio < 1)) {
+      statusColor = 'red';
+      statusText = 'Alerte';
+    } else if ((roas !== null && roas < 3) || (ratio !== null && ratio !== undefined && ratio < 3) || margeNette < 200) {
+      statusColor = 'orange';
+      statusText = 'À surveiller';
+    }
+    statusEl.className = 'hero-status ' + statusColor;
+    statusEl.style.display = 'inline-flex';
+    statusTextEl.textContent = statusText;
+
     const trendEl = document.getElementById('heroTrend');
     if (revenuePrevMonth > 0 || margePrevMonth !== 0) {
       const delta = margeNette - margePrevMonth;
