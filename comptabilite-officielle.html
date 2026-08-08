@@ -223,16 +223,15 @@
           </div>
           <div class="form-row">
             <div style="flex:1;">
-              <span class="form-label">Libellé</span>
-              <select class="form-input" id="entryLabel" onchange="document.getElementById('entryLabelCustomRow').style.display = (this.value === 'autre') ? 'block' : 'none';">
-                <option value="Nouvelle consultation">Nouvelle consultation</option>
-                <option value="Séance de suivi">Séance de suivi</option>
-                <option value="Consultation urgente">Consultation urgente</option>
-                <option value="Prestation à distance">Prestation à distance</option>
-                <option value="autre">Autre (personnalisé)</option>
-              </select>
+              <span class="form-label">Libellé <a onclick="toggleLibelleManager()" style="font-size:11px;color:var(--accent-gold);cursor:pointer;font-weight:normal;text-decoration:underline;">Gérer</a></span>
+              <select class="form-input" id="entryLabel" onchange="document.getElementById('entryLabelCustomRow').style.display = (this.value === 'autre') ? 'block' : 'none';"></select>
               <div id="entryLabelCustomRow" style="display:none;margin-top:8px;">
                 <input type="text" class="form-input" id="entryLabelCustom" placeholder="Précise le libellé">
+                <button type="button" class="row-delete" style="color:var(--accent-gold);font-size:12px;margin-top:6px;" onclick="ajouterLibelleALaListe()">+ Ajouter cette option à la liste pour la prochaine fois</button>
+              </div>
+              <div id="libelleManagerPanel" style="display:none;margin-top:10px;padding:10px;border:1px solid var(--border-soft);border-radius:8px;">
+                <div style="font-size:11px;color:var(--text-soft);margin-bottom:6px;">Libellés disponibles pour ce type :</div>
+                <div id="libelleChipsList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
               </div>
             </div>
           </div>
@@ -325,6 +324,9 @@
   const LIVRE_LIST_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-livre-list';
   const LIVRE_CREATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-livre-create';
   const RECU_GENERATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-recu-generate';
+  const LIBELLE_LIST_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-libelle-list';
+  const LIBELLE_CREATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-libelle-create';
+  const LIBELLE_DELETE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-libelle-delete';
   const LIVRE_DELETE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-livre-delete';
   const AMORT_LIST_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-amort-list';
   const AMORT_CREATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-amort-create';
@@ -405,12 +407,92 @@
     document.getElementById('printTitle').textContent = titles[tab] + ' — ' + selectedYear;
   }
 
+  let libelleOptions = { recette: [], depense: [] };
+
   function setEntryType(type) {
     currentEntryType = type;
     document.getElementById('typeBtnRecette').classList.toggle('active', type === 'recette');
     document.getElementById('typeBtnDepense').classList.toggle('active', type === 'depense');
     document.getElementById('clientFieldsRow').style.display = (type === 'recette') ? 'flex' : 'none';
+    document.getElementById('libelleManagerPanel').style.display = 'none';
     populateCategories();
+    loadLibelleOptions(type);
+  }
+
+  async function loadLibelleOptions(type) {
+    try {
+      const resp = await fetch(LIBELLE_LIST_API + '?account_id=' + encodeURIComponent(session.account_id) + '&type=' + type);
+      const data = await resp.json();
+      libelleOptions[type] = data.options || [];
+    } catch (err) {
+      libelleOptions[type] = [];
+    }
+    renderLibelleSelect(type);
+  }
+
+  function renderLibelleSelect(type) {
+    const sel = document.getElementById('entryLabel');
+    const opts = libelleOptions[type] || [];
+    let html = opts.map(o => '<option value="' + esc(o.libelle) + '">' + esc(o.libelle) + '</option>').join('');
+    html += '<option value="autre">Autre (personnalisé)</option>';
+    sel.innerHTML = html;
+    renderLibelleChips(type);
+  }
+
+  function renderLibelleChips(type) {
+    const opts = libelleOptions[type] || [];
+    const container = document.getElementById('libelleChipsList');
+    if (opts.length === 0) {
+      container.innerHTML = '<span style="font-size:12px;color:var(--text-soft);">Aucun libellé enregistré pour ce type.</span>';
+      return;
+    }
+    container.innerHTML = opts.map(o =>
+      '<span style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:14px;padding:4px 10px;font-size:12px;">' +
+        esc(o.libelle) +
+        '<span style="cursor:pointer;color:#B23A2E;font-weight:bold;" onclick="supprimerLibelle(' + o.id + ')" title="Supprimer">✕</span>' +
+      '</span>'
+    ).join('');
+  }
+
+  function toggleLibelleManager() {
+    const panel = document.getElementById('libelleManagerPanel');
+    panel.style.display = (panel.style.display === 'none') ? 'block' : 'none';
+  }
+
+  async function ajouterLibelleALaListe() {
+    const val = document.getElementById('entryLabelCustom').value.trim();
+    if (!val) { showToast('Écris d\'abord le libellé à ajouter.'); return; }
+    try {
+      const resp = await fetch(LIBELLE_CREATE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: session.account_id, type: currentEntryType, libelle: val })
+      });
+      if (!resp.ok) throw new Error('fail');
+      showToast('Libellé ajouté à la liste.');
+      await loadLibelleOptions(currentEntryType);
+      document.getElementById('entryLabel').value = val;
+      document.getElementById('entryLabelCustomRow').style.display = 'none';
+      document.getElementById('entryLabelCustom').value = '';
+    } catch (err) {
+      showToast('Erreur lors de l\'ajout du libellé.');
+    }
+  }
+
+  async function supprimerLibelle(id) {
+    if (!confirm('Supprimer ce libellé de la liste ?')) return;
+    try {
+      const resp = await fetch(LIBELLE_DELETE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: session.account_id, id: id })
+      });
+      if (!resp.ok) throw new Error('fail');
+      showToast('Libellé supprimé.');
+      await loadLibelleOptions(currentEntryType);
+    } catch (err) {
+      showToast('Erreur lors de la suppression.');
+    }
   }
 
   function populateCategories() {
@@ -591,7 +673,7 @@
       }
 
       document.getElementById('entryAmount').value = '';
-      document.getElementById('entryLabel').value = 'Nouvelle consultation';
+      document.getElementById('entryLabel').selectedIndex = 0;
       document.getElementById('entryLabelCustom').value = '';
       document.getElementById('entryLabelCustomRow').style.display = 'none';
       document.getElementById('entryRef').value = '';
@@ -705,6 +787,7 @@
 
   initYearPicker();
   populateCategories();
+  loadLibelleOptions('recette');
   loadAll();
 </script>
 
