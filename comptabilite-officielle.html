@@ -231,7 +231,11 @@
               </div>
               <div id="libelleManagerPanel" style="display:none;margin-top:10px;padding:10px;border:1px solid var(--border-soft);border-radius:8px;">
                 <div style="font-size:11px;color:var(--text-soft);margin-bottom:6px;">Libellés disponibles pour ce type :</div>
-                <div id="libelleChipsList" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+                <div id="libelleChipsList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
+                <div style="display:flex;gap:8px;">
+                  <input type="text" class="form-input" id="libelleManagerNewInput" placeholder="Nouveau libellé…" style="flex:1;">
+                  <button type="button" class="btn-primary" style="white-space:nowrap;padding:0 14px;" onclick="ajouterLibelleDepuisGestion()">+ Ajouter</button>
+                </div>
               </div>
             </div>
           </div>
@@ -457,6 +461,25 @@
   function toggleLibelleManager() {
     const panel = document.getElementById('libelleManagerPanel');
     panel.style.display = (panel.style.display === 'none') ? 'block' : 'none';
+  }
+
+  async function ajouterLibelleDepuisGestion() {
+    const input = document.getElementById('libelleManagerNewInput');
+    const val = input.value.trim();
+    if (!val) { showToast('Écris d\'abord le libellé à ajouter.'); return; }
+    try {
+      const resp = await fetch(LIBELLE_CREATE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: session.account_id, type: currentEntryType, libelle: val })
+      });
+      if (!resp.ok) throw new Error('fail');
+      showToast('Libellé ajouté.');
+      input.value = '';
+      await loadLibelleOptions(currentEntryType);
+    } catch (err) {
+      showToast('Erreur lors de l\'ajout du libellé.');
+    }
   }
 
   async function ajouterLibelleALaListe() {
