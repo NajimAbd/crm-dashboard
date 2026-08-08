@@ -426,7 +426,7 @@
       const isIn = e.type === 'recette';
       const recuEnvoye = isIn && (e.recu_envoye === 1 || e.recu_envoye === true || e.recu_envoye === '1');
       const arrowColor = recuEnvoye ? '#2C6B3F' : 'var(--accent-gold)';
-      const arrowTitle = recuEnvoye ? 'Reçu envoyé — télécharger' : 'Télécharger le reçu';
+      const arrowTitle = recuEnvoye ? 'Reçu déjà envoyé — cliquer pour renvoyer' : 'Envoyer le reçu par email';
       html += '<tr>' +
         '<td style="color:var(--text-soft);">' + (idx + 1) + '</td>' +
         '<td>' + esc(formatDateShort(e.date_operation)) + '</td>' +
@@ -434,7 +434,7 @@
         '<td>' + esc(e.libelle) + (e.reference_piece ? ' <span style="color:var(--text-soft);font-size:11px;">(' + esc(e.reference_piece) + ')</span>' : '') + '</td>' +
         '<td><span class="tag ' + (isIn ? 'in' : 'out') + '">' + (isIn ? 'Recette' : 'Dépense') + '</span></td>' +
         '<td style="text-align:right;" class="' + (isIn ? 'amount-in' : 'amount-out') + '">' + (isIn ? '+' : '−') + parseFloat(e.montant_ht).toFixed(2) + ' CHF</td>' +
-        '<td class="no-print">' + (isIn ? '<button class="row-delete" style="color:' + arrowColor + ';" onclick="telechargerRecu(' + e.id + ')" title="' + arrowTitle + '">⬇</button>' : '') + '</td>' +
+        '<td class="no-print">' + (isIn ? '<button class="row-delete" style="color:' + arrowColor + ';" onclick="envoyerRecu(' + e.id + ')" title="' + arrowTitle + '">⬇</button>' : '') + '</td>' +
         '<td class="no-print"><button class="row-delete" onclick="deleteEntry(' + e.id + ')" title="Supprimer">✕</button></td>' +
         '</tr>';
     });
@@ -562,12 +562,19 @@
     }
   }
 
-  async function telechargerRecu(id) {
-    const entry = allEntries.find(e => e.id === id);
-    if (entry && entry.recu_pdf_url) {
-      window.open(entry.recu_pdf_url, '_blank');
-    } else {
-      showToast('Reçu pas encore disponible, réessaie dans un instant.');
+  async function envoyerRecu(id) {
+    try {
+      showToast('Envoi du reçu en cours…');
+      const resp = await fetch(RECU_GENERATE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: session.account_id, entry_id: id })
+      });
+      if (!resp.ok) throw new Error('fail');
+      showToast('Reçu envoyé.');
+      loadAll();
+    } catch (err) {
+      showToast('Erreur lors de l\'envoi du reçu.');
     }
   }
 
