@@ -202,10 +202,6 @@
           <div class="form-row">
             <div style="flex:1;"><span class="form-label">Libellé</span><input type="text" class="form-input" id="entryLabel" placeholder="Ex: Consultation — M. Dupont"></div>
           </div>
-          <div class="form-row" id="clientFieldsRow">
-            <div style="flex:1;"><span class="form-label">Nom du client</span><input type="text" class="form-input" id="entryClientNom" placeholder="Ex: Karim B."></div>
-            <div style="flex:1;"><span class="form-label">Email du client (optionnel)</span><input type="email" class="form-input" id="entryClientEmail" placeholder="client@email.com"></div>
-          </div>
           <div class="form-row">
             <div style="flex:1;"><span class="form-label">Mode de paiement</span>
               <select class="form-input" id="entryPaymentMode">
@@ -290,7 +286,6 @@
 <script>
   const LIVRE_LIST_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-livre-list';
   const LIVRE_CREATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-livre-create';
-  const RECU_GENERATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-recu-generate';
   const LIVRE_DELETE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-livre-delete';
   const AMORT_LIST_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-amort-list';
   const AMORT_CREATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-amort-create';
@@ -371,7 +366,6 @@
     currentEntryType = type;
     document.getElementById('typeBtnRecette').classList.toggle('active', type === 'recette');
     document.getElementById('typeBtnDepense').classList.toggle('active', type === 'depense');
-    document.getElementById('clientFieldsRow').style.display = (type === 'recette') ? 'flex' : 'none';
     populateCategories();
   }
 
@@ -421,7 +415,7 @@
       return;
     }
     const sorted = [...allEntries].sort((a, b) => (a.date_operation || '').localeCompare(b.date_operation || ''));
-    let html = '<table class="journal-table"><thead><tr><th>Date</th><th>Catégorie</th><th>Libellé</th><th></th><th style="text-align:right;">Montant</th><th class="no-print"></th><th class="no-print"></th></tr></thead><tbody>';
+    let html = '<table class="journal-table"><thead><tr><th>Date</th><th>Catégorie</th><th>Libellé</th><th></th><th style="text-align:right;">Montant</th><th class="no-print"></th></tr></thead><tbody>';
     sorted.forEach(e => {
       const isIn = e.type === 'recette';
       html += '<tr>' +
@@ -430,7 +424,6 @@
         '<td>' + esc(e.libelle) + (e.reference_piece ? ' <span style="color:var(--text-soft);font-size:11px;">(' + esc(e.reference_piece) + ')</span>' : '') + '</td>' +
         '<td><span class="tag ' + (isIn ? 'in' : 'out') + '">' + (isIn ? 'Recette' : 'Dépense') + '</span></td>' +
         '<td style="text-align:right;" class="' + (isIn ? 'amount-in' : 'amount-out') + '">' + (isIn ? '+' : '−') + parseFloat(e.montant_ht).toFixed(2) + ' CHF</td>' +
-        '<td class="no-print">' + (isIn ? '<button class="row-delete" style="color:var(--accent-gold);" onclick="telechargerRecu(' + e.id + ')" title="Télécharger le reçu">⬇</button>' : '') + '</td>' +
         '<td class="no-print"><button class="row-delete" onclick="deleteEntry(' + e.id + ')" title="Supprimer">✕</button></td>' +
         '</tr>';
     });
@@ -503,15 +496,9 @@
     const libelle = document.getElementById('entryLabel').value.trim();
     const mode = document.getElementById('entryPaymentMode').value;
     const ref = document.getElementById('entryRef').value.trim();
-    const clientNom = document.getElementById('entryClientNom').value.trim();
-    const clientEmail = document.getElementById('entryClientEmail').value.trim();
 
     if (!date || !amount || amount <= 0 || !libelle) {
       showToast('Complète la date, le montant et le libellé.');
-      return;
-    }
-    if (currentEntryType === 'recette' && !clientNom) {
-      showToast('Indique le nom du client pour générer le reçu.');
       return;
     }
     try {
@@ -526,44 +513,17 @@
           libelle: libelle,
           montant_ht: amount,
           mode_paiement: mode,
-          reference_piece: ref || null,
-          client_nom: currentEntryType === 'recette' ? (clientNom || null) : null,
-          client_email: currentEntryType === 'recette' ? (clientEmail || null) : null
+          reference_piece: ref || null
         })
       });
       if (!resp.ok) throw new Error('fail');
-      const data = await resp.json().catch(() => ({}));
-
-      if (currentEntryType === 'recette') {
-        showToast('Écriture ajoutée. Génération du reçu…');
-        try {
-          await fetch(RECU_GENERATE_API, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ account_id: session.account_id, entry_id: data.id || data.insertId || null })
-          });
-        } catch (recuErr) { /* le reçu peut être régénéré manuellement si l'appel échoue */ }
-      } else {
-        showToast('Écriture ajoutée.');
-      }
-
+      showToast('Écriture ajoutée.');
       document.getElementById('entryAmount').value = '';
       document.getElementById('entryLabel').value = '';
       document.getElementById('entryRef').value = '';
-      document.getElementById('entryClientNom').value = '';
-      document.getElementById('entryClientEmail').value = '';
       loadAll();
     } catch (err) {
       showToast('Erreur — écriture non enregistrée.');
-    }
-  }
-
-  async function telechargerRecu(id) {
-    const entry = allEntries.find(e => e.id === id);
-    if (entry && entry.recu_pdf_url) {
-      window.open(entry.recu_pdf_url, '_blank');
-    } else {
-      showToast('Reçu pas encore disponible, réessaie dans un instant.');
     }
   }
 
