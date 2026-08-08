@@ -229,8 +229,11 @@
                 <input type="text" class="form-input" id="entryLabelCustom" placeholder="Précise le libellé">
                 <button type="button" class="row-delete" style="color:var(--accent-gold);font-size:12px;margin-top:6px;" onclick="ajouterLibelleALaListe()">+ Ajouter cette option à la liste pour la prochaine fois</button>
               </div>
-              <div id="libelleManagerPanel" style="display:none;margin-top:10px;padding:10px;border:1px solid var(--border-soft);border-radius:8px;">
-                <div style="font-size:11px;color:var(--text-soft);margin-bottom:6px;">Libellés disponibles pour ce type :</div>
+              <div id="libelleManagerPanel" style="display:none;margin-top:10px;padding:12px;background:var(--green-deep);border:1px solid var(--gold);border-radius:8px;">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+                  <div style="font-size:11px;color:var(--gold-light);">Libellés disponibles pour ce type :</div>
+                  <span style="cursor:pointer;color:var(--cream);font-size:16px;line-height:1;" onclick="toggleLibelleManager()" title="Fermer">✕</span>
+                </div>
                 <div id="libelleChipsList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
                 <div style="display:flex;gap:8px;">
                   <input type="text" class="form-input" id="libelleManagerNewInput" placeholder="Nouveau libellé…" style="flex:1;">
@@ -447,13 +450,13 @@
     const opts = libelleOptions[type] || [];
     const container = document.getElementById('libelleChipsList');
     if (opts.length === 0) {
-      container.innerHTML = '<span style="font-size:12px;color:var(--text-soft);">Aucun libellé enregistré pour ce type.</span>';
+      container.innerHTML = '<span style="font-size:12px;color:var(--gold-light);">Aucun libellé enregistré pour ce type.</span>';
       return;
     }
     container.innerHTML = opts.map(o =>
-      '<span style="display:inline-flex;align-items:center;gap:6px;background:var(--bg-soft);border:1px solid var(--border-soft);border-radius:14px;padding:4px 10px;font-size:12px;">' +
+      '<span style="display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,0.08);border:1px solid var(--gold);color:var(--cream);border-radius:14px;padding:4px 10px;font-size:12px;">' +
         esc(o.libelle) +
-        '<span style="cursor:pointer;color:#B23A2E;font-weight:bold;" onclick="supprimerLibelle(' + o.id + ')" title="Supprimer">✕</span>' +
+        '<span style="cursor:pointer;color:#E8887A;font-weight:bold;" onclick="supprimerLibelle(' + o.id + ')" title="Supprimer">✕</span>' +
       '</span>'
     ).join('');
   }
