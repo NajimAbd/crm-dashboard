@@ -22,13 +22,14 @@
   body { margin: 0; background: var(--bg-soft); font-family: 'Inter', sans-serif; color: var(--text-main); min-height: 100vh; }
 
   .topbar { background: var(--green-deep); color: var(--cream); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--gold); }
-  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .topbar-left { flex: 1; display: flex; align-items: center; gap: 14px; }
   .brand-mark { width: 34px; height: 34px; }
   .brand-text { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: var(--cream); }
   .brand-sub { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
   .nav-link { color: var(--gold-light); text-decoration: none; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
   .nav-link:hover { color: var(--cream); }
   .topbar-links { display: flex; align-items: center; gap: 22px; }
+  .topbar-right { flex: 1; }
 
   .page { max-width: 1200px; margin: 0 auto; padding: 36px 32px 60px; }
   .page-header { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 10px; }
@@ -158,6 +159,7 @@
       Panel Admin
     </a>
   </div>
+  <div class="topbar-right"></div>
 </div>
 
 <div class="page">

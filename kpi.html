@@ -24,7 +24,9 @@
   body { margin: 0; background: var(--bg-soft); font-family: 'Inter', sans-serif; color: var(--text-main); min-height: 100vh; }
 
   .topbar { background: var(--green-deep); color: var(--cream); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--gold); }
-  .topbar-left { display: flex; align-items: center; gap: 14px; }
+  .topbar-left { flex: 1; display: flex; align-items: center; gap: 14px; }
+  .topbar-center { display: flex; align-items: center; gap: 20px; }
+  .topbar-right { flex: 1; }
   .brand-mark { width: 34px; height: 34px; }
   .brand-text { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: var(--cream); }
   .brand-sub { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
@@ -183,7 +185,7 @@
       <div class="brand-sub">Platform CRM</div>
     </div>
   </div>
-  <div style="display:flex;align-items:center;gap:22px;">
+  <div class="topbar-center">
   <a class="nav-link" onclick="window.location.href='dashboard.html'">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
     Tableau de bord
@@ -213,6 +215,7 @@
     Panel Admin
   </a>
   </div>
+  <div class="topbar-right"></div>
 </div>
 
 <div class="page">
