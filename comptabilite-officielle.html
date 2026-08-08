@@ -425,7 +425,7 @@
     sorted.forEach((e, idx) => {
       const isIn = e.type === 'recette';
       const recuEnvoye = isIn && (e.recu_envoye === 1 || e.recu_envoye === true || e.recu_envoye === '1');
-      const arrowColor = recuEnvoye ? '#2C6B3F' : 'var(--accent-gold)';
+      const arrowColor = recuEnvoye ? '#2C6B3F' : '#E07B1E';
       const arrowTitle = recuEnvoye ? 'Reçu déjà envoyé — cliquer pour renvoyer' : 'Envoyer le reçu par email';
       html += '<tr>' +
         '<td style="color:var(--text-soft);">' + (idx + 1) + '</td>' +
