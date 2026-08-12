@@ -141,6 +141,22 @@
   .hero-pastille.good .hero-pastille-value { color: #8FCB9C; }
   .hero-pastille.neutral .hero-pastille-value { color: #E8C989; }
   .hero-pastille.bad .hero-pastille-value { color: #E8998C; }
+  .treasury-card { background: #fff; border: 1px solid var(--border-soft, #E4E0D6); border-radius: 16px; padding: 20px 24px; margin-bottom: 24px; }
+  .treasury-header { display: flex; align-items: center; gap: 10px; margin-bottom: 14px; }
+  .treasury-icon { font-size: 18px; }
+  .treasury-title { font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; color: var(--text-soft, #6B6B60); }
+  .treasury-refresh { margin-left: auto; cursor: pointer; opacity: 0.5; transition: opacity .15s; font-size: 14px; }
+  .treasury-refresh:hover { opacity: 1; }
+  .treasury-loading, .treasury-error { color: var(--text-soft, #6B6B60); font-size: 13px; padding: 8px 0; }
+  .treasury-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 20px; }
+  .treasury-item-label { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-soft, #6B6B60); font-weight: 700; margin-bottom: 4px; }
+  .treasury-item-value { font-family: 'Playfair Display', serif; font-size: 26px; font-weight: 700; color: var(--green-deep, #0D1A12); }
+  .treasury-item-value.pending { color: #C4954E; }
+  .treasury-item-sub { font-size: 12px; color: var(--text-soft, #6B6B60); margin-top: 4px; }
+  .treasury-runway { display: flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 700; margin-top: 4px; width: fit-content; }
+  .treasury-runway.good { background: rgba(143,203,156,0.15); color: #4CAF50; }
+  .treasury-runway.warn { background: rgba(232,178,108,0.15); color: #E8991E; }
+  .treasury-runway.bad { background: rgba(232,153,140,0.15); color: #D64545; }
   .finance-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border-soft); }
   .finance-row:last-child { border-bottom: none; }
   .finance-row-label { font-size: 13px; color: var(--text-soft); }
@@ -254,6 +270,17 @@
   </div>
 
   <div id="priorityBanner"></div>
+
+  <div class="treasury-card" id="treasuryCard">
+    <div class="treasury-header">
+      <span class="treasury-icon">💰</span>
+      <span class="treasury-title">Trésorerie Stripe</span>
+      <span class="treasury-refresh" id="treasuryRefresh" title="Actualiser">🔄</span>
+    </div>
+    <div class="treasury-body" id="treasuryBody">
+      <div class="treasury-loading">Chargement de la trésorerie…</div>
+    </div>
+  </div>
 
   <div class="stats" id="statsContainer">
     <div class="stat-card"><div class="stat-value" id="kpiLeads">—</div><div class="stat-label">Leads totaux</div><div class="stat-delta flat" id="kpiLeadsDelta"></div></div>
@@ -1167,6 +1194,59 @@
   }
 
   loadKPIs();
+  loadTreasury();
+  document.getElementById('treasuryRefresh').addEventListener('click', loadTreasury);
+
+  async function loadTreasury() {
+    const body = document.getElementById('treasuryBody');
+    body.innerHTML = '<div class="treasury-loading">Chargement de la trésorerie…</div>';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-stripe-balance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+      const data = await resp.json();
+
+      // Charges mensuelles recurrentes, meme logique que le module Finances
+      const cfg = getFinanceConfig();
+      const totalMonthlyCharges = (cfg.costs || []).reduce((sum, c) => {
+        const amt = parseFloat(c.amount) || 0;
+        return sum + (c.frequency === 'annuelle' ? amt / 12 : amt);
+      }, 0);
+
+      const runwayMonths = totalMonthlyCharges > 0 ? (data.available / totalMonthlyCharges) : null;
+      let runwayClass = 'good', runwayText = '';
+      if (runwayMonths !== null) {
+        if (runwayMonths < 1) { runwayClass = 'bad'; }
+        else if (runwayMonths < 3) { runwayClass = 'warn'; }
+        runwayText = runwayMonths >= 12 ? '12+ mois de charges couverts' : runwayMonths.toFixed(1) + ' mois de charges couverts';
+      }
+
+      let payoutHtml = '';
+      if (data.next_payout_amount) {
+        const d = new Date(data.next_payout_date);
+        payoutHtml = '<div class="treasury-item-sub">Prochain virement : ' + data.next_payout_amount.toFixed(2) + ' ' + data.currency + ' le ' + d.toLocaleDateString('fr-CH') + '</div>';
+      }
+
+      body.innerHTML =
+        '<div class="treasury-grid">' +
+          '<div>' +
+            '<div class="treasury-item-label">Disponible maintenant</div>' +
+            '<div class="treasury-item-value">' + data.available.toFixed(2) + ' ' + data.currency + '</div>' +
+            payoutHtml +
+          '</div>' +
+          '<div>' +
+            '<div class="treasury-item-label">En attente de virement</div>' +
+            '<div class="treasury-item-value pending">' + data.pending.toFixed(2) + ' ' + data.currency + '</div>' +
+          '</div>' +
+          '<div>' +
+            '<div class="treasury-item-label">Autonomie (runway)</div>' +
+            (runwayMonths !== null
+              ? '<div class="treasury-runway ' + runwayClass + '">' + runwayText + '</div>'
+              : '<div class="treasury-item-sub">Ajoutez vos charges récurrentes dans "Configurer" pour calculer votre autonomie.</div>') +
+          '</div>' +
+        '</div>';
+    } catch (e) {
+      body.innerHTML = '<div class="treasury-error">Impossible de charger la trésorerie Stripe pour le moment.</div>';
+    }
+  }
 </script>
 
 </body>
