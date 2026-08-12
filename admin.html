@@ -385,6 +385,14 @@
         <option value="premium">Premium (Administration & Production)</option>
       </select>
     </div>
+    <div class="modal-field" id="fieldIriscue" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer">
+        <input type="checkbox" id="newIriscue" style="width:auto"> Accès IrisCue
+      </label>
+      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:13px;color:#888">
+        <input type="checkbox" id="newIriscueTrial" style="width:auto"> Essai 3 jours
+      </label>
+    </div>
     <div class="modal-field" id="fieldLogin">
       <label>Adresse e-mail du client</label>
       <input type="email" id="newLogin" placeholder="client@email.com">
@@ -404,6 +412,7 @@
       <div style="display:flex;gap:10px">
         <button type="button" class="btn-manage-pwd" onclick="manageIrisFromEdit()">🔧 Iris</button>
         <button type="button" class="btn-manage-pwd" onclick="manageNexaFromEdit()">🔧 Nexa</button>
+        <button type="button" class="btn-manage-pwd" onclick="manageIriscueFromEdit()">🔧 IrisCue</button>
       </div>
     </div>
     <div class="modal-msg" id="createMsg"></div>
@@ -468,6 +477,35 @@
     <div class="modal-actions">
       <button class="modal-btn-cancel" onclick="closeNexaPasswordModal()">Annuler</button>
       <button class="modal-btn-confirm" id="nexaConfirmBtn" onclick="submitNexaPassword()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="floating-panel" id="iriscuePasswordModal">
+  <div class="floating-panel-header" onmousedown="startDrag(event, 'iriscuePasswordModal')">
+    <span>Mot de passe IrisCue</span>
+    <button type="button" class="floating-close" onclick="closeIriscuePasswordModal()">✕</button>
+  </div>
+  <div class="floating-panel-body">
+    <input type="hidden" id="iriscueLogin" value="">
+    <div class="modal-field">
+      <label>Compte (e-mail)</label>
+      <input type="text" id="iriscueLoginDisplay" readonly>
+    </div>
+    <div class="modal-field">
+      <label>Nouveau mot de passe IrisCue</label>
+      <div class="pwd-wrap">
+        <input type="password" id="iriscueNewPassword" placeholder="ex: IrisCue@2026!">
+        <button type="button" class="pwd-eye" onclick="togglePwd('iriscueNewPassword', this)" aria-label="Afficher le mot de passe">
+          <svg class="eye-open" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          <svg class="eye-closed" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+        </button>
+      </div>
+    </div>
+    <div class="modal-msg" id="iriscueMsg"></div>
+    <div class="modal-actions">
+      <button class="modal-btn-cancel" onclick="closeIriscuePasswordModal()">Annuler</button>
+      <button class="modal-btn-confirm" id="iriscueConfirmBtn" onclick="submitIriscuePassword()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -643,6 +681,8 @@
     document.getElementById('newPlan').value = 'administration';
     document.getElementById('newLogin').value = '';
     document.getElementById('newPassword').value = 'Admin@1234@.';
+    document.getElementById('newIriscue').checked = false;
+    document.getElementById('newIriscueTrial').checked = false;
     document.getElementById('passwordLabel').textContent = 'Mot de passe temporaire';
     document.getElementById('newPassword').placeholder = '';
     document.getElementById('fieldLogin').style.display = 'block';
@@ -660,6 +700,8 @@
     document.getElementById('modalAccountId').value = acc.id;
     document.getElementById('newNom').value = acc.nom_praticien;
     document.getElementById('newPlan').value = acc.plan;
+    document.getElementById('newIriscue').checked = (acc.iriscue === 'oui');
+    document.getElementById('newIriscueTrial').checked = false;
     document.getElementById('newLogin').value = acc.login || '';
     document.getElementById('fieldLogin').style.display = 'block';
     document.getElementById('fieldPassword').style.display = 'none';
@@ -700,6 +742,11 @@
     }
     msgEl.style.display = 'none';
     openNexaPasswordModal(id);
+  }
+
+  function manageIriscueFromEdit() {
+    const id = parseInt(document.getElementById('modalAccountId').value, 10);
+    openIriscuePasswordModal(id);
   }
 
   // === Mot de passe Iris Studio (plans premium / production) ===
@@ -841,6 +888,60 @@
     btn.textContent = 'Enregistrer';
   }
 
+  // === Mot de passe IrisCue (independant du plan Nexa/Iris) ===
+  function openIriscuePasswordModal(id) {
+    const acc = allAccounts.find(a => a.id === id);
+    if (!acc) return;
+    document.getElementById('iriscueLogin').value = acc.login || '';
+    document.getElementById('iriscueLoginDisplay').value = acc.login || '';
+    document.getElementById('iriscueNewPassword').value = '';
+    document.getElementById('iriscueMsg').style.display = 'none';
+    document.getElementById('iriscuePasswordModal').classList.add('show');
+  }
+
+  function closeIriscuePasswordModal() {
+    document.getElementById('iriscuePasswordModal').classList.remove('show');
+  }
+
+  async function submitIriscuePassword() {
+    const login = document.getElementById('iriscueLogin').value;
+    const newPassword = document.getElementById('iriscueNewPassword').value.trim();
+    const msgEl = document.getElementById('iriscueMsg');
+    const btn = document.getElementById('iriscueConfirmBtn');
+
+    if (!newPassword) {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = 'Veuillez saisir un mot de passe.';
+      msgEl.style.display = 'block';
+      return;
+    }
+
+    btn.disabled = true;
+    btn.textContent = 'Enregistrement…';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-set-iriscue-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login, new_password: newPassword })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        closeIriscuePasswordModal();
+        showToast('Mot de passe IrisCue mis à jour');
+      } else {
+        msgEl.className = 'modal-msg error';
+        msgEl.textContent = data.message || 'Erreur lors de la mise à jour.';
+        msgEl.style.display = 'block';
+      }
+    } catch (err) {
+      msgEl.className = 'modal-msg error';
+      msgEl.textContent = 'Erreur de connexion.';
+      msgEl.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Enregistrer';
+  }
+
   async function submitAccountModal() {
     const editId = document.getElementById('modalAccountId').value;
     const nom = document.getElementById('newNom').value.trim();
@@ -871,7 +972,7 @@
         const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-update-account', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ account_id: editId, nom_praticien: nom, plan, login: editLogin, new_password: '' })
+          body: JSON.stringify({ account_id: editId, nom_praticien: nom, plan, login: editLogin, new_password: '', iriscue: document.getElementById('newIriscue').checked, iriscue_trial: document.getElementById('newIriscueTrial').checked })
         });
         const data = await resp.json();
         if (data.success) {
@@ -913,7 +1014,7 @@
       const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-create-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nom_praticien: nom, login, password, plan })
+        body: JSON.stringify({ nom_praticien: nom, login, password, plan, iriscue: document.getElementById('newIriscue').checked, iriscue_trial: document.getElementById('newIriscueTrial').checked })
       });
       const data = await resp.json();
 
