@@ -415,6 +415,15 @@
         <button type="button" class="btn-manage-pwd" onclick="manageIriscueFromEdit()">🔧 IrisCue</button>
       </div>
     </div>
+    <div class="modal-field" id="fieldAppLinks" style="display:none">
+      <label>Liens à envoyer au client</label>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <button type="button" class="btn-manage-pwd" onclick="copyAppLink('https://entrepreneur.contentviral.ch/dashboard.html', this)" style="text-align:left">📋 Copier lien Nexa</button>
+        <button type="button" class="btn-manage-pwd" onclick="copyAppLink('https://www.contentviral.ch/index.html', this)" style="text-align:left">📋 Copier lien Iris Studio</button>
+        <button type="button" class="btn-manage-pwd" onclick="copyAppLink('https://iriscue.contentviral.ch/mobile.html', this)" style="text-align:left">📋 Copier lien IrisCue Mobile</button>
+        <button type="button" class="btn-manage-pwd" onclick="copyAppLink('https://iriscue.contentviral.ch/desktop.html', this)" style="text-align:left">📋 Copier lien IrisCue Desktop</button>
+      </div>
+    </div>
     <div class="modal-msg" id="createMsg"></div>
     <div class="modal-actions">
       <button class="modal-btn-cancel" onclick="closeCreateModal()">Annuler</button>
@@ -688,6 +697,7 @@
     document.getElementById('fieldLogin').style.display = 'block';
     document.getElementById('fieldPassword').style.display = 'block';
     document.getElementById('fieldPasswordManage').style.display = 'none';
+    document.getElementById('fieldAppLinks').style.display = 'none';
     document.getElementById('modalTitle').textContent = 'Créer un compte client';
     document.getElementById('createConfirmBtn').textContent = 'Créer le compte';
     document.getElementById('createMsg').style.display = 'none';
@@ -706,6 +716,7 @@
     document.getElementById('fieldLogin').style.display = 'block';
     document.getElementById('fieldPassword').style.display = 'none';
     document.getElementById('fieldPasswordManage').style.display = 'block';
+    document.getElementById('fieldAppLinks').style.display = 'block';
     document.getElementById('modalTitle').textContent = 'Modifier le compte';
     document.getElementById('createConfirmBtn').textContent = 'Enregistrer les modifications';
     document.getElementById('createMsg').style.display = 'none';
@@ -940,6 +951,14 @@
     }
     btn.disabled = false;
     btn.textContent = 'Enregistrer';
+  }
+
+  function copyAppLink(url, btn) {
+    navigator.clipboard.writeText(url).then(() => {
+      const original = btn.textContent;
+      btn.textContent = '✅ Lien copié !';
+      setTimeout(() => { btn.textContent = original; }, 1500);
+    });
   }
 
   async function submitAccountModal() {
