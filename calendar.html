@@ -80,7 +80,35 @@
   .rdv-name { font-weight: 600; font-size: 14px; color: var(--text-main); }
   .rdv-meta { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
 
-  .status-chip { padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; }
+  .status-chip { padding: 4px 12px; border-radius: 12px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; position: relative; cursor: help; }
+  .status-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 8px);
+    right: 0;
+    width: 220px;
+    background: #1A1F17;
+    color: #F5F1E8;
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: none;
+    letter-spacing: normal;
+    line-height: 1.5;
+    padding: 10px 12px;
+    border-radius: 8px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.25);
+    z-index: 50;
+    text-align: left;
+  }
+  .status-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    right: 14px;
+    border: 6px solid transparent;
+    border-top-color: #1A1F17;
+  }
+  .status-chip:hover .status-tooltip { display: block; }
   .status-planifie { background: rgba(74, 123, 166, 0.15); color: var(--status-planned); }
   .status-termine { background: rgba(90, 140, 90, 0.15); color: var(--status-done); }
   .status-annule { background: rgba(196, 96, 78, 0.15); color: var(--status-cancelled); }
@@ -275,11 +303,11 @@
         const showCancelBtn = a.statut !== 'annule' && a.statut !== 'absent';
 
         const STATUS_TOOLTIPS = {
-          'planifie': 'À venir, rendez-vous confirmé, rien fait encore.',
-          'termine': 'Le client est venu, la consultation s\'est bien déroulée.',
-          'absent': 'Le client n\'est jamais venu, sans prévenir (no-show).',
-          'annule': 'Le client a prévenu à l\'avance qu\'il annulait.',
-          'passe': 'La date est dépassée et le statut n\'a pas encore été mis à jour manuellement.'
+          'planifie': 'Rendez-vous confirmé et à venir. Rien à faire pour l\'instant — il apparaîtra automatiquement dans "Terminé" ou "Passé" une fois la date dépassée.',
+          'termine': 'Le client s\'est présenté et la consultation a eu lieu normalement. Statut mis à jour manuellement par toi.',
+          'absent': 'Le client n\'est jamais venu au rendez-vous prévu, sans prévenir à l\'avance (no-show). Utile pour repérer un besoin de rappel automatique ou d\'acompte.',
+          'annule': 'Le client a annulé lui-même depuis Calendly avant la date. Détecté et mis à jour automatiquement, rien à faire de ton côté.',
+          'passe': 'La date est déjà dépassée mais personne n\'a encore dit ce qui s\'est passé. Clique sur le rendez-vous pour le marquer "Terminé", ou sur la croix rouge pour "Absent".'
         };
         const tooltipText = STATUS_TOOLTIPS[effectiveStatus] || '';
 
@@ -290,7 +318,9 @@
             '<div class="rdv-name">' + esc(fullName) + '</div>' +
             '<div class="rdv-meta">' + esc(a.email || '') + (a.whatsapp ? ' · ' + esc(a.whatsapp) : '') + '</div>' +
           '</div>' +
-          '<span class="status-chip ' + statusClass + '" title="' + esc(tooltipText) + '">' + statusLabel + '</span>' +
+          '<span class="status-chip ' + statusClass + '">' + statusLabel +
+            '<span class="status-tooltip">' + esc(tooltipText) + '</span>' +
+          '</span>' +
           (showCancelBtn ? '<button class="rdv-cancel-btn" title="Marquer absent (client non présenté)" onclick="event.stopPropagation(); markAbsent(' + a.id + ')">✕</button>' : '') +
         '</div>';
       });
