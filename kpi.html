@@ -157,6 +157,16 @@
   .treasury-runway.good { background: rgba(143,203,156,0.15); color: #4CAF50; }
   .treasury-runway.warn { background: rgba(232,178,108,0.15); color: #E8991E; }
   .treasury-runway.bad { background: rgba(232,153,140,0.15); color: #D64545; }
+  .manual-source-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border-soft, #E4E0D6); }
+  .manual-source-row:last-of-type { border-bottom: none; }
+  .manual-source-label { font-size: 13px; color: var(--text-soft, #6B6B60); display: flex; align-items: center; gap: 8px; }
+  .manual-source-value { font-family: 'Playfair Display', serif; font-size: 18px; font-weight: 700; color: var(--green-deep, #0D1A12); display: flex; align-items: center; gap: 8px; }
+  .manual-source-edit-btn { background: none; border: 1px solid var(--border-soft, #E4E0D6); border-radius: 6px; padding: 3px 9px; font-size: 12px; cursor: pointer; color: var(--text-soft, #6B6B60); }
+  .manual-source-edit-btn:hover { border-color: var(--green-deep, #0D1A12); color: var(--green-deep, #0D1A12); }
+  .manual-source-input { width: 90px; padding: 4px 8px; border: 1px solid var(--green-deep, #0D1A12); border-radius: 6px; font-size: 14px; }
+  .manual-total-row { display: flex; justify-content: space-between; align-items: baseline; padding-top: 14px; margin-top: 4px; border-top: 2px solid var(--green-deep, #0D1A12); }
+  .manual-total-label { font-size: 13px; text-transform: uppercase; letter-spacing: 0.05em; font-weight: 700; color: var(--text-soft, #6B6B60); }
+  .manual-total-value { font-family: 'Playfair Display', serif; font-size: 30px; font-weight: 700; color: var(--green-deep, #0D1A12); }
   .finance-row { display: flex; justify-content: space-between; align-items: baseline; padding: 8px 0; border-bottom: 1px solid var(--border-soft); }
   .finance-row:last-child { border-bottom: none; }
   .finance-row-label { font-size: 13px; color: var(--text-soft); }
@@ -279,6 +289,17 @@
     </div>
     <div class="treasury-body" id="treasuryBody">
       <div class="treasury-loading">Chargement de la trésorerie…</div>
+    </div>
+  </div>
+
+  <div class="treasury-card" id="manualTreasuryCard">
+    <div class="treasury-header">
+      <span class="treasury-icon">🗂️</span>
+      <span class="treasury-title">Trésorerie totale (Stripe + hors Stripe)</span>
+      <span class="treasury-refresh" id="manualTreasuryRefresh" title="Actualiser">🔄</span>
+    </div>
+    <div class="treasury-body" id="manualTreasuryBody">
+      <div class="treasury-loading">Chargement…</div>
     </div>
   </div>
 
@@ -1194,8 +1215,88 @@
   }
 
   loadKPIs();
+  let lastStripeAvailable = 0;
+  let lastManualSources = [];
+
   loadTreasury();
+  loadManualTreasury();
   document.getElementById('treasuryRefresh').addEventListener('click', loadTreasury);
+  document.getElementById('manualTreasuryRefresh').addEventListener('click', loadManualTreasury);
+
+  const SOURCE_LABELS = { banque: '🏦 Compte bancaire', cash: '💵 Espèces', twint_direct: '📱 Twint reçu directement' };
+
+  async function loadManualTreasury() {
+    const body = document.getElementById('manualTreasuryBody');
+    body.innerHTML = '<div class="treasury-loading">Chargement…</div>';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-tresorerie-manuelle', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get' })
+      });
+      const data = await resp.json();
+      lastManualSources = data.sources || [];
+      renderManualTreasury();
+    } catch (e) {
+      body.innerHTML = '<div class="treasury-error">Impossible de charger les sources manuelles.</div>';
+    }
+  }
+
+  function renderManualTreasury() {
+    const body = document.getElementById('manualTreasuryBody');
+    const manualTotal = lastManualSources.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
+    const grandTotal = lastStripeAvailable + manualTotal;
+
+    let rowsHtml = '<div class="manual-source-row"><span class="manual-source-label">💳 Stripe (disponible)</span><span class="manual-source-value">' + lastStripeAvailable.toFixed(2) + ' CHF</span></div>';
+
+    lastManualSources.forEach(s => {
+      const label = SOURCE_LABELS[s.source] || s.source;
+      rowsHtml += '<div class="manual-source-row" data-source="' + s.source + '">' +
+        '<span class="manual-source-label">' + label + '</span>' +
+        '<span class="manual-source-value" id="display_' + s.source + '">' + parseFloat(s.montant).toFixed(2) + ' CHF ' +
+        '<button class="manual-source-edit-btn" onclick="editManualSource(\'' + s.source + '\', ' + s.montant + ')">Modifier</button></span>' +
+        '</div>';
+    });
+
+    rowsHtml += '<div class="manual-total-row"><span class="manual-total-label">Total tous comptes</span><span class="manual-total-value">' + grandTotal.toFixed(2) + ' CHF</span></div>';
+
+    body.innerHTML = rowsHtml;
+
+    // Recalcule le runway global si les charges recurrentes sont disponibles
+    try {
+      const cfg = getFinanceConfig();
+      const totalMonthlyCharges = (cfg.costs || []).reduce((sum, c) => {
+        const amt = parseFloat(c.amount) || 0;
+        return sum + (c.frequency === 'annuelle' ? amt / 12 : amt);
+      }, 0);
+      if (totalMonthlyCharges > 0) {
+        const runwayMonths = grandTotal / totalMonthlyCharges;
+        const runwayText = runwayMonths >= 12 ? '12+ mois' : runwayMonths.toFixed(1) + ' mois';
+        const cls = runwayMonths < 1 ? 'bad' : runwayMonths < 3 ? 'warn' : 'good';
+        body.innerHTML += '<div style="margin-top:10px"><span class="treasury-runway ' + cls + '">Autonomie totale : ' + runwayText + '</span></div>';
+      }
+    } catch (e) {}
+  }
+
+  function editManualSource(source, currentValue) {
+    const displayEl = document.getElementById('display_' + source);
+    displayEl.innerHTML = '<input type="number" step="0.01" class="manual-source-input" id="input_' + source + '" value="' + currentValue + '"> ' +
+      '<button class="manual-source-edit-btn" onclick="saveManualSource(\'' + source + '\')">Enregistrer</button>';
+    document.getElementById('input_' + source).focus();
+  }
+
+  async function saveManualSource(source) {
+    const input = document.getElementById('input_' + source);
+    const montant = parseFloat(input.value) || 0;
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-tresorerie-manuelle', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set', source, montant })
+      });
+      const data = await resp.json();
+      lastManualSources = data.sources || lastManualSources;
+      renderManualTreasury();
+    } catch (e) {
+      alert('Erreur lors de la sauvegarde.');
+    }
+  }
 
   async function loadTreasury() {
     const body = document.getElementById('treasuryBody');
@@ -1210,6 +1311,9 @@
         const amt = parseFloat(c.amount) || 0;
         return sum + (c.frequency === 'annuelle' ? amt / 12 : amt);
       }, 0);
+
+      lastStripeAvailable = data.available || 0;
+      if (lastManualSources.length) renderManualTreasury();
 
       const runwayMonths = totalMonthlyCharges > 0 ? (data.available / totalMonthlyCharges) : null;
       let runwayClass = 'good', runwayText = '';
