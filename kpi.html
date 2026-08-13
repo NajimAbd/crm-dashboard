@@ -1291,11 +1291,28 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set', source, montant })
       });
       const data = await resp.json();
-      lastManualSources = data.sources || lastManualSources;
-      renderManualTreasury();
+      const freshSources = data.sources || lastManualSources;
+      // Met a jour seulement la valeur en memoire pour cette source, sans toucher aux autres lignes en cours d'edition
+      lastManualSources = lastManualSources.map(s => {
+        const fresh = freshSources.find(f => f.source === s.source);
+        return fresh || s;
+      });
+      // Redessine uniquement cette ligne (pas tout le tableau), pour ne pas ecraser une autre ligne en cours de modification
+      const displayEl = document.getElementById('display_' + source);
+      const label = SOURCE_LABELS[source] || source;
+      displayEl.innerHTML = montant.toFixed(2) + ' CHF <button class="manual-source-edit-btn" onclick="editManualSource(\'' + source + '\', ' + montant + ')">Modifier</button>';
+      // Met a jour uniquement le total, sans reconstruire les lignes deja affichees
+      updateManualTotalOnly();
     } catch (e) {
       alert('Erreur lors de la sauvegarde.');
     }
+  }
+
+  function updateManualTotalOnly() {
+    const manualTotal = lastManualSources.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
+    const grandTotal = lastStripeAvailable + manualTotal;
+    const totalRow = document.querySelector('.manual-total-row .manual-total-value');
+    if (totalRow) totalRow.textContent = grandTotal.toFixed(2) + ' CHF';
   }
 
   async function loadTreasury() {
