@@ -274,6 +274,15 @@
         const statusLabel = a.statut === 'termine' ? 'Terminé' : (a.statut === 'annule' ? 'Annulé' : (a.statut === 'absent' ? 'Absent' : (isPastDue ? 'Passé (à mettre à jour)' : 'Planifié')));
         const showCancelBtn = a.statut !== 'annule' && a.statut !== 'absent';
 
+        const STATUS_TOOLTIPS = {
+          'planifie': 'À venir, rendez-vous confirmé, rien fait encore.',
+          'termine': 'Le client est venu, la consultation s\'est bien déroulée.',
+          'absent': 'Le client n\'est jamais venu, sans prévenir (no-show).',
+          'annule': 'Le client a prévenu à l\'avance qu\'il annulait.',
+          'passe': 'La date est dépassée et le statut n\'a pas encore été mis à jour manuellement.'
+        };
+        const tooltipText = STATUS_TOOLTIPS[effectiveStatus] || '';
+
         html += '<div class="rdv-card">' +
           '<div class="rdv-time" onclick="window.location.href=\'lead-detail.html?id=' + a.lead_id + '\'" style="cursor:pointer">' + time + '</div>' +
           '<div class="rdv-divider"></div>' +
@@ -281,7 +290,7 @@
             '<div class="rdv-name">' + esc(fullName) + '</div>' +
             '<div class="rdv-meta">' + esc(a.email || '') + (a.whatsapp ? ' · ' + esc(a.whatsapp) : '') + '</div>' +
           '</div>' +
-          '<span class="status-chip ' + statusClass + '">' + statusLabel + '</span>' +
+          '<span class="status-chip ' + statusClass + '" title="' + esc(tooltipText) + '">' + statusLabel + '</span>' +
           (showCancelBtn ? '<button class="rdv-cancel-btn" title="Marquer absent (client non présenté)" onclick="event.stopPropagation(); markAbsent(' + a.id + ')">✕</button>' : '') +
         '</div>';
       });
