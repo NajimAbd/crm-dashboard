@@ -84,6 +84,7 @@
   .status-planifie { background: rgba(74, 123, 166, 0.15); color: var(--status-planned); }
   .status-termine { background: rgba(90, 140, 90, 0.15); color: var(--status-done); }
   .status-annule { background: rgba(196, 96, 78, 0.15); color: var(--status-cancelled); }
+  .status-passe { background: rgba(140, 130, 120, 0.15); color: #8C8278; }
 
   .empty-state, .loading-state { text-align: center; padding: 80px 24px; color: var(--text-soft); }
   .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border-soft); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
@@ -158,6 +159,7 @@
     <div class="filter-tabs">
       <div class="filter-tab active" data-filter="all" onclick="setFilter('all')">Tous</div>
       <div class="filter-tab" data-filter="planifie" onclick="setFilter('planifie')">À venir</div>
+      <div class="filter-tab" data-filter="passe" onclick="setFilter('passe')">Passés (à mettre à jour)</div>
       <div class="filter-tab" data-filter="termine" onclick="setFilter('termine')">Terminés</div>
     </div>
   </div>
@@ -229,7 +231,12 @@
   function render() {
     let list = allAppointments;
     if (currentFilter !== 'all') {
-      list = list.filter(a => a.statut === currentFilter);
+      list = list.filter(a => {
+        const d = new Date(a.date_rdv.replace(' ', 'T'));
+        const isPastDue = (a.statut === 'planifie' || !a.statut) && d < new Date();
+        const effectiveStatus = isPastDue ? 'passe' : (a.statut || 'planifie');
+        return effectiveStatus === currentFilter;
+      });
     }
 
     const container = document.getElementById('rdvContainer');
@@ -257,8 +264,10 @@
         const d = new Date(a.date_rdv.replace(' ', 'T'));
         const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
         const fullName = ((a.prenom || '') + ' ' + (a.nom || '')).trim() || 'Lead sans nom';
-        const statusClass = 'status-' + (a.statut || 'planifie');
-        const statusLabel = a.statut === 'termine' ? 'Terminé' : (a.statut === 'annule' ? 'Annulé' : 'Planifié');
+        const isPastDue = (a.statut === 'planifie' || !a.statut) && d < new Date();
+        const effectiveStatus = isPastDue ? 'passe' : (a.statut || 'planifie');
+        const statusClass = 'status-' + effectiveStatus;
+        const statusLabel = a.statut === 'termine' ? 'Terminé' : (a.statut === 'annule' ? 'Annulé' : (isPastDue ? 'Passé (à mettre à jour)' : 'Planifié'));
 
         html += '<div class="rdv-card" onclick="window.location.href=\'lead-detail.html?id=' + a.lead_id + '\'">' +
           '<div class="rdv-time">' + time + '</div>' +
