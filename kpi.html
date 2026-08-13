@@ -1242,25 +1242,25 @@
 
   function renderManualTreasury() {
     const body = document.getElementById('manualTreasuryBody');
-    const manualTotal = lastManualSources.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
-    const grandTotal = lastStripeAvailable + manualTotal;
-
     let rowsHtml = '<div class="manual-source-row"><span class="manual-source-label">💳 Stripe (disponible)</span><span class="manual-source-value">' + lastStripeAvailable.toFixed(2) + ' CHF</span></div>';
 
     lastManualSources.forEach(s => {
       const label = SOURCE_LABELS[s.source] || s.source;
       rowsHtml += '<div class="manual-source-row" data-source="' + s.source + '">' +
         '<span class="manual-source-label">' + label + '</span>' +
-        '<span class="manual-source-value" id="display_' + s.source + '">' + parseFloat(s.montant).toFixed(2) + ' CHF ' +
-        '<button class="manual-source-edit-btn" onclick="editManualSource(\'' + s.source + '\', ' + s.montant + ')">Modifier</button></span>' +
+        '<span class="manual-source-value">' +
+          '<span id="display_' + s.source + '">' + parseFloat(s.montant).toFixed(2) + ' CHF</span> ' +
+          '<button class="manual-source-edit-btn" onclick="adjustManualSource(\'' + s.source + '\', 1)">+</button> ' +
+          '<button class="manual-source-edit-btn" onclick="adjustManualSource(\'' + s.source + '\', -1)">−</button>' +
+        '</span>' +
         '</div>';
     });
 
-    rowsHtml += '<div class="manual-total-row"><span class="manual-total-label">Total tous comptes</span><span class="manual-total-value">' + grandTotal.toFixed(2) + ' CHF</span></div>';
+    rowsHtml += '<div class="manual-total-row"><span class="manual-total-label">Total tous comptes</span><span class="manual-total-value">0.00 CHF</span></div>';
 
     body.innerHTML = rowsHtml;
+    updateManualTotalOnly();
 
-    // Recalcule le runway global si les charges recurrentes sont disponibles
     try {
       const cfg = getFinanceConfig();
       const totalMonthlyCharges = (cfg.costs || []).reduce((sum, c) => {
@@ -1268,40 +1268,38 @@
         return sum + (c.frequency === 'annuelle' ? amt / 12 : amt);
       }, 0);
       if (totalMonthlyCharges > 0) {
+        const manualTotal = lastManualSources.reduce((sum, s) => sum + parseFloat(s.montant || 0), 0);
+        const grandTotal = lastStripeAvailable + manualTotal;
         const runwayMonths = grandTotal / totalMonthlyCharges;
         const runwayText = runwayMonths >= 12 ? '12+ mois' : runwayMonths.toFixed(1) + ' mois';
         const cls = runwayMonths < 1 ? 'bad' : runwayMonths < 3 ? 'warn' : 'good';
-        body.innerHTML += '<div style="margin-top:10px"><span class="treasury-runway ' + cls + '">Autonomie totale : ' + runwayText + '</span></div>';
+        body.innerHTML += '<div id="manualRunwayLine" style="margin-top:10px"><span class="treasury-runway ' + cls + '">Autonomie totale : ' + runwayText + '</span></div>';
       }
     } catch (e) {}
   }
 
-  function editManualSource(source, currentValue) {
-    const displayEl = document.getElementById('display_' + source);
-    displayEl.innerHTML = '<input type="number" step="0.01" class="manual-source-input" id="input_' + source + '" value="' + currentValue + '"> ' +
-      '<button class="manual-source-edit-btn" onclick="saveManualSource(\'' + source + '\')">Enregistrer</button>';
-    document.getElementById('input_' + source).focus();
-  }
+  async function adjustManualSource(source, sign) {
+    const deltaStr = prompt(sign > 0 ? 'Ajouter combien de CHF ?' : 'Retirer combien de CHF ?');
+    if (deltaStr === null) return;
+    const delta = parseFloat(deltaStr.replace(',', '.'));
+    if (isNaN(delta) || delta <= 0) { alert('Montant invalide.'); return; }
 
-  async function saveManualSource(source) {
-    const input = document.getElementById('input_' + source);
-    const montant = parseFloat(input.value) || 0;
+    const current = lastManualSources.find(s => s.source === source);
+    const currentValue = current ? parseFloat(current.montant) : 0;
+    const newValue = Math.max(0, currentValue + (sign * delta));
+
     try {
       const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-tresorerie-manuelle', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set', source, montant })
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set', source, montant: newValue })
       });
       const data = await resp.json();
       const freshSources = data.sources || lastManualSources;
-      // Met a jour seulement la valeur en memoire pour cette source, sans toucher aux autres lignes en cours d'edition
       lastManualSources = lastManualSources.map(s => {
         const fresh = freshSources.find(f => f.source === s.source);
         return fresh || s;
       });
-      // Redessine uniquement cette ligne (pas tout le tableau), pour ne pas ecraser une autre ligne en cours de modification
       const displayEl = document.getElementById('display_' + source);
-      const label = SOURCE_LABELS[source] || source;
-      displayEl.innerHTML = montant.toFixed(2) + ' CHF <button class="manual-source-edit-btn" onclick="editManualSource(\'' + source + '\', ' + montant + ')">Modifier</button>';
-      // Met a jour uniquement le total, sans reconstruire les lignes deja affichees
+      if (displayEl) displayEl.textContent = newValue.toFixed(2) + ' CHF';
       updateManualTotalOnly();
     } catch (e) {
       alert('Erreur lors de la sauvegarde.');
