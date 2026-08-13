@@ -77,6 +77,16 @@
 
   .section-header { display: flex; align-items: center; justify-content: space-between; margin: 40px 0 16px; }
   .section-title { font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600; color: var(--green-deep); margin: 0; }
+  .rhythm-header { display: flex; align-items: center; gap: 10px; padding: 10px 16px; border-radius: 10px; margin: 28px 0 14px; flex-wrap: wrap; }
+  .rhythm-icon { font-size: 16px; }
+  .rhythm-label { font-family: 'Cinzel', 'Cormorant Garamond', serif; font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .rhythm-sub { font-size: 12.5px; color: var(--text-soft, #6B6B60); }
+  .rhythm-weekly { background: rgba(212,163,115,0.12); border: 1px solid rgba(212,163,115,0.3); }
+  .rhythm-weekly .rhythm-label { color: #B8763D; }
+  .rhythm-monthly { background: rgba(107,140,107,0.1); border: 1px solid rgba(107,140,107,0.28); }
+  .rhythm-monthly .rhythm-label { color: var(--green-deep, #0D1A12); }
+  .rhythm-quarterly { background: rgba(90,110,180,0.1); border: 1px solid rgba(90,110,180,0.25); }
+  .rhythm-quarterly .rhythm-label { color: #3E4F94; }
   .config-btn { background: white; border: 1px solid var(--border-soft); color: var(--text-soft); font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; padding: 7px 14px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
   .config-btn:hover { border-color: var(--gold); color: var(--green-deep); }
 
@@ -281,6 +291,12 @@
 
   <div id="priorityBanner"></div>
 
+  <div class="rhythm-header rhythm-weekly">
+    <span class="rhythm-icon">📅</span>
+    <span class="rhythm-label">À surveiller chaque semaine</span>
+    <span class="rhythm-sub">Trésorerie et alertes opérationnelles</span>
+  </div>
+
   <div class="treasury-card" id="treasuryCard">
     <div class="treasury-header">
       <span class="treasury-icon">💰</span>
@@ -309,6 +325,12 @@
     <div class="stat-card"><div class="stat-value" id="kpiRevenue">—</div><div class="stat-label">Chiffre d'affaires (CHF)</div><div class="stat-delta flat" id="kpiRevenueDelta"></div></div>
     <div class="stat-card"><div class="stat-value" id="kpiRate">—</div><div class="stat-label">Taux conversion</div><div class="stat-delta flat" id="kpiRateDelta"></div></div>
     <div class="stat-card"><div class="stat-value" id="kpiAvgBasket">—</div><div class="stat-label">Panier moyen (CHF)</div><div class="stat-delta flat" id="kpiAvgBasketDelta"></div></div>
+  </div>
+
+  <div class="rhythm-header rhythm-monthly">
+    <span class="rhythm-icon">📆</span>
+    <span class="rhythm-label">À revoir chaque mois</span>
+    <span class="rhythm-sub">Marge, charges, funnel de conversion, ROAS du mois</span>
   </div>
 
   <div class="section-header">
@@ -417,6 +439,20 @@
     <div class="chart-card">
       <h3 class="chart-title">Entonnoir de conversion</h3>
       <div id="funnelContainer" style="padding-top:8px"></div>
+    </div>
+  </div>
+
+  <div class="rhythm-header rhythm-quarterly">
+    <span class="rhythm-icon">📊</span>
+    <span class="rhythm-label">À décider chaque trimestre</span>
+    <span class="rhythm-sub">Tendance CAC/ROAS sur 3 mois glissants — assez de données pour juger si la pub est rentable</span>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card" style="grid-column: 1 / -1;">
+      <h3 class="chart-title">CAC &amp; ROAS — tendance mensuelle</h3>
+      <div class="chart-wrap"><canvas id="cacRoasChart"></canvas></div>
+      <div id="quarterlyHint" class="funnel-meta-hint"></div>
     </div>
   </div>
 
@@ -535,6 +571,7 @@
       renderSourceChart(leads);
       renderRevenueChart(sales);
       renderFunnel(leads, sales);
+      renderCacRoasChart(leads, sales);
       renderFinanceModule(sales);
 
       document.getElementById('subtitleInfo').textContent = 'Vue d\'ensemble basée sur ' + leads.length + ' lead(s) et ' + sales.length + ' vente(s)';
@@ -1169,6 +1206,90 @@
         }
       }
     });
+  }
+
+  function renderCacRoasChart(leads, sales) {
+    const cfg = getFinanceConfig();
+    const adSpendByMonth = cfg.adSpendByMonth || {};
+
+    // Regroupe ventes et clients "leads achat" par mois (cle YYYY-MM, coherente avec monthKey())
+    const revenueByMonth = {};
+    const clientsByMonth = {};
+    sales.forEach(s => {
+      const d = new Date((s.date_vente || '').replace(' ', 'T'));
+      if (isNaN(d)) return;
+      const key = monthKey(d);
+      revenueByMonth[key] = (revenueByMonth[key] || 0) + parseFloat(s.montant || 0);
+    });
+    leads.forEach(l => {
+      if (!(l.a_achete == 1 || l.a_achete === true)) return;
+      const d = new Date((l.date_inscription || l.created_at || '').replace(' ', 'T'));
+      if (isNaN(d)) return;
+      const key = monthKey(d);
+      clientsByMonth[key] = (clientsByMonth[key] || 0) + 1;
+    });
+
+    // Les 6 derniers mois ayant un budget pub renseigne, dans l'ordre chronologique
+    const monthsWithSpend = Object.keys(adSpendByMonth).filter(k => parseFloat(adSpendByMonth[k]) > 0).sort();
+    const last6 = monthsWithSpend.slice(-6);
+
+    const wrap = document.getElementById('cacRoasChart').parentElement;
+    if (last6.length === 0) {
+      wrap.innerHTML = '<p style="color:#6B6B68;font-size:13px;text-align:center;padding-top:90px">Renseignez votre budget pub mois après mois dans "Configurer" pour voir apparaître la tendance ici.</p>';
+      document.getElementById('quarterlyHint').textContent = '';
+      return;
+    }
+
+    const labels = last6.map(k => {
+      const [y, m] = k.split('-');
+      return new Date(parseInt(y), parseInt(m) - 1, 1).toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' });
+    });
+    const cacData = last6.map(k => {
+      const spend = parseFloat(adSpendByMonth[k]) || 0;
+      const clients = clientsByMonth[k] || 0;
+      return (spend > 0 && clients > 0) ? Math.round(spend / clients) : null;
+    });
+    const roasData = last6.map(k => {
+      const spend = parseFloat(adSpendByMonth[k]) || 0;
+      const revenue = revenueByMonth[k] || 0;
+      return (spend > 0) ? Math.round((revenue / spend) * 100) / 100 : null;
+    });
+
+    new Chart(document.getElementById('cacRoasChart'), {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [
+          { label: 'CAC (CHF)', data: cacData, borderColor: '#B8763D', backgroundColor: 'rgba(184,118,61,0.1)', yAxisID: 'yCac', tension: 0.3, spanGaps: true },
+          { label: 'ROAS (x)', data: roasData, borderColor: '#3E4F94', backgroundColor: 'rgba(62,79,148,0.1)', yAxisID: 'yRoas', tension: 0.3, spanGaps: true }
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: { legend: { display: true, position: 'top', labels: { font: { size: 11 } } } },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+          yCac: { position: 'left', beginAtZero: true, ticks: { font: { size: 10 } }, grid: { color: '#F0EBE0' }, title: { display: true, text: 'CAC (CHF)', font: { size: 10 } } },
+          yRoas: { position: 'right', beginAtZero: true, ticks: { font: { size: 10 } }, grid: { display: false }, title: { display: true, text: 'ROAS (x)', font: { size: 10 } } }
+        }
+      }
+    });
+
+    const hint = document.getElementById('quarterlyHint');
+    if (last6.length < 3) {
+      hint.textContent = 'Encore ' + (3 - last6.length) + ' mois de données avant d\'avoir un CAC/ROAS fiable sur 3 mois glissants.';
+    } else {
+      const last3 = last6.slice(-3);
+      const validRoas = last3.map(k => {
+        const spend = parseFloat(adSpendByMonth[k]) || 0;
+        const revenue = revenueByMonth[k] || 0;
+        return spend > 0 ? revenue / spend : null;
+      }).filter(v => v !== null);
+      const avgRoas = validRoas.length ? (validRoas.reduce((a, b) => a + b, 0) / validRoas.length) : null;
+      if (avgRoas !== null) {
+        hint.textContent = 'ROAS moyen sur les 3 derniers mois : ' + avgRoas.toFixed(2) + 'x — ' + (avgRoas >= 3 ? 'rentable, tu peux envisager d\'augmenter le budget.' : avgRoas >= 1 ? 'à surveiller, marge faible.' : 'perte nette, à revoir avant de continuer.');
+      }
+    }
   }
 
   function renderFunnel(leads, sales) {
