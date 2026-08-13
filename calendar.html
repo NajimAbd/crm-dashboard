@@ -85,6 +85,9 @@
   .status-termine { background: rgba(90, 140, 90, 0.15); color: var(--status-done); }
   .status-annule { background: rgba(196, 96, 78, 0.15); color: var(--status-cancelled); }
   .status-passe { background: rgba(140, 130, 120, 0.15); color: #8C8278; }
+  .status-absent { background: rgba(196, 96, 78, 0.15); color: #C4604E; }
+  .rdv-cancel-btn { background: none; border: none; color: #C4604E; font-size: 16px; font-weight: 700; cursor: pointer; padding: 4px 8px; border-radius: 6px; margin-left: 8px; opacity: 0.55; }
+  .rdv-cancel-btn:hover { opacity: 1; background: rgba(196,96,78,0.1); }
 
   .empty-state, .loading-state { text-align: center; padding: 80px 24px; color: var(--text-soft); }
   .spinner { width: 28px; height: 28px; border: 2.5px solid var(--border-soft); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
@@ -160,6 +163,7 @@
       <div class="filter-tab active" data-filter="all" onclick="setFilter('all')">Tous</div>
       <div class="filter-tab" data-filter="planifie" onclick="setFilter('planifie')">À venir</div>
       <div class="filter-tab" data-filter="passe" onclick="setFilter('passe')">Passés (à mettre à jour)</div>
+      <div class="filter-tab" data-filter="absent" onclick="setFilter('absent')">Absents</div>
       <div class="filter-tab" data-filter="termine" onclick="setFilter('termine')">Terminés</div>
     </div>
   </div>
@@ -234,7 +238,7 @@
       list = list.filter(a => {
         const d = new Date(a.date_rdv.replace(' ', 'T'));
         const isPastDue = (a.statut === 'planifie' || !a.statut) && d < new Date();
-        const effectiveStatus = isPastDue ? 'passe' : (a.statut || 'planifie');
+        const effectiveStatus = a.statut === 'absent' ? 'absent' : (isPastDue ? 'passe' : (a.statut || 'planifie'));
         return effectiveStatus === currentFilter;
       });
     }
@@ -265,18 +269,20 @@
         const time = d.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
         const fullName = ((a.prenom || '') + ' ' + (a.nom || '')).trim() || 'Lead sans nom';
         const isPastDue = (a.statut === 'planifie' || !a.statut) && d < new Date();
-        const effectiveStatus = isPastDue ? 'passe' : (a.statut || 'planifie');
+        const effectiveStatus = a.statut === 'absent' ? 'absent' : (isPastDue ? 'passe' : (a.statut || 'planifie'));
         const statusClass = 'status-' + effectiveStatus;
-        const statusLabel = a.statut === 'termine' ? 'Terminé' : (a.statut === 'annule' ? 'Annulé' : (isPastDue ? 'Passé (à mettre à jour)' : 'Planifié'));
+        const statusLabel = a.statut === 'termine' ? 'Terminé' : (a.statut === 'annule' ? 'Annulé' : (a.statut === 'absent' ? 'Absent' : (isPastDue ? 'Passé (à mettre à jour)' : 'Planifié')));
+        const showCancelBtn = a.statut !== 'annule' && a.statut !== 'absent';
 
-        html += '<div class="rdv-card" onclick="window.location.href=\'lead-detail.html?id=' + a.lead_id + '\'">' +
-          '<div class="rdv-time">' + time + '</div>' +
+        html += '<div class="rdv-card">' +
+          '<div class="rdv-time" onclick="window.location.href=\'lead-detail.html?id=' + a.lead_id + '\'" style="cursor:pointer">' + time + '</div>' +
           '<div class="rdv-divider"></div>' +
-          '<div class="rdv-content">' +
+          '<div class="rdv-content" onclick="window.location.href=\'lead-detail.html?id=' + a.lead_id + '\'" style="cursor:pointer">' +
             '<div class="rdv-name">' + esc(fullName) + '</div>' +
             '<div class="rdv-meta">' + esc(a.email || '') + (a.whatsapp ? ' · ' + esc(a.whatsapp) : '') + '</div>' +
           '</div>' +
           '<span class="status-chip ' + statusClass + '">' + statusLabel + '</span>' +
+          (showCancelBtn ? '<button class="rdv-cancel-btn" title="Marquer absent (client non présenté)" onclick="event.stopPropagation(); markAbsent(' + a.id + ')">✕</button>' : '') +
         '</div>';
       });
 
@@ -284,6 +290,27 @@
     });
 
     container.innerHTML = html;
+  }
+
+  async function markAbsent(appointmentId) {
+    if (!confirm('Marquer ce rendez-vous comme "Absent" (client non présenté) ?')) return;
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-appointment-set-status', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ appointment_id: appointmentId, statut: 'absent' })
+      });
+      const data = await resp.json();
+      if (data.ok) {
+        const a = allAppointments.find(x => x.id === appointmentId);
+        if (a) a.statut = 'absent';
+        render();
+      } else {
+        alert('Erreur lors de la mise à jour.');
+      }
+    } catch (e) {
+      alert('Erreur de connexion.');
+    }
   }
 
   function capitalize(s) {
