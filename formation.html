@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Formation — Nexa</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-deep: #0D1A12;
+    --green-2: #17281C;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F7F2E9;
+    --border: #E4E0D6;
+    --text-soft: #6B6B60;
+    --danger: #C4604E;
+    --success: #4CAF50;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Inter',sans-serif; background:var(--cream); color:var(--green-deep); }
+  .topbar { background:var(--green-deep); color:#fff; padding:18px 32px; display:flex; align-items:center; justify-content:space-between; border-bottom:3px solid var(--gold); }
+  .topbar a { color:var(--gold-light); text-decoration:none; font-size:13px; }
+  .topbar h1 { font-family:'Cormorant Garamond',serif; font-size:22px; margin:0; color:var(--gold); }
+  .wrap { max-width:1000px; margin:0 auto; padding:32px 24px 80px; }
+  .eyebrow { font-size:11px; text-transform:uppercase; letter-spacing:0.08em; color:var(--gold); font-weight:700; }
+  h2 { font-family:'Cormorant Garamond',serif; font-size:32px; margin:6px 0 4px; color:var(--green-deep); }
+  .subtitle { color:var(--text-soft); font-size:14px; margin-bottom:28px; }
+
+  .disabled-state { background:#fff; border:1px solid var(--border); border-radius:14px; padding:48px 32px; text-align:center; }
+  .disabled-state p { color:var(--text-soft); font-size:14px; max-width:420px; margin:10px auto 0; }
+
+  .section-title { font-family:'Cormorant Garamond',serif; font-size:22px; font-weight:600; margin:36px 0 14px; display:flex; align-items:center; justify-content:space-between; }
+  .btn { font-family:'Inter'; font-weight:600; font-size:13px; padding:9px 18px; border-radius:8px; border:1px solid var(--green-deep); background:var(--green-deep); color:#fff; cursor:pointer; }
+  .btn:hover { opacity:0.9; }
+  .btn.secondary { background:#fff; color:var(--green-deep); }
+  .btn.small { padding:5px 12px; font-size:12px; }
+
+  .niveau-card { background:#fff; border:1px solid var(--border); border-radius:12px; padding:20px 22px; margin-bottom:12px; display:flex; align-items:flex-start; justify-content:space-between; gap:16px; }
+  .niveau-name { font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:600; margin:0 0 4px; }
+  .niveau-meta { font-size:12.5px; color:var(--text-soft); display:flex; gap:14px; flex-wrap:wrap; }
+  .niveau-price { font-family:'Cormorant Garamond',serif; font-size:26px; font-weight:700; color:var(--gold); white-space:nowrap; }
+  .niveau-actions { display:flex; gap:8px; margin-top:10px; }
+  .badge-inactive { background:rgba(196,96,78,0.12); color:var(--danger); font-size:11px; padding:2px 8px; border-radius:10px; margin-left:8px; }
+
+  .etudiant-row { display:flex; align-items:center; justify-content:space-between; padding:12px 16px; background:#fff; border:1px solid var(--border); border-radius:10px; margin-bottom:8px; }
+  .etudiant-name { font-weight:600; font-size:14px; }
+  .etudiant-meta { font-size:12px; color:var(--text-soft); }
+  .statut-chip { font-size:11px; padding:3px 10px; border-radius:10px; font-weight:600; text-transform:uppercase; letter-spacing:0.03em; }
+  .statut-inscrit { background:rgba(184,150,90,0.15); color:var(--gold); }
+  .statut-en_cours { background:rgba(62,79,148,0.12); color:#3E4F94; }
+  .statut-termine { background:rgba(76,175,80,0.12); color:var(--success); }
+  .statut-abandonne { background:rgba(196,96,78,0.12); color:var(--danger); }
+  select.statut-select { font-size:12px; padding:4px 8px; border-radius:6px; border:1px solid var(--border); margin-left:10px; }
+
+  .empty-hint { color:var(--text-soft); font-size:13px; text-align:center; padding:24px; }
+
+  .modal-bg { display:none; position:fixed; inset:0; background:rgba(13,26,18,0.5); align-items:center; justify-content:center; z-index:100; padding:16px; }
+  .modal-bg.show { display:flex; }
+  .modal { background:#fff; border-radius:14px; padding:26px; max-width:420px; width:100%; max-height:88vh; overflow-y:auto; }
+  .modal h3 { font-family:'Cormorant Garamond',serif; font-size:20px; margin:0 0 16px; }
+  .field { margin-bottom:14px; }
+  .field label { display:block; font-size:12px; color:var(--text-soft); margin-bottom:5px; font-weight:600; }
+  .field input, .field textarea { width:100%; padding:9px 11px; border:1px solid var(--border); border-radius:8px; font-size:14px; font-family:'Inter'; }
+  .field-row { display:flex; gap:10px; }
+  .field-row .field { flex:1; }
+  .modal-actions { display:flex; gap:10px; margin-top:8px; }
+  .modal-actions .btn { flex:1; }
+
+  .toast { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--green-deep); color:#fff; padding:10px 20px; border-radius:8px; font-size:13px; display:none; z-index:200; }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <h1>Nexa · Formation</h1>
+  <a href="dashboard.html">← Retour au tableau de bord</a>
+</div>
+
+<div class="wrap">
+  <div class="eyebrow">Module Formation</div>
+  <h2 id="pageTitle">Chargement…</h2>
+  <div class="subtitle" id="pageSubtitle"></div>
+
+  <div id="disabledState" class="disabled-state" style="display:none">
+    <p><b>Le module Formation n'est pas encore activé sur ce compte.</b></p>
+    <p>Contacte l'administrateur pour l'activer, ou active-le depuis le Panel Admin si tu es super-admin.</p>
+  </div>
+
+  <div id="activeContent" style="display:none">
+    <div class="section-title">
+      Niveaux de formation
+      <button class="btn" onclick="openNiveauModal()">+ Ajouter un niveau</button>
+    </div>
+    <div id="niveauxList"></div>
+
+    <div class="section-title">
+      Étudiants inscrits
+      <button class="btn secondary" onclick="openInscriptionModal()">+ Inscrire un étudiant</button>
+    </div>
+    <div id="etudiantsList"></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="niveauModal">
+  <div class="modal">
+    <h3 id="niveauModalTitle">Nouveau niveau</h3>
+    <input type="hidden" id="niveauId">
+    <div class="field"><label>Nom du niveau</label><input type="text" id="niveauNom" placeholder="ex: Level I - المبتدئ"></div>
+    <div class="field"><label>Description (optionnel)</label><textarea id="niveauDescription" rows="2"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Prix</label><input type="number" id="niveauPrix" placeholder="97"></div>
+      <div class="field"><label>Devise</label><input type="text" id="niveauDevise" value="CHF"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>Durée (semaines)</label><input type="number" id="niveauDuree"></div>
+      <div class="field"><label>Nb. de modules</label><input type="number" id="niveauModules"></div>
+    </div>
+    <div class="field"><label>Nom du certificat</label><input type="text" id="niveauCertificat" placeholder="ex: Certificat de Fondation"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeNiveauModal()">Annuler</button>
+      <button class="btn" onclick="submitNiveau()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="modal-bg" id="inscriptionModal">
+  <div class="modal">
+    <h3>Inscrire un étudiant</h3>
+    <div class="field">
+      <label>Niveau</label>
+      <select id="inscriptionNiveau" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px"></select>
+    </div>
+    <div class="field"><label>Nom complet</label><input type="text" id="inscriptionNom"></div>
+    <div class="field"><label>E-mail (optionnel)</label><input type="email" id="inscriptionEmail"></div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeInscriptionModal()">Annuler</button>
+      <button class="btn" onclick="submitInscription()">Inscrire</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-formation';
+let ACCOUNT_ID = null;
+let niveaux = [];
+let etudiants = [];
+
+function getSession() {
+  try { return JSON.parse(localStorage.getItem('crm_session_user')); } catch (e) { return null; }
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.display = 'block';
+  setTimeout(() => t.style.display = 'none', 2500);
+}
+
+async function call(action, extra) {
+  extra = extra || {};
+  const resp = await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(Object.assign({ action: action, account_id: ACCOUNT_ID }, extra))
+  });
+  return resp.json();
+}
+
+function esc(s) {
+  return String(s || '').replace(/[&<>"']/g, function(c) {
+    return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' })[c];
+  });
+}
+
+async function init() {
+  const session = getSession();
+  if (!session) { window.location.href = 'index.html'; return; }
+  ACCOUNT_ID = session.account_id;
+
+  try {
+    const data = await call('list_niveaux');
+    if (!data.ok) throw new Error();
+    niveaux = data.results || [];
+    document.getElementById('pageTitle').textContent = session.nom_praticien ? session.nom_praticien + ' — Formation' : 'Formation';
+    document.getElementById('pageSubtitle').textContent = niveaux.length + ' niveau(x) · gérez vos formations et vos étudiants';
+    document.getElementById('activeContent').style.display = 'block';
+    renderNiveaux();
+    loadEtudiants();
+  } catch (e) {
+    document.getElementById('pageTitle').textContent = 'Formation';
+    document.getElementById('disabledState').style.display = 'block';
+  }
+}
+
+function renderNiveaux() {
+  const el = document.getElementById('niveauxList');
+  if (niveaux.length === 0) { el.innerHTML = '<div class="empty-hint">Aucun niveau créé pour le moment.</div>'; return; }
+  el.innerHTML = niveaux.map(function(n) {
+    return '<div class="niveau-card">' +
+      '<div>' +
+        '<div class="niveau-name">' + esc(n.nom) + (n.actif === 'non' ? '<span class="badge-inactive">Inactif</span>' : '') + '</div>' +
+        '<div class="niveau-meta">' +
+          (n.duree_semaines ? '<span>⏱ ' + n.duree_semaines + ' semaines</span>' : '') +
+          (n.nombre_modules ? '<span>📚 ' + n.nombre_modules + ' modules</span>' : '') +
+          (n.nom_certificat ? '<span>🎓 ' + esc(n.nom_certificat) + '</span>' : '') +
+        '</div>' +
+        '<div class="niveau-actions">' +
+          '<button class="btn small secondary" onclick="editNiveauById(' + n.id + ')">Modifier</button>' +
+          '<button class="btn small secondary" onclick="deleteNiveau(' + n.id + ')">Supprimer</button>' +
+        '</div>' +
+      '</div>' +
+      '<div class="niveau-price">' + parseFloat(n.prix).toFixed(0) + ' ' + n.devise + '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function editNiveauById(id) {
+  const n = niveaux.find(function(x) { return x.id === id; });
+  if (n) editNiveau(n);
+}
+
+async function loadEtudiants() {
+  const data = await call('list_etudiants');
+  etudiants = data.results || [];
+  renderEtudiants();
+}
+
+function renderEtudiants() {
+  const el = document.getElementById('etudiantsList');
+  if (etudiants.length === 0) { el.innerHTML = '<div class="empty-hint">Aucun étudiant inscrit pour le moment.</div>'; return; }
+  el.innerHTML = etudiants.map(function(e) {
+    return '<div class="etudiant-row">' +
+      '<div>' +
+        '<div class="etudiant-name">' + esc(e.nom) + '</div>' +
+        '<div class="etudiant-meta">' + esc(e.niveau_nom) + (e.email ? ' · ' + esc(e.email) : '') + '</div>' +
+      '</div>' +
+      '<div>' +
+        '<span class="statut-chip statut-' + e.statut + '">' + e.statut.replace('_',' ') + '</span>' +
+        '<select class="statut-select" onchange="changeStatut(' + e.id + ', this.value)">' +
+          '<option value="">Changer…</option>' +
+          '<option value="inscrit">Inscrit</option>' +
+          '<option value="en_cours">En cours</option>' +
+          '<option value="termine">Terminé</option>' +
+          '<option value="abandonne">Abandonné</option>' +
+        '</select>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+async function changeStatut(etudiantId, statut) {
+  if (!statut) return;
+  const data = await call('update_etudiant_statut', { etudiant_id: etudiantId, data: { statut: statut } });
+  if (data.ok) { showToast('Statut mis à jour'); loadEtudiants(); }
+}
+
+function openNiveauModal() {
+  document.getElementById('niveauModalTitle').textContent = 'Nouveau niveau';
+  document.getElementById('niveauId').value = '';
+  document.getElementById('niveauNom').value = '';
+  document.getElementById('niveauDescription').value = '';
+  document.getElementById('niveauPrix').value = '';
+  document.getElementById('niveauDevise').value = 'CHF';
+  document.getElementById('niveauDuree').value = '';
+  document.getElementById('niveauModules').value = '';
+  document.getElementById('niveauCertificat').value = '';
+  document.getElementById('niveauModal').classList.add('show');
+}
+
+function editNiveau(n) {
+  document.getElementById('niveauModalTitle').textContent = 'Modifier le niveau';
+  document.getElementById('niveauId').value = n.id;
+  document.getElementById('niveauNom').value = n.nom;
+  document.getElementById('niveauDescription').value = n.description || '';
+  document.getElementById('niveauPrix').value = n.prix;
+  document.getElementById('niveauDevise').value = n.devise;
+  document.getElementById('niveauDuree').value = n.duree_semaines || '';
+  document.getElementById('niveauModules').value = n.nombre_modules || '';
+  document.getElementById('niveauCertificat').value = n.nom_certificat || '';
+  document.getElementById('niveauModal').classList.add('show');
+}
+
+function closeNiveauModal() { document.getElementById('niveauModal').classList.remove('show'); }
+
+async function submitNiveau() {
+  const id = document.getElementById('niveauId').value;
+  const payload = {
+    nom: document.getElementById('niveauNom').value.trim(),
+    description: document.getElementById('niveauDescription').value.trim(),
+    prix: document.getElementById('niveauPrix').value,
+    devise: document.getElementById('niveauDevise').value.trim() || 'CHF',
+    duree_semaines: document.getElementById('niveauDuree').value,
+    nombre_modules: document.getElementById('niveauModules').value,
+    nom_certificat: document.getElementById('niveauCertificat').value.trim(),
+    ordre: niveaux.length + 1
+  };
+  if (!payload.nom) { alert('Le nom du niveau est requis.'); return; }
+
+  const action = id ? 'update_niveau' : 'create_niveau';
+  const extra = id ? { niveau_id: parseInt(id), data: payload } : { data: payload };
+  const data = await call(action, extra);
+  if (data.ok) {
+    closeNiveauModal();
+    showToast(id ? 'Niveau modifié' : 'Niveau créé');
+    const fresh = await call('list_niveaux');
+    niveaux = fresh.results || [];
+    renderNiveaux();
+  } else {
+    alert('Erreur lors de l\'enregistrement.');
+  }
+}
+
+async function deleteNiveau(id) {
+  if (!confirm('Supprimer ce niveau ? Les étudiants inscrits à ce niveau seront aussi supprimés.')) return;
+  const data = await call('delete_niveau', { niveau_id: id });
+  if (data.ok) {
+    showToast('Niveau supprimé');
+    const fresh = await call('list_niveaux');
+    niveaux = fresh.results || [];
+    renderNiveaux();
+  }
+}
+
+function openInscriptionModal() {
+  const sel = document.getElementById('inscriptionNiveau');
+  sel.innerHTML = niveaux.map(function(n) {
+    return '<option value="' + n.id + '">' + esc(n.nom) + ' — ' + parseFloat(n.prix).toFixed(0) + ' ' + n.devise + '</option>';
+  }).join('');
+  document.getElementById('inscriptionNom').value = '';
+  document.getElementById('inscriptionEmail').value = '';
+  document.getElementById('inscriptionModal').classList.add('show');
+}
+
+function closeInscriptionModal() { document.getElementById('inscriptionModal').classList.remove('show'); }
+
+async function submitInscription() {
+  const niveauId = document.getElementById('inscriptionNiveau').value;
+  const nom = document.getElementById('inscriptionNom').value.trim();
+  const email = document.getElementById('inscriptionEmail').value.trim();
+  if (!nom) { alert('Le nom est requis.'); return; }
+  const data = await call('inscrire_etudiant', { niveau_id: parseInt(niveauId), data: { nom: nom, email: email } });
+  if (data.ok) {
+    closeInscriptionModal();
+    showToast('Étudiant inscrit');
+    loadEtudiants();
+  }
+}
+
+init();
+</script>
+</body>
+</html>
