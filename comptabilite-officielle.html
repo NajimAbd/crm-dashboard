@@ -250,6 +250,7 @@
     <button class="tab-btn active" id="tabBtnLivre" onclick="switchTab('livre')">Livre comptable</button>
     <button class="tab-btn" id="tabBtnAmort" onclick="switchTab('amort')">Amortissements</button>
     <button class="tab-btn" id="tabBtnPatrimoine" onclick="switchTab('patrimoine')">État du patrimoine</button>
+    <button class="tab-btn" id="tabBtnMery" onclick="switchTab('mery')">Mery — Frais de paiement</button>
   </div>
 
   <!-- ONGLET 1 : LIVRE COMPTABLE -->
@@ -373,6 +374,118 @@
       <div class="patrimoine-total-row" style="margin-top:18px; font-size:16px;"><span>Fortune nette (Actifs − Passifs)</span><span id="patFortuneNette">0 CHF</span></div>
       <div class="no-print" style="margin-top:18px;">
         <button class="btn-primary" onclick="savePatrimoine()">Enregistrer l'état du patrimoine</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ONGLET 4 : MERY (FRAIS DE PAIEMENT) -->
+  <div class="tab-panel" id="panelMery">
+    <div class="legal-note no-print" style="margin-bottom:22px;">
+      Stripe et Klarna calculent déjà leurs frais automatiquement (workflow n8n). Cet onglet sert aux paiements qui n'ont pas d'automatisation : virement, poste, banque, PayPal, compte dédié. Chaque calcul peut être ajouté directement au livre comptable ci-contre.
+    </div>
+    <div class="layout">
+      <div class="no-print">
+        <div class="card">
+          <div class="card-title">Calculer un frais</div>
+          <div class="type-toggle" id="meryMethodTabs" style="flex-wrap:wrap;">
+            <button data-m="virement" class="active" onclick="setMeryMethod('virement')">Virement</button>
+            <button data-m="poste" onclick="setMeryMethod('poste')">Frais Poste</button>
+            <button data-m="banque" onclick="setMeryMethod('banque')">Frais Banque</button>
+            <button data-m="paypal" onclick="setMeryMethod('paypal')">PayPal</button>
+            <button data-m="wise" onclick="setMeryMethod('wise')">Wise</button>
+            <button data-m="compte" onclick="setMeryMethod('compte')">Compte dédié</button>
+          </div>
+
+          <div id="meryForm-virement" class="mery-form">
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Montant envoyé par le client</span><input type="number" class="form-input" id="mvi_sent" step="0.01" placeholder="ex : 100.00"></div>
+              <div style="flex:1;"><span class="form-label">Devise</span>
+                <select class="form-input" id="mvi_currency"><option value="CHF">CHF</option><option value="EUR">EUR</option><option value="USD">USD</option><option value="AL">Autre</option></select>
+              </div>
+            </div>
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Taux du jour (si devise ≠ CHF)</span><input type="number" class="form-input" id="mvi_rate" step="0.0001" placeholder="ex : 0.9300"></div>
+              <div style="flex:1;"><span class="form-label">Montant net reçu en CHF</span><input type="number" class="form-input" id="mvi_net" step="0.01" placeholder="ex : 90.50"></div>
+            </div>
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Date</span><input type="date" class="form-input" id="mvi_date"></div>
+              <div style="flex:1;"><span class="form-label">Note</span><input type="text" class="form-input" id="mvi_note" placeholder="ex : virement client Allemagne"></div>
+            </div>
+          </div>
+
+          <div id="meryForm-poste" class="mery-form" style="display:none;">
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Libellé</span><input type="text" class="form-input" id="mpo_label" placeholder="ex : Frais tenue de compte Poste"></div>
+              <div style="flex:1;"><span class="form-label">Montant CHF</span><input type="number" class="form-input" id="mpo_amount" step="0.01" placeholder="ex : 5.00"></div>
+            </div>
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Date</span><input type="date" class="form-input" id="mpo_date"></div>
+            </div>
+          </div>
+
+          <div id="meryForm-banque" class="mery-form" style="display:none;">
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Libellé</span><input type="text" class="form-input" id="mbq_label" placeholder="ex : Frais tenue de compte banque"></div>
+              <div style="flex:1;"><span class="form-label">Montant CHF</span><input type="number" class="form-input" id="mbq_amount" step="0.01" placeholder="ex : 5.00"></div>
+            </div>
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Date</span><input type="date" class="form-input" id="mbq_date"></div>
+            </div>
+          </div>
+
+          <div id="meryForm-paypal" class="mery-form" style="display:none;">
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Montant brut</span><input type="number" class="form-input" id="mpp_gross" step="0.01" placeholder="ex : 100.00"></div>
+              <div style="flex:1;"><span class="form-label">Montant net reçu (PayPal)</span><input type="number" class="form-input" id="mpp_net" step="0.01" placeholder="ex : 95.20"></div>
+            </div>
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Date</span><input type="date" class="form-input" id="mpp_date"></div>
+              <div style="flex:1;"><span class="form-label">Note (pays du client)</span><input type="text" class="form-input" id="mpp_note" placeholder="ex : client Sénégal"></div>
+            </div>
+          </div>
+
+          <div id="meryForm-wise" class="mery-form" style="display:none;">
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Montant envoyé</span><input type="number" class="form-input" id="mwi_gross" step="0.01" placeholder="ex : 100.00"></div>
+              <div style="flex:1;"><span class="form-label">Montant net reçu CHF</span><input type="number" class="form-input" id="mwi_net" step="0.01" placeholder="ex : 97.50"></div>
+            </div>
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Date</span><input type="date" class="form-input" id="mwi_date"></div>
+              <div style="flex:1;"><span class="form-label">Note</span><input type="text" class="form-input" id="mwi_note" placeholder="optionnel"></div>
+            </div>
+            <div class="empty-hint">Squelette en attente de tes données Wise réelles.</div>
+          </div>
+
+          <div id="meryForm-compte" class="mery-form" style="display:none;">
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Libellé du mouvement</span><input type="text" class="form-input" id="mcd_label" placeholder="ex : Frais compte dédié RoqyaSuisse"></div>
+              <div style="flex:1;"><span class="form-label">Montant CHF</span><input type="number" class="form-input" id="mcd_amount" step="0.01" placeholder="ex : 8.00"></div>
+            </div>
+            <div class="form-row">
+              <div style="flex:1;"><span class="form-label">Date</span><input type="date" class="form-input" id="mcd_date"></div>
+            </div>
+          </div>
+
+          <div id="meryResultBox" style="display:none;background:var(--cream);border:1px dashed var(--gold);border-radius:10px;padding:14px 16px;margin:14px 0;font-size:13px;">
+            <div style="display:flex;justify-content:space-between;padding:3px 0;"><span>Montant brut</span><span id="meryResGross">—</span></div>
+            <div style="display:flex;justify-content:space-between;padding:3px 0;color:#B23A2E;"><span>Frais</span><span id="meryResFee">—</span></div>
+            <div style="display:flex;justify-content:space-between;padding:6px 0 0;margin-top:6px;border-top:1px solid var(--border-soft);font-weight:700;color:var(--green-deep);"><span>Montant net</span><span id="meryResNet">—</span></div>
+          </div>
+
+          <button class="btn-primary" style="width:100%;" onclick="calculerMery()">Calculer</button>
+          <button class="btn-secondary" style="width:100%;margin-top:8px;display:none;" id="meryAddBtn" onclick="ajouterMeryAuLivre()">+ Ajouter ce frais au livre comptable</button>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="card-title">Rappel des formules</div>
+          <div style="font-size:12.5px;color:var(--text-soft);line-height:1.7;">
+            <strong>Virement / Wise</strong> — coût réel = (montant envoyé converti au taux du jour) − montant net reçu.<br><br>
+            <strong>PayPal</strong> — frais = montant brut − montant net reçu (variable selon le pays du client).<br><br>
+            <strong>Frais Poste / Banque / Compte dédié</strong> — montant fixe relevé directement sur le relevé bancaire, rubrique « Frais et commissions ».<br><br>
+            Chaque frais ajouté ici s'enregistre comme dépense, catégorie « Frais bancaires/commissions », dans le même livre comptable que Stripe et Klarna.
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -515,12 +628,117 @@
 
   function switchTab(tab) {
     currentTab = tab;
-    ['Livre','Amort','Patrimoine'].forEach(t => {
+    ['Livre','Amort','Patrimoine','Mery'].forEach(t => {
       document.getElementById('tabBtn' + t).classList.toggle('active', t.toLowerCase() === tab);
       document.getElementById('panel' + t).classList.toggle('active', t.toLowerCase() === tab);
     });
-    const titles = { livre: 'Livre des recettes et dépenses', amort: 'Tableau des amortissements', patrimoine: 'État du patrimoine' };
+    const titles = { livre: 'Livre des recettes et dépenses', amort: 'Tableau des amortissements', patrimoine: 'État du patrimoine', mery: 'Frais de paiement — Mery' };
     document.getElementById('printTitle').textContent = titles[tab] + ' — ' + selectedYear;
+  }
+
+  // ==== MERY : frais de paiement (virement, poste, banque, paypal, wise, compte dédié) ====
+  let meryMethod = 'virement';
+  let meryPending = null;
+
+  function setMeryMethod(m) {
+    meryMethod = m;
+    document.querySelectorAll('#meryMethodTabs button').forEach(b => b.classList.toggle('active', b.dataset.m === m));
+    document.querySelectorAll('.mery-form').forEach(f => f.style.display = 'none');
+    document.getElementById('meryForm-' + m).style.display = 'block';
+    document.getElementById('meryResultBox').style.display = 'none';
+    document.getElementById('meryAddBtn').style.display = 'none';
+    meryPending = null;
+  }
+
+  function meryFmt(n) {
+    return (Math.round(n * 100) / 100).toFixed(2) + ' CHF';
+  }
+  function meryToday() {
+    return new Date().toISOString().slice(0, 10);
+  }
+
+  function calculerMery() {
+    let gross = 0, fee = 0, net = 0, note = '', date = meryToday();
+
+    if (meryMethod === 'virement') {
+      const sent = parseFloat(document.getElementById('mvi_sent').value) || 0;
+      const currency = document.getElementById('mvi_currency').value;
+      const rate = currency === 'CHF' ? 1 : (parseFloat(document.getElementById('mvi_rate').value) || 1);
+      net = parseFloat(document.getElementById('mvi_net').value) || 0;
+      gross = sent * rate;
+      fee = gross - net;
+      note = document.getElementById('mvi_note').value || '';
+      date = document.getElementById('mvi_date').value || meryToday();
+    } else if (meryMethod === 'poste') {
+      fee = parseFloat(document.getElementById('mpo_amount').value) || 0;
+      gross = fee; net = 0;
+      note = document.getElementById('mpo_label').value || 'Frais Poste';
+      date = document.getElementById('mpo_date').value || meryToday();
+    } else if (meryMethod === 'banque') {
+      fee = parseFloat(document.getElementById('mbq_amount').value) || 0;
+      gross = fee; net = 0;
+      note = document.getElementById('mbq_label').value || 'Frais Banque';
+      date = document.getElementById('mbq_date').value || meryToday();
+    } else if (meryMethod === 'paypal') {
+      gross = parseFloat(document.getElementById('mpp_gross').value) || 0;
+      net = parseFloat(document.getElementById('mpp_net').value) || 0;
+      fee = gross - net;
+      note = document.getElementById('mpp_note').value || 'PayPal';
+      date = document.getElementById('mpp_date').value || meryToday();
+    } else if (meryMethod === 'wise') {
+      gross = parseFloat(document.getElementById('mwi_gross').value) || 0;
+      net = parseFloat(document.getElementById('mwi_net').value) || 0;
+      fee = gross - net;
+      note = document.getElementById('mwi_note').value || 'Wise';
+      date = document.getElementById('mwi_date').value || meryToday();
+    } else if (meryMethod === 'compte') {
+      fee = parseFloat(document.getElementById('mcd_amount').value) || 0;
+      gross = fee; net = 0;
+      note = document.getElementById('mcd_label').value || 'Compte dédié';
+      date = document.getElementById('mcd_date').value || meryToday();
+    }
+
+    document.getElementById('meryResGross').textContent = meryFmt(gross);
+    document.getElementById('meryResFee').textContent = '− ' + meryFmt(fee);
+    document.getElementById('meryResNet').textContent = meryFmt(net);
+    document.getElementById('meryResultBox').style.display = 'block';
+    document.getElementById('meryAddBtn').style.display = 'block';
+
+    meryPending = { method: meryMethod, gross, fee, net, note, date };
+  }
+
+  const meryLabels = { virement: 'Virement', poste: 'Frais Poste', banque: 'Frais Banque', paypal: 'PayPal', wise: 'Wise', compte: 'Compte dédié' };
+
+  async function ajouterMeryAuLivre() {
+    if (!meryPending || meryPending.fee <= 0) {
+      showToast('Le frais doit être supérieur à 0.');
+      return;
+    }
+    try {
+      const resp = await fetch(LIVRE_CREATE_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          account_id: session.account_id,
+          date_operation: meryPending.date,
+          type: 'depense',
+          categorie: 'Frais bancaires/commissions',
+          libelle: 'Frais ' + meryLabels[meryPending.method] + (meryPending.note ? ' - ' + meryPending.note : ''),
+          montant_ht: meryPending.fee,
+          mode_paiement: meryPending.method,
+          reference_piece: null
+        })
+      });
+      if (!resp.ok) throw new Error('fail');
+      showToast('Frais ajouté au livre comptable.');
+      document.getElementById('meryResultBox').style.display = 'none';
+      document.getElementById('meryAddBtn').style.display = 'none';
+      document.querySelectorAll('.mery-form input').forEach(i => i.value = '');
+      meryPending = null;
+      loadAll();
+    } catch (err) {
+      showToast('Erreur — frais non enregistré.');
+    }
   }
 
   let libelleOptions = { recette: [], depense: [] };
