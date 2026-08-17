@@ -259,6 +259,25 @@
       <div>
         <div class="card">
           <div class="card-title">Livre des recettes et dépenses — <span id="livreYearLabel"></span></div>
+          <div class="no-print" id="livreFilterBar" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;align-items:center;">
+            <select id="filterType" class="form-input" style="width:auto;min-width:130px;" onchange="renderLivre()">
+              <option value="all">Tous types</option>
+              <option value="recette">Recettes</option>
+              <option value="depense">Dépenses</option>
+            </select>
+            <select id="filterMode" class="form-input" style="width:auto;min-width:150px;" onchange="renderLivre()">
+              <option value="all">Tous moyens de paiement</option>
+              <option value="stripe">Stripe</option>
+              <option value="klarna">Klarna</option>
+              <option value="paypal">PayPal</option>
+              <option value="wise">Wise</option>
+              <option value="virement">Virement</option>
+              <option value="especes">Espèces</option>
+              <option value="autre">Autre</option>
+            </select>
+            <input type="text" id="filterSearch" class="form-input" style="width:auto;min-width:180px;flex:1;" placeholder="Rechercher un libellé ou une catégorie…" oninput="renderLivre()">
+            <button class="btn-secondary" style="padding:8px 14px;" onclick="resetLivreFilters()">Réinitialiser</button>
+          </div>
           <div id="livreContent"><div class="loading-state"><div class="spinner"></div>Chargement…</div></div>
         </div>
       </div>
@@ -878,6 +897,13 @@
     }
   }
 
+  function resetLivreFilters() {
+    document.getElementById('filterType').value = 'all';
+    document.getElementById('filterMode').value = 'all';
+    document.getElementById('filterSearch').value = '';
+    renderLivre();
+  }
+
   function renderLivre() {
     const totalRecettes = allEntries.filter(e => e.type === 'recette').reduce((s, e) => s + parseFloat(e.montant_ht || 0), 0);
     const totalDepenses = allEntries.filter(e => e.type === 'depense').reduce((s, e) => s + parseFloat(e.montant_ht || 0), 0);
@@ -893,7 +919,27 @@
       content.innerHTML = '<div class="journal-empty">Aucune écriture pour ' + selectedYear + '.</div>';
       return;
     }
-    const sorted = [...allEntries].sort((a, b) => (a.date_operation || '').localeCompare(b.date_operation || ''));
+
+    const fType = document.getElementById('filterType') ? document.getElementById('filterType').value : 'all';
+    const fMode = document.getElementById('filterMode') ? document.getElementById('filterMode').value : 'all';
+    const fSearch = document.getElementById('filterSearch') ? document.getElementById('filterSearch').value.trim().toLowerCase() : '';
+
+    let filtered = allEntries.filter(e => {
+      if (fType !== 'all' && e.type !== fType) return false;
+      if (fMode !== 'all' && (e.mode_paiement || '').toLowerCase() !== fMode) return false;
+      if (fSearch) {
+        const hay = ((e.libelle || '') + ' ' + (e.categorie || '')).toLowerCase();
+        if (!hay.includes(fSearch)) return false;
+      }
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      content.innerHTML = '<div class="journal-empty">Aucune écriture ne correspond à ces filtres.</div>';
+      return;
+    }
+
+    const sorted = [...filtered].sort((a, b) => (a.date_operation || '').localeCompare(b.date_operation || ''));
     let html = '<table class="journal-table"><thead><tr><th>#</th><th>Date</th><th>Catégorie</th><th>Libellé</th><th></th><th style="text-align:right;">Montant</th><th class="no-print" style="text-align:center;">Reçu envoyé</th><th class="no-print"></th></tr></thead><tbody>';
 
     function libelleHighlight(libelle, modePaiement) {
