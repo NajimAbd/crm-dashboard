@@ -279,9 +279,7 @@
             <input type="date" id="filterDateFrom" class="form-input" style="width:auto;" onchange="renderLivre()">
             <span style="font-size:12px;color:var(--text-soft);">au</span>
             <input type="date" id="filterDateTo" class="form-input" style="width:auto;" onchange="renderLivre()">
-            <select id="filterLibelle" class="form-input" style="width:auto;min-width:180px;flex:1;" onchange="renderLivre()">
-              <option value="all">Toutes les descriptions</option>
-            </select>
+            <input type="text" id="filterSearch" class="form-input" style="width:auto;min-width:180px;flex:1;" placeholder="Rechercher une description ou une catégorie…" oninput="renderLivre()">
             <button class="btn-secondary" style="padding:8px 14px;" onclick="resetLivreFilters()">Réinitialiser</button>
           </div>
           <div id="livreContent"><div class="loading-state"><div class="spinner"></div>Chargement…</div></div>
@@ -908,7 +906,7 @@
     document.getElementById('filterMode').value = 'all';
     document.getElementById('filterDateFrom').value = '';
     document.getElementById('filterDateTo').value = '';
-    document.getElementById('filterLibelle').value = 'all';
+    document.getElementById('filterSearch').value = '';
     renderLivre();
   }
 
@@ -928,26 +926,11 @@
       return;
     }
 
-    // Peuple le menu déroulant des descriptions avec les valeurs uniques existantes
-    const libelleSelectEl = document.getElementById('filterLibelle');
-    if (libelleSelectEl) {
-      const previousValue = libelleSelectEl.value;
-      const uniqueLibelles = [...new Set(allEntries.map(e => e.libelle).filter(Boolean))].sort((a, b) => a.localeCompare(b));
-      let optsHtml = '<option value="all">Toutes les descriptions</option>';
-      uniqueLibelles.forEach(l => {
-        optsHtml += '<option value="' + esc(l) + '">' + esc(l) + '</option>';
-      });
-      libelleSelectEl.innerHTML = optsHtml;
-      if (uniqueLibelles.includes(previousValue) || previousValue === 'all') {
-        libelleSelectEl.value = previousValue;
-      }
-    }
-
     const fType = document.getElementById('filterType') ? document.getElementById('filterType').value : 'all';
     const fMode = document.getElementById('filterMode') ? document.getElementById('filterMode').value : 'all';
     const fDateFrom = document.getElementById('filterDateFrom') ? document.getElementById('filterDateFrom').value : '';
     const fDateTo = document.getElementById('filterDateTo') ? document.getElementById('filterDateTo').value : '';
-    const fLibelle = document.getElementById('filterLibelle') ? document.getElementById('filterLibelle').value : 'all';
+    const fSearch = document.getElementById('filterSearch') ? document.getElementById('filterSearch').value.trim().toLowerCase() : '';
 
     let filtered = allEntries.filter(e => {
       if (fType !== 'all' && e.type !== fType) return false;
@@ -955,7 +938,10 @@
       const opDate = (e.date_operation || '').slice(0, 10);
       if (fDateFrom && opDate < fDateFrom) return false;
       if (fDateTo && opDate > fDateTo) return false;
-      if (fLibelle !== 'all' && e.libelle !== fLibelle) return false;
+      if (fSearch) {
+        const hay = ((e.libelle || '') + ' ' + (e.categorie || '')).toLowerCase();
+        if (!hay.includes(fSearch)) return false;
+      }
       return true;
     });
 
