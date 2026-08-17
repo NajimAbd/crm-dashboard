@@ -910,6 +910,9 @@
       const recuEnvoye = isIn && (e.recu_envoye === 1 || e.recu_envoye === true || e.recu_envoye === '1');
       const arrowColor = recuEnvoye ? '#2C6B3F' : '#E07B1E';
       const arrowTitle = recuEnvoye ? 'Reçu déjà envoyé — cliquer pour renvoyer' : 'Envoyer le reçu par email';
+      const envelopeIcon = recuEnvoye
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + arrowColor + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l9 6 9-6"/><path d="M21 6v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6"/><path d="M12 12v6"/><path d="M9 15l3 3 3-3"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + arrowColor + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>';
       const hl = libelleHighlight(e.libelle, e.mode_paiement);
       const libelleStyle = hl ? ' style="background:' + hl + ';padding:2px 8px;border-radius:5px;display:inline-block;"' : '';
       html += '<tr>' +
@@ -919,7 +922,7 @@
         '<td><span' + libelleStyle + '>' + esc(e.libelle) + '</span>' + (e.reference_piece ? ' <span style="color:var(--text-soft);font-size:11px;">(' + esc(e.reference_piece) + ')</span>' : '') + '</td>' +
         '<td><span class="tag ' + (isIn ? 'in' : 'out') + '">' + (isIn ? 'Recette' : 'Dépense') + '</span></td>' +
         '<td style="text-align:right;" class="' + (isIn ? 'amount-in' : 'amount-out') + '">' + (isIn ? '+' : '−') + parseFloat(e.montant_ht).toFixed(2) + ' CHF</td>' +
-        '<td class="no-print">' + (isIn ? '<button class="row-delete" style="color:' + arrowColor + ';" onclick="envoyerRecu(' + e.id + ')" title="' + arrowTitle + '">⬇</button>' : '') + '</td>' +
+        '<td class="no-print" style="text-align:center;">' + (isIn ? '<button class="row-delete" style="display:inline-flex;align-items:center;" onclick="envoyerRecu(' + e.id + ')" title="' + arrowTitle + '">' + envelopeIcon + '</button>' : '') + '</td>' +
         '<td class="no-print"><button class="row-delete" onclick="deleteEntry(' + e.id + ')" title="Supprimer">✕</button></td>' +
         '</tr>';
     });
