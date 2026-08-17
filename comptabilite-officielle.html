@@ -246,6 +246,17 @@
     <div class="stat-card"><div class="stat-value" id="statResultat">—</div><div class="stat-label">Résultat net (CHF)</div></div>
   </div>
 
+  <div class="stat-card" id="tvaThresholdCard" style="margin-bottom:28px;">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:10px;">
+      <span class="stat-label" style="margin:0;">Chiffre d'affaires cumulé — Seuil d'assujettissement TVA (100'000 CHF)</span>
+      <span id="tvaThresholdLabel" style="font-family:'Georgia',serif;font-size:18px;color:var(--green-deep);">—</span>
+    </div>
+    <div style="background:#EDE7D9;border-radius:8px;height:14px;overflow:hidden;">
+      <div id="tvaThresholdBar" style="height:100%;border-radius:8px;transition:width 0.3s;"></div>
+    </div>
+    <div id="tvaThresholdNote" style="font-size:12px;color:var(--text-soft);margin-top:8px;"></div>
+  </div>
+
   <div class="tabs no-print">
     <button class="tab-btn active" id="tabBtnLivre" onclick="switchTab('livre')">Livre comptable</button>
     <button class="tab-btn" id="tabBtnAmort" onclick="switchTab('amort')">Amortissements</button>
@@ -320,7 +331,7 @@
             </div>
           </div>
           <div class="form-row" id="clientFieldsRow">
-            <div style="flex:1;"><span class="form-label">Nom du client</span><input type="text" class="form-input" id="entryClientNom" placeholder="Ex: Karim B."></div>
+            <div style="flex:1;"><span class="form-label">Nom du client <span style="color:var(--accent-gold);">*</span></span><input type="text" class="form-input" id="entryClientNom" placeholder="Ex: Karim B."></div>
             <div style="flex:1;"><span class="form-label">Email du client (optionnel)</span><input type="email" class="form-input" id="entryClientEmail" placeholder="client@email.com"></div>
           </div>
           <div class="form-row">
@@ -335,7 +346,11 @@
             </div>
           </div>
           <div class="form-row">
-            <div style="flex:1;"><span class="form-label">Référence pièce (optionnel)</span><input type="text" class="form-input" id="entryRef" placeholder="N° facture / reçu"></div>
+            <div style="flex:1;">
+              <span class="form-label">Référence pièce <span style="color:var(--accent-gold);">— fortement recommandé</span></span>
+              <input type="text" class="form-input" id="entryRef" placeholder="N° facture / reçu / dossier" style="border:1.5px solid var(--accent-gold);background:#FFFBF0;">
+              <div style="font-size:11px;color:var(--text-soft);margin-top:4px;">Permet de retrouver la pièce justificative en cas de contrôle. Conserve les pièces 10 ans.</div>
+            </div>
           </div>
           <button class="btn-primary" style="width:100%;" onclick="addEntry()">+ Ajouter l'écriture</button>
         </div>
@@ -918,6 +933,28 @@
     resEl.textContent = resultat.toFixed(2) + ' CHF';
     resEl.style.color = resultat >= 0 ? '#2C6B3F' : '#B23A2E';
 
+    // Barre de progression du seuil d'assujettissement TVA (100'000 CHF)
+    const TVA_THRESHOLD = 100000;
+    const pct = Math.min((totalRecettes / TVA_THRESHOLD) * 100, 100);
+    const bar = document.getElementById('tvaThresholdBar');
+    const label = document.getElementById('tvaThresholdLabel');
+    const note = document.getElementById('tvaThresholdNote');
+    if (bar && label && note) {
+      label.textContent = totalRecettes.toFixed(2) + ' / 100\'000 CHF (' + pct.toFixed(1) + '%)';
+      let barColor = '#5A8C5A';
+      let noteText = 'Tu es en dessous du seuil — pas d\'assujettissement TVA obligatoire.';
+      if (pct >= 90) {
+        barColor = '#C4604E';
+        noteText = 'Attention, tu approches du seuil de 100\'000 CHF — l\'assujettissement TVA deviendra obligatoire au-delà.';
+      } else if (pct >= 70) {
+        barColor = '#E0A62E';
+        noteText = 'Tu te rapproches du seuil de 100\'000 CHF — surveille ton chiffre d\'affaires cumulé.';
+      }
+      bar.style.width = pct + '%';
+      bar.style.background = barColor;
+      note.textContent = noteText;
+    }
+
     const content = document.getElementById('livreContent');
     if (allEntries.length === 0) {
       content.innerHTML = '<div class="journal-empty">Aucune écriture pour ' + selectedYear + '.</div>';
@@ -1057,6 +1094,13 @@
       showToast('Indique le nom du client pour générer le reçu.');
       return;
     }
+
+    // Forcer le nom du client dans la description, pour la traçabilité
+    let finalLibelle = libelle;
+    if (currentEntryType === 'recette' && clientNom && !libelle.toLowerCase().includes(clientNom.toLowerCase())) {
+      finalLibelle = libelle + ' - ' + clientNom;
+    }
+
     try {
       const resp = await fetch(LIVRE_CREATE_API, {
         method: 'POST',
@@ -1066,7 +1110,7 @@
           date_operation: date,
           type: currentEntryType,
           categorie: categorie,
-          libelle: libelle,
+          libelle: finalLibelle,
           montant_ht: amount,
           mode_paiement: mode,
           reference_piece: ref || null,
