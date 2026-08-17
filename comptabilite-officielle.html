@@ -894,7 +894,7 @@
       return;
     }
     const sorted = [...allEntries].sort((a, b) => (a.date_operation || '').localeCompare(b.date_operation || ''));
-    let html = '<table class="journal-table"><thead><tr><th>#</th><th>Date</th><th>Catégorie</th><th>Libellé</th><th></th><th style="text-align:right;">Montant</th><th class="no-print"></th><th class="no-print"></th></tr></thead><tbody>';
+    let html = '<table class="journal-table"><thead><tr><th>#</th><th>Date</th><th>Catégorie</th><th>Libellé</th><th></th><th style="text-align:right;">Montant</th><th class="no-print" style="text-align:center;">Reçu envoyé</th><th class="no-print"></th></tr></thead><tbody>';
 
     function libelleHighlight(libelle, modePaiement) {
       const l = (libelle || '').toLowerCase();
