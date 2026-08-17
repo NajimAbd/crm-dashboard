@@ -895,16 +895,28 @@
     }
     const sorted = [...allEntries].sort((a, b) => (a.date_operation || '').localeCompare(b.date_operation || ''));
     let html = '<table class="journal-table"><thead><tr><th>#</th><th>Date</th><th>Catégorie</th><th>Libellé</th><th></th><th style="text-align:right;">Montant</th><th class="no-print"></th><th class="no-print"></th></tr></thead><tbody>';
+
+    function libelleHighlight(libelle, modePaiement) {
+      const l = (libelle || '').toLowerCase();
+      const m = (modePaiement || '').toLowerCase();
+      if (l.includes('stripe') || m === 'stripe') return '#DCEEFB';
+      if (l.includes('paypal') || m === 'paypal') return '#FDF3C7';
+      if (l.includes('wise') || m === 'wise') return '#DDF0DE';
+      return null;
+    }
+
     sorted.forEach((e, idx) => {
       const isIn = e.type === 'recette';
       const recuEnvoye = isIn && (e.recu_envoye === 1 || e.recu_envoye === true || e.recu_envoye === '1');
       const arrowColor = recuEnvoye ? '#2C6B3F' : '#E07B1E';
       const arrowTitle = recuEnvoye ? 'Reçu déjà envoyé — cliquer pour renvoyer' : 'Envoyer le reçu par email';
+      const hl = libelleHighlight(e.libelle, e.mode_paiement);
+      const libelleStyle = hl ? ' style="background:' + hl + ';padding:2px 8px;border-radius:5px;display:inline-block;"' : '';
       html += '<tr>' +
         '<td style="color:var(--text-soft);">' + (idx + 1) + '</td>' +
         '<td>' + esc(formatDateShort(e.date_operation)) + '</td>' +
         '<td>' + esc(e.categorie) + '</td>' +
-        '<td>' + esc(e.libelle) + (e.reference_piece ? ' <span style="color:var(--text-soft);font-size:11px;">(' + esc(e.reference_piece) + ')</span>' : '') + '</td>' +
+        '<td><span' + libelleStyle + '>' + esc(e.libelle) + '</span>' + (e.reference_piece ? ' <span style="color:var(--text-soft);font-size:11px;">(' + esc(e.reference_piece) + ')</span>' : '') + '</td>' +
         '<td><span class="tag ' + (isIn ? 'in' : 'out') + '">' + (isIn ? 'Recette' : 'Dépense') + '</span></td>' +
         '<td style="text-align:right;" class="' + (isIn ? 'amount-in' : 'amount-out') + '">' + (isIn ? '+' : '−') + parseFloat(e.montant_ht).toFixed(2) + ' CHF</td>' +
         '<td class="no-print">' + (isIn ? '<button class="row-delete" style="color:' + arrowColor + ';" onclick="envoyerRecu(' + e.id + ')" title="' + arrowTitle + '">⬇</button>' : '') + '</td>' +
