@@ -437,6 +437,14 @@
     <div class="legal-note no-print" style="margin-bottom:22px;">
       Stripe et Klarna calculent déjà leurs frais automatiquement (workflow n8n). Cet onglet sert aux paiements qui n'ont pas d'automatisation : virement, poste, banque, PayPal, compte dédié. Chaque calcul peut être ajouté directement au livre comptable ci-contre.
     </div>
+
+    <div class="stat-card no-print" id="meryMonthlyAlert" style="margin-bottom:20px;">
+      <div class="stat-label" style="margin-bottom:6px;">Frais de paiement — ce mois-ci</div>
+      <div class="stat-value" id="meryMonthlyTotal" style="color:var(--accent-red, #B23A2E);">—</div>
+    </div>
+
+    <div class="no-print" id="meryCategoryBreakdown" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(120px, 1fr));gap:10px;margin-bottom:24px;"></div>
+
     <div class="layout">
       <div class="no-print">
         <div class="card">
@@ -688,6 +696,45 @@
     });
     const titles = { livre: 'Livre des recettes et dépenses', amort: 'Tableau des amortissements', patrimoine: 'État du patrimoine', mery: 'Frais de paiement — Mery' };
     document.getElementById('printTitle').textContent = titles[tab] + ' — ' + selectedYear;
+    if (tab === 'mery') renderMerySynthese();
+  }
+
+  function renderMerySynthese() {
+    const categories = {
+      stripe: 'Stripe', klarna: 'Klarna', paypal: 'PayPal', wise: 'Wise',
+      virement: 'Virement', especes: 'Espèces', autre: 'Autre / Poste / Banque'
+    };
+    const feeEntries = allEntries.filter(e => e.type === 'depense' && (e.categorie || '').toLowerCase().includes('frais bancaires'));
+
+    // Total du mois en cours
+    const now = new Date();
+    const monthEntries = feeEntries.filter(e => {
+      const d = new Date(e.date_operation);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    });
+    const monthTotal = monthEntries.reduce((s, e) => s + parseFloat(e.montant_ht || 0), 0);
+    const totalEl = document.getElementById('meryMonthlyTotal');
+    if (totalEl) {
+      totalEl.textContent = monthEntries.length > 0
+        ? '− ' + monthTotal.toFixed(2) + ' CHF (' + monthEntries.length + ' transaction' + (monthEntries.length > 1 ? 's' : '') + ')'
+        : '0.00 CHF — aucun frais ce mois-ci';
+    }
+
+    // Ventilation par mode de paiement (toute l'année sélectionnée)
+    const breakdown = document.getElementById('meryCategoryBreakdown');
+    if (breakdown) {
+      let html = '';
+      Object.keys(categories).forEach(mode => {
+        const total = feeEntries.filter(e => (e.mode_paiement || '').toLowerCase() === mode).reduce((s, e) => s + parseFloat(e.montant_ht || 0), 0);
+        if (total > 0) {
+          html += '<div class="stat-card" style="padding:12px 14px;">' +
+            '<div style="font-size:10.5px;text-transform:uppercase;letter-spacing:0.5px;color:var(--text-soft);margin-bottom:4px;">' + categories[mode] + '</div>' +
+            '<div style="font-family:Georgia,serif;font-size:16px;color:#B23A2E;">' + total.toFixed(2) + ' CHF</div>' +
+            '</div>';
+        }
+      });
+      breakdown.innerHTML = html || '<div class="journal-empty" style="grid-column:1/-1;">Aucun frais enregistré pour ' + selectedYear + '.</div>';
+    }
   }
 
   // ==== MERY : frais de paiement (virement, poste, banque, paypal, wise, compte dédié) ====
@@ -926,6 +973,7 @@
       renderLivre();
       renderAmort();
       renderPatrimoine(patData.patrimoine || null);
+      renderMerySynthese();
     } catch (err) {
       document.getElementById('subtitleInfo').textContent = 'Erreur de chargement des données.';
       document.getElementById('livreContent').innerHTML = '<div class="journal-empty">Impossible de charger les données. Réessayez plus tard.</div>';
