@@ -412,7 +412,7 @@
         <div>
           <div class="patrimoine-col-title">Actifs</div>
           <div class="form-row"><div style="flex:1;"><span class="form-label">Solde bancaire professionnel (CHF)</span><input type="number" class="form-input" id="patSoldeBancaire" step="1"></div></div>
-          <div class="form-row"><div style="flex:1;"><span class="form-label">Matériel (valeur résiduelle, CHF)</span><input type="number" class="form-input" id="patMateriel" step="1"></div></div>
+          <div class="form-row"><div style="flex:1;"><span class="form-label">Matériel (valeur résiduelle, CHF)</span><input type="number" class="form-input" id="patMateriel" step="1"><div id="patMaterielSuggestion" style="font-size:11px;color:var(--text-soft);margin-top:4px;"></div></div></div>
           <div class="form-row"><div style="flex:1;"><span class="form-label">Créances clients (CHF)</span><input type="number" class="form-input" id="patCreances" step="1"></div></div>
           <div class="patrimoine-total-row"><span>Total actifs</span><span id="patTotalActifs">0 CHF</span></div>
         </div>
@@ -1064,6 +1064,31 @@
     content.innerHTML = html;
   }
 
+  function computeTotalResidualAmort() {
+    return allAmort.reduce((sum, a) => {
+      const yearsElapsed = (new Date().getFullYear()) - (new Date(a.date_achat)).getFullYear();
+      const residual = Math.max(0, parseFloat(a.valeur_achat) * Math.pow(1 - (parseFloat(a.taux_amortissement) / 100), Math.max(0, yearsElapsed)));
+      return sum + residual;
+    }, 0);
+  }
+
+  function applyMaterielSuggestion() {
+    document.getElementById('patMateriel').value = computeTotalResidualAmort().toFixed(0);
+    recalcPatrimoine();
+    updateMaterielSuggestionText();
+  }
+
+  function updateMaterielSuggestionText() {
+    const el = document.getElementById('patMaterielSuggestion');
+    if (!el) return;
+    const total = computeTotalResidualAmort();
+    if (allAmort.length === 0) {
+      el.textContent = '';
+      return;
+    }
+    el.innerHTML = 'Suggestion basée sur ton tableau d\'amortissements : ' + total.toFixed(0) + ' CHF — <a onclick="applyMaterielSuggestion()" style="color:var(--accent-gold);cursor:pointer;text-decoration:underline;">Appliquer</a>';
+  }
+
   function renderPatrimoine(pat) {
     if (pat) {
       document.getElementById('patSoldeBancaire').value = pat.solde_bancaire_pro || 0;
@@ -1075,6 +1100,11 @@
     } else {
       ['patSoldeBancaire','patMateriel','patCreances','patDettes','patAvances','patPrets'].forEach(id => document.getElementById(id).value = '');
     }
+    // Pré-remplissage automatique si aucune valeur "matériel" n'a encore été saisie/enregistrée pour cette année
+    if ((!pat || !pat.valeur_materiel_residuelle) && allAmort.length > 0) {
+      document.getElementById('patMateriel').value = computeTotalResidualAmort().toFixed(0);
+    }
+    updateMaterielSuggestionText();
     recalcPatrimoine();
   }
 
