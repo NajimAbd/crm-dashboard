@@ -380,7 +380,23 @@
             <div style="flex:1;"><span class="form-label">Valeur d'achat CHF</span><input type="number" class="form-input" id="amortValue" min="0" step="1" placeholder="0"></div>
           </div>
           <div class="form-row">
-            <div style="flex:1;"><span class="form-label">Taux d'amortissement annuel (%)</span><input type="number" class="form-input" id="amortRate" min="0" max="100" step="1" value="30"></div>
+            <div style="flex:1;">
+              <span class="form-label">Type de bien</span>
+              <select class="form-input" id="amortAssetType" onchange="applyAmortRateSuggestion()">
+                <option value="">— Choisir un type (facultatif) —</option>
+                <option value="informatique">Matériel informatique/électronique</option>
+                <option value="mobilier">Mobilier de bureau</option>
+                <option value="vehicule">Véhicule professionnel</option>
+                <option value="autre">Autre / à définir manuellement</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-row">
+            <div style="flex:1;">
+              <span class="form-label">Taux d'amortissement annuel (%)</span>
+              <input type="number" class="form-input" id="amortRate" min="0" max="100" step="1" value="30">
+              <div id="amortRateNote" style="font-size:11px;color:var(--text-soft);margin-top:4px;"></div>
+            </div>
           </div>
           <button class="btn-primary" style="width:100%;" onclick="addAmortissement()">+ Ajouter</button>
         </div>
@@ -1002,11 +1018,19 @@
         : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="' + arrowColor + '" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>';
       const hl = libelleHighlight(e.libelle, e.mode_paiement);
       const libelleStyle = hl ? ' style="background:' + hl + ';padding:2px 8px;border-radius:5px;display:inline-block;"' : '';
+      let auditInfo = '';
+      if (e.cree_le) {
+        const creeDate = new Date(e.cree_le);
+        const dateTxt = !isNaN(creeDate.getTime())
+          ? String(creeDate.getDate()).padStart(2, '0') + '/' + String(creeDate.getMonth() + 1).padStart(2, '0') + '/' + creeDate.getFullYear() + ' à ' + String(creeDate.getHours()).padStart(2, '0') + ':' + String(creeDate.getMinutes()).padStart(2, '0')
+          : e.cree_le;
+        auditInfo = '<br><span style="color:var(--text-soft);font-size:10.5px;">Saisi le ' + dateTxt + (e.cree_par ? ' par ' + esc(e.cree_par) : '') + '</span>';
+      }
       html += '<tr>' +
         '<td style="color:var(--text-soft);">' + (idx + 1) + '</td>' +
         '<td>' + esc(formatDateShort(e.date_operation)) + '</td>' +
         '<td>' + esc(e.categorie) + '</td>' +
-        '<td><span' + libelleStyle + '>' + esc(e.libelle) + '</span>' + (e.reference_piece ? ' <span style="color:var(--text-soft);font-size:11px;">(' + esc(e.reference_piece) + ')</span>' : '') + '</td>' +
+        '<td><span' + libelleStyle + '>' + esc(e.libelle) + '</span>' + (e.reference_piece ? ' <span style="color:var(--text-soft);font-size:11px;">(' + esc(e.reference_piece) + ')</span>' : '') + auditInfo + '</td>' +
         '<td><span class="tag ' + (isIn ? 'in' : 'out') + '">' + (isIn ? 'Recette' : 'Dépense') + '</span></td>' +
         '<td style="text-align:right;" class="' + (isIn ? 'amount-in' : 'amount-out') + '">' + (isIn ? '+' : '−') + parseFloat(e.montant_ht).toFixed(2) + ' CHF</td>' +
         '<td class="no-print" style="text-align:center;">' + (isIn ? '<button class="row-delete" style="display:inline-flex;align-items:center;" onclick="envoyerRecu(' + e.id + ')" title="' + arrowTitle + '">' + envelopeIcon + '</button>' : '') + '</td>' +
@@ -1115,7 +1139,8 @@
           mode_paiement: mode,
           reference_piece: ref || null,
           client_nom: currentEntryType === 'recette' ? (clientNom || null) : null,
-          client_email: currentEntryType === 'recette' ? (clientEmail || null) : null
+          client_email: currentEntryType === 'recette' ? (clientEmail || null) : null,
+          cree_par: session.login || null
         })
       });
       if (!resp.ok) throw new Error('fail');
@@ -1175,6 +1200,24 @@
       loadAll();
     } catch (err) {
       showToast('Erreur de suppression.');
+    }
+  }
+
+  function applyAmortRateSuggestion() {
+    const type = document.getElementById('amortAssetType').value;
+    const rateInput = document.getElementById('amortRate');
+    const note = document.getElementById('amortRateNote');
+    const suggestions = {
+      informatique: { rate: 40, text: 'Taux AFC (Notice A/1995) : 40% dégressif sur valeur comptable (soit 20% linéaire sur valeur d\'achat).' },
+      mobilier: { rate: 25, text: 'Taux AFC (Notice A/1995) : 25% dégressif sur valeur comptable (soit 12,5% linéaire sur valeur d\'achat).' },
+      vehicule: { rate: 40, text: 'Taux AFC (Notice A/1995) : 40% dégressif sur valeur comptable (soit 20% linéaire sur valeur d\'achat, durée de vie admise 5 ans).' },
+      autre: { rate: null, text: 'Vérifie le taux applicable dans la Notice A/1995 de l\'AFC (estv.admin.ch) selon la catégorie exacte du bien.' }
+    };
+    if (suggestions[type]) {
+      if (suggestions[type].rate !== null) rateInput.value = suggestions[type].rate;
+      note.textContent = suggestions[type].text;
+    } else {
+      note.textContent = '';
     }
   }
 
