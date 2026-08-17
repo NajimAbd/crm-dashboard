@@ -232,6 +232,7 @@
     </div>
     <div class="period-picker">
       <select id="yearSelect" onchange="onYearChange()"></select>
+      <button class="btn-secondary" onclick="exportLivreCSV()">⬇ Exporter CSV</button>
       <button class="btn-secondary" onclick="window.print()">🖨 Imprimer</button>
     </div>
   </div>
@@ -939,6 +940,55 @@
     renderLivre();
   }
 
+  function getFilteredEntries() {
+    const fType = document.getElementById('filterType') ? document.getElementById('filterType').value : 'all';
+    const fMode = document.getElementById('filterMode') ? document.getElementById('filterMode').value : 'all';
+    const fDateFrom = document.getElementById('filterDateFrom') ? document.getElementById('filterDateFrom').value : '';
+    const fDateTo = document.getElementById('filterDateTo') ? document.getElementById('filterDateTo').value : '';
+    return allEntries.filter(e => {
+      if (fType !== 'all' && e.type !== fType) return false;
+      if (fMode !== 'all' && (e.mode_paiement || '').toLowerCase() !== fMode) return false;
+      const opDate = (e.date_operation || '').slice(0, 10);
+      if (fDateFrom && opDate < fDateFrom) return false;
+      if (fDateTo && opDate > fDateTo) return false;
+      return true;
+    });
+  }
+
+  function exportLivreCSV() {
+    const filtered = [...getFilteredEntries()].sort((a, b) => (a.date_operation || '').localeCompare(b.date_operation || ''));
+    if (filtered.length === 0) {
+      showToast('Aucune écriture à exporter avec ces filtres.');
+      return;
+    }
+    const csvEsc = (v) => {
+      const s = String(v == null ? '' : v);
+      return '"' + s.replace(/"/g, '""') + '"';
+    };
+    let csv = ['Date', 'Type', 'Catégorie', 'Description', 'Montant CHF', 'Moyen de paiement', 'Référence pièce', 'Client', 'Email client'].map(csvEsc).join(';') + '\n';
+    filtered.forEach(e => {
+      csv += [
+        formatDateShort(e.date_operation),
+        e.type === 'recette' ? 'Recette' : 'Dépense',
+        e.categorie || '',
+        e.libelle || '',
+        parseFloat(e.montant_ht || 0).toFixed(2),
+        e.mode_paiement || '',
+        e.reference_piece || '',
+        e.client_nom || '',
+        e.client_email || ''
+      ].map(csvEsc).join(';') + '\n';
+    });
+    const blob = new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Livre_comptable_RoqyaSuisse_' + selectedYear + '_' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Export CSV téléchargé.');
+  }
+
   function renderLivre() {
     const totalRecettes = allEntries.filter(e => e.type === 'recette').reduce((s, e) => s + parseFloat(e.montant_ht || 0), 0);
     const totalDepenses = allEntries.filter(e => e.type === 'depense').reduce((s, e) => s + parseFloat(e.montant_ht || 0), 0);
@@ -977,19 +1027,7 @@
       return;
     }
 
-    const fType = document.getElementById('filterType') ? document.getElementById('filterType').value : 'all';
-    const fMode = document.getElementById('filterMode') ? document.getElementById('filterMode').value : 'all';
-    const fDateFrom = document.getElementById('filterDateFrom') ? document.getElementById('filterDateFrom').value : '';
-    const fDateTo = document.getElementById('filterDateTo') ? document.getElementById('filterDateTo').value : '';
-
-    let filtered = allEntries.filter(e => {
-      if (fType !== 'all' && e.type !== fType) return false;
-      if (fMode !== 'all' && (e.mode_paiement || '').toLowerCase() !== fMode) return false;
-      const opDate = (e.date_operation || '').slice(0, 10);
-      if (fDateFrom && opDate < fDateFrom) return false;
-      if (fDateTo && opDate > fDateTo) return false;
-      return true;
-    });
+    let filtered = getFilteredEntries();
 
     if (filtered.length === 0) {
       content.innerHTML = '<div class="journal-empty">Aucune écriture ne correspond à ces filtres.</div>';
