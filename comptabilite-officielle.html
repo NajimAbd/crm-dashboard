@@ -279,7 +279,9 @@
             <input type="date" id="filterDateFrom" class="form-input" style="width:auto;" onchange="renderLivre()">
             <span style="font-size:12px;color:var(--text-soft);">au</span>
             <input type="date" id="filterDateTo" class="form-input" style="width:auto;" onchange="renderLivre()">
-            <input type="text" id="filterSearch" class="form-input" style="width:auto;min-width:180px;flex:1;" placeholder="Rechercher un libellé ou une catégorie…" oninput="renderLivre()">
+            <select id="filterLibelle" class="form-input" style="width:auto;min-width:180px;flex:1;" onchange="renderLivre()">
+              <option value="all">Toutes les descriptions</option>
+            </select>
             <button class="btn-secondary" style="padding:8px 14px;" onclick="resetLivreFilters()">Réinitialiser</button>
           </div>
           <div id="livreContent"><div class="loading-state"><div class="spinner"></div>Chargement…</div></div>
@@ -301,20 +303,20 @@
           </div>
           <div class="form-row">
             <div style="flex:1;">
-              <span class="form-label">Libellé <a onclick="toggleLibelleManager()" style="font-size:11px;color:var(--accent-gold);cursor:pointer;font-weight:normal;text-decoration:underline;">Gérer</a></span>
+              <span class="form-label">Description <a onclick="toggleLibelleManager()" style="font-size:11px;color:var(--accent-gold);cursor:pointer;font-weight:normal;text-decoration:underline;">Gérer</a></span>
               <select class="form-input" id="entryLabel" onchange="document.getElementById('entryLabelCustomRow').style.display = (this.value === 'autre') ? 'block' : 'none';"></select>
               <div id="entryLabelCustomRow" style="display:none;margin-top:8px;">
-                <input type="text" class="form-input" id="entryLabelCustom" placeholder="Précise le libellé">
+                <input type="text" class="form-input" id="entryLabelCustom" placeholder="Précise la description">
                 <button type="button" class="row-delete" style="color:var(--accent-gold);font-size:12px;margin-top:6px;" onclick="ajouterLibelleALaListe()">+ Ajouter cette option à la liste pour la prochaine fois</button>
               </div>
               <div id="libelleManagerPanel" style="display:none;margin-top:10px;padding:12px;background:var(--green-deep);border:1px solid var(--gold);border-radius:8px;">
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                  <div style="font-size:11px;color:var(--gold-light);">Libellés disponibles pour ce type :</div>
+                  <div style="font-size:11px;color:var(--gold-light);">Descriptions disponibles pour ce type :</div>
                   <span style="cursor:pointer;color:var(--cream);font-size:16px;line-height:1;" onclick="toggleLibelleManager()" title="Fermer">✕</span>
                 </div>
                 <div id="libelleChipsList" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px;"></div>
                 <div style="display:flex;gap:8px;">
-                  <input type="text" class="form-input" id="libelleManagerNewInput" placeholder="Nouveau libellé…" style="flex:1;">
+                  <input type="text" class="form-input" id="libelleManagerNewInput" placeholder="Nouvelle description…" style="flex:1;">
                   <button type="button" class="btn-primary" style="white-space:nowrap;padding:0 14px;" onclick="ajouterLibelleDepuisGestion()">+ Ajouter</button>
                 </div>
               </div>
@@ -438,7 +440,7 @@
 
           <div id="meryForm-poste" class="mery-form" style="display:none;">
             <div class="form-row">
-              <div style="flex:1;"><span class="form-label">Libellé</span><input type="text" class="form-input" id="mpo_label" placeholder="ex : Frais tenue de compte Poste"></div>
+              <div style="flex:1;"><span class="form-label">Description</span><input type="text" class="form-input" id="mpo_label" placeholder="ex : Frais tenue de compte Poste"></div>
               <div style="flex:1;"><span class="form-label">Montant CHF</span><input type="number" class="form-input" id="mpo_amount" step="0.01" placeholder="ex : 5.00"></div>
             </div>
             <div class="form-row">
@@ -448,7 +450,7 @@
 
           <div id="meryForm-banque" class="mery-form" style="display:none;">
             <div class="form-row">
-              <div style="flex:1;"><span class="form-label">Libellé</span><input type="text" class="form-input" id="mbq_label" placeholder="ex : Frais tenue de compte banque"></div>
+              <div style="flex:1;"><span class="form-label">Description</span><input type="text" class="form-input" id="mbq_label" placeholder="ex : Frais tenue de compte banque"></div>
               <div style="flex:1;"><span class="form-label">Montant CHF</span><input type="number" class="form-input" id="mbq_amount" step="0.01" placeholder="ex : 5.00"></div>
             </div>
             <div class="form-row">
@@ -481,7 +483,7 @@
 
           <div id="meryForm-compte" class="mery-form" style="display:none;">
             <div class="form-row">
-              <div style="flex:1;"><span class="form-label">Libellé du mouvement</span><input type="text" class="form-input" id="mcd_label" placeholder="ex : Frais compte dédié RoqyaSuisse"></div>
+              <div style="flex:1;"><span class="form-label">Description du mouvement</span><input type="text" class="form-input" id="mcd_label" placeholder="ex : Frais compte dédié RoqyaSuisse"></div>
               <div style="flex:1;"><span class="form-label">Montant CHF</span><input type="number" class="form-input" id="mcd_amount" step="0.01" placeholder="ex : 8.00"></div>
             </div>
             <div class="form-row">
@@ -800,7 +802,7 @@
     const opts = libelleOptions[type] || [];
     const container = document.getElementById('libelleChipsList');
     if (opts.length === 0) {
-      container.innerHTML = '<span style="font-size:12px;color:var(--gold-light);">Aucun libellé enregistré pour ce type.</span>';
+      container.innerHTML = '<span style="font-size:12px;color:var(--gold-light);">Aucune description enregistrée pour ce type.</span>';
       return;
     }
     container.innerHTML = opts.map(o =>
@@ -819,7 +821,7 @@
   async function ajouterLibelleDepuisGestion() {
     const input = document.getElementById('libelleManagerNewInput');
     const val = input.value.trim();
-    if (!val) { showToast('Écris d\'abord le libellé à ajouter.'); return; }
+    if (!val) { showToast('Écris d\'abord la description à ajouter.'); return; }
     try {
       const resp = await fetch(LIBELLE_CREATE_API, {
         method: 'POST',
@@ -827,17 +829,17 @@
         body: JSON.stringify({ account_id: session.account_id, type: currentEntryType, libelle: val })
       });
       if (!resp.ok) throw new Error('fail');
-      showToast('Libellé ajouté.');
+      showToast('Description ajoutée.');
       input.value = '';
       await loadLibelleOptions(currentEntryType);
     } catch (err) {
-      showToast('Erreur lors de l\'ajout du libellé.');
+      showToast('Erreur lors de l\'ajout de la description.');
     }
   }
 
   async function ajouterLibelleALaListe() {
     const val = document.getElementById('entryLabelCustom').value.trim();
-    if (!val) { showToast('Écris d\'abord le libellé à ajouter.'); return; }
+    if (!val) { showToast('Écris d\'abord la description à ajouter.'); return; }
     try {
       const resp = await fetch(LIBELLE_CREATE_API, {
         method: 'POST',
@@ -845,18 +847,18 @@
         body: JSON.stringify({ account_id: session.account_id, type: currentEntryType, libelle: val })
       });
       if (!resp.ok) throw new Error('fail');
-      showToast('Libellé ajouté à la liste.');
+      showToast('Description ajoutée à la liste.');
       await loadLibelleOptions(currentEntryType);
       document.getElementById('entryLabel').value = val;
       document.getElementById('entryLabelCustomRow').style.display = 'none';
       document.getElementById('entryLabelCustom').value = '';
     } catch (err) {
-      showToast('Erreur lors de l\'ajout du libellé.');
+      showToast('Erreur lors de l\'ajout de la description.');
     }
   }
 
   async function supprimerLibelle(id) {
-    if (!confirm('Supprimer ce libellé de la liste ?')) return;
+    if (!confirm('Supprimer cette description de la liste ?')) return;
     try {
       const resp = await fetch(LIBELLE_DELETE_API, {
         method: 'POST',
@@ -864,7 +866,7 @@
         body: JSON.stringify({ account_id: session.account_id, id: id })
       });
       if (!resp.ok) throw new Error('fail');
-      showToast('Libellé supprimé.');
+      showToast('Description supprimée.');
       await loadLibelleOptions(currentEntryType);
     } catch (err) {
       showToast('Erreur lors de la suppression.');
@@ -906,7 +908,7 @@
     document.getElementById('filterMode').value = 'all';
     document.getElementById('filterDateFrom').value = '';
     document.getElementById('filterDateTo').value = '';
-    document.getElementById('filterSearch').value = '';
+    document.getElementById('filterLibelle').value = 'all';
     renderLivre();
   }
 
@@ -926,11 +928,26 @@
       return;
     }
 
+    // Peuple le menu déroulant des descriptions avec les valeurs uniques existantes
+    const libelleSelectEl = document.getElementById('filterLibelle');
+    if (libelleSelectEl) {
+      const previousValue = libelleSelectEl.value;
+      const uniqueLibelles = [...new Set(allEntries.map(e => e.libelle).filter(Boolean))].sort((a, b) => a.localeCompare(b));
+      let optsHtml = '<option value="all">Toutes les descriptions</option>';
+      uniqueLibelles.forEach(l => {
+        optsHtml += '<option value="' + esc(l) + '">' + esc(l) + '</option>';
+      });
+      libelleSelectEl.innerHTML = optsHtml;
+      if (uniqueLibelles.includes(previousValue) || previousValue === 'all') {
+        libelleSelectEl.value = previousValue;
+      }
+    }
+
     const fType = document.getElementById('filterType') ? document.getElementById('filterType').value : 'all';
     const fMode = document.getElementById('filterMode') ? document.getElementById('filterMode').value : 'all';
     const fDateFrom = document.getElementById('filterDateFrom') ? document.getElementById('filterDateFrom').value : '';
     const fDateTo = document.getElementById('filterDateTo') ? document.getElementById('filterDateTo').value : '';
-    const fSearch = document.getElementById('filterSearch') ? document.getElementById('filterSearch').value.trim().toLowerCase() : '';
+    const fLibelle = document.getElementById('filterLibelle') ? document.getElementById('filterLibelle').value : 'all';
 
     let filtered = allEntries.filter(e => {
       if (fType !== 'all' && e.type !== fType) return false;
@@ -938,10 +955,7 @@
       const opDate = (e.date_operation || '').slice(0, 10);
       if (fDateFrom && opDate < fDateFrom) return false;
       if (fDateTo && opDate > fDateTo) return false;
-      if (fSearch) {
-        const hay = ((e.libelle || '') + ' ' + (e.categorie || '')).toLowerCase();
-        if (!hay.includes(fSearch)) return false;
-      }
+      if (fLibelle !== 'all' && e.libelle !== fLibelle) return false;
       return true;
     });
 
@@ -951,7 +965,7 @@
     }
 
     const sorted = [...filtered].sort((a, b) => (a.date_operation || '').localeCompare(b.date_operation || ''));
-    let html = '<table class="journal-table"><thead><tr><th>#</th><th>Date</th><th>Catégorie</th><th>Libellé</th><th></th><th style="text-align:right;">Montant</th><th class="no-print" style="text-align:center;">Reçu envoyé</th><th class="no-print"></th></tr></thead><tbody>';
+    let html = '<table class="journal-table"><thead><tr><th>#</th><th>Date</th><th>Catégorie</th><th>Description</th><th></th><th style="text-align:right;">Montant</th><th class="no-print" style="text-align:center;">Reçu envoyé</th><th class="no-print"></th></tr></thead><tbody>';
 
     function libelleHighlight(libelle, modePaiement) {
       const l = (libelle || '').toLowerCase();
@@ -1057,7 +1071,7 @@
     const clientEmail = document.getElementById('entryClientEmail').value.trim();
 
     if (!date || !amount || amount <= 0 || !libelle) {
-      showToast('Complète la date, le montant et le libellé.');
+      showToast('Complète la date, le montant et la description.');
       return;
     }
     if (currentEntryType === 'recette' && !clientNom) {
