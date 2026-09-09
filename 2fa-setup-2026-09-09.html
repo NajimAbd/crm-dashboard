@@ -135,8 +135,18 @@
   <div class="step active" id="stepIntro">
     <h1>Double authentification</h1>
     <p class="eyebrow">Nexa Platform CRM</p>
-    <p class="desc">Ajoutez une couche de sécurité supplémentaire à votre compte avec Google Authenticator (ou toute application compatible : Authy, Microsoft Authenticator...).</p>
-    <button class="submit-btn" id="startBtn">Activer la double authentification</button>
+    <p class="desc">Ajoutez une couche de sécurité supplémentaire à votre compte. Ce code vous sera notamment demandé si vous oubliez votre mot de passe, pour confirmer que c'est bien vous.</p>
+
+    <div style="background: rgba(255,255,255,0.04); border: 1px solid rgba(184,150,90,0.25); border-radius: 12px; padding: 16px 18px; margin-bottom: 20px;">
+      <p style="font-size: 13px; color: var(--gold-light); font-weight: 600; margin: 0 0 8px;">Avant de commencer</p>
+      <p style="font-size: 13px; color: var(--text-soft); line-height: 1.6; margin: 0 0 12px;">Téléchargez gratuitement l'application <strong style="color: var(--cream)">Google Authenticator</strong> sur votre téléphone :</p>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank" style="flex: 1; min-width: 140px; text-align: center; padding: 10px; border: 1px solid rgba(184,150,90,0.35); border-radius: 8px; color: var(--gold-light); text-decoration: none; font-size: 13px; font-weight: 600;">📱 iPhone (App Store)</a>
+        <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" style="flex: 1; min-width: 140px; text-align: center; padding: 10px; border: 1px solid rgba(184,150,90,0.35); border-radius: 8px; color: var(--gold-light); text-decoration: none; font-size: 13px; font-weight: 600;">🤖 Android (Play Store)</a>
+      </div>
+    </div>
+
+    <button class="submit-btn" id="startBtn">J'ai installé l'application, continuer</button>
     <div class="msg error" id="introMsg"></div>
     <a class="back-link" onclick="window.location.href='dashboard.html'">← Retour au tableau de bord</a>
   </div>
@@ -145,7 +155,7 @@
   <div class="step" id="stepQr">
     <h1>Scannez ce code</h1>
     <p class="eyebrow">Nexa Platform CRM</p>
-    <p class="desc">Ouvrez Google Authenticator, appuyez sur "+" puis "Scanner un code QR".</p>
+    <p class="desc">Ouvrez Google Authenticator, appuyez sur "+" puis "Scanner un code QR". Gardez cette application : elle vous servira à confirmer votre identité si vous oubliez votre mot de passe.</p>
     <div class="qr-wrap"><img id="qrImage" src="" alt="QR code"></div>
     <p class="desc" style="margin-bottom:6px">Vous ne pouvez pas scanner ? Entrez ce code manuellement :</p>
     <div class="secret-box" id="secretBox"></div>
