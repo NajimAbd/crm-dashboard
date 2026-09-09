@@ -78,7 +78,8 @@
   .modal-overlay.show { display: flex; }
   .modal-box {
     background: white; border-radius: 16px; padding: 32px;
-    max-width: 420px; width: 100%; box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+    max-width: 440px; width: 100%; box-shadow: 0 30px 80px rgba(0,0,0,0.3);
+    max-height: 88vh; overflow-y: auto;
   }
   .modal-title {
     font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600;
@@ -259,6 +260,23 @@
   }
   .toast.show { opacity: 1; transform: translateY(0); }
 
+  /* ==== Cases à cocher produits ==== */
+  .products-box {
+    display: flex; flex-direction: column; gap: 10px;
+    border: 1px solid var(--border-soft); border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .products-box .product-row {
+    display: flex; align-items: center; gap: 9px; cursor: pointer; font-size: 14px;
+  }
+  .products-box .product-row input { width: auto; }
+  .products-box .product-row.sub {
+    font-size: 12.5px; color: var(--text-soft); margin-left: 24px;
+  }
+  .products-box hr {
+    border: none; border-top: 1px solid var(--border-soft); margin: 2px 0;
+  }
+
   @media (max-width: 720px) {
     .page { padding: 24px 16px 50px; }
     table { font-size: 12px; }
@@ -376,22 +394,43 @@
       <label>Nom complet / entreprise</label>
       <input type="text" id="newNom" placeholder="ex: Karim Doctor - Cabinet Medical" autocomplete="off">
     </div>
-    <div class="modal-field" id="fieldPlan">
-      <label>Plan</label>
-      <select id="newPlan">
-        <option value="test">Découverte (3 jours)</option>
-        <option value="administration">Administration</option>
-        <option value="production">Production</option>
-        <option value="premium">Premium (Administration & Production)</option>
-      </select>
-    </div>
-    <div class="modal-field" id="fieldIriscue" style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
-      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer">
-        <input type="checkbox" id="newIriscue" style="width:auto"> Accès IrisCue
-      </label>
-      <label style="display:flex;align-items:center;gap:6px;margin:0;cursor:pointer;font-size:13px;color:#888">
-        <input type="checkbox" id="newIriscueTrial" style="width:auto"> Essai 3 jours
-      </label>
+    <div class="modal-field" id="fieldProducts">
+      <label>Produits & accès</label>
+      <div class="products-box">
+        <label class="product-row" title="Accès au panel admin : créer, gérer et désactiver les comptes clients.">
+          <input type="checkbox" id="chkAdministration"> Administration
+        </label>
+        <label class="product-row" title="Accès au CRM complet : leads, ventes, calendrier, comptabilité.">
+          <input type="checkbox" id="chkProduction"> Production
+        </label>
+        <label class="product-row sub" title="3 jours d'essai gratuit d'Administration + Production.">
+          <input type="checkbox" id="chkEssaiProduction"> Essai Production (3 jours)
+        </label>
+        <hr>
+        <label class="product-row" title="Outil de création de contenu : hooks, reels, carrousels, textes experts.">
+          <input type="checkbox" id="chkIrisStudio"> Iris Studio
+        </label>
+        <label class="product-row" title="Téléprompteur pour l'enregistrement vidéo.">
+          <input type="checkbox" id="chkIriscue"> IrisCue
+        </label>
+        <label class="product-row sub" title="3 jours d'essai gratuit d'IrisCue.">
+          <input type="checkbox" id="chkIriscueTrial"> Essai IrisCue (3 jours)
+        </label>
+        <hr>
+        <label class="product-row" title="Espace de formation à créer et vendre à ses propres élèves (3 niveaux).">
+          <input type="checkbox" id="chkFormation"> Académie
+        </label>
+        <hr>
+        <label class="product-row sub" title="Essai gratuit de Crete + Staircase ensemble : 60 min de vidéo max, 1 vidéo, 5 Go, expire après 2 jours.">
+          <input type="checkbox" id="chkDecouverte"> Découverte (Crete + Staircase)
+        </label>
+        <label class="product-row" title="Transcription automatique de la vidéo, puis découpage en clips courts prêts à publier, sans limite.">
+          <input type="checkbox" id="chkCrete"> Crete
+        </label>
+        <label class="product-row" title="Transcription automatique de la vidéo, puis génération d'un maximum de questions à partir du contenu, sans limite.">
+          <input type="checkbox" id="chkStaircase"> Staircase
+        </label>
+      </div>
     </div>
     <div class="modal-field" id="fieldLogin">
       <label>Adresse e-mail du client</label>
@@ -570,9 +609,30 @@
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
+  // Conservé pour l'affichage du journal (anciennes entrées enregistrées avec l'ancien système de "plan")
   function planLabel(p) {
     var m = { test: 'Découverte', administration: 'Administration', production: 'Production', premium: 'Premium' };
     return m[p] || p;
+  }
+
+  // Résumé rapide affiché dans le tableau des comptes (détail complet dans la fiche du compte)
+  function isFutureDate(d) {
+    if (!d) return false;
+    return new Date(String(d).replace(' ', 'T')) > new Date();
+  }
+  function accountSummary(a) {
+    const names = {
+      administration: 'Administration', production: 'Production',
+      iris_studio: 'Iris Studio', iriscue: 'IrisCue',
+      formation: 'Académie', crete: 'Crete', staircase: 'Staircase'
+    };
+    const active = Object.keys(names).filter(k => a[k] === 'oui');
+    if (active.includes('administration') && active.includes('production')) return 'Full Access';
+    if (active.length === 1) return names[active[0]];
+    if (active.length > 1) return active.length + ' produits';
+    if (a.decouverte === 'oui' && isFutureDate(a.decouverte_ends_at)) return 'Découverte';
+    if (isFutureDate(a.essai_production_ends_at)) return 'Essai Production';
+    return 'Inactif';
   }
 
   function togglePwd(inputId, btn) {
@@ -614,7 +674,7 @@
   function renderTable() {
     let html = '<table><thead><tr>' +
       '<th>Entrepreneur</th>' +
-      '<th>Plan</th>' +
+      '<th>Accès</th>' +
       '<th>Statut</th>' +
       '<th>Activité</th>' +
       '<th>Créé le</th>' +
@@ -643,7 +703,7 @@
 
       html += '<tr>' +
         '<td><div class="account-name account-name-link" onclick="openEditModal(' + a.id + ')">' + esc(a.nom_praticien) + '</div></td>' +
-        '<td><span class="plan-chip">' + esc(planLabel(a.plan)) + '</span></td>' +
+        '<td><span class="plan-chip">' + esc(accountSummary(a)) + '</span></td>' +
         '<td>' + statusHtml + '</td>' +
         '<td><span class="stat-mini"><b>' + a.total_leads + '</b> leads · <b>' + a.total_users + '</b> compte(s)</span></td>' +
         '<td>' + created + '</td>' +
@@ -684,14 +744,18 @@
     }
   }
 
+  const PRODUCT_CHECKBOX_IDS = ['chkAdministration','chkProduction','chkEssaiProduction','chkIrisStudio','chkIriscue','chkIriscueTrial','chkFormation','chkDecouverte','chkCrete','chkStaircase'];
+
+  function resetProductCheckboxes() {
+    PRODUCT_CHECKBOX_IDS.forEach(id => { document.getElementById(id).checked = false; });
+  }
+
   function openCreateModal() {
     document.getElementById('modalAccountId').value = '';
     document.getElementById('newNom').value = '';
-    document.getElementById('newPlan').value = 'administration';
     document.getElementById('newLogin').value = '';
     document.getElementById('newPassword').value = 'Admin@1234@.';
-    document.getElementById('newIriscue').checked = false;
-    document.getElementById('newIriscueTrial').checked = false;
+    resetProductCheckboxes();
     document.getElementById('passwordLabel').textContent = 'Mot de passe temporaire';
     document.getElementById('newPassword').placeholder = '';
     document.getElementById('fieldLogin').style.display = 'block';
@@ -709,10 +773,17 @@
     if (!acc) return;
     document.getElementById('modalAccountId').value = acc.id;
     document.getElementById('newNom').value = acc.nom_praticien;
-    document.getElementById('newPlan').value = acc.plan;
-    document.getElementById('newIriscue').checked = (acc.iriscue === 'oui');
-    document.getElementById('newIriscueTrial').checked = false;
     document.getElementById('newLogin').value = acc.login || '';
+    resetProductCheckboxes();
+    document.getElementById('chkAdministration').checked = (acc.administration === 'oui');
+    document.getElementById('chkProduction').checked = (acc.production === 'oui');
+    document.getElementById('chkIrisStudio').checked = (acc.iris_studio === 'oui');
+    document.getElementById('chkIriscue').checked = (acc.iriscue === 'oui');
+    document.getElementById('chkFormation').checked = (acc.formation === 'oui');
+    document.getElementById('chkDecouverte').checked = (acc.decouverte === 'oui');
+    document.getElementById('chkCrete').checked = (acc.crete === 'oui');
+    document.getElementById('chkStaircase').checked = (acc.staircase === 'oui');
+    // Essai Production / Essai IrisCue : cases d'action, jamais pré-cochées à l'ouverture
     document.getElementById('fieldLogin').style.display = 'block';
     document.getElementById('fieldPassword').style.display = 'none';
     document.getElementById('fieldPasswordManage').style.display = 'block';
@@ -729,11 +800,10 @@
 
   function manageIrisFromEdit() {
     const id = parseInt(document.getElementById('modalAccountId').value, 10);
-    const plan = document.getElementById('newPlan').value;
     const msgEl = document.getElementById('createMsg');
-    if (plan === 'administration') {
+    if (!document.getElementById('chkIrisStudio').checked) {
       msgEl.className = 'modal-msg error';
-      msgEl.textContent = "Le plan Administration ne donne pas accès à Iris. Passe ce compte en Production ou Premium avant de définir ce mot de passe.";
+      msgEl.textContent = "Ce compte n'a pas accès à Iris Studio. Coche la case Iris Studio (et enregistre) avant de définir ce mot de passe.";
       msgEl.style.display = 'block';
       return;
     }
@@ -743,11 +813,10 @@
 
   function manageNexaFromEdit() {
     const id = parseInt(document.getElementById('modalAccountId').value, 10);
-    const plan = document.getElementById('newPlan').value;
     const msgEl = document.getElementById('createMsg');
-    if (plan === 'production') {
+    if (!document.getElementById('chkAdministration').checked && !document.getElementById('chkProduction').checked) {
       msgEl.className = 'modal-msg error';
-      msgEl.textContent = "Le plan Production ne donne pas accès à Nexa. Passe ce compte en Administration ou Premium avant de définir ce mot de passe.";
+      msgEl.textContent = "Ce compte n'a pas accès à Nexa. Coche Administration ou Production (et enregistre) avant de définir ce mot de passe.";
       msgEl.style.display = 'block';
       return;
     }
@@ -760,8 +829,7 @@
     openIriscuePasswordModal(id);
   }
 
-  // === Mot de passe Iris Studio (plans premium / production) ===
-  // === Déplacement des panneaux flottants (Iris / Nexa) ===
+  // === Déplacement des panneaux flottants (Iris / Nexa / IrisCue) ===
   let dragState = null;
   function startDrag(e, panelId) {
     const panel = document.getElementById(panelId);
@@ -879,7 +947,7 @@
       const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-update-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ account_id: acc.id, nom_praticien: acc.nom_praticien, plan: acc.plan, login: acc.login, new_password: newPassword })
+        body: JSON.stringify({ account_id: acc.id, nom_praticien: acc.nom_praticien, login: acc.login, new_password: newPassword })
       });
       const data = await resp.json();
       if (data.success) {
@@ -899,7 +967,7 @@
     btn.textContent = 'Enregistrer';
   }
 
-  // === Mot de passe IrisCue (independant du plan Nexa/Iris) ===
+  // === Mot de passe IrisCue (indépendant des autres accès) ===
   function openIriscuePasswordModal(id) {
     const acc = allAccounts.find(a => a.id === id);
     if (!acc) return;
@@ -961,12 +1029,27 @@
     });
   }
 
+  function buildProductsPayload() {
+    return {
+      administration: document.getElementById('chkAdministration').checked,
+      production: document.getElementById('chkProduction').checked,
+      essai_production: document.getElementById('chkEssaiProduction').checked,
+      iris_studio: document.getElementById('chkIrisStudio').checked,
+      iriscue: document.getElementById('chkIriscue').checked,
+      iriscue_trial: document.getElementById('chkIriscueTrial').checked,
+      formation: document.getElementById('chkFormation').checked,
+      decouverte: document.getElementById('chkDecouverte').checked,
+      crete: document.getElementById('chkCrete').checked,
+      staircase: document.getElementById('chkStaircase').checked
+    };
+  }
+
   async function submitAccountModal() {
     const editId = document.getElementById('modalAccountId').value;
     const nom = document.getElementById('newNom').value.trim();
-    const plan = document.getElementById('newPlan').value;
     const msgEl = document.getElementById('createMsg');
     const btn = document.getElementById('createConfirmBtn');
+    const products = buildProductsPayload();
 
     if (!nom) {
       msgEl.className = 'modal-msg error';
@@ -991,7 +1074,7 @@
         const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-update-account', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ account_id: editId, nom_praticien: nom, plan, login: editLogin, new_password: '', iriscue: document.getElementById('newIriscue').checked, iriscue_trial: document.getElementById('newIriscueTrial').checked })
+          body: JSON.stringify(Object.assign({ account_id: editId, nom_praticien: nom, login: editLogin, new_password: '' }, products))
         });
         const data = await resp.json();
         if (data.success) {
@@ -1033,7 +1116,7 @@
       const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-create-account', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nom_praticien: nom, login, password, plan, iriscue: document.getElementById('newIriscue').checked, iriscue_trial: document.getElementById('newIriscueTrial').checked })
+        body: JSON.stringify(Object.assign({ nom_praticien: nom, login, password }, products))
       });
       const data = await resp.json();
 
@@ -1184,7 +1267,6 @@
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    // Débloquer le bouton de suppression après export
     document.getElementById('btnClearLogs').disabled = false;
     document.getElementById('btnClearLogs').title = '';
     showToast('Journal exporté (' + allLogs.length + ' entrées)');
