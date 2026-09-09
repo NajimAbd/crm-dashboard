@@ -700,16 +700,19 @@
       const btnClass = isActive ? 'to-deactivate' : 'to-activate';
       const btnLabel = isActive ? 'Désactiver' : 'Activer';
       const nextStatus = isActive ? 'inactif' : 'actif';
+      const isSelf = (session.account_id == a.id);
 
       html += '<tr>' +
-        '<td><div class="account-name account-name-link" onclick="openEditModal(' + a.id + ')">' + esc(a.nom_praticien) + '</div></td>' +
+        '<td><div class="account-name account-name-link" onclick="openEditModal(' + a.id + ')">' + esc(a.nom_praticien) + (isSelf ? ' <span class="stat-mini" style="color:var(--gold)">(vous)</span>' : '') + '</div></td>' +
         '<td><span class="plan-chip">' + esc(accountSummary(a)) + '</span></td>' +
         '<td>' + statusHtml + '</td>' +
         '<td><span class="stat-mini"><b>' + a.total_leads + '</b> leads · <b>' + a.total_users + '</b> compte(s)</span></td>' +
         '<td>' + created + '</td>' +
         '<td><div class="actions-cell">' +
-          '<button class="toggle-btn ' + btnClass + '" onclick="toggleStatus(' + a.id + ', \'' + nextStatus + '\', this)">' + btnLabel + '</button>' +
-          '<button class="btn-delete" onclick="confirmDelete(' + a.id + ', \'' + esc(a.nom_praticien).replace(/'/g, "\\'") + '\', this)">Supprimer</button>' +
+          (isSelf
+            ? '<span class="stat-mini" title="Vous ne pouvez pas désactiver ou supprimer votre propre compte">Protégé</span>'
+            : '<button class="toggle-btn ' + btnClass + '" onclick="toggleStatus(' + a.id + ', \'' + nextStatus + '\', this)">' + btnLabel + '</button>' +
+              '<button class="btn-delete" onclick="confirmDelete(' + a.id + ', \'' + esc(a.nom_praticien).replace(/'/g, "\\'") + '\', this)">Supprimer</button>') +
         '</div></td>' +
         '</tr>';
     });
