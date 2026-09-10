@@ -46,7 +46,7 @@
   .brand .sub{color:var(--text-dim);font-size:13px;font-family:'IBM Plex Mono',monospace;direction:ltr;}
   header p.tagline{color:var(--text-dim);font-size:16px;margin-top:14px;max-width:520px;}
 
-  .lang-switch{margin-inline-start:auto;display:flex;gap:6px;flex-shrink:0;}
+  .lang-switch{margin-inline-start:auto;display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;}
   .lang-btn{
     background:transparent;border:1px solid var(--line);color:var(--text-dim);
     padding:6px 14px;border-radius:20px;
@@ -181,6 +181,8 @@
       <div class="lang-switch">
         <button type="button" class="lang-btn" data-lang="ar">عربي</button>
         <button type="button" class="lang-btn" data-lang="fr">Français</button>
+        <button type="button" class="lang-btn" data-lang="de">Deutsch</button>
+        <button type="button" class="lang-btn" data-lang="sq">Shqip</button>
       </div>
     </div>
     <p class="tagline" data-i18n="tagline"></p>
@@ -287,6 +289,68 @@ const I18N = {
     mic_no_speech: "Aucune voix détectée. Parlez plus fort ou vérifiez que le bon micro est sélectionné comme entrée par défaut dans les réglages du système.",
     mic_network_error: "Erreur de connexion au service de reconnaissance vocale. Vérifiez votre connexion internet.",
     mic_generic_error: "Erreur pendant la dictée : "
+  },
+  de: {
+    tagline: "Fügen Sie einen Text oder ein Thema ein, und Staircase generiert die größtmögliche Anzahl an Fragen dazu — Stufe für Stufe.",
+    qgen_title: "Generierung möglicher Fragen",
+    qgen_input_ph: "Fügen Sie hier den Text oder die Informationen zum Thema ein...",
+    qgen_text_first: "Fügen Sie zuerst den Text oder die Informationen ein.",
+    qgen_create_btn: "Fragen generieren",
+    qgen_copy_btn: "📋 Text kopieren",
+    qgen_copied: "Kopiert!",
+    qgen_print_btn: "🖨 Fragen drucken",
+    qgen_generating: "Fragen werden generiert...",
+    server_error: "Serverfehler: ",
+    qgen_no_questions: "Claude hat keine gültigen Fragen zurückgegeben.",
+    qgen_gen_error: "Fehler bei der Generierung: ",
+    qgen_ready: "Fertig! {n} Fragen bereit.",
+    dictation_title: "Textquelle",
+    dictation_desc: "Diktieren Sie den Text direkt mit Ihrer Stimme, oder verwenden Sie ein Video (bald verfügbar), um es unten automatisch zu transkribieren.",
+    mic_btn_start: "🎙 Diktat starten",
+    mic_btn_stop: "⏸ Pause",
+    mic_btn_reset: "🔄 Neues Diktat",
+    mic_reset_done: "Gelöscht. Bereit für ein neues Diktat.",
+    video_transcribe_btn: "🎬 Video transkribieren (bald verfügbar)",
+    mic_not_supported: "Ihr Browser unterstützt keine Sprachdiktierung. Versuchen Sie Chrome.",
+    mic_listening: "Zuhören läuft... Sprechen Sie jetzt.",
+    mic_stopped: "Diktat gestoppt.",
+    mic_requesting: "Mikrofonzugriff wird angefordert...",
+    mic_permission_denied: "Mikrofonzugriff verweigert. Klicken Sie auf das Schlosssymbol neben der Adressleiste, stellen Sie sicher, dass die Mikrofonberechtigung für diese Seite aktiviert ist, und versuchen Sie es erneut.",
+    mic_no_device: "Kein Mikrofon an diesem Gerät gefunden. Stellen Sie sicher, dass ein Mikrofon angeschlossen und in den Systemeinstellungen aktiviert ist.",
+    mic_no_speech: "Keine Stimme erkannt. Sprechen Sie lauter oder stellen Sie sicher, dass das richtige Mikrofon als Standardeingabe in den Systemeinstellungen ausgewählt ist.",
+    mic_network_error: "Verbindungsfehler beim Spracherkennungsdienst. Überprüfen Sie Ihre Internetverbindung.",
+    mic_generic_error: "Fehler während des Diktats: "
+  },
+  sq: {
+    tagline: "Ngjit një tekst ose temë, dhe Staircase gjeneron numrin maksimal të pyetjeve të mundshme rreth saj — hap pas hapi.",
+    qgen_title: "Gjenerimi i pyetjeve të mundshme",
+    qgen_input_ph: "Ngjit këtu tekstin ose informacionin mbi temën...",
+    qgen_text_first: "Ngjit fillimisht tekstin ose informacionin.",
+    qgen_create_btn: "Gjenero pyetjet",
+    qgen_copy_btn: "📋 Kopjo tekstin",
+    qgen_copied: "U kopjua!",
+    qgen_print_btn: "🖨 Printo pyetjet",
+    qgen_generating: "Duke gjeneruar pyetjet...",
+    server_error: "Gabim i serverit: ",
+    qgen_no_questions: "Claude nuk ktheu asnjë pyetje të vlefshme.",
+    qgen_gen_error: "Gabim gjatë gjenerimit: ",
+    qgen_ready: "Përfundoi! {n} pyetje gati.",
+    dictation_title: "Burimi i tekstit",
+    dictation_desc: "Dikto tekstin direkt me zë, ose përdor një video (së shpejti) për ta transkriptuar automatikisht më poshtë.",
+    mic_btn_start: "🎙 Fillo diktimin",
+    mic_btn_stop: "⏸ Pauzë",
+    mic_btn_reset: "🔄 Diktim i ri",
+    mic_reset_done: "U pastrua. Gati për një diktim të ri.",
+    video_transcribe_btn: "🎬 Transkripto një video (së shpejti)",
+    mic_not_supported: "Shfletuesi juaj nuk mbështet diktimin me zë. Provoni Chrome.",
+    mic_listening: "Duke dëgjuar... flisni tani.",
+    mic_stopped: "Diktimi u ndal.",
+    mic_requesting: "Duke kërkuar akses në mikrofon...",
+    mic_permission_denied: "Aksesi në mikrofon u refuzua. Klikoni ikonën e kyçit pranë adresës së faqes, sigurohuni që leja e mikrofonit është aktivizuar për këtë faqe, dhe provoni përsëri.",
+    mic_no_device: "Nuk u gjet asnjë mikrofon i lidhur me këtë pajisje. Sigurohuni që një mikrofon është i lidhur dhe i aktivizuar në cilësimet e sistemit.",
+    mic_no_speech: "Nuk u zbulua asnjë zë. Flisni më fort ose sigurohuni që mikrofoni i saktë është zgjedhur si hyrje e parazgjedhur në cilësimet e sistemit.",
+    mic_network_error: "Gabim lidhjeje me shërbimin e njohjes së zërit. Kontrolloni lidhjen tuaj në internet.",
+    mic_generic_error: "Gabim gjatë diktimit: "
   }
 };
 
@@ -338,7 +402,7 @@ function initRecognition(){
   const rec = new SpeechRecognition();
   rec.continuous = true;
   rec.interimResults = true;
-  rec.lang = (currentLang === 'ar') ? 'ar-SA' : 'fr-FR';
+  rec.lang = { ar: 'ar-SA', fr: 'fr-FR', de: 'de-DE', sq: 'sq-AL' }[currentLang] || 'fr-FR';
   return rec;
 }
 
