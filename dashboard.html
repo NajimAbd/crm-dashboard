@@ -563,9 +563,9 @@
 
   <div style="display:flex;align-items:center;gap:10px">
     <div class="product-switch-group" style="display:flex;background:rgba(255,255,255,0.03);border:1px solid #2A3A2A;border-radius:10px;padding:4px;gap:6px">
-      <a id="laboratoireLink" href="laboratoire.html" class="product-btn">Laboratoire</a>
+      <a id="laboratoireLink" class="product-btn disabled" onclick="handleLockedClick('laboratoireLink', function(){ window.location.href='laboratoire.html'; })">Laboratoire</a>
       <a id="adminLink" href="admin.html" class="product-btn" style="display:none">Panel Admin</a>
-      <a class="product-btn" onclick="goToIris()">Iris</a>
+      <a id="irisBtn" class="product-btn disabled" onclick="handleLockedClick('irisBtn', goToIris)">Iris</a>
       <a id="iriscueBtn" class="product-btn disabled" onclick="handleLockedClick('iriscueBtn', goToIriscue)">IrisCue</a>
       <a id="formationBtn" class="product-btn disabled" onclick="handleLockedClick('formationBtn', function(){ window.location.href='formation.html'; })">Académie</a>
     </div>
@@ -940,6 +940,38 @@
       throw new Error('Password change required');
     }
 
+    // === Verifie l'acces Iris et active le bouton si actif ===
+    (async function checkIrisAccess() {
+      try {
+        const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-iris-access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login: session.login })
+        });
+        const data = await resp.json();
+        if (data.iris) {
+          const btn = document.getElementById('irisBtn');
+          if (btn) btn.classList.remove('disabled');
+        }
+      } catch (e) {}
+    })();
+
+    // === Verifie l'acces Laboratoire et active le bouton si actif ===
+    (async function checkLaboratoireAccess() {
+      try {
+        const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-laboratoire-access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ login: session.login })
+        });
+        const data = await resp.json();
+        if (data.laboratoire) {
+          const btn = document.getElementById('laboratoireLink');
+          if (btn) btn.classList.remove('disabled');
+        }
+      } catch (e) {}
+    })();
+
     // === Verifie l'acces IrisCue et affiche le bouton si actif ===
     (async function checkIriscueAccess() {
       try {
@@ -975,7 +1007,10 @@
     document.body.style.display = '';
     if (session.role === 'super_admin') {
       document.getElementById('adminLink').style.display = 'inline-flex';
-      document.getElementById('laboratoireLink').style.display = 'inline-flex';
+      document.getElementById('laboratoireLink').classList.remove('disabled');
+      document.getElementById('irisBtn').classList.remove('disabled');
+      document.getElementById('iriscueBtn').classList.remove('disabled');
+      document.getElementById('formationBtn').classList.remove('disabled');
     } else {
       var ftally = document.getElementById('filterTally');
       if (ftally) ftally.style.display = 'none';

@@ -194,9 +194,9 @@
 
   <div style="display:flex;align-items:center;gap:10px">
     <div class="product-switch-group" style="display:flex;background:rgba(255,255,255,0.03);border:1px solid #2A3A2A;border-radius:10px;padding:4px;gap:6px">
-      <a id="laboratoireLink" href="laboratoire.html" class="product-btn">Laboratoire</a>
+      <a id="laboratoireLink" class="product-btn disabled" onclick="handleLockedClick('laboratoireLink', function(){ window.location.href='laboratoire.html'; })">Laboratoire</a>
       <a id="adminLink" href="admin.html" class="product-btn" style="display:none">Panel Admin</a>
-      <a class="product-btn" onclick="goToIris()">Iris</a>
+      <a id="irisBtn" class="product-btn disabled" onclick="handleLockedClick('irisBtn', goToIris)">Iris</a>
       <a id="iriscueBtn" class="product-btn disabled" onclick="handleLockedClick('iriscueBtn', goToIriscue)">IrisCue</a>
       <a id="formationBtn" class="product-btn disabled" onclick="handleLockedClick('formationBtn', function(){ window.location.href='formation.html'; })">Académie</a>
     </div>
@@ -628,6 +628,30 @@
     window.open('https://iriscue.contentviral.ch/desktop.html', '_blank');
   }
 
+  (async function checkIrisAccessNav() {
+    const s = getSession();
+    if (!s) return;
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-iris-access', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: s.login })
+      });
+      const data = await resp.json();
+      if (data.iris) { const btn = document.getElementById('irisBtn'); if (btn) btn.classList.remove('disabled'); }
+    } catch (e) {}
+  })();
+
+  (async function checkLaboratoireAccessNav() {
+    const s = getSession();
+    if (!s) return;
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-laboratoire-access', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: s.login })
+      });
+      const data = await resp.json();
+      if (data.laboratoire) { const btn = document.getElementById('laboratoireLink'); if (btn) btn.classList.remove('disabled'); }
+    } catch (e) {}
+  })();
+
   (async function checkIriscueAccessNav() {
     const s = getSession();
     if (!s) return;
@@ -659,8 +683,10 @@
   if (session.role === 'super_admin') {
     const adminLinkEl = document.getElementById('adminLink');
     if (adminLinkEl) adminLinkEl.style.display = 'flex';
-    const laboratoireLinkEl = document.getElementById('laboratoireLink');
-    if (laboratoireLinkEl) laboratoireLinkEl.style.display = 'flex';
+    ['laboratoireLink','irisBtn','iriscueBtn','formationBtn'].forEach(function(id){
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('disabled');
+    });
   }
 
   function esc(s) {
