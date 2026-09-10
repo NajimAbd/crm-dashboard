@@ -555,7 +555,7 @@
       <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
     </svg>
     <div>
-      <div class="brand-text">Nexa</div>
+      <div class="brand-text" id="brandText">Nexa</div>
       <div class="brand-sub">Platform CRM</div>
     </div>
   </div>
@@ -969,6 +969,9 @@
     } else {
       var ftally = document.getElementById('filterTally');
       if (ftally) ftally.style.display = 'none';
+      document.getElementById('brandText').innerHTML = 'Nexa <span style="font-style:italic;font-weight:400">Entrepreneur</span>';
+      var aaTab = document.querySelector('.type-tab[data-type="AA"]');
+      if (aaTab) aaTab.style.display = 'none';
     }
     const rawName = session.nom_praticien || (session.login.charAt(0).toUpperCase() + session.login.slice(1));
     // Séparer "Nom - Métier" : le nom va dans le titre, le métier en dessous
