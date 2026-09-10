@@ -149,6 +149,7 @@
     transition: background .15s ease, color .15s ease;
   }
   .product-btn:hover { background: rgba(184,150,90,0.12); color: #F5EFE1; }
+  .product-btn.disabled { opacity: 0.35; cursor: not-allowed; }
 
   .logout-btn-gold {
     display: inline-flex;
@@ -208,8 +209,8 @@
       <a id="laboratoireLink" href="laboratoire.html" class="product-btn" style="display:none">Laboratoire</a>
       <a id="adminLink" href="admin.html" class="product-btn" style="display:none">Panel Admin</a>
       <a class="product-btn" onclick="goToIris()">Iris</a>
-      <a id="iriscueBtn" class="product-btn" onclick="goToIriscue()" style="display:none">IrisCue</a>
-      <a id="formationBtn" class="product-btn" onclick="window.location.href='formation.html'" style="display:none">Académie</a>
+      <a id="iriscueBtn" class="product-btn disabled" onclick="handleLockedClick('iriscueBtn', goToIriscue)">IrisCue</a>
+      <a id="formationBtn" class="product-btn disabled" onclick="handleLockedClick('formationBtn', function(){ window.location.href='formation.html'; })">Académie</a>
     </div>
     <div style="width:1px;height:24px;background:#2A3A2A;margin:0 4px"></div>
     <button class="logout-btn-gold" onclick="logout()">
@@ -256,6 +257,15 @@
 </div>
 
 <script>
+  function handleLockedClick(btnId, action) {
+    var btn = document.getElementById(btnId);
+    if (btn && btn.classList.contains('disabled')) {
+      alert("Ce module n'est pas encore activé sur ton compte. Contacte-nous pour l'activer : info.najim1@gmail.com");
+      return;
+    }
+    action();
+  }
+
   const CRM_APPOINTMENTS_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-appointments';
   const SESSION_KEY = 'crm_session_user';
   const SESSION_EXPIRY = 'crm_session_expiry';
@@ -309,7 +319,7 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: s.login })
       });
       const data = await resp.json();
-      if (data.iriscue) { const btn = document.getElementById('iriscueBtn'); if (btn) btn.style.display = 'inline-flex'; }
+      if (data.iriscue) { const btn = document.getElementById('iriscueBtn'); if (btn) btn.classList.remove('disabled'); }
     } catch (e) {}
   })();
 
@@ -321,7 +331,7 @@
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: s.account_id })
       });
       const data = await resp.json();
-      if (data.formation) { const btn = document.getElementById('formationBtn'); if (btn) btn.style.display = 'inline-flex'; }
+      if (data.formation) { const btn = document.getElementById('formationBtn'); if (btn) btn.classList.remove('disabled'); }
     } catch (e) {}
   })();
 
