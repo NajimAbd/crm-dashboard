@@ -397,20 +397,25 @@
     <div class="modal-field" id="fieldProducts">
       <label>Produits & accès</label>
       <div class="products-box">
-        <label class="product-row" title="Accès au panel admin : créer, gérer et désactiver les comptes clients.">
-          <input type="checkbox" id="chkAdministration"> Administration
+        <label class="product-row" title="Débloque tous les produits d'un coup pour ce compte (Laboratoire, Iris, IrisCue, Académie).">
+          <input type="checkbox" id="chkPremium"> Premium
         </label>
-        <label class="product-row" title="Accès au CRM complet : leads, ventes, calendrier, comptabilité.">
-          <input type="checkbox" id="chkProduction"> Production
+        <label class="product-row sub" title="3 jours d'essai gratuit de Premium (tous les produits débloqués temporairement).">
+          <input type="checkbox" id="chkPremiumTrial"> Essai Premium (3 jours)
         </label>
-        <label class="product-row sub" title="3 jours d'essai gratuit d'Administration + Production.">
-          <input type="checkbox" id="chkEssaiProduction"> Essai Production (3 jours)
+        <hr>
+        <label class="product-row" title="Débloque le pack de 6 outils : Crete, Staircase, Zahra, Sophy, Elarion AI, Challenge.">
+          <input type="checkbox" id="chkLaboratoire"> Laboratoire
+        </label>
+        <label class="product-row sub" title="3 jours d'essai gratuit du Laboratoire.">
+          <input type="checkbox" id="chkLaboratoireTrial"> Essai Laboratoire (3 jours)
         </label>
         <hr>
         <label class="product-row" title="Outil de création de contenu : hooks, reels, carrousels, textes experts.">
-          <input type="checkbox" id="chkIrisStudio"> Iris Studio
+          <input type="checkbox" id="chkIrisStudio"> Iris
         </label>
-        <label class="product-row" title="Téléprompteur pour l'enregistrement vidéo.">
+        <hr>
+        <label class="product-row" title="Téléprompteur pour l'enregistrement vidéo (mobile et desktop).">
           <input type="checkbox" id="chkIriscue"> IrisCue
         </label>
         <label class="product-row sub" title="3 jours d'essai gratuit d'IrisCue.">
@@ -419,16 +424,6 @@
         <hr>
         <label class="product-row" title="Espace de formation à créer et vendre à ses propres élèves (3 niveaux).">
           <input type="checkbox" id="chkFormation"> Académie
-        </label>
-        <hr>
-        <label class="product-row sub" title="Essai gratuit de Crete + Staircase ensemble : 60 min de vidéo max, 1 vidéo, 5 Go, expire après 2 jours.">
-          <input type="checkbox" id="chkDecouverte"> Découverte (Crete + Staircase)
-        </label>
-        <label class="product-row" title="Transcription automatique de la vidéo, puis découpage en clips courts prêts à publier, sans limite.">
-          <input type="checkbox" id="chkCrete"> Crete
-        </label>
-        <label class="product-row" title="Transcription automatique de la vidéo, puis génération d'un maximum de questions à partir du contenu, sans limite.">
-          <input type="checkbox" id="chkStaircase"> Staircase
         </label>
       </div>
     </div>
@@ -458,6 +453,7 @@
       <label>Liens à envoyer au client</label>
       <div style="display:flex;flex-direction:column;gap:8px">
         <button type="button" class="btn-manage-pwd" onclick="copyAppLink('https://entrepreneur.contentviral.ch/dashboard.html', this)" style="text-align:left">📋 Copier lien Nexa</button>
+        <button type="button" class="btn-manage-pwd" onclick="copyAppLink('https://entrepreneur.contentviral.ch/laboratoire.html', this)" style="text-align:left">📋 Copier lien Laboratoire</button>
         <button type="button" class="btn-manage-pwd" onclick="copyAppLink('https://www.contentviral.ch/index.html', this)" style="text-align:left">📋 Copier lien Iris Studio</button>
         <button type="button" class="btn-manage-pwd" onclick="copyAppLink('https://iriscue.contentviral.ch/mobile.html', this)" style="text-align:left">📋 Copier lien IrisCue Mobile</button>
         <button type="button" class="btn-manage-pwd" onclick="copyAppLink('https://iriscue.contentviral.ch/desktop.html', this)" style="text-align:left">📋 Copier lien IrisCue Desktop</button>
@@ -622,17 +618,18 @@
   }
   function accountSummary(a) {
     const names = {
-      administration: 'Administration', production: 'Production',
-      iris_studio: 'Iris Studio', iriscue: 'IrisCue',
-      formation: 'Académie', crete: 'Crete', staircase: 'Staircase'
+      premium: 'Premium',
+      laboratoire: 'Laboratoire',
+      iris_studio: 'Iris', iriscue: 'IrisCue',
+      formation: 'Académie'
     };
     const active = Object.keys(names).filter(k => a[k] === 'oui');
-    if (active.includes('administration') && active.includes('production')) return 'Full Access';
+    if (active.includes('premium')) return 'Premium';
     if (active.length === 1) return names[active[0]];
     if (active.length > 1) return active.length + ' produits';
-    if (a.decouverte === 'oui' && isFutureDate(a.decouverte_ends_at)) return 'Découverte';
-    if (isFutureDate(a.essai_production_ends_at)) return 'Essai Production';
-    return 'Inactif';
+    if (isFutureDate(a.premium_trial_ends_at)) return 'Essai Premium';
+    if (isFutureDate(a.laboratoire_trial_ends_at)) return 'Essai Laboratoire';
+    return 'Nexa seul';
   }
 
   function togglePwd(inputId, btn) {
@@ -747,7 +744,7 @@
     }
   }
 
-  const PRODUCT_CHECKBOX_IDS = ['chkAdministration','chkProduction','chkEssaiProduction','chkIrisStudio','chkIriscue','chkIriscueTrial','chkFormation','chkDecouverte','chkCrete','chkStaircase'];
+  const PRODUCT_CHECKBOX_IDS = ['chkPremium','chkPremiumTrial','chkLaboratoire','chkLaboratoireTrial','chkIrisStudio','chkIriscue','chkIriscueTrial','chkFormation'];
 
   function resetProductCheckboxes() {
     PRODUCT_CHECKBOX_IDS.forEach(id => { document.getElementById(id).checked = false; });
@@ -778,14 +775,11 @@
     document.getElementById('newNom').value = acc.nom_praticien;
     document.getElementById('newLogin').value = acc.login || '';
     resetProductCheckboxes();
-    document.getElementById('chkAdministration').checked = (acc.administration === 'oui');
-    document.getElementById('chkProduction').checked = (acc.production === 'oui');
+    document.getElementById('chkPremium').checked = (acc.premium === 'oui');
+    document.getElementById('chkLaboratoire').checked = (acc.laboratoire === 'oui');
     document.getElementById('chkIrisStudio').checked = (acc.iris_studio === 'oui');
     document.getElementById('chkIriscue').checked = (acc.iriscue === 'oui');
     document.getElementById('chkFormation').checked = (acc.formation === 'oui');
-    document.getElementById('chkDecouverte').checked = (acc.decouverte === 'oui');
-    document.getElementById('chkCrete').checked = (acc.crete === 'oui');
-    document.getElementById('chkStaircase').checked = (acc.staircase === 'oui');
     // Essai Production / Essai IrisCue : cases d'action, jamais pré-cochées à l'ouverture
     document.getElementById('fieldLogin').style.display = 'block';
     document.getElementById('fieldPassword').style.display = 'none';
@@ -806,7 +800,7 @@
     const msgEl = document.getElementById('createMsg');
     if (!document.getElementById('chkIrisStudio').checked) {
       msgEl.className = 'modal-msg error';
-      msgEl.textContent = "Ce compte n'a pas accès à Iris Studio. Coche la case Iris Studio (et enregistre) avant de définir ce mot de passe.";
+      msgEl.textContent = "Ce compte n'a pas accès à Iris. Coche la case Iris (et enregistre) avant de définir ce mot de passe.";
       msgEl.style.display = 'block';
       return;
     }
@@ -816,14 +810,6 @@
 
   function manageNexaFromEdit() {
     const id = parseInt(document.getElementById('modalAccountId').value, 10);
-    const msgEl = document.getElementById('createMsg');
-    if (!document.getElementById('chkAdministration').checked && !document.getElementById('chkProduction').checked) {
-      msgEl.className = 'modal-msg error';
-      msgEl.textContent = "Ce compte n'a pas accès à Nexa. Coche Administration ou Production (et enregistre) avant de définir ce mot de passe.";
-      msgEl.style.display = 'block';
-      return;
-    }
-    msgEl.style.display = 'none';
     openNexaPasswordModal(id);
   }
 
@@ -1034,16 +1020,14 @@
 
   function buildProductsPayload() {
     return {
-      administration: document.getElementById('chkAdministration').checked,
-      production: document.getElementById('chkProduction').checked,
-      essai_production: document.getElementById('chkEssaiProduction').checked,
+      premium: document.getElementById('chkPremium').checked,
+      premium_trial: document.getElementById('chkPremiumTrial').checked,
+      laboratoire: document.getElementById('chkLaboratoire').checked,
+      laboratoire_trial: document.getElementById('chkLaboratoireTrial').checked,
       iris_studio: document.getElementById('chkIrisStudio').checked,
       iriscue: document.getElementById('chkIriscue').checked,
       iriscue_trial: document.getElementById('chkIriscueTrial').checked,
-      formation: document.getElementById('chkFormation').checked,
-      decouverte: document.getElementById('chkDecouverte').checked,
-      crete: document.getElementById('chkCrete').checked,
-      staircase: document.getElementById('chkStaircase').checked
+      formation: document.getElementById('chkFormation').checked
     };
   }
 
