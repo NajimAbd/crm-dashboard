@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sophy v25 — mode clips par défaut, retour en haut, fix SAR ffmpeg</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;900&family=Nunito+Sans:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root{
+    --cream:#FAF5EA; --paper:#FFFDF8; --ink:#16231B; --muted:#6b6255; --line:#E6DCC6;
+    --coral:#A9432E; --coral-d:#7E301F; --sun:#B8965A; --sun-d:#8F7140;
+    --mint:#2F6B4F; --mint-d:#1F4A36; --sky:#3E6E78; --sky-d:#2C4F57;
+    --grape:#7A3B5E; --grape-d:#582943; --rose:#B5546E; --rose-d:#8A3C51;
+    --radius:16px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    background:radial-gradient(circle at 8% 4%, #F0E3C4 0%, transparent 42%),
+      radial-gradient(circle at 95% 12%, #DCE7DE 0%, transparent 40%), var(--cream);
+    color:var(--ink); font-family:'Nunito Sans',system-ui,sans-serif;
+    min-height:100vh; padding:30px 18px 90px;
+  }
+  .wrap{max-width:1040px;margin:0 auto}
+  header{margin-bottom:28px}
+  .eyebrow{display:inline-flex;align-items:center;gap:8px;background:var(--ink);color:var(--sun);
+    font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;
+    padding:6px 12px;border-radius:999px;margin-bottom:14px}
+  .eyebrow .dot{width:8px;height:8px;border-radius:50%;background:var(--coral);animation:pulse 1.4s infinite}
+  @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+  h1{font-family:'Cinzel',serif;font-weight:800;font-size:clamp(24px,4vw,38px);line-height:1.15;
+    text-transform:uppercase;letter-spacing:.02em}
+  h1 span{color:var(--sun)}
+  .hero-rule{width:64px;height:3px;background:var(--sun);margin:14px 0 4px;position:relative}
+  .hero-rule::after{content:'';position:absolute;left:0;top:7px;width:64px;height:1px;background:var(--sun-d);opacity:.6}
+  .sub{color:var(--muted);margin-top:12px;max-width:680px;font-size:15px;line-height:1.6}
+
+  .panel{background:var(--paper);border:2px solid var(--line);border-radius:var(--radius);
+    padding:22px;margin-bottom:20px;box-shadow:0 6px 0 var(--line)}
+  .panel h2{font-family:'Cinzel',serif;font-size:15.5px;margin-bottom:16px;font-weight:700;
+    text-transform:uppercase;letter-spacing:.04em;
+    display:flex;align-items:center;gap:10px}
+  .panel h2 .chip{background:var(--ink);color:var(--sun);font-family:'Cinzel',serif;
+    font-size:12px;font-weight:700;padding:4px 10px;border-radius:8px;letter-spacing:.03em}
+  .panel-toggle{margin-left:auto;background:var(--cream);border:2px solid var(--line);border-radius:8px;
+    width:30px;height:30px;flex:0 0 auto;cursor:pointer;font-size:14px;color:var(--muted);
+    display:flex;align-items:center;justify-content:center;line-height:1}
+  .panel-toggle:hover{border-color:var(--sun-d);color:var(--ink)}
+  .panel.collapsed > *:not(h2){display:none !important}
+
+  /* v24 — la barre nav/boutons/Aperçus reste visible en haut de l'écran pendant qu'on
+     règle des clips éloignés (Clip 6, Clip 8...) plus bas dans la même carte. */
+  .workspace-sticky-bar{
+    position: sticky; top: 10px; z-index: 40;
+    background: var(--paper); border: 2px solid var(--line); border-radius: 12px;
+    padding: 14px 16px; margin: 0 0 16px; box-shadow: 0 6px 14px rgba(22,35,27,.12);
+  }
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:640px){.grid{grid-template-columns:1fr}}
+  .field label{display:block;font-size:13px;color:var(--muted);font-weight:700;margin-bottom:6px}
+  .field input[type=text],.field input[type=number]{
+    width:100%;background:var(--cream);border:2px solid var(--line);border-radius:10px;
+    padding:11px 12px;color:var(--ink);font-family:'JetBrains Mono',monospace;font-size:13.5px;outline:none}
+  .field input:focus{border-color:var(--sky)}
+  .hint{font-size:11.5px;color:#9a8fa0;margin-top:5px;line-height:1.4}
+  .field-browse{display:flex;gap:8px}
+  .field-browse input{flex:1}
+  .field-browse button{white-space:nowrap}
+
+  .mode-toggle{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+  .mode-btn{flex:1;min-width:220px;text-align:left;background:var(--paper);border:2px solid var(--line);
+    border-radius:var(--radius);padding:16px 18px;cursor:pointer;box-shadow:0 5px 0 var(--line);transition:transform .08s}
+  .mode-btn:active{transform:translateY(3px);box-shadow:0 2px 0 var(--line)}
+  .mode-btn .mt{font-family:'Cinzel',serif;font-weight:700;font-size:14.5px;margin-bottom:4px;letter-spacing:.01em}
+  .mode-btn .md{font-size:12.5px;color:var(--muted);line-height:1.4}
+  .mode-btn.active{border-color:var(--ink);background:#F2E9D5;box-shadow:0 5px 0 var(--sun-d)}
+
+  .clip-list{display:flex;flex-direction:column;gap:8px;margin-bottom:12px}
+  .clip-row{display:flex;gap:8px;align-items:center}
+  .clip-row input{flex:1}
+  .clip-num{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--muted);width:26px}
+
+  button{font-family:'Nunito Sans',sans-serif;font-weight:700;font-size:14px;border:none;border-radius:12px;
+    padding:12px 18px;cursor:pointer;color:#fff;transition:transform .08s}
+  button:active{transform:translateY(3px)}
+  .btn-coral{background:var(--coral);box-shadow:0 5px 0 var(--coral-d)}
+  .btn-coral:active{box-shadow:0 2px 0 var(--coral-d)}
+  .btn-mint{background:var(--mint);box-shadow:0 5px 0 var(--mint-d)}
+  .btn-mint:active{box-shadow:0 2px 0 var(--mint-d)}
+  .btn-sky{background:var(--sky);box-shadow:0 5px 0 var(--sky-d)}
+  .btn-sky:active{box-shadow:0 2px 0 var(--sky-d)}
+  .btn-grape{background:var(--grape);box-shadow:0 5px 0 var(--grape-d)}
+  .btn-grape:active{box-shadow:0 2px 0 var(--grape-d)}
+  .btn-ghost{background:var(--paper);color:var(--ink);border:2px solid var(--line);box-shadow:0 5px 0 var(--line)}
+  .btn-ghost:active{box-shadow:0 2px 0 var(--line)}
+  .btn-sm{padding:8px 12px;font-size:12.5px;border-radius:9px}
+  .toolbar{display:flex;gap:10px;flex-wrap:wrap;margin:4px 0 18px}
+
+  /* Boutons presets Test 1..5 */
+  .preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:8px}
+  .preset-btn{border:none;border-radius:16px;padding:16px 14px;cursor:pointer;text-align:left;color:#fff;
+    transition:transform .08s;position:relative}
+  .preset-btn:active{transform:translateY(3px)}
+  .preset-btn .pt{font-family:'Cinzel',serif;font-weight:700;font-size:14.5px;display:flex;align-items:center;gap:8px;letter-spacing:.01em}
+  .preset-btn .pd{font-size:11px;opacity:.9;margin-top:6px;line-height:1.4;font-family:'JetBrains Mono',monospace}
+  .preset-btn.selected{outline:3px solid #fff;outline-offset:-3px}
+  .preset-btn .star{position:absolute;top:8px;right:10px;font-size:17px;color:#fff;display:none;
+    text-shadow:0 1px 3px rgba(0,0,0,.35)}
+  .preset-btn.selected .star{display:block}
+
+  .variants{display:flex;flex-direction:column;gap:14px}
+  .variant-card{border:2px solid var(--line);border-radius:14px;padding:16px;background:var(--cream)}
+  .variant-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px}
+  .variant-title{font-family:'Cinzel',serif;font-weight:700;font-size:14px;display:flex;align-items:center;gap:8px}
+  .variant-badge{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+    color:#fff;font-size:15px}
+
+  .sub-label{font-size:11.5px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.06em;
+    margin:12px 0 8px}
+
+  .fx-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .fx-chip{border:2px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer;background:var(--paper);
+    font-size:12px;font-weight:700}
+  .fx-chip.on{border-color:var(--mint-d);background:#E6FBF4}
+  .fx-chip .fx-param{margin-top:6px;display:flex;align-items:center;gap:6px}
+  .fx-chip .fx-param input{width:60px;background:var(--cream);border:1px solid var(--line);border-radius:6px;
+    padding:3px 5px;font-family:'JetBrains Mono',monospace;font-size:11px}
+  .fx-chip .fx-param label{font-size:10px;color:var(--muted);font-weight:400}
+
+  .trans-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:8px;margin-bottom:6px}
+  .trans-chip{border:2px solid var(--line);border-radius:10px;padding:8px 6px;cursor:pointer;background:var(--paper);
+    text-align:center;font-size:11.5px;font-weight:700;color:var(--ink)}
+  .trans-chip .ic{font-size:16px;display:block;margin-bottom:2px}
+  .trans-chip.on{border-color:var(--ink);background:#F2E9D5}
+
+  /* ===== Rangée Clip / Z (mode clips séparés, v18) ===== */
+  .clipz-row{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin-bottom:4px}
+  .clip-btn{background:var(--sun);color:var(--ink);border:2px solid var(--sun-d);border-radius:10px;
+    padding:8px 14px;font-family:'Nunito Sans',sans-serif;font-weight:700;font-size:12.5px;cursor:pointer}
+  .clip-btn.has-fx{background:#F2E9D5;border-color:var(--ink)}
+  .clip-btn.open{outline:2px solid var(--ink);outline-offset:1px}
+  .z-btn{background:var(--rose);color:#fff;border:2px solid var(--rose-d);border-radius:8px;
+    padding:6px 9px;font-family:'JetBrains Mono',monospace;font-weight:700;font-size:11px;cursor:pointer}
+  .z-btn.has-fx{background:var(--coral);border-color:var(--coral-d)}
+  .z-btn.open{outline:2px solid var(--ink);outline-offset:1px}
+  .clipz-panel{border:2px dashed var(--line);border-radius:12px;padding:12px 14px;margin:0 0 10px;background:var(--cream)}
+  .clipz-panel .panel-title{font-family:'Cinzel',serif;font-weight:700;font-size:12.5px;margin-bottom:10px;
+    display:flex;align-items:center;gap:8px}
+  .clipz-field-row{display:flex;flex-wrap:wrap;gap:14px;align-items:center}
+  .clipz-field{display:flex;align-items:center;gap:6px}
+  .clipz-field input[type=checkbox]{width:auto}
+  .clipz-field label{font-size:12px;font-weight:700;color:var(--coral-d)}
+  .clipz-field input[type=number]{width:70px;background:var(--paper);border:2px solid var(--line);
+    border-radius:8px;padding:6px 8px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink)}
+  .clipz-unit{font-size:12px;color:var(--coral-d);font-weight:700}
+
+  select, .dur-row input{background:var(--paper);border:2px solid var(--line);border-radius:8px;
+    padding:7px 9px;font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--ink)}
+  .row-inline{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .row-inline label{font-size:12px;color:var(--muted);font-weight:700}
+
+  .term{background:#221A2B;border:2px solid var(--line);border-radius:var(--radius);overflow:hidden}
+  .term-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;
+    background:#2E2338;border-bottom:1px solid #3a2c46}
+  .term-title{font-family:'JetBrains Mono',monospace;font-size:12px;color:#c9bcd6}
+  .term-count{font-size:11px;color:var(--sun);font-family:'JetBrains Mono',monospace}
+  pre{padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.65;color:#DCE8E4;
+    overflow-x:auto;white-space:pre;max-height:460px;overflow-y:auto}
+  .copied{color:var(--sun)!important}
+
+  footer{margin-top:34px;color:#a798af;font-size:12px;line-height:1.6;border-top:2px solid var(--line);padding-top:16px}
+  .note{background:#F2E9D5;border:2px dashed var(--sun-d);border-radius:12px;padding:12px 14px;font-size:12.5px;
+    color:var(--ink);line-height:1.5;margin-bottom:16px}
+
+  .howto{background:var(--paper);border:2px solid var(--line);border-radius:var(--radius);
+    padding:24px 16px 18px;margin-top:14px}
+  .howto-title{font-family:'Cinzel',serif;font-weight:700;font-size:13px;color:var(--ink);text-transform:uppercase;
+    letter-spacing:.05em;margin-bottom:18px;text-align:center}
+  .path-track{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;position:relative;flex-wrap:wrap}
+  .path-track::before{content:'';position:absolute;top:17px;left:34px;right:34px;height:2px;background:var(--line);z-index:0}
+  .path-step{flex:1;min-width:110px;text-align:center;position:relative;z-index:1}
+  .path-num{width:34px;height:34px;margin:0 auto 10px;border-radius:50%;color:#fff;display:flex;
+    align-items:center;justify-content:center;font-family:'Cinzel',serif;font-weight:700;font-size:15px}
+  .path-step p{font-size:12.5px;color:var(--ink);line-height:1.4;font-weight:700;margin:0}
+  .path-step code{background:var(--cream);border:1px solid var(--line);border-radius:6px;padding:1px 6px;
+    font-family:'JetBrains Mono',monospace;font-size:11.5px;color:var(--coral-d);display:inline-block;margin-top:2px}
+  @media(max-width:640px){.path-track{flex-direction:column;align-items:stretch;gap:16px}
+    .path-track::before{display:none}.path-step{text-align:left;display:flex;gap:12px;align-items:center}
+    .path-num{margin:0}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow"><span class="dot"></span> SOPHY V25 · MODE CLIPS PAR DÉFAUT · FIX BUG FFMPEG</div>
+    <h1>Sophy <span>v25</span></h1>
+    <div class="hero-rule"></div>
+    <p class="sub">En mode "Clips séparés", tu règles Clip par Clip et zone Z par zone Z dans une seule Zone de travail (réglages, transition, B-roll). Quand une version te convient, clique "Terminer cette version" — elle apparaît dans les Aperçus (V1, V2, V3...) avec son résumé, et la zone de travail repart à vide pour la suivante.</p>
+  </header>
+
+  <div class="mode-toggle">
+    <div class="mode-btn active" id="modeBtnSingle" onclick="setMode('single')">
+      <div class="mt">🎬 Vidéo déjà montée</div>
+      <div class="md">Une seule vidéo. Chaque variante = cette vidéo avec un combo d'effets différent.</div>
+    </div>
+    <div class="mode-btn" id="modeBtnClips" onclick="setMode('clips')">
+      <div class="mt">🎞️ Clips séparés à assembler</div>
+      <div class="md">Chaque variante = tes clips assemblés avec une transition + un combo d'effets.</div>
+    </div>
+  </div>
+
+  <!-- FICHIERS -->
+  <section class="panel">
+    <h2><span class="chip">I</span> Tes fichiers</h2>
+    <div class="grid">
+      <div class="field" id="fieldSingleVideo">
+        <label for="inVideo">Nom de ta vidéo originale</label>
+        <div class="field-browse">
+          <input type="text" id="inVideo" value="V1.mp4">
+          <button type="button" class="btn-sky btn-sm" onclick="pickFile('inVideo','video/*')">📂 Parcourir</button>
+        </div>
+        <div class="hint">Le fichier doit être dans le dossier où tu lances le script.</div>
+      </div>
+      <div class="field">
+        <label for="inMusic">Fichier musique (optionnel)</label>
+        <div class="field-browse">
+          <input type="text" id="inMusic" value="musique_fond.mp3">
+          <button type="button" class="btn-sky btn-sm" onclick="pickFile('inMusic','audio/*')">📂 Parcourir</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="inDir">Dossier de sortie</label>
+        <input type="text" id="inDir" value="Variations_Video">
+        <div class="hint">Le script créera ce dossier tout seul au bon endroit, même s'il n'existe pas encore — tape juste le nom que tu veux.</div>
+      </div>
+      <div class="field">
+        <label for="inPrefix">Préfixe des fichiers générés</label>
+        <input type="text" id="inPrefix" value="V">
+      </div>
+    </div>
+    <input type="file" id="hiddenFilePicker" style="display:none">
+
+    <div id="clipsSection" style="display:none;margin-top:18px">
+      <div class="grid">
+        <div>
+          <label style="display:block;font-size:13px;color:var(--muted);font-weight:700;margin-bottom:8px">Tes clips, dans l'ordre du montage</label>
+          <div class="clip-list" id="clipList"></div>
+          <div class="toolbar" style="margin:10px 0 0">
+            <button class="btn-mint btn-sm" onclick="addClipRow()">➕ Ajouter un clip</button>
+          </div>
+        </div>
+        <div>
+          <label style="display:block;font-size:13px;color:var(--muted);font-weight:700;margin-bottom:8px">Tes B-roll (optionnel — à insérer dans une zone Z)</label>
+          <div class="clip-list" id="brollList"></div>
+          <div class="toolbar" style="margin:10px 0 0">
+            <button class="btn-mint btn-sm" onclick="addBrollRow()">➕ Ajouter un B-roll</button>
+          </div>
+        </div>
+      </div>
+      <div class="hint">📂 Le bouton n'enregistre que le NOM du fichier — assure-toi qu'il est bien dans le dossier où tu lances le script. Astuce : clique "➕ Ajouter un clip" (ou "B-roll") une seule fois, puis sélectionne PLUSIEURS vidéos d'un coup dans la fenêtre (Cmd+clic sur Mac, ou glisse pour sélectionner) — elles s'ajoutent toutes en même temps.</div>
+    </div>
+  </section>
+
+  <!-- AUDIO & ANTI-DÉTECTION -->
+  <section class="panel">
+    <h2><span class="chip">II</span> Musique de fond &amp; anti-détection audio</h2>
+    <div class="note">Réglage global, appliqué à toutes les vidéos générées. Le volume musique par défaut est très bas (6%) pour ne pas gêner l'écoute — tu peux le monter librement pendant tes tests, la valeur reste jusqu'à ce que tu la changes.</div>
+    <div class="grid">
+      <div class="field">
+        <label for="inMusicVol">Volume musique de fond (%)</label>
+        <input type="number" id="inMusicVol" value="6" min="0" max="100" step="1">
+        <div class="hint">6% = discret par défaut. Monte à 10-20% pendant tes tests si tu veux mieux l'entendre, redescends ensuite.</div>
+      </div>
+      <div class="field">
+        <label for="inOrigVol">Volume audio original (%)</label>
+        <input type="number" id="inOrigVol" value="100" min="0" max="100" step="1">
+        <div class="hint">100% = voix originale inchangée. Baisse si tu veux laisser plus de place à la musique.</div>
+      </div>
+      <div class="field">
+        <label for="inBaseCRF">Qualité / poids du fichier</label>
+        <input type="text" value="23 (varie tout seul entre 22 et 25)" disabled style="opacity:.6;cursor:not-allowed">
+        <input type="hidden" id="inBaseCRF" value="23">
+        <div class="hint">Plus ce chiffre est bas, plus la vidéo est nette mais lourde ; plus il est haut, plus elle est compressée mais légère. Sophy fait varier cette valeur automatiquement entre <b>22 et 25</b> selon les versions (23 par défaut) — c'est juste un signal technique en plus pour différencier tes vidéos, tu n'as rien à régler ici.</div>
+      </div>
+      <div class="field">
+        <label for="inJitter" style="display:flex;align-items:center;gap:8px;cursor:pointer">
+          <input type="checkbox" id="inJitter" checked style="width:auto">
+          Variation automatique légère entre les versions
+        </label>
+        <div class="hint">Décale très légèrement chaque valeur d'effet (zoom, teinte, vitesse...) à chaque génération, pour que deux vidéos issues du même preset ne soient jamais strictement identiques.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CHOIX DU NOMBRE DE VIDÉOS (mode "vidéo déjà montée" uniquement) -->
+  <section class="panel" id="presetsSection">
+    <h2><span class="chip">III</span> Combien de vidéos veux-tu créer ?</h2>
+    <div class="note">👉 Chaque bouton ajoute <b>UNE vidéo</b> avec son propre combo d'effets — le chiffre est juste l'ordre du bouton, pas le nombre de vidéos.<br>Clique plusieurs fois sur des boutons différents pour obtenir plusieurs vidéos (ou utilise le bouton violet pour les 5 d'un coup).</div>
+    <div class="preset-grid" id="presetGrid"></div>
+    <div class="toolbar">
+      <button class="btn-grape" onclick="generateAllPresets()">✨ Créer mes 5 vidéos en même temps</button>
+    </div>
+    <div class="hint">Besoin d'une vidéo de plus, configurée à la main ? <button class="btn-ghost btn-sm" onclick="addVariant()">➕ Ajouter une vidéo vide en plus</button></div>
+  </section>
+
+  <!-- VIDÉOS (éditables) — mode "vidéo déjà montée" uniquement -->
+  <section class="panel" id="singleVariantsSection">
+    <h2><span class="chip">IV</span> Tes vidéos <span style="font-weight:400;font-size:12.5px;color:var(--muted)">(modifiable une par une)</span></h2>
+    <div class="variants" id="variantList"></div>
+  </section>
+
+  <!-- ZONE DE TRAVAIL + APERÇUS — mode "clips séparés" uniquement, MÊME CADRE -->
+  <section class="panel" id="workspaceSection" style="display:none">
+    <h2><span class="chip">IV</span> Zone de travail</h2>
+    <div class="note">Clique sur un Clip pour régler son zoom / coupure / vitesse, ou sur une zone Z pour choisir sa transition (ou y insérer un B-roll). Quand cette version te convient, clique sur "Terminer cette version" — elle s'ajoute aux Aperçus à droite, et la zone de travail repart à vide, juste en dessous, pour la version suivante.</div>
+    <div class="grid workspace-sticky-bar" style="align-items:start">
+      <div>
+        <div id="workspaceNav"></div>
+        <div class="toolbar" style="margin-top:14px">
+          <button class="btn-mint" onclick="finalizeVersion()">✅ Terminer cette version (End)</button>
+          <button class="btn-ghost btn-sm" onclick="resetWorkspace()">🔄 Réinitialiser la zone de travail</button>
+        </div>
+      </div>
+      <div>
+        <h2 style="margin-bottom:10px"><span class="chip">V</span> Aperçus <span style="font-weight:400;font-size:12.5px;color:var(--muted)">(une ligne par version terminée)</span></h2>
+        <div id="apercusList"></div>
+        <div class="hint" id="apercusEmptyHint">Aucune version terminée pour le moment. Règle ta zone de travail à gauche puis clique "Terminer cette version".</div>
+      </div>
+    </div>
+    <div id="workspacePanels" style="margin-top:18px"></div>
+  </section>
+
+  <!-- SCRIPT -->
+  <section class="panel">
+    <h2><span class="chip">VI</span> Ton script est prêt</h2>
+    <div class="toolbar">
+      <button class="btn-mint" onclick="downloadScript()">⬇️ Télécharger creer_variations.sh</button>
+    </div>
+    <div class="howto">
+      <div class="howto-title">À faire dans cet ordre</div>
+      <div class="path-track">
+        <div class="path-step">
+          <div class="path-num" style="background:#B8965A">1</div>
+          <p>Fichier dans le dossier de ta vidéo</p>
+        </div>
+        <div class="path-step">
+          <div class="path-num" style="background:#2F6B4F">2</div>
+          <p>Ouvre le Terminal</p>
+        </div>
+        <div class="path-step">
+          <div class="path-num" style="background:#3E6E78">3</div>
+          <p>Tape <code>cd </code> (espace incluse)</p>
+        </div>
+        <div class="path-step">
+          <div class="path-num" style="background:#7A3B5E">4</div>
+          <p>Glisse le dossier, Entrée</p>
+        </div>
+        <div class="path-step">
+          <div class="path-num" style="background:#A9432E">5</div>
+          <p>Tape <code>bash creer_variations.sh</code>, Entrée</p>
+        </div>
+      </div>
+    </div>
+    <div class="term">
+      <div class="term-bar">
+        <span class="term-title">creer_variations.sh — bash</span>
+        <span class="term-count" id="count">0 variation(s)</span>
+      </div>
+      <pre id="out"></pre>
+    </div>
+  </section>
+
+  <footer>
+    Sophy v25 · S'ouvre par défaut en mode "Clips séparés" · "Terminer cette version" ramène automatiquement en haut de la page · Correction d'un bug ffmpeg (SAR incohérent entre clips traités séparément, qui faisait planter l'assemblage par coupure franche) · La barre nav/End/Aperçus reste collée en haut pendant le scroll.
+  </footer>
+
+</div>
+
+<script>
+// ===================== RÉFÉRENTIEL DES EFFETS =====================
+const EFFECTS = [
+  {id:'trimStart', name:'Couper début', unit:'sec', def:3, min:0, max:20, step:1},
+  {id:'trimEnd',   name:'Couper fin',   unit:'sec', def:2, min:0, max:15, step:1},
+  {id:'bright',    name:'Plus clair',   unit:'',    def:0.1, min:0.03, max:0.3, step:0.01},
+  {id:'zoom',      name:'Zoom léger',   unit:'%',   def:5, min:2, max:12, step:1},
+  {id:'speed',     name:'Vitesse',      unit:'x',   def:1.04, min:0.9, max:1.15, step:0.01},
+  {id:'hue',       name:'Teinte',       unit:'°',   def:6, min:2, max:20, step:1},
+  {id:'cropVertical', name:'Recadrage 9:16', unit:'%', def:8, min:4, max:15, step:1},
+  {id:'rotate',    name:'Rotation',     unit:'°',   def:1, min:0.5, max:2, step:0.1},
+];
+
+// Réglages appliqués CLIP PAR CLIP en mode "clips séparés" (v18) — tous en %.
+const CLIP_EFFECTS = [
+  {id:'zoom',      name:'Zoom',            unit:'%', def:5,   min:0,  max:20,  step:1},
+  {id:'trimStart', name:'Coupure début',   unit:'%', def:5,   min:0,  max:30,  step:1},
+  {id:'trimEnd',   name:'Coupure fin',     unit:'%', def:5,   min:0,  max:30,  step:1},
+  {id:'speed',     name:'Vitesse',         unit:'%', def:105, min:80, max:130, step:1},
+];
+
+let TRANSITIONS = [
+  {id:'fadewhite', name:'Fondu blanc', ic:'🤍'},
+  {id:'fadeslow', name:'Fondu lent', ic:'🌙'},
+  {id:'dissolve', name:'Dissolution', ic:'✨'},
+  {id:'distance', name:'Distance', ic:'📏'},
+  {id:'zoomin', name:'Zoom', ic:'🔍'},
+  {id:'hlwind', name:'Vent horiz.', ic:'🌬️'},
+  {id:'hlslice', name:'Tranches', ic:'🔪'},
+  {id:'circlecrop', name:'Cercle', ic:'⭕'},
+  {id:'wipeleft', name:'Balayage ◀', ic:'⬅️'},
+  {id:'slideleft', name:'Glisse ◀', ic:'◀️'},
+];
+
+const VARIANT_COLORS = ['#B8965A','#2F6B4F','#3E6E78','#7A3B5E','#A9432E','#8F7140','#1F4A36'];
+
+// 5 presets — utilisés UNIQUEMENT en mode "vidéo déjà montée".
+const PRESETS = [
+  {name:'Le Furtif', icon:'🕶️', color:'#3E6E78', fx:{zoom:5, speed:1.03, rotate:0.8, trimEnd:1}},
+  {name:'Le Nomade', icon:'🧭', color:'#8F7140', fx:{trimStart:2, hue:8, cropVertical:6, trimEnd:2}},
+  {name:'L\u2019Alchimiste', icon:'⚗️', color:'#2F6B4F', fx:{speed:1.05, cropVertical:9, bright:0.08, trimEnd:1}},
+  {name:'Le Mirage', icon:'🌅', color:'#7A3B5E', fx:{zoom:7, hue:4, rotate:1.3, trimStart:3, trimEnd:2}},
+  {name:'Le Phénix', icon:'🔥', color:'#A9432E', fx:{trimStart:4, speed:1.06, cropVertical:5, bright:0.05, trimEnd:3}},
+];
+
+// ===================== VARIATION AUTOMATIQUE LÉGÈRE (JITTER) — mode "vidéo déjà montée" =====================
+function jitterOneValue(st, def){
+  if(!st.on) return;
+  const range = (def.max - def.min);
+  const delta = (Math.random()*2 - 1) * range * 0.06; // ±6% de la plage totale
+  let newVal = st.val + delta;
+  newVal = Math.min(def.max, Math.max(def.min, newVal));
+  st.val = Math.round(newVal / def.step) * def.step;
+  st.val = parseFloat(st.val.toFixed(3));
+}
+function applyJitter(v){
+  if(!document.getElementById('inJitter').checked) return v;
+  Object.keys(v.fx).forEach(fxId=>{
+    jitterOneValue(v.fx[fxId], EFFECTS.find(e=>e.id===fxId));
+  });
+  return v;
+}
+
+function renderPresetButtons(){
+  const box = document.getElementById('presetGrid');
+  box.innerHTML = '';
+  PRESETS.forEach((p, idx)=>{
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn' + (presetVariantId[idx] !== null ? ' selected' : '');
+    btn.style.background = p.color;
+    btn.style.boxShadow = `0 5px 0 ${shade(p.color)}`;
+    const fxList = Object.keys(p.fx).map(k=>EFFECTS.find(e=>e.id===k).name).join(' + ');
+    btn.innerHTML = `<span class="star">★</span><div class="pt">${p.icon} Test ${idx+1}</div><div class="pd">${p.name}</div><div class="pd" style="opacity:.75;margin-top:4px">${fxList}</div>`;
+    btn.onclick = ()=> applyPreset(idx);
+    box.appendChild(btn);
+  });
+}
+function shade(hex){
+  // assombrit légèrement une couleur hex pour l'ombre 3D
+  const n = parseInt(hex.slice(1),16);
+  const r = Math.max(0,(n>>16)-40), g = Math.max(0,((n>>8)&255)-40), b = Math.max(0,(n&255)-40);
+  return `rgb(${r},${g},${b})`;
+}
+
+// ===================== ÉTAT DES VARIANTES — mode "vidéo déjà montée" =====================
+let clipCount = 0;
+let brollCount = 0;
+let variants = [];
+let variantSeq = 0;
+let presetVariantId = PRESETS.map(()=>null); // id de la variante créée par chaque bouton Test, ou null si non sélectionné
+
+function newVariantFromPreset(preset){
+  variantSeq++;
+  const fx = {};
+  EFFECTS.forEach(e=>{ fx[e.id] = {on:false, val:e.def}; });
+  Object.keys(preset.fx).forEach(k=>{ fx[k] = {on:true, val:preset.fx[k]}; });
+  return {id: variantSeq, name: preset.name, fx};
+}
+function newEmptyVariant(){
+  variantSeq++;
+  const fx = {};
+  EFFECTS.forEach(e=>{ fx[e.id] = {on:false, val:e.def}; });
+  return {id: variantSeq, name:'Variante', fx};
+}
+function applyPreset(idx){
+  if(presetVariantId[idx] !== null){
+    const vid = presetVariantId[idx];
+    presetVariantId[idx] = null;
+    variants = variants.filter(v=>v.id!==vid);
+  } else {
+    const v = applyJitter(newVariantFromPreset(PRESETS[idx]));
+    presetVariantId[idx] = v.id;
+    variants.push(v);
+  }
+  renderPresetButtons(); renderVariants(); build();
+}
+function generateAllPresets(){
+  variants = PRESETS.map(p=>applyJitter(newVariantFromPreset(p)));
+  presetVariantId = variants.map(v=>v.id);
+  renderPresetButtons(); renderVariants(); build();
+}
+function addVariant(){ variants.push(newEmptyVariant()); renderVariants(); build(); }
+function removeVariant(){ variants.pop(); renderVariants(); build(); }
+
+function toggleFx(vid, fxId){
+  const v = variants.find(v=>v.id===vid);
+  v.fx[fxId].on = !v.fx[fxId].on;
+  renderVariants(); build();
+}
+function setFxVal(vid, fxId, val){
+  const v = variants.find(v=>v.id===vid);
+  v.fx[fxId].val = parseFloat(val);
+  build();
+}
+function renameVariant(vid, val){
+  const v = variants.find(v=>v.id===vid);
+  v.name = val || 'Variante'; build();
+}
+
+function addCustomTransition(){
+  const name = prompt("Nom de la transition vue dans CapCut (ex: Cube, Iris, Flash) :");
+  if(!name) return;
+  const id = name.toLowerCase().replace(/[^a-z0-9]+/g,'');
+  TRANSITIONS.push({id, name, ic:'🎬'});
+  renderWorkspace();
+}
+
+function renderVariants(){
+  const box = document.getElementById('variantList');
+  box.innerHTML = '';
+  if(variants.length===0){
+    box.innerHTML = '<div class="hint">Aucune variante pour le moment. Clique sur un des 5 boutons ci-dessus, ou « Ajouter une variante vide ».</div>';
+    return;
+  }
+  variants.forEach((v, idx)=>{
+    const color = VARIANT_COLORS[idx % VARIANT_COLORS.length];
+    const card = document.createElement('div');
+    card.className = 'variant-card';
+    let fxChips = EFFECTS.map(e=>{
+      const st = v.fx[e.id];
+      return `<div class="fx-chip ${st.on?'on':''}">
+        <div onclick="toggleFx(${v.id},'${e.id}')">${st.on?'✅':'⬜'} ${e.name}</div>
+        ${st.on?`<div class="fx-param"><input type="number" step="${e.step}" min="${e.min}" max="${e.max}" value="${st.val}" onchange="setFxVal(${v.id},'${e.id}',this.value)"><label>${e.unit}</label></div>`:''}
+      </div>`;
+    }).join('');
+    card.innerHTML = `
+      <div class="variant-head">
+        <div class="variant-title"><span class="variant-badge" style="background:${color}">${idx+1}</span>
+          <input type="text" value="${v.name}" style="border:none;background:transparent;font-family:'Cinzel',serif;font-weight:700;font-size:14px;width:160px" onchange="renameVariant(${v.id},this.value)">
+        </div>
+        <button class="btn-coral btn-sm" onclick="deleteVariant(${v.id})">✕ Retirer</button>
+      </div>
+      <div class="sub-label">Effets combinés sur cette version</div>
+      <div class="fx-grid">${fxChips}</div>
+    `;
+    box.appendChild(card);
+  });
+}
+function deleteVariant(vid){
+  variants = variants.filter(v=>v.id!==vid);
+  const pIdx = presetVariantId.indexOf(vid);
+  if(pIdx !== -1){ presetVariantId[pIdx] = null; renderPresetButtons(); }
+  renderVariants(); build();
+}
+
+// ===================== ZONE DE TRAVAIL — mode "clips séparés" (v19) =====================
+// Une seule zone de travail à la fois. Quand elle est terminée ("End"), on l'archive dans
+// savedVersions (V1, V2, V3...) avec un résumé texte, et la zone de travail repart à vide.
+function getClipCount(){
+  return document.querySelectorAll('#clipList .clip-row').length;
+}
+function getBrollFiles(){
+  return Array.from(document.querySelectorAll('.brollInput')).map(i=>i.value.trim()).filter(Boolean);
+}
+function newClipFx(){
+  const fx = {};
+  CLIP_EFFECTS.forEach(e=>{ fx[e.id] = {on:false, val:e.def}; });
+  return fx;
+}
+function newWorkZ(){
+  // v20 : Transition et B-roll sont deux cases INDÉPENDANTES.
+  // Aucune des deux cochée = aucun effet ajouté (coupure franche, rien de forcé par défaut).
+  return {transitionOn:false, transition: TRANSITIONS[0].id, duration: 0.6, brollOn:false, brolls: []};
+}
+let workingClipFx = [];
+let workingZ = [];
+let savedVersions = [];
+
+function ensureWorkingStructures(n){
+  while(workingClipFx.length < n) workingClipFx.push(newClipFx());
+  workingClipFx.length = n;
+  const nz = Math.max(0, n-1);
+  while(workingZ.length < nz) workingZ.push(newWorkZ());
+  workingZ.length = nz;
+}
+function resetWorkspace(){
+  workingClipFx = []; workingZ = [];
+  ensureWorkingStructures(getClipCount());
+  renderWorkspace();
+  build();
+  // Petit flash visuel pour confirmer que le reset a bien eu lieu,
+  // même quand la zone était déjà vide (rien à décocher visuellement).
+  const panelsBox = document.getElementById('workspacePanels');
+  if(panelsBox){
+    panelsBox.style.transition = 'none';
+    panelsBox.style.opacity = '0.25';
+    setTimeout(()=>{
+      panelsBox.style.transition = 'opacity 0.35s';
+      panelsBox.style.opacity = '1';
+    }, 20);
+  }
+}
+
+function scrollToPanel(id){
+  const el = document.getElementById('panel-'+id);
+  if(el) el.scrollIntoView({behavior:'smooth', block:'center'});
+}
+function setWorkClipFxOn(i, fxId){ workingClipFx[i][fxId].on = !workingClipFx[i][fxId].on; renderWorkspace(); build(); }
+function setWorkClipFxVal(i, fxId, val){ workingClipFx[i][fxId].val = parseFloat(val); renderWorkspace(); build(); }
+function setWorkZTransitionOn(i){ workingZ[i].transitionOn = !workingZ[i].transitionOn; renderWorkspace(); build(); }
+function setWorkZBrollOn(i){ workingZ[i].brollOn = !workingZ[i].brollOn; renderWorkspace(); build(); }
+function setZTransitionWork(i, tid){ workingZ[i].transition = tid; renderWorkspace(); build(); }
+function setZDurationWork(i, val){ workingZ[i].duration = parseFloat(val)||0.6; build(); }
+function toggleWorkZBroll(i, filename){
+  const arr = workingZ[i].brolls;
+  const idx = arr.indexOf(filename);
+  if(idx>=0) arr.splice(idx,1); else arr.push(filename);
+  renderWorkspace(); build();
+}
+
+function zHasAnyEffect(z){ return z.transitionOn || (z.brollOn && z.brolls.length>0); }
+function zLabel(z){
+  const parts = [];
+  if(z.transitionOn) parts.push(TRANSITIONS.find(t=>t.id===z.transition)?.name || z.transition);
+  if(z.brollOn && z.brolls.length) parts.push('B-roll: '+z.brolls.join(', '));
+  return parts.length ? parts.join(' + ') : 'Coupure franche (rien réglé)';
+}
+
+// v19.1 — TOUS les panneaux (Clip et Z) restent affichés en permanence dans la zone de travail,
+// avec un aperçu en direct de tout ce qui est réglé jusqu'ici. Plus de bouton "replier" qui
+// cache un réglage déjà fait : rien ne disparaît de la vue tant qu'on n'a pas cliqué "End".
+// v19.2 — Zone de travail et Aperçus (V1, V2...) sont désormais dans la MÊME carte : la nav/les
+// boutons vont dans #workspaceNav, la liste Aperçus reste dans son propre bloc à droite (gérée
+// par renderApercus), et l'aperçu "en cours" + tous les panneaux vont dans #workspacePanels.
+// v20 — chaque Z a deux cases indépendantes (Transition, B-roll) : coche l'une, l'autre, les
+// deux, ou aucune. Rien coché = coupure franche, aucune valeur par défaut n'est appliquée.
+function renderWorkspace(){
+  const navBox = document.getElementById('workspaceNav');
+  const panelsBox = document.getElementById('workspacePanels');
+  if(!navBox || !panelsBox) return;
+  const n = workingClipFx.length;
+  if(n===0){
+    navBox.innerHTML = '<div class="hint">Ajoute d\'abord tes clips en Section I pour commencer à régler ta zone de travail.</div>';
+    panelsBox.innerHTML = '';
+    return;
+  }
+  let row = '<div class="sub-label">Clique sur un Clip ou une zone Z pour la régler</div><div class="clipz-row">';
+  for(let i=0;i<n;i++){
+    const cfx = workingClipFx[i];
+    const hasFx = Object.values(cfx).some(st=>st.on);
+    row += `<button type="button" class="clip-btn ${hasFx?'has-fx':''}" onclick="scrollToPanel('clip-${i}')">Clip ${i+1}</button>`;
+    if(i < n-1){
+      const z = workingZ[i];
+      row += `<button type="button" class="z-btn ${zHasAnyEffect(z)?'has-fx':''}" onclick="scrollToPanel('z-${i}')" title="${zLabel(z)}">Z${i+1}</button>`;
+    }
+  }
+  row += '</div>';
+  navBox.innerHTML = row;
+
+  const summary = buildSummaryLines(workingClipFx, workingZ);
+  const summaryBox = `<div class="clipz-panel" style="border-style:solid;border-color:var(--mint-d);background:#E6FBF4">
+    <div class="panel-title">📋 Aperçu de cette version (en cours — pas encore enregistrée)</div>
+    <div style="font-size:12.5px;line-height:1.6">${summary.length ? summary.map(s=>'• '+s).join('<br>') : "Aucun réglage particulier pour l'instant."}</div>
+  </div>`;
+
+  let panels = '';
+  for(let i=0;i<n;i++){
+    panels += renderClipPanelWork(i);
+    if(i < n-1) panels += renderZPanelWork(i);
+  }
+  panelsBox.innerHTML = summaryBox + panels;
+}
+function renderClipPanelWork(i){
+  const cfx = workingClipFx[i];
+  const fields = CLIP_EFFECTS.map(e=>{
+    const st = cfx[e.id];
+    return `<div class="clipz-field">
+      <input type="checkbox" ${st.on?'checked':''} onchange="setWorkClipFxOn(${i},'${e.id}')">
+      <label>${e.name}</label>
+      ${st.on?`<input type="number" step="${e.step}" min="${e.min}" max="${e.max}" value="${st.val}" onchange="setWorkClipFxVal(${i},'${e.id}',this.value)"><span class="clipz-unit">${e.unit}</span>`:''}
+    </div>`;
+  }).join('');
+  return `<div class="clipz-panel" id="panel-clip-${i}">
+    <div class="panel-title">🎬 Réglages — Clip ${i+1}</div>
+    <div class="clipz-field-row">${fields}</div>
+  </div>`;
+}
+function renderZPanelWork(i){
+  const z = workingZ[i];
+  const brollFiles = getBrollFiles();
+  const transSection = `
+    <div class="clipz-field" style="margin-bottom:${z.transitionOn?'10px':'0'}">
+      <input type="checkbox" ${z.transitionOn?'checked':''} onchange="setWorkZTransitionOn(${i})">
+      <label>🔀 Transition</label>
+    </div>
+    ${z.transitionOn ? `
+      <div class="trans-grid">${TRANSITIONS.map(t=>`<div class="trans-chip ${z.transition===t.id?'on':''}" onclick="setZTransitionWork(${i},'${t.id}')"><span class="ic">${t.ic}</span>${t.name}</div>`).join('')}</div>
+      <div class="row-inline" style="margin-top:8px">
+        <label>Durée (sec)</label>
+        <input type="number" step="0.1" min="0.2" max="2" value="${z.duration}" onchange="setZDurationWork(${i},this.value)">
+        <button class="btn-ghost btn-sm" onclick="addCustomTransition()">➕ Ajouter une transition</button>
+      </div>` : ''}
+  `;
+  const brollSection = `
+    <div class="clipz-field" style="margin-top:14px;margin-bottom:${z.brollOn?'10px':'0'}">
+      <input type="checkbox" ${z.brollOn?'checked':''} onchange="setWorkZBrollOn(${i})">
+      <label>🎞️ B-roll <span style="font-weight:400;color:var(--muted)">(tu peux en cocher plusieurs — ils s'insèrent à la suite, dans l'ordre)</span></label>
+    </div>
+    ${z.brollOn ? (
+      brollFiles.length===0
+        ? '<div class="hint">Ajoute d\'abord un B-roll en Section I.</div>'
+        : `<div class="clipz-field-row">${brollFiles.map(f=>`<div class="clipz-field">
+            <input type="checkbox" ${z.brolls.includes(f)?'checked':''} onchange="toggleWorkZBroll(${i},'${f}')">
+            <label>${f}</label>
+          </div>`).join('')}</div>`
+    ) : ''}
+  `;
+  return `<div class="clipz-panel" id="panel-z-${i}">
+    <div class="panel-title">🔀 Z${i+1} <span style="font-weight:400;font-size:11px;color:var(--muted)">(entre Clip ${i+1} et Clip ${i+2}) — coche Transition et/ou B-roll ; rien coché = coupure franche</span></div>
+    ${transSection}
+    ${brollSection}
+  </div>`;
+}
+
+// ----- "End" : archive la zone de travail actuelle en tant que nouvelle version (V1, V2...) -----
+function buildSummaryLines(clipsFx, zSettings){
+  const lines = [];
+  clipsFx.forEach((cfx, i)=>{
+    const parts = [];
+    CLIP_EFFECTS.forEach(e=>{ if(cfx[e.id].on) parts.push(`${e.name} ${cfx[e.id].val}${e.unit}`); });
+    if(parts.length) lines.push(`Clip ${i+1} : ${parts.join(' · ')}`);
+  });
+  zSettings.forEach((z, i)=>{
+    const parts = [];
+    if(z.transitionOn){
+      const tName = TRANSITIONS.find(t=>t.id===z.transition)?.name || z.transition;
+      parts.push(`transition ${tName} (${z.duration}s)`);
+    }
+    if(z.brollOn && z.brolls.length){ parts.push(`B-roll — ${z.brolls.join(', ')}`); }
+    if(parts.length) lines.push(`Z${i+1} : ${parts.join(' + ')}`);
+  });
+  return lines;
+}
+function finalizeVersion(){
+  const n = getClipCount();
+  if(n===0){ alert("Ajoute d'abord tes clips en Section I avant de terminer une version."); return; }
+  const summary = buildSummaryLines(workingClipFx, workingZ);
+  savedVersions.push({
+    clipsFx: JSON.parse(JSON.stringify(workingClipFx)),
+    zSettings: JSON.parse(JSON.stringify(workingZ)),
+    summary,
+  });
+  resetWorkspace();
+  renderApercus();
+  build();
+  window.scrollTo({top: 0, behavior: 'smooth'});
+}
+function deleteSavedVersion(idx){
+  savedVersions.splice(idx, 1);
+  renderApercus();
+  build();
+}
+// Recharge les réglages d'une version déjà enregistrée dans la zone de travail pour la modifier.
+// La version est retirée des Aperçus le temps de la modification ; elle réapparaît (à la fin
+// de la liste) quand on reclique sur "Terminer cette version".
+function editVersion(idx){
+  const sv = savedVersions[idx];
+  if(!sv) return;
+  workingClipFx = JSON.parse(JSON.stringify(sv.clipsFx));
+  workingZ = JSON.parse(JSON.stringify(sv.zSettings));
+  ensureWorkingStructures(getClipCount());
+  savedVersions.splice(idx, 1);
+  renderWorkspace();
+  renderApercus();
+  build();
+  const nav = document.getElementById('workspaceNav');
+  if(nav && typeof nav.scrollIntoView === 'function') nav.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function renderApercus(){
+  const box = document.getElementById('apercusList');
+  const emptyHint = document.getElementById('apercusEmptyHint');
+  if(!box) return;
+  box.innerHTML = '';
+  if(savedVersions.length===0){
+    if(emptyHint) emptyHint.style.display = 'block';
+    return;
+  }
+  if(emptyHint) emptyHint.style.display = 'none';
+  savedVersions.forEach((sv, idx)=>{
+    const color = VARIANT_COLORS[idx % VARIANT_COLORS.length];
+    const card = document.createElement('div');
+    card.className = 'variant-card';
+    const summaryHtml = sv.summary.length
+      ? sv.summary.map(s=>'• '+s).join('<br>')
+      : 'Aucun réglage particulier (clips assemblés tels quels).';
+    card.innerHTML = `
+      <div class="variant-head">
+        <div class="variant-title"><span class="variant-badge" style="background:${color}">${idx+1}</span> V${idx+1}</div>
+        <div style="display:flex;gap:8px">
+          <button class="btn-sky btn-sm" onclick="editVersion(${idx})">✏️ Modifier</button>
+          <button class="btn-coral btn-sm" onclick="deleteSavedVersion(${idx})">✕ Retirer</button>
+        </div>
+      </div>
+      <div class="hint" style="color:var(--ink);font-size:12.5px;line-height:1.6">${summaryHtml}</div>
+    `;
+    box.appendChild(card);
+  });
+}
+
+// ===================== MODE =====================
+let mode = 'single';
+function setMode(m){
+  mode = m;
+  document.getElementById('modeBtnSingle').classList.toggle('active', m==='single');
+  document.getElementById('modeBtnClips').classList.toggle('active', m==='clips');
+  document.getElementById('fieldSingleVideo').style.display = m==='single' ? 'block':'none';
+  document.getElementById('clipsSection').style.display = m==='clips' ? 'block':'none';
+  document.getElementById('presetsSection').style.display = m==='single' ? 'block':'none';
+  document.getElementById('singleVariantsSection').style.display = m==='single' ? 'block':'none';
+  document.getElementById('workspaceSection').style.display = m==='clips' ? 'block':'none';
+  if(m==='clips'){
+    ensureWorkingStructures(getClipCount());
+    renderWorkspace();
+    renderApercus();
+  } else {
+    renderVariants();
+  }
+  build();
+}
+
+// ===================== CLIPS & B-ROLL =====================
+function addClipRow(){
+  pickTargetInputId = null; pickTargetRowId = null; pickMode = 'new';
+  const picker = document.getElementById('hiddenFilePicker');
+  picker.accept = 'video/*'; picker.multiple = true; picker.value = ''; picker.click();
+}
+function createClipRow(filename){
+  clipCount++;
+  const rowId = 'clipRow'+clipCount;
+  const list = document.getElementById('clipList');
+  const row = document.createElement('div');
+  row.className = 'clip-row'; row.id = rowId;
+  row.innerHTML = `<span class="clip-num">${document.querySelectorAll('#clipList .clip-row').length + 1}.</span>
+    <input type="text" class="clipInput" value="${filename}" oninput="build()">
+    <button class="btn-sky btn-sm" onclick="pickFileIntoRow('${rowId}')">📂</button>
+    <button class="btn-coral btn-sm" onclick="document.getElementById('${rowId}').remove(); renumberClips(); ensureWorkingStructures(getClipCount()); renderWorkspace(); build()">✕</button>`;
+  list.appendChild(row);
+  ensureWorkingStructures(getClipCount());
+  renderWorkspace();
+  build();
+}
+function renumberClips(){
+  document.querySelectorAll('#clipList .clip-row').forEach((row, idx)=>{ row.querySelector('.clip-num').textContent = (idx+1)+'.'; });
+}
+
+function addBrollRow(){
+  pickTargetInputId = null; pickTargetRowId = null; pickMode = 'newBroll';
+  const picker = document.getElementById('hiddenFilePicker');
+  picker.accept = 'video/*'; picker.multiple = true; picker.value = ''; picker.click();
+}
+function createBrollRow(filename){
+  brollCount++;
+  const rowId = 'brollRow'+brollCount;
+  const list = document.getElementById('brollList');
+  const row = document.createElement('div');
+  row.className = 'clip-row'; row.id = rowId;
+  row.innerHTML = `<span class="clip-num">${document.querySelectorAll('#brollList .clip-row').length + 1}.</span>
+    <input type="text" class="brollInput" value="${filename}" oninput="renderWorkspace(); build()">
+    <button class="btn-sky btn-sm" onclick="pickFileIntoBrollRow('${rowId}')">📂</button>
+    <button class="btn-coral btn-sm" onclick="document.getElementById('${rowId}').remove(); renumberBroll(); renderWorkspace(); build()">✕</button>`;
+  list.appendChild(row);
+  renderWorkspace();
+  build();
+}
+function renumberBroll(){
+  document.querySelectorAll('#brollList .clip-row').forEach((row, idx)=>{ row.querySelector('.clip-num').textContent = (idx+1)+'.'; });
+}
+
+let pickTargetInputId = null, pickTargetRowId = null, pickMode = null;
+function pickFile(inputId, accept){
+  pickTargetInputId = inputId; pickTargetRowId = null; pickMode = 'field';
+  const picker = document.getElementById('hiddenFilePicker');
+  picker.accept = accept || ''; picker.multiple = false; picker.value = ''; picker.click();
+}
+function pickFileIntoRow(rowId){
+  pickTargetInputId = null; pickTargetRowId = rowId; pickMode = 'row';
+  const picker = document.getElementById('hiddenFilePicker');
+  picker.accept = 'video/*'; picker.multiple = false; picker.value = ''; picker.click();
+}
+function pickFileIntoBrollRow(rowId){
+  pickTargetInputId = null; pickTargetRowId = rowId; pickMode = 'rowBroll';
+  const picker = document.getElementById('hiddenFilePicker');
+  picker.accept = 'video/*'; picker.multiple = false; picker.value = ''; picker.click();
+}
+document.getElementById('hiddenFilePicker').addEventListener('change', function(e){
+  const files = Array.from(e.target.files);
+  if(!files.length) return;
+  if(pickMode==='field' && pickTargetInputId){ document.getElementById(pickTargetInputId).value = files[0].name; }
+  else if(pickMode==='row' && pickTargetRowId){ document.getElementById(pickTargetRowId).querySelector('.clipInput').value = files[0].name; }
+  else if(pickMode==='new'){ files.forEach(f=>createClipRow(f.name)); }
+  else if(pickMode==='rowBroll' && pickTargetRowId){ document.getElementById(pickTargetRowId).querySelector('.brollInput').value = files[0].name; renderWorkspace(); }
+  else if(pickMode==='newBroll'){ files.forEach(f=>createBrollRow(f.name)); }
+  build();
+});
+
+// ===================== CONSTRUCTION DES FILTRES FFMPEG =====================
+function buildVideoFilterChain(fx){
+  const parts = [];
+  if(fx.zoom.on){ const k=(100-fx.zoom.val)/100; parts.push(`crop=iw*${k}:ih*${k},scale=trunc(iw/2)*2:trunc(ih/2)*2`); }
+  if(fx.cropVertical.on){ const k=((100-fx.cropVertical.val)/100).toFixed(2); parts.push(`crop='min(iw\\,ih*9/16)*${k}':'min(iw\\,ih*9/16)*${k}*16/9',scale=1080:1920`); }
+  if(fx.rotate.on){ parts.push(`rotate=${fx.rotate.val}*PI/180,crop=iw*0.94:ih*0.94,scale=trunc(iw/2)*2:trunc(ih/2)*2`); }
+  if(fx.hue.on){ parts.push(`hue=h=${fx.hue.val}`); }
+  if(fx.bright.on){ parts.push(`eq=brightness=${fx.bright.val}`); }
+  // GARDE-FOU FORMAT (v11) : quelle que soit la vidéo d'entrée (paysage ou verticale),
+  // la sortie est TOUJOURS en 1080x1920 vertical plein cadre, sans bandes noires.
+  // scale "cover" (force_original_aspect_ratio=increase) + crop centré.
+  parts.push(`scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1`);
+  return parts.join(',');
+}
+
+// process_variant (bash) fait le trim début+fin, les filtres visuels, la vitesse,
+// le mix musique de fond + audio original, et un CRF légèrement variable par version.
+// La durée réelle n'étant connue qu'à l'exécution (ffprobe), tout se calcule côté bash.
+function buildVariantCommand(v, inputExpr, outFile, crf){
+  const vf = buildVideoFilterChain(v.fx);
+  const speed = v.fx.speed.on ? v.fx.speed.val : 1;
+  const trimStart = v.fx.trimStart.on ? v.fx.trimStart.val : 0;
+  const trimEnd = v.fx.trimEnd.on ? v.fx.trimEnd.val : 0;
+  return `process_variant ${inputExpr} "${outFile}" "${vf}" "${speed}" "${trimStart}" "${trimEnd}" "${crf}"`;
+}
+
+const PROCESS_FUNC = `
+# --- Trouve le VRAI flux vidéo et ignore les miniatures/pochettes ("attached_pic") ---
+# Certaines vidéos (surtout téléchargées depuis les réseaux) contiennent une image de
+# couverture cachée comme "premier flux vidéo". Sans cette fonction, ffmpeg utilisait
+# cette image fixe au lieu de la vraie vidéo (résultat : une vidéo d'une seule image).
+get_video_stream_index() {
+  local f="$1"
+  local idx
+  idx=$(ffprobe -v error -select_streams v -show_entries stream=index:stream_disposition=attached_pic -of csv=p=0 "$f" 2>/dev/null | awk -F',' '$2==0{print $1; exit}')
+  if [ -z "$idx" ]; then
+    idx=$(ffprobe -v error -select_streams v:0 -show_entries stream=index -of csv=p=0 "$f" 2>/dev/null)
+  fi
+  echo "\${idx:-0}"
+}
+
+# --- Fonction générique : trim début/fin + filtres + vitesse + mix musique + CRF ---
+process_variant() {
+  local INPUT="$1"; local OUTFILE="$2"; local VF="$3"; local SPEED="$4"
+  local TRIM_START="$5"; local TRIM_END="$6"; local CRF="$7"
+
+  local VIDX
+  VIDX=$(get_video_stream_index "$INPUT")
+
+  local DUR
+  DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$INPUT")
+  local T_DUR
+  T_DUR=$(awk "BEGIN{d=$DUR-$TRIM_START-$TRIM_END; if(d<0.5) d=0.5; printf \\"%.3f\\", d}")
+
+  local -a IN_OPTS=()
+  [ "$TRIM_START" != "0" ] && IN_OPTS+=(-ss "$TRIM_START")
+  IN_OPTS+=(-t "$T_DUR")
+
+  local VCHAIN="$VF"
+  if [ -n "$VCHAIN" ]; then VCHAIN="\${VCHAIN},"; fi
+  VCHAIN="\${VCHAIN}setpts=PTS-STARTPTS"
+  [ "$SPEED" != "1" ] && VCHAIN="\${VCHAIN},setpts=PTS/\${SPEED}"
+
+  if [ -n "$MUSIC_FILE" ] && [ -f "$MUSIC_FILE" ]; then
+    ffmpeg "\${IN_OPTS[@]}" -i "$INPUT" -stream_loop -1 -i "$MUSIC_FILE" \\
+      -filter_complex "[0:\${VIDX}]\${VCHAIN}[vout];[0:a]atempo=\${SPEED},volume=\${ORIG_VOL_F}[a0];[1:a]volume=\${MUSIC_VOL_F}[a1];[a0][a1]amix=inputs=2:duration=first:dropout_transition=0:normalize=0[aout]" \\
+      -map "[vout]" -map "[aout]" -map_metadata -1 -c:v libx264 -crf "$CRF" -y "$OUTFILE"
+  else
+    ffmpeg "\${IN_OPTS[@]}" -i "$INPUT" \\
+      -filter_complex "[0:\${VIDX}]\${VCHAIN}[vout];[0:a]atempo=\${SPEED},volume=\${ORIG_VOL_F}[aout]" \\
+      -map "[vout]" -map "[aout]" -map_metadata -1 -c:v libx264 -crf "$CRF" -y "$OUTFILE"
+  fi
+}
+`;
+
+// v18 — le mode "clips séparés" ne traite plus tous les clips avec le même combo :
+// 1) chaque clip est d'abord traité individuellement (son propre zoom / coupure début / coupure fin / vitesse)
+// 2) les clips traités sont assemblés avec, pour CHAQUE zone Z, sa propre transition + durée
+// 3) le résultat assemblé repasse par process_variant (musique de fond + CRF final + suppression métadonnées)
+const PROCESS_CLIP_FUNC = `
+# --- Traite UN clip avec ses réglages propres (zoom %, coupure début/fin %, vitesse %) ---
+process_clip() {
+  local INPUT="$1"; local OUTFILE="$2"
+  local ZOOM_PCT="$3"; local TRIM_START_PCT="$4"; local TRIM_END_PCT="$5"; local SPEED_PCT="$6"; local CRF="$7"
+
+  local DUR
+  DUR=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "$INPUT")
+  local TRIM_START_SEC TRIM_END_SEC T_DUR
+  TRIM_START_SEC=$(awk "BEGIN{printf \\"%.3f\\", $DUR*$TRIM_START_PCT/100}")
+  TRIM_END_SEC=$(awk "BEGIN{printf \\"%.3f\\", $DUR*$TRIM_END_PCT/100}")
+  T_DUR=$(awk "BEGIN{d=$DUR-$TRIM_START_SEC-$TRIM_END_SEC; if(d<0.3) d=0.3; printf \\"%.3f\\", d}")
+
+  local -a IN_OPTS=()
+  [ "$TRIM_START_SEC" != "0.000" ] && IN_OPTS+=(-ss "$TRIM_START_SEC")
+  IN_OPTS+=(-t "$T_DUR")
+
+  local VF=""
+  if [ "$ZOOM_PCT" != "0" ]; then
+    local K
+    K=$(awk "BEGIN{printf \\"%.4f\\", (100-$ZOOM_PCT)/100}")
+    VF="crop=iw*\${K}:ih*\${K},scale=trunc(iw/2)*2:trunc(ih/2)*2,"
+  fi
+  # Garde-fou format : chaque clip traité ressort en 1080x1920 avec le MÊME ratio pixel (SAR 1:1),
+  # sinon le filtre "concat" (coupures franches) refuse d'assembler des segments dont le SAR diffère
+  # ne serait-ce que légèrement (ex: 37632:37631 vs 10240:10239) — c'était la cause de l'échec ffmpeg.
+  VF="\${VF}scale=1080:1920:force_original_aspect_ratio=increase,crop=1080:1920,setsar=1,setpts=PTS-STARTPTS"
+
+  local SPEED_MULT AF="anull"
+  SPEED_MULT=$(awk "BEGIN{printf \\"%.4f\\", $SPEED_PCT/100}")
+  if [ "$SPEED_PCT" != "100" ]; then
+    VF="\${VF},setpts=PTS/\${SPEED_MULT}"
+    AF="atempo=\${SPEED_MULT}"
+  fi
+
+  ffmpeg "\${IN_OPTS[@]}" -i "$INPUT" -filter:v "$VF" -filter:a "$AF" -c:v libx264 -crf "$CRF" -c:a aac -y "$OUTFILE"
+}
+`;
+
+const ASSEMBLE_MULTI_FUNC = `
+# --- Assemble des clips DÉJÀ traités. Pour CHAQUE zone entre deux segments, soit une
+# transition (xfade) avec sa durée, soit "cut" pour une coupure franche (concat, sans effet). ---
+# Args : OUTFILE, nombre de zones, puis pour chaque zone : "transition_ou_cut" "durée", puis les clips.
+assemble_variant_multi() {
+  local OUTFILE="$1"; shift
+  local NZ="$1"; shift
+  local -a ZTRANS=() ZDURS=()
+  for ((i=0; i<NZ; i++)); do ZTRANS+=("$1"); shift; ZDURS+=("$1"); shift; done
+  local -a CLIPSV=("$@")
+  local N=\${#CLIPSV[@]}
+  local -a DURS
+  for i in "\${!CLIPSV[@]}"; do
+    DURS[$i]=$(ffprobe -v error -show_entries format=duration -of csv=p=0 "\${CLIPSV[$i]}")
+  done
+  local FILTER="" CUM=\${DURS[0]} VLABEL="[0:v]" ALABEL="[0:a]"
+  for ((i=1; i<N; i++)); do
+    local D="\${ZDURS[$((i-1))]}"
+    local T="\${ZTRANS[$((i-1))]}"
+    if [ "$T" == "cut" ]; then
+      # Coupure franche : simple concaténation, aucun effet ajouté.
+      FILTER+="\${VLABEL}\${ALABEL}[$i:v][$i:a]concat=n=2:v=1:a=1[v$i][a$i];"
+      VLABEL="[v$i]"; ALABEL="[a$i]"
+      CUM=$(awk "BEGIN{printf \\"%.3f\\", $CUM + \${DURS[$i]}}")
+    else
+      OFFSET=$(awk "BEGIN{printf \\"%.3f\\", $CUM - $D}")
+      FILTER+="\${VLABEL}[$i:v]xfade=transition=\${T}:duration=\${D}:offset=\${OFFSET}[v$i];"
+      FILTER+="\${ALABEL}[$i:a]acrossfade=d=\${D}[a$i];"
+      VLABEL="[v$i]"; ALABEL="[a$i]"
+      CUM=$(awk "BEGIN{printf \\"%.3f\\", $CUM + \${DURS[$i]} - $D}")
+    fi
+  done
+  FILTER="\${FILTER%;}"
+  local -a INPUTS=()
+  for c in "\${CLIPSV[@]}"; do INPUTS+=(-i "$c"); done
+  ffmpeg "\${INPUTS[@]}" -filter_complex "$FILTER" -map "\${VLABEL}" -map "\${ALABEL}" -c:v libx264 -crf 20 -y "$OUTFILE"
+}
+`;
+
+// CRF légèrement variable d'une version à l'autre — reste toujours entre 22 et 25 (23 par défaut).
+const CRF_OFFSETS = [-1, 0, 1, 2, 0];
+function crfForIndex(baseCRF, idx){
+  let c = baseCRF + CRF_OFFSETS[idx % CRF_OFFSETS.length];
+  return Math.min(25, Math.max(22, c));
+}
+
+// Construit la liste des segments à assembler pour une version sauvegardée.
+// v20 : Transition et B-roll sont deux réglages INDÉPENDANTS par zone Z.
+// v21 : une zone Z peut contenir PLUSIEURS B-roll, insérés à la suite dans l'ordre choisi.
+// - Ni l'un ni l'autre coché → coupure franche ("cut"), aucun effet ajouté.
+// - Transition seule → xfade normal entre les deux clips.
+// - B-roll(s) seul(s) → insérés à la suite, coupures franches partout (avant, entre eux, après).
+// - Les deux cochés → LA MÊME transition choisie encadre le bloc de B-roll (avant le 1er, après
+//   le dernier) ; les coupures ENTRE plusieurs B-roll consécutifs restent des coupures franches.
+function buildSegments(sv){
+  const segs = [{type:'clip', idx:0}];
+  sv.zSettings.forEach((z, i)=>{
+    const hasTrans = !!z.transitionOn;
+    const hasBroll = !!(z.brollOn && z.brolls && z.brolls.length);
+    const t = hasTrans ? {transition:z.transition, duration:z.duration} : {transition:'cut', duration:0};
+    if(hasBroll){
+      z.brolls.forEach((brollFile, bi)=>{
+        const transIn = bi===0 ? t : {transition:'cut', duration:0};
+        segs.push({type:'broll', file:brollFile, trans:transIn});
+      });
+      segs.push({type:'clip', idx:i+1, trans:t});
+    } else {
+      segs.push({type:'clip', idx:i+1, trans:t});
+    }
+  });
+  return segs;
+}
+
+function build(){
+  const dir = document.getElementById('inDir').value.trim() || 'Variations_Video';
+  const px = document.getElementById('inPrefix').value.trim() || 'V';
+  const musicFile = document.getElementById('inMusic').value.trim();
+  const musicVol = (parseFloat(document.getElementById('inMusicVol').value) || 0) / 100;
+  const origVol = (parseFloat(document.getElementById('inOrigVol').value) || 100) / 100;
+  const baseCRF = parseInt(document.getElementById('inBaseCRF').value) || 23;
+  const itemCount = mode==='single' ? variants.length : savedVersions.length;
+
+  let header = `#!/bin/bash
+# ============================================
+#  SOPHY V19 — script généré automatiquement
+#  ${itemCount} version(s)
+#  ${mode==='single' ? "Combo d'effets par version + musique de fond + CRF variable" : "Zone de travail (Clip par Clip, Z par Z, B-roll) + musique de fond + CRF variable"}
+# ============================================
+
+# Force le point décimal (évite le bug "No such filter: '733'"
+# qui survient sur les Mac configurés en français, où les calculs
+# de durée utilisent une virgule au lieu d'un point par défaut).
+export LC_ALL=C
+export LC_NUMERIC=C
+
+OUT="${dir}"
+MUSIC_FILE="${musicFile}"
+MUSIC_VOL_F="${musicVol}"
+ORIG_VOL_F="${origVol}"
+
+if ! command -v ffmpeg >/dev/null; then
+  echo "❌ ffmpeg n'est pas installé. Lance :  brew install ffmpeg"; exit 1
+fi
+if [ -n "$MUSIC_FILE" ] && [ ! -f "$MUSIC_FILE" ]; then
+  echo "⚠️  Musique introuvable ($MUSIC_FILE) — les vidéos seront générées SANS musique de fond."
+  MUSIC_FILE=""
+fi
+mkdir -p "$OUT"
+`;
+  header += PROCESS_FUNC;
+  let body = '';
+
+  if(mode==='single'){
+    const video = document.getElementById('inVideo').value.trim() || 'V1.mp4';
+    header += `INPUT="${video}"\nif [ ! -f "$INPUT" ]; then echo "❌ Vidéo introuvable : $INPUT"; exit 1; fi\n`;
+    body += `echo "🎬 Création de ${itemCount} version(s) à partir de $INPUT ..."\necho ""\n\n`;
+    variants.forEach((v, idx)=>{
+      const n = idx+1;
+      const outFile = `$OUT/${px}${n}_${slug(v.name)}.mp4`;
+      const crf = crfForIndex(baseCRF, idx);
+      body += `echo "▶ Variante ${n} : ${v.name} (CRF ${crf})"\n`;
+      body += buildVariantCommand(v, '"$INPUT"', outFile, crf) + '\n';
+      body += `echo ""\n\n`;
+    });
+  } else {
+    const clipInputs = Array.from(document.querySelectorAll('#clipList .clipInput')).map(i=>i.value.trim()).filter(Boolean);
+    header += `CLIPS=(${clipInputs.map(c=>`"${c}"`).join(' ')})\n`;
+    header += `for c in "\${CLIPS[@]}"; do\n  if [ ! -f "$c" ]; then echo "❌ Clip introuvable : $c"; exit 1; fi\ndone\n`;
+    const brollInputs = getBrollFiles();
+    if(brollInputs.length){
+      header += `BROLLS=(${brollInputs.map(c=>`"${c}"`).join(' ')})\n`;
+      header += `for c in "\${BROLLS[@]}"; do\n  if [ ! -f "$c" ]; then echo "❌ B-roll introuvable : $c"; exit 1; fi\ndone\n`;
+    }
+    header += PROCESS_CLIP_FUNC;
+    header += ASSEMBLE_MULTI_FUNC;
+    body += `echo "🎬 Traitement clip par clip puis assemblage en ${itemCount} version(s) ..."\necho ""\n\n`;
+    savedVersions.forEach((sv, idx)=>{
+      const n = idx+1;
+      const crf = crfForIndex(baseCRF, idx);
+      const assembledPath = `$OUT/_assemble_${px}${n}.mp4`;
+      const outFile = `$OUT/${px}${n}.mp4`;
+      const segs = buildSegments(sv);
+      const tempVar = `TMPC_${px}${n}`;
+
+      body += `echo "▶ V${n} (${segs.length} segments, CRF ${crf})"\n`;
+      body += `${tempVar}=()\n`;
+      // Étape 1 : traiter chaque segment (clip avec SES réglages, ou b-roll sans effet)
+      segs.forEach((seg, si)=>{
+        const tmpPath = `$OUT/_c${si}_${px}${n}.mp4`;
+        if(seg.type==='clip'){
+          const cfx = sv.clipsFx[seg.idx];
+          const zoom = cfx.zoom.on ? cfx.zoom.val : 0;
+          const trimStart = cfx.trimStart.on ? cfx.trimStart.val : 0;
+          const trimEnd = cfx.trimEnd.on ? cfx.trimEnd.val : 0;
+          const speed = cfx.speed.on ? cfx.speed.val : 100;
+          body += `process_clip "\${CLIPS[${seg.idx}]}" "${tmpPath}" "${zoom}" "${trimStart}" "${trimEnd}" "${speed}" "${crf}"\n`;
+        } else {
+          body += `process_clip "${seg.file}" "${tmpPath}" "0" "0" "0" "100" "${crf}"\n`;
+        }
+        body += `${tempVar}+=("${tmpPath}")\n`;
+      });
+      // Étape 2 : assembler avec, pour chaque zone entre segments, sa transition + durée
+      const zArgs = segs.slice(1).map(s=>`"${s.trans.transition}" "${s.trans.duration}"`).join(' ');
+      body += `assemble_variant_multi "${assembledPath}" "${segs.length-1}" ${zArgs} "\${${tempVar}[@]}"\n`;
+      // Étape 3 : musique de fond + CRF final + suppression des métadonnées (aucun autre effet ni trim ici)
+      body += `process_variant "${assembledPath}" "${outFile}" "" "1" "0" "0" "${crf}"\n`;
+      body += `rm -f "${assembledPath}" "\${${tempVar}[@]}"\n`;
+      body += `echo ""\n\n`;
+    });
+  }
+
+  const footer = `
+echo ""
+echo "✅ Terminé ! Tes ${itemCount} version(s) sont dans le dossier : $OUT"
+echo "👉 Ouvre-les maintenant dans CapCut pour la finition (sous-titres, son)."
+open "$OUT" 2>/dev/null
+`;
+
+  const script = header + '\n' + body + footer;
+  document.getElementById('out').textContent = script;
+  document.getElementById('count').textContent = itemCount + ' variation(s)';
+  return script;
+}
+function slug(s){ return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'_').replace(/^_+|_+$/g,'') || 'v'; }
+
+function downloadScript(){
+  const blob = new Blob([build()], {type:'text/x-sh'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'creer_variations.sh';
+  a.click();
+}
+
+['inVideo','inMusic','inDir','inPrefix','inMusicVol','inOrigVol','inBaseCRF'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', build);
+});
+document.getElementById('inJitter').addEventListener('change', build);
+
+renderPresetButtons();
+// Dès l'ouverture, les 5 vidéos presets sont pré-créées et visibles en mode "vidéo déjà montée"
+// (comportement d'origine que Najim connaît — évite de télécharger un script vide).
+generateAllPresets();
+// Initialise la zone de travail / aperçus du mode "clips séparés" (vide au départ).
+ensureWorkingStructures(getClipCount());
+renderWorkspace();
+renderApercus();
+
+// ===================== SECTIONS REPLIABLES (v22) =====================
+// Ajoute une petite icône ▾ en haut à droite de CHAQUE carte (Musique, Zone de travail, etc.).
+// Un clic replie la carte (seul le titre reste visible) ; un second clic la rouvre.
+function togglePanelCollapse(btn){
+  const panel = btn.closest('.panel');
+  panel.classList.toggle('collapsed');
+  btn.textContent = panel.classList.contains('collapsed') ? '▸' : '▾';
+}
+document.querySelectorAll('.panel > h2').forEach(h2=>{
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = 'panel-toggle';
+  btn.title = 'Replier / déplier cette carte';
+  btn.textContent = '▾';
+  btn.onclick = ()=> togglePanelCollapse(btn);
+  h2.appendChild(btn);
+});
+
+// v25 — mode par défaut à l'ouverture de l'app : "Clips séparés à assembler".
+setMode('clips');
+</script>
+</body>
+</html>

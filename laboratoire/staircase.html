@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staircase</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F4F6F9;
+    --panel:#FFFFFF;
+    --panel-2:#E8ECF1;
+    --line:#C7D3E0;
+    --gold:#3A5A82;
+    --gold-light:#5C7FA8;
+    --gold-dark:#1F3A5C;
+    --gold-dim:#7C93AD;
+    --text:#16233A;
+    --text-dim:#5A6E88;
+    --red:#B23A3A;
+    --green:#2F8F63;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(circle at 50% 0%, #FFFFFF 0%, var(--bg) 55%);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:'Tajawal',sans-serif;
+    min-height:100vh;
+    line-height:1.6;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;direction:ltr;unicode-bidi:embed;}
+  .wrap{max-width:820px;margin:0 auto;padding:48px 24px 96px;}
+
+  header{margin-bottom:56px;}
+  .brand{
+    display:flex;align-items:center;gap:18px;
+  }
+  .brand .logo{width:72px;height:72px;flex-shrink:0;}
+  .brand h1{
+    font-size:38px;font-weight:800;margin:0;color:var(--gold);
+    font-family:'Cinzel',serif;letter-spacing:3px;
+  }
+  .brand .sub{color:var(--text-dim);font-size:13px;font-family:'IBM Plex Mono',monospace;direction:ltr;}
+  header p.tagline{color:var(--text-dim);font-size:16px;margin-top:14px;max-width:520px;}
+
+  .lang-switch{margin-inline-start:auto;display:flex;gap:6px;flex-shrink:0;}
+  .lang-btn{
+    background:transparent;border:1px solid var(--line);color:var(--text-dim);
+    padding:6px 14px;border-radius:20px;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;
+    cursor:pointer;transition:all .15s ease;
+  }
+  .lang-btn:hover{border-color:var(--gold-dim);color:var(--text);}
+  .lang-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(58,90,130,0.10);}
+
+  .step{
+    background:linear-gradient(155deg, #FFFFFF 0%, #F0F3F7 55%, #E3E8EE 100%);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:28px 28px;
+    margin-bottom:20px;
+    position:relative;
+    box-shadow:
+      0 14px 32px rgba(22,35,58,0.12),
+      inset 0 1px 0 rgba(255,255,255,0.9),
+      inset 0 -2px 8px rgba(22,35,58,0.06);
+  }
+  .step-head{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .step-num{
+    width:30px;height:30px;border-radius:50%;
+    border:1px solid var(--gold-dim);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--gold);
+    flex-shrink:0;
+  }
+  .step-title{font-size:19px;font-weight:700;color:var(--text);}
+  .step-desc{color:var(--text-dim);font-size:14px;margin-bottom:16px;}
+
+  textarea{
+    width:100%;min-height:160px;
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:4px;
+    color:var(--text);
+    padding:14px;
+    font-family:'Tajawal',sans-serif;
+    font-size:15px;
+    resize:vertical;
+    direction:rtl;
+    box-shadow:inset 0 3px 8px rgba(22,35,58,0.10), inset 0 -1px 0 rgba(255,255,255,0.7);
+  }
+  textarea:focus{outline:none;border-color:var(--gold-dim);}
+
+  input[type="password"]{
+    box-shadow:inset 0 3px 8px rgba(22,35,58,0.10), inset 0 -1px 0 rgba(255,255,255,0.7);
+  }
+
+  .row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+
+  button{
+    background:linear-gradient(135deg, var(--gold-light), var(--gold) 60%, var(--gold-dark));
+    color:#F4F6F9;
+    border:none;
+    border-radius:4px;
+    padding:12px 22px;
+    font-family:'Tajawal',sans-serif;
+    font-weight:700;
+    font-size:15px;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(22,35,58,0.25), inset 0 1px 0 rgba(255,255,255,0.3), inset 0 -3px 6px rgba(0,0,0,0.15);
+    transition:filter .15s ease, transform .15s ease;
+  }
+  button:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  button:disabled{background:var(--line);color:var(--text-dim);cursor:not-allowed;box-shadow:none;transform:none;}
+
+  .status{
+    margin-top:14px;font-size:14px;color:var(--text-dim);
+    display:flex;align-items:center;gap:8px;
+  }
+  .status.error{color:var(--red);}
+  .status.ok{color:var(--green);}
+
+  .spinner{
+    width:14px;height:14px;border-radius:50%;
+    border:2px solid var(--line);border-top-color:var(--gold);
+    animation:spin .7s linear infinite;flex-shrink:0;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .clip-card{
+    background:var(--panel-2);
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:18px;
+    margin-bottom:12px;
+  }
+  .clip-card .clip-text{margin:0;font-size:16px;color:var(--text);}
+
+  footer{margin-top:60px;color:var(--text-dim);font-size:12px;text-align:center;}
+
+  .print-only{display:none;}
+  @media print{
+    body *{visibility:hidden;}
+    .print-only, .print-only *{visibility:visible;}
+    .print-only{display:block;position:absolute;top:0;left:0;width:100%;padding:24px;}
+    .print-only h2{font-family:'Cinzel',serif;color:#1F3A5C;margin-bottom:24px;}
+    .print-only .print-q{font-size:16px;margin-bottom:14px;line-height:1.7;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#A9C0DA"/>
+            <stop offset="50%" stop-color="#5C7FA8"/>
+            <stop offset="100%" stop-color="#1F3A5C"/>
+          </linearGradient>
+          <filter id="logoShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.45"/>
+          </filter>
+        </defs>
+        <circle cx="100" cy="100" r="92" fill="none" stroke="url(#goldGrad)" stroke-width="2"/>
+        <circle cx="100" cy="100" r="80" fill="#0F1A2C"/>
+        <path d="M52,148 L52,124 L76,124 L76,100 L100,100 L100,76 L124,76 L124,52 L148,52 L148,148 Z"
+              fill="url(#goldGrad)" filter="url(#logoShadow)"/>
+      </svg>
+      <div>
+        <h1>STAIRCASE</h1>
+        <div class="sub">v12</div>
+      </div>
+      <div class="lang-switch">
+        <button type="button" class="lang-btn" data-lang="ar">عربي</button>
+        <button type="button" class="lang-btn" data-lang="fr">Français</button>
+      </div>
+    </div>
+    <p class="tagline" data-i18n="tagline"></p>
+  </header>
+
+  <!-- DICTATION / TRANSCRIPTION SOURCE -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">١</div>
+      <div class="step-title" data-i18n="dictation_title"></div>
+    </div>
+    <div class="step-desc" data-i18n="dictation_desc"></div>
+    <div class="row" style="margin-top:0;">
+      <button id="micBtn" type="button" data-i18n="mic_btn_start"></button>
+      <button id="micResetBtn" type="button" data-i18n="mic_btn_reset"></button>
+      <button id="videoTranscribeBtn" type="button" disabled data-i18n="video_transcribe_btn"></button>
+    </div>
+    <div class="status" id="dictationStatus"></div>
+  </div>
+
+  <!-- QUESTION GENERATION -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">٢</div>
+      <div class="step-title" data-i18n="qgen_title"></div>
+    </div>
+    <textarea id="qgenInput" data-i18n-ph="qgen_input_ph"></textarea>
+    <div class="row">
+      <button id="qgenCreateBtn" type="button" data-i18n="qgen_create_btn"></button>
+      <button id="qgenCopyBtn" type="button" data-i18n="qgen_copy_btn"></button>
+      <button id="qgenPrintBtn" type="button" data-i18n="qgen_print_btn"></button>
+    </div>
+    <div class="status" id="qgenShowStatus"></div>
+    <div id="qgenResults" style="margin-top:16px;"></div>
+  </div>
+
+  <footer>Staircase v12 — 2026-09-06 · Roqya Suisse / Najim</footer>
+</div>
+<div class="print-only" id="printArea"></div>
+
+<script>
+// ---------- i18n ----------
+const I18N = {
+  ar: {
+    tagline: "الصق نصًا أو موضوعًا، و Staircase يولّد أكبر عدد ممكن من الأسئلة الممكنة حوله — درجة درجة.",
+    qgen_title: "توليد الأسئلة الممكنة",
+    qgen_input_ph: "الصق هنا النص أو المعلومات عن الموضوع...",
+    qgen_text_first: "الصق النص أو المعلومات أولًا.",
+    qgen_create_btn: "أنشئ الأسئلة",
+    qgen_copy_btn: "📋 نسخ النص",
+    qgen_copied: "تم النسخ!",
+    qgen_print_btn: "🖨 طباعة الأسئلة",
+    qgen_generating: "جاري إنشاء الأسئلة...",
+    server_error: "خطأ من الخادم: ",
+    qgen_no_questions: "لم يرجع Claude أي أسئلة صالحة.",
+    qgen_gen_error: "خطأ أثناء الإنشاء: ",
+    qgen_ready: "تم! {n} سؤال جاهز.",
+    dictation_title: "مصدر النص",
+    dictation_desc: "أملِ النص مباشرة بصوتك، أو استعمل فيديو (قريبًا) ليُحوَّل تلقائيًا إلى نص أدناه.",
+    mic_btn_start: "🎙 ابدأ الإملاء",
+    mic_btn_stop: "⏸ إيقاف مؤقت",
+    mic_btn_reset: "🔄 إملاء جديد",
+    mic_reset_done: "تم المسح. جاهز لإملاء جديد.",
+    video_transcribe_btn: "🎬 تفريغ فيديو (قريبًا)",
+    mic_not_supported: "متصفحك لا يدعم الإملاء الصوتي. جرّب Chrome.",
+    mic_listening: "جاري الاستماع... تحدّث الآن.",
+    mic_stopped: "تم إيقاف الإملاء.",
+    mic_requesting: "جاري طلب إذن الميكروفون...",
+    mic_permission_denied: "تم رفض الوصول إلى الميكروفون. اضغط على أيقونة القفل بجانب رابط الصفحة، وتأكد أن إذن الميكروفون مفعّل لهذا الموقع، ثم أعد المحاولة.",
+    mic_no_device: "لم يتم العثور على أي ميكروفون متصل بالجهاز. تأكد من توصيل الميكروفون وأنه مفعّل في إعدادات النظام.",
+    mic_no_speech: "لم يتم رصد أي صوت. تحدّث بصوت أعلى أو تأكد من اختيار الميكروفون الصحيح كمدخل افتراضي في إعدادات النظام.",
+    mic_network_error: "خطأ في الاتصال بخدمة التعرّف على الصوت. تأكد من اتصالك بالإنترنت.",
+    mic_generic_error: "حدث خطأ أثناء الإملاء: "
+  },
+  fr: {
+    tagline: "Collez un texte ou un sujet, et Staircase génère un maximum de questions possibles à son sujet — marche après marche.",
+    qgen_title: "Génération de questions possibles",
+    qgen_input_ph: "Collez ici le texte ou les informations sur le sujet...",
+    qgen_apikey_ph: "Clé API Claude : sk-ant-...",
+    qgen_create_btn: "Générer les questions",
+    qgen_copy_btn: "📋 Copier le texte",
+    qgen_copied: "Copié !",
+    qgen_print_btn: "🖨 Imprimer les questions",
+    qgen_text_first: "Collez d'abord le texte ou les informations.",
+    api_key_first: "Entrez votre clé API Claude.",
+    qgen_generating: "Génération des questions en cours...",
+    server_error: "Erreur du serveur : ",
+    qgen_no_questions: "Claude n'a renvoyé aucune question valide.",
+    qgen_gen_error: "Erreur durant la génération : ",
+    qgen_ready: "Terminé ! {n} questions prêtes.",
+    dictation_title: "Source du texte",
+    dictation_desc: "Dictez le texte directement à voix haute, ou utilisez une vidéo (bientôt) pour la transcrire automatiquement ci-dessous.",
+    mic_btn_start: "🎙 Démarrer la dictée",
+    mic_btn_stop: "⏸ Pause",
+    mic_btn_reset: "🔄 Nouvelle dictée",
+    mic_reset_done: "Effacé. Prêt pour une nouvelle dictée.",
+    video_transcribe_btn: "🎬 Transcrire une vidéo (bientôt)",
+    mic_not_supported: "Votre navigateur ne supporte pas la dictée vocale. Essayez Chrome.",
+    mic_listening: "Écoute en cours... parlez maintenant.",
+    mic_stopped: "Dictée arrêtée.",
+    mic_requesting: "Demande d'accès au microphone...",
+    mic_permission_denied: "Accès au microphone refusé. Cliquez sur l'icône de cadenas à côté de l'adresse de la page, vérifiez que la permission microphone est activée pour ce site, puis réessayez.",
+    mic_no_device: "Aucun microphone détecté sur cet appareil. Vérifiez qu'un micro est bien branché et activé dans les réglages du système.",
+    mic_no_speech: "Aucune voix détectée. Parlez plus fort ou vérifiez que le bon micro est sélectionné comme entrée par défaut dans les réglages du système.",
+    mic_network_error: "Erreur de connexion au service de reconnaissance vocale. Vérifiez votre connexion internet.",
+    mic_generic_error: "Erreur pendant la dictée : "
+  }
+};
+
+let currentLang = 'ar';
+try{ currentLang = localStorage.getItem('staircase_lang') || 'ar'; }catch(e){}
+let recognition = null;
+let isListening = false;
+let dictationBaseText = '';
+
+function t(key, vars){
+  let s = (I18N[currentLang] && I18N[currentLang][key] !== undefined) ? I18N[currentLang][key] : key;
+  if(vars){ Object.keys(vars).forEach(k => { s = s.replace('{'+k+'}', vars[k]); }); }
+  return s;
+}
+
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+}
+
+function setLang(lang){
+  currentLang = lang;
+  try{ localStorage.setItem('staircase_lang', lang); }catch(e){}
+  document.documentElement.lang = lang;
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  applyI18n();
+}
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => setLang(btn.dataset.lang));
+});
+
+setLang(currentLang);
+
+function setStatus(el, cls, msg, spinner){
+  el.className = 'status' + (cls ? ' '+cls : '');
+  el.innerHTML = (spinner ? '<div class="spinner"></div>' : '') + '<span>'+msg+'</span>';
+}
+
+// ---------- dictation (browser speech recognition, feeds qgenInput) ----------
+const micBtn = document.getElementById('micBtn');
+const micResetBtn = document.getElementById('micResetBtn');
+const dictationStatusEl = document.getElementById('dictationStatus');
+const qgenInputEl = document.getElementById('qgenInput');
+function initRecognition(){
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if(!SpeechRecognition) return null;
+  const rec = new SpeechRecognition();
+  rec.continuous = true;
+  rec.interimResults = true;
+  rec.lang = (currentLang === 'ar') ? 'ar-SA' : 'fr-FR';
+  return rec;
+}
+
+micBtn.addEventListener('click', () => {
+  if(isListening){ stopDictation(); return; }
+  startDictation();
+});
+
+function speechErrorMessage(errCode){
+  switch(errCode){
+    case 'not-allowed':
+    case 'permission-denied':
+      return { cls: 'error', msg: t('mic_permission_denied') };
+    case 'audio-capture':
+      return { cls: 'error', msg: t('mic_no_device') };
+    case 'no-speech':
+      return { cls: '', msg: t('mic_no_speech') };
+    case 'network':
+      return { cls: 'error', msg: t('mic_network_error') };
+    default:
+      return { cls: 'error', msg: t('mic_generic_error') + errCode };
+  }
+}
+
+async function startDictation(){
+  recognition = initRecognition();
+  if(!recognition){ setStatus(dictationStatusEl, 'error', t('mic_not_supported')); return; }
+
+  micBtn.disabled = true;
+  setStatus(dictationStatusEl, '', t('mic_requesting'), true);
+
+  // Demande explicite et vérifiée de l'accès au micro AVANT de démarrer la reconnaissance.
+  // Cela force une vraie boîte de dialogue de permission et permet de capter précisément
+  // pourquoi ça échoue (refusé, aucun périphérique, etc.) au lieu d'un blocage silencieux.
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach(track => track.stop());
+  }catch(err){
+    micBtn.disabled = false;
+    const info = speechErrorMessage(err.name === 'NotFoundError' ? 'audio-capture' : 'not-allowed');
+    setStatus(dictationStatusEl, info.cls, info.msg);
+    return;
+  }
+
+  micBtn.disabled = false;
+  dictationBaseText = qgenInputEl.value ? (qgenInputEl.value.trim() + ' ') : '';
+
+  recognition.onresult = (event) => {
+    let interim = '';
+    let final = '';
+    for(let i = event.resultIndex; i < event.results.length; i++){
+      const transcript = event.results[i][0].transcript;
+      if(event.results[i].isFinal){ final += transcript + ' '; }
+      else { interim += transcript; }
+    }
+    if(final){ dictationBaseText += final; }
+    qgenInputEl.value = dictationBaseText + interim;
+  };
+
+  recognition.onerror = (event) => {
+    if(event.error === 'no-speech') return; // transitoire, onend relance l'écoute
+    isListening = false;
+    micBtn.textContent = t('mic_btn_start');
+    const info = speechErrorMessage(event.error);
+    setStatus(dictationStatusEl, info.cls, info.msg);
+  };
+
+  recognition.onend = () => {
+    if(isListening){
+      // redémarre automatiquement si l'écoute s'est arrêtée toute seule
+      try{ recognition.start(); }catch(e){}
+    }
+  };
+
+  recognition.start();
+  isListening = true;
+  micBtn.textContent = t('mic_btn_stop');
+  setStatus(dictationStatusEl, 'ok', t('mic_listening'));
+}
+
+function stopDictation(){
+  isListening = false;
+  if(recognition){ recognition.stop(); }
+  micBtn.textContent = t('mic_btn_start');
+  setStatus(dictationStatusEl, '', t('mic_stopped'));
+}
+
+micResetBtn.addEventListener('click', () => {
+  isListening = false;
+  if(recognition){ try{ recognition.stop(); }catch(e){} }
+  dictationBaseText = '';
+  qgenInputEl.value = '';
+  micBtn.textContent = t('mic_btn_start');
+  setStatus(dictationStatusEl, '', t('mic_reset_done'));
+});
+
+// ---------- question generation (direct via API) ----------
+document.getElementById('qgenCreateBtn').addEventListener('click', qgenCreateQuestions);
+
+document.getElementById('qgenCopyBtn').addEventListener('click', () => {
+  const text = document.getElementById('qgenInput').value;
+  const btn = document.getElementById('qgenCopyBtn');
+  const originalLabel = btn.textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    btn.textContent = I18N[currentLang].qgen_copied;
+    setTimeout(() => { btn.textContent = originalLabel; }, 1500);
+  });
+});
+
+document.getElementById('qgenPrintBtn').addEventListener('click', () => {
+  const cards = document.querySelectorAll('#qgenResults .clip-text');
+  if(!cards.length) return;
+  const printArea = document.getElementById('printArea');
+  printArea.setAttribute('dir', currentLang === 'ar' ? 'rtl' : 'ltr');
+  const title = currentLang === 'ar' ? 'الأسئلة الممكنة — Staircase' : 'Questions possibles — Staircase';
+  const questionsHtml = Array.from(cards).map(c => `<div class="print-q">${c.textContent}</div>`).join('');
+  printArea.innerHTML = `<h2>${title}</h2>${questionsHtml}`;
+  window.print();
+});
+
+const STAIRCASE_WEBHOOK_URL = "https://n8n.srv936251.hstgr.cloud/webhook/staircase-questions";
+
+async function qgenCreateQuestions(){
+  const statusEl = document.getElementById('qgenShowStatus');
+  const resultsEl = document.getElementById('qgenResults');
+  const sourceText = document.getElementById('qgenInput').value.trim();
+
+  if(!sourceText){ setStatus(statusEl, 'error', t('qgen_text_first')); return; }
+
+  setStatus(statusEl, '', t('qgen_generating'), true);
+  resultsEl.innerHTML = '';
+
+  try{
+    const response = await fetch(STAIRCASE_WEBHOOK_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sourceText })
+    });
+
+    if(!response.ok){
+      const errText = await response.text();
+      throw new Error(t('server_error') + response.status + ' — ' + errText.slice(0,200));
+    }
+
+    const data = await response.json();
+    if(data.success === false){
+      throw new Error(data.error || t('qgen_no_questions'));
+    }
+
+    const lines = (data.questions || []).filter(l => l && l.trim().length);
+
+    if(!lines.length){ setStatus(statusEl, 'error', t('qgen_no_questions')); return; }
+
+    resultsEl.innerHTML = lines.map((q, i) => `
+      <div class="clip-card">
+        <div class="clip-text">${i+1}. ${q}</div>
+      </div>
+    `).join('');
+
+    setStatus(statusEl, 'ok', t('qgen_ready', {n: lines.length}));
+
+  }catch(err){
+    setStatus(statusEl, 'error', t('qgen_gen_error') + err.message);
+  }
+}
+</script>
+</body>
+</html>

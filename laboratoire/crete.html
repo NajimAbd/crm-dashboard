@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Crete</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;900&family=IBM+Plex+Mono:wght@400;500&family=Cinzel:wght@600;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0A0908;
+    --panel:#55482E;
+    --panel-2:#332B1B;
+    --line:#8A7750;
+    --gold:#D4AF6A;
+    --gold-light:#F0DDA8;
+    --gold-dark:#9C7C3E;
+    --gold-dim:#8F7443;
+    --text:#F3EDE0;
+    --text-dim:#C2B49A;
+    --red:#B23F35;
+    --green:#4F8F63;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:radial-gradient(circle at 50% 0%, #171208 0%, var(--bg) 55%);
+    background-attachment:fixed;
+    color:var(--text);
+    font-family:'Tajawal',sans-serif;
+    min-height:100vh;
+    line-height:1.6;
+  }
+  .mono{font-family:'IBM Plex Mono',monospace;direction:ltr;unicode-bidi:embed;}
+  .wrap{max-width:640px;margin:0 auto;padding:48px 24px 96px;}
+
+  header{margin-bottom:56px;}
+  .brand{display:flex;align-items:center;gap:18px;}
+  .brand .logo{width:72px;height:72px;flex-shrink:0;}
+  .brand h1{
+    font-size:38px;font-weight:800;margin:0;color:var(--gold);
+    font-family:'Cinzel',serif;letter-spacing:3px;
+  }
+  .brand .sub{color:var(--text-dim);font-size:13px;font-family:'IBM Plex Mono',monospace;direction:ltr;}
+  header p.tagline{color:var(--text-dim);font-size:16px;margin-top:14px;max-width:520px;}
+
+  .lang-switch{margin-inline-start:auto;display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;}
+  .lang-btn{
+    background:transparent;border:1px solid var(--line);color:var(--text-dim);
+    padding:6px 14px;border-radius:20px;
+    font-family:'IBM Plex Mono',monospace;font-size:12px;
+    cursor:pointer;transition:all .15s ease;
+  }
+  .lang-btn:hover{border-color:var(--gold-dim);color:var(--text);}
+  .lang-btn.active{border-color:var(--gold);color:var(--gold);background:rgba(212,175,106,0.10);}
+
+  .step{
+    background:linear-gradient(155deg, #6C5B39 0%, var(--panel) 55%, #423823 100%);
+    border:1px solid var(--line);
+    border-radius:8px;
+    padding:28px 28px;
+    margin-bottom:20px;
+    position:relative;
+    box-shadow:
+      0 16px 40px rgba(0,0,0,0.6),
+      inset 0 1px 0 rgba(255,255,255,0.18),
+      inset 0 -3px 10px rgba(0,0,0,0.35);
+  }
+  .step-head{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+  .step-num{
+    width:30px;height:30px;border-radius:50%;
+    border:1px solid var(--gold-dim);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'IBM Plex Mono',monospace;font-size:14px;color:var(--gold);
+    flex-shrink:0;
+  }
+  .step-title{font-size:19px;font-weight:700;color:var(--text);}
+  .step-desc{color:var(--text-dim);font-size:14px;margin-bottom:16px;}
+
+  input[type="email"]{
+    width:100%;padding:14px;background:var(--panel-2);
+    border:1px solid var(--line);border-radius:4px;color:var(--text);
+    font-family:'Tajawal',sans-serif;font-size:15px;
+    box-shadow:inset 0 3px 8px rgba(0,0,0,0.45), inset 0 -1px 0 rgba(255,255,255,0.05);
+  }
+  input[type="email"]:focus{outline:none;border-color:var(--gold-dim);}
+
+  .dropzone{
+    border:1px dashed var(--line);
+    border-radius:4px;
+    padding:36px 28px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .15s ease, background .15s ease;
+    background:var(--panel-2);
+    box-shadow:inset 0 3px 8px rgba(0,0,0,0.45), inset 0 -1px 0 rgba(255,255,255,0.05);
+  }
+  .dropzone:hover, .dropzone.drag{border-color:var(--gold-dim);background:#2E271F;}
+  .dropzone input{display:none;}
+  .dropzone .filename{color:var(--gold);font-weight:500;margin-top:6px;}
+  .dropzone .hint{color:var(--text-dim);font-size:13px;}
+
+  .row{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;}
+
+  button{
+    background:linear-gradient(135deg, var(--gold-light), var(--gold) 60%, var(--gold-dark));
+    color:#171310;
+    border:none;
+    border-radius:4px;
+    padding:14px 26px;
+    font-family:'Tajawal',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    cursor:pointer;
+    width:100%;
+    box-shadow:0 4px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -3px 6px rgba(0,0,0,0.25);
+    transition:filter .15s ease, transform .15s ease;
+  }
+  button:hover{filter:brightness(1.08);transform:translateY(-1px);}
+  button:disabled{background:var(--line);color:var(--text-dim);cursor:not-allowed;box-shadow:none;transform:none;}
+
+  .status{
+    margin-top:16px;font-size:14px;color:var(--text-dim);
+    display:flex;align-items:flex-start;gap:8px;
+  }
+  .status.error{color:var(--red);}
+  .status.ok{color:var(--green);}
+  .status .detail{display:block;font-size:12px;color:var(--text-dim);margin-top:4px;direction:ltr;text-align:left;}
+
+  .spinner{
+    width:14px;height:14px;border-radius:50%;
+    border:2px solid var(--line);border-top-color:var(--gold);
+    animation:spin .7s linear infinite;flex-shrink:0;margin-top:2px;
+  }
+  @keyframes spin{to{transform:rotate(360deg);}}
+
+  .progress-bar{
+    width:100%;height:6px;background:var(--panel-2);border-radius:3px;overflow:hidden;margin-top:14px;
+    border:1px solid var(--line);
+  }
+  .progress-bar .fill{height:100%;background:var(--gold);width:0%;transition:width .2s ease;}
+
+  footer{margin-top:60px;color:var(--text-dim);font-size:12px;text-align:center;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#F0DDA8"/>
+            <stop offset="50%" stop-color="#D4AF6A"/>
+            <stop offset="100%" stop-color="#9C7C3E"/>
+          </linearGradient>
+          <filter id="logoShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="0" dy="2" stdDeviation="3" flood-color="#000000" flood-opacity="0.45"/>
+          </filter>
+        </defs>
+        <circle cx="100" cy="100" r="92" fill="none" stroke="url(#goldGrad)" stroke-width="2"/>
+        <circle cx="100" cy="100" r="80" fill="#201C16"/>
+        <path d="M151.68,118.81 A55,55 0 1,1 151.68,81.19" fill="none" stroke="url(#goldGrad)" stroke-width="20" stroke-linecap="round" filter="url(#logoShadow)"/>
+        <circle cx="153" cy="100" r="7" fill="url(#goldGrad)"/>
+        <g filter="url(#logoShadow)">
+          <path d="M68,100 Q100,72 132,100 Q100,128 68,100 Z" fill="#0E0C0A" stroke="url(#goldGrad)" stroke-width="3" stroke-linejoin="round"/>
+          <circle cx="100" cy="100" r="12" fill="url(#goldGrad)"/>
+          <circle cx="100" cy="100" r="5" fill="#0E0C0A"/>
+          <circle cx="104" cy="96" r="2" fill="#F0DDA8"/>
+        </g>
+      </svg>
+      <div>
+        <h1>CRETE</h1>
+        <div class="sub">Découverte</div>
+      </div>
+      <div class="lang-switch">
+        <button type="button" class="lang-btn" data-lang="ar">عربي</button>
+        <button type="button" class="lang-btn" data-lang="fr">Français</button>
+        <button type="button" class="lang-btn" data-lang="de">Deutsch</button>
+        <button type="button" class="lang-btn" data-lang="sq">Shqip</button>
+      </div>
+    </div>
+    <p class="tagline" data-i18n="tagline"></p>
+  </header>
+
+  <!-- STEP 1: EMAIL -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">1</div>
+      <div class="step-title" data-i18n="step1_title"></div>
+    </div>
+    <div class="step-desc" data-i18n="step1_desc"></div>
+    <input type="email" id="clientEmail" class="mono" data-i18n-ph="email_placeholder" style="direction:ltr;text-align:left;">
+  </div>
+
+  <!-- STEP 2: VIDEO -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">2</div>
+      <div class="step-title" data-i18n="step2_title"></div>
+    </div>
+    <div class="step-desc" data-i18n="step2_desc"></div>
+    <div class="dropzone" id="videoDrop">
+      <input type="file" id="videoInput" accept="video/*">
+      <div class="hint" data-i18n="drop_hint"></div>
+      <div class="filename" id="videoName"></div>
+    </div>
+  </div>
+
+  <!-- STEP 3: SEND -->
+  <div class="step">
+    <div class="step-head">
+      <div class="step-num">3</div>
+      <div class="step-title" data-i18n="step3_title"></div>
+    </div>
+    <div class="step-desc" data-i18n="step3_desc"></div>
+    <button id="sendBtn" type="button" data-i18n="send_btn"></button>
+    <div class="progress-bar" id="progressBar" style="display:none;"><div class="fill" id="progressFill"></div></div>
+    <div class="status" id="sendStatus"></div>
+  </div>
+
+  <footer>Crete — Roqya Suisse</footer>
+</div>
+
+<script>
+// ---------- i18n ----------
+const I18N = {
+  ar: {
+    tagline: "ارفع فيديوك الطويل، وسيقوم Crete تلقائيًا بتفريغه واختيار أقوى اللحظات وتقسيمها إلى مقاطع جاهزة للنشر.",
+    step1_title: "البريد الإلكتروني",
+    step1_desc: "أدخل بريدك الإلكتروني للتحقق من صلاحية الوصول.",
+    email_placeholder: "example@email.com",
+    step2_title: "الفيديو",
+    step2_desc: "ارفع الفيديو الأصلي (بودكاست، حصة، مقابلة...). العرض التجريبي: حتى 60 دقيقة، فيديو واحد فقط.",
+    drop_hint: "اضغط هنا أو اسحب ملف الفيديو",
+    step3_title: "الإرسال",
+    step3_desc: "بعد الإرسال، سيقوم Crete بمعالجة الفيديو تلقائيًا. ستصلك المقاطع بعد الانتهاء.",
+    send_btn: "إرسال الفيديو",
+    email_required: "الرجاء إدخال البريد الإلكتروني أولاً.",
+    video_required: "الرجاء اختيار فيديو أولاً.",
+    checking_access: "جاري التحقق من الصلاحية...",
+    uploading: "جاري إرسال الفيديو...",
+    success: "تم استلام الفيديو بنجاح! جاري معالجته الآن.",
+    generic_error: "حدث خطأ أثناء الإرسال. يرجى المحاولة مجددًا أو التواصل مع Roqya Suisse.",
+    network_error: "تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت وحاول مجددًا.",
+    access_none: "هذا البريد الإلكتروني لا يملك صلاحية الوصول إلى Crete. يرجى التواصل مع Roqya Suisse.",
+    access_expired: "انتهت فترة تجربتك المجانية. يرجى التواصل مع Roqya Suisse للاشتراك.",
+    access_inactive: "هذا الحساب غير نشط حاليًا. يرجى التواصل مع Roqya Suisse."
+  },
+  fr: {
+    tagline: "Envoyez votre vidéo longue : Crete la transcrit automatiquement, repère les moments les plus forts et les découpe en clips prêts à publier.",
+    step1_title: "Adresse e-mail",
+    step1_desc: "Entrez votre e-mail pour vérifier votre accès.",
+    email_placeholder: "exemple@email.com",
+    step2_title: "La vidéo",
+    step2_desc: "Importez la vidéo source (podcast, cours, interview...). Offre Découverte : 60 minutes max, une seule vidéo.",
+    drop_hint: "Cliquez ici ou glissez le fichier vidéo",
+    step3_title: "Envoi",
+    step3_desc: "Une fois envoyée, Crete traite automatiquement votre vidéo. Vous recevrez les clips une fois le traitement terminé.",
+    send_btn: "Envoyer la vidéo",
+    email_required: "Merci d'entrer votre adresse e-mail.",
+    video_required: "Merci de sélectionner une vidéo.",
+    checking_access: "Vérification de l'accès...",
+    uploading: "Envoi de la vidéo en cours...",
+    success: "Vidéo reçue avec succès ! Traitement en cours.",
+    generic_error: "Une erreur est survenue lors de l'envoi. Merci de réessayer ou de contacter Roqya Suisse.",
+    network_error: "Impossible de contacter le serveur. Vérifiez votre connexion internet et réessayez.",
+    access_none: "Cette adresse e-mail n'a pas accès à Crete. Merci de contacter Roqya Suisse.",
+    access_expired: "Votre période d'essai gratuite est terminée. Merci de contacter Roqya Suisse pour souscrire.",
+    access_inactive: "Ce compte n'est pas actif actuellement. Merci de contacter Roqya Suisse."
+  },
+  de: {
+    tagline: "Laden Sie Ihr langes Video hoch: Crete transkribiert es automatisch, findet die stärksten Momente und schneidet sie zu veröffentlichungsfertigen Clips.",
+    step1_title: "E-Mail-Adresse",
+    step1_desc: "Geben Sie Ihre E-Mail ein, um Ihren Zugang zu überprüfen.",
+    email_placeholder: "beispiel@email.com",
+    step2_title: "Das Video",
+    step2_desc: "Laden Sie das Ausgangsvideo hoch (Podcast, Kurs, Interview...). Découverte-Angebot: maximal 60 Minuten, nur ein Video.",
+    drop_hint: "Hier klicken oder Videodatei ziehen",
+    step3_title: "Senden",
+    step3_desc: "Nach dem Senden verarbeitet Crete Ihr Video automatisch. Sie erhalten die Clips nach Abschluss der Verarbeitung.",
+    send_btn: "Video senden",
+    email_required: "Bitte geben Sie zuerst Ihre E-Mail-Adresse ein.",
+    video_required: "Bitte wählen Sie zuerst ein Video aus.",
+    checking_access: "Zugang wird überprüft...",
+    uploading: "Video wird gesendet...",
+    success: "Video erfolgreich empfangen! Verarbeitung läuft.",
+    generic_error: "Beim Senden ist ein Fehler aufgetreten. Bitte versuchen Sie es erneut oder kontaktieren Sie Roqya Suisse.",
+    network_error: "Server konnte nicht erreicht werden. Überprüfen Sie Ihre Internetverbindung und versuchen Sie es erneut.",
+    access_none: "Diese E-Mail-Adresse hat keinen Zugang zu Crete. Bitte kontaktieren Sie Roqya Suisse.",
+    access_expired: "Ihre kostenlose Testphase ist abgelaufen. Bitte kontaktieren Sie Roqya Suisse für ein Abonnement.",
+    access_inactive: "Dieses Konto ist derzeit nicht aktiv. Bitte kontaktieren Sie Roqya Suisse."
+  },
+  sq: {
+    tagline: "Ngarkoni videon tuaj të gjatë: Crete e transkripton automatikisht, gjen momentet më të forta dhe i pret në klipe gati për publikim.",
+    step1_title: "Adresa e emailit",
+    step1_desc: "Shkruani emailin tuaj për të verifikuar qasjen.",
+    email_placeholder: "shembull@email.com",
+    step2_title: "Videoja",
+    step2_desc: "Ngarkoni videon origjinale (podkast, kurs, intervistë...). Oferta Découverte: deri në 60 minuta, vetëm një video.",
+    drop_hint: "Klikoni këtu ose tërhiqni skedarin e videos",
+    step3_title: "Dërgimi",
+    step3_desc: "Pas dërgimit, Crete e përpunon automatikisht videon tuaj. Do t'i merrni klipet pasi përpunimi të përfundojë.",
+    send_btn: "Dërgo videon",
+    email_required: "Ju lutemi shkruani së pari emailin tuaj.",
+    video_required: "Ju lutemi zgjidhni së pari një video.",
+    checking_access: "Duke verifikuar qasjen...",
+    uploading: "Videoja po dërgohet...",
+    success: "Videoja u mor me sukses! Përpunimi është duke vazhduar.",
+    generic_error: "Ndodhi një gabim gjatë dërgimit. Ju lutemi provoni përsëri ose kontaktoni Roqya Suisse.",
+    network_error: "Nuk mund të lidhemi me serverin. Kontrolloni lidhjen tuaj me internetin dhe provoni përsëri.",
+    access_none: "Ky email nuk ka qasje në Crete. Ju lutemi kontaktoni Roqya Suisse.",
+    access_expired: "Periudha juaj e provës falas ka përfunduar. Ju lutemi kontaktoni Roqya Suisse për t'u abonuar.",
+    access_inactive: "Ky llogari nuk është aktive aktualisht. Ju lutemi kontaktoni Roqya Suisse."
+  }
+};
+
+let currentLang = 'ar';
+try{ currentLang = localStorage.getItem('crete_lang') || 'ar'; }catch(e){}
+
+function t(key){
+  return (I18N[currentLang] && I18N[currentLang][key] !== undefined) ? I18N[currentLang][key] : key;
+}
+
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => { el.placeholder = t(el.getAttribute('data-i18n-ph')); });
+}
+
+function setLang(lang){
+  currentLang = lang;
+  try{ localStorage.setItem('crete_lang', lang); }catch(e){}
+  document.documentElement.lang = lang;
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  applyI18n();
+}
+
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => setLang(btn.dataset.lang));
+});
+
+setLang(currentLang);
+
+// ---------- video dropzone ----------
+let videoFile = null;
+const videoDrop = document.getElementById('videoDrop');
+const videoInput = document.getElementById('videoInput');
+const videoName = document.getElementById('videoName');
+
+videoDrop.addEventListener('click', () => videoInput.click());
+videoDrop.addEventListener('dragover', e => { e.preventDefault(); videoDrop.classList.add('drag'); });
+videoDrop.addEventListener('dragleave', () => videoDrop.classList.remove('drag'));
+videoDrop.addEventListener('drop', e => {
+  e.preventDefault();
+  videoDrop.classList.remove('drag');
+  if(e.dataTransfer.files.length){ setVideoFile(e.dataTransfer.files[0]); }
+});
+videoInput.addEventListener('change', e => {
+  if(e.target.files.length){ setVideoFile(e.target.files[0]); }
+});
+
+function setVideoFile(file){
+  videoFile = file;
+  videoName.textContent = file.name;
+}
+
+// ---------- send ----------
+function setStatus(cls, msg, spinner){
+  const el = document.getElementById('sendStatus');
+  el.className = 'status' + (cls ? ' '+cls : '');
+  el.innerHTML = (spinner ? '<div class="spinner"></div>' : '') + '<span>'+msg+'</span>';
+}
+
+document.getElementById('sendBtn').addEventListener('click', sendVideo);
+
+async function sendVideo(){
+  const email = document.getElementById('clientEmail').value.trim();
+  if(!email){ setStatus('error', t('email_required')); return; }
+  if(!videoFile){ setStatus('error', t('video_required')); return; }
+
+  const btn = document.getElementById('sendBtn');
+  btn.disabled = true;
+  setStatus('', t('checking_access'), true);
+
+  // Verification d'acces avant tout upload (Crete ou essai Decouverte encore valide)
+  let accessData = null;
+  try{
+    const accessResp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-crete-access', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+    accessData = await accessResp.json();
+  }catch(e){
+    btn.disabled = false;
+    setStatus('error', t('network_error'));
+    return;
+  }
+
+  if(!accessData || !accessData.access){
+    btn.disabled = false;
+    const reason = accessData ? accessData.reason : 'no_access';
+    let msgKey = 'access_none';
+    if(reason === 'trial_expired') msgKey = 'access_expired';
+    if(reason === 'inactive') msgKey = 'access_inactive';
+    setStatus('error', t(msgKey));
+    return;
+  }
+
+  const bar = document.getElementById('progressBar');
+  const fill = document.getElementById('progressFill');
+  bar.style.display = 'block';
+  fill.style.width = '0%';
+  setStatus('', t('uploading'), true);
+
+  const formData = new FormData();
+  formData.append('client', email);
+  formData.append('file', videoFile);
+
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://n8n.srv936251.hstgr.cloud/webhook/crete-upload');
+
+  xhr.upload.addEventListener('progress', e => {
+    if(e.lengthComputable){
+      fill.style.width = Math.round((e.loaded / e.total) * 100) + '%';
+    }
+  });
+
+  xhr.onload = () => {
+    btn.disabled = false;
+    let data = null;
+    try{ data = JSON.parse(xhr.responseText); }catch(e){}
+    if(data && data.success){
+      setStatus('ok', t('success'));
+    } else {
+      const detail = (data && data.error) ? data.error : ('HTTP ' + xhr.status);
+      setStatus('error', t('generic_error') + '<span class="detail">' + detail + '</span>');
+    }
+  };
+
+  xhr.onerror = () => {
+    btn.disabled = false;
+    setStatus('error', t('network_error'));
+  };
+
+  xhr.send(formData);
+}
+</script>
+</body>
+</html>

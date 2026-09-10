@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Zahra V — Dossier d'analyse vidéo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@800;900&family=Cinzel:wght@500;600&family=Cormorant+Garamond:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5EFE1;
+    --panel:#FBF8F0;
+    --panel-2:#F0E8D5;
+    --border:#DDCEA8;
+    --text:#1A1F2E;
+    --text-dim:#6B7280;
+    --accent:#C6A15B;
+    --accent-dim:#F0E3C4;
+    --blue:#3B5BA9;
+    --warn:#A67C2E;
+    --danger:#8A2E2E;
+    --forest:#182A5C;
+    --forest-2:#24397A;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;overflow-x:hidden;width:100%;}
+  body{
+    background:
+      radial-gradient(ellipse 1100px 600px at 12% -15%, rgba(18,51,40,0.05), transparent 60%),
+      radial-gradient(ellipse 800px 600px at 100% 0%, rgba(184,150,90,0.08), transparent 55%),
+      var(--bg);
+    color:var(--text);
+    font-family:'Inter', sans-serif;
+    min-height:100vh;
+    width:100%;
+    padding:32px 20px 80px;
+  }
+  .app{width:100%;max-width:960px;margin:0 auto;}
+  .eyebrow{
+    font-family:'Cinzel', serif;
+    font-size:11.5px;
+    font-weight:600;
+    letter-spacing:.22em;
+    text-transform:uppercase;
+    color:var(--forest);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .eyebrow::before{
+    content:"";
+    width:22px;height:1px;
+    background:var(--accent);
+  }
+  .titlerow{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:18px;}
+  h1{
+    font-family:'Playfair Display', serif;
+    font-weight:900;
+    font-style:normal;
+    font-size:clamp(36px,6vw,58px);
+    margin:0;
+    letter-spacing:.01em;
+    color:var(--accent);
+    text-shadow:
+      2px 2px 0 var(--forest),
+      3px 3px 0 var(--forest),
+      4px 4px 0 var(--forest);
+    display:inline-block;
+    line-height:1;
+  }
+  .vbadge{
+    font-family:'Cinzel', serif;font-size:13px;color:var(--forest);
+    background:transparent;padding:3px 12px;border-radius:20px;font-weight:600;
+    border:1px solid var(--accent);letter-spacing:.06em;
+    align-self:center;
+  }
+  .sub{color:var(--text-dim);font-size:15.5px;max-width:600px;line-height:1.6;margin-bottom:34px;font-family:'Inter';}
+  .sub b{color:var(--text);font-weight:600;}
+
+  .upload{
+    display:block;
+    width:100%;
+    border:1.5px solid var(--border);
+    border-radius:var(--radius);
+    background:var(--panel);
+    padding:52px 24px;
+    text-align:center;
+    cursor:pointer;
+    transition:border-color .18s ease, background .18s ease;
+    position:relative;
+    box-shadow:0 1px 0 rgba(18,51,40,.04);
+  }
+  .upload:hover, .upload.drag{border-color:var(--accent);background:var(--panel-2);}
+  .upload input{display:none;}
+  .upload-icon{
+    width:46px;height:46px;margin:0 auto 18px;
+    border:1px solid var(--accent);border-radius:50%;
+    display:flex;align-items:center;justify-content:center;color:var(--forest);
+    font-family:'Cormorant Garamond';font-size:20px;
+  }
+  .upload-title{font-family:'Cormorant Garamond';font-weight:700;font-size:20px;margin-bottom:6px;color:var(--forest);}
+  .upload-hint{color:var(--text-dim);font-size:12.5px;font-family:'IBM Plex Mono', monospace;letter-spacing:.02em;}
+  .filename-chip{
+    display:none;margin-top:16px;font-family:'IBM Plex Mono';font-size:12px;color:var(--text);
+    background:var(--panel-2);border:1px solid var(--border);padding:6px 12px;border-radius:20px;
+  }
+
+  .processing{display:none;margin-top:28px;}
+  .scanline-wrap{position:relative;height:2px;background:var(--panel-2);border-radius:2px;overflow:hidden;margin-bottom:22px;}
+  .scanline{position:absolute;top:0;left:0;height:100%;width:30%;background:linear-gradient(90deg, transparent, var(--accent), transparent);animation:sweep 1.3s ease-in-out infinite;}
+  @keyframes sweep{0%{left:-30%;}100%{left:100%;}}
+  .steps{display:flex;flex-direction:column;gap:10px;}
+  .step{display:flex;align-items:center;gap:10px;font-family:'IBM Plex Mono', monospace;font-size:12.5px;color:var(--text-dim);padding:8px 12px;border-radius:4px;border:1px solid transparent;}
+  .step.active{color:var(--forest);background:var(--panel);border-color:var(--border);}
+  .step.done{color:var(--accent);}
+  .step .dot{width:6px;height:6px;border-radius:50%;background:var(--border);flex:none;}
+  .step.active .dot{background:var(--forest);box-shadow:0 0 6px var(--accent);animation:pulse 1s ease-in-out infinite;}
+  .step.done .dot{background:var(--accent);}
+  @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+  .step-note{font-size:11px;color:var(--text-dim);margin-left:17px;opacity:.75;}
+
+  .results{display:none;margin-top:36px;}
+  .score-row{display:grid;grid-template-columns:auto 1fr;gap:32px;align-items:center;background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:28px;margin-bottom:24px;}
+  .score-big{
+    font-family:'Cormorant Garamond';font-weight:700;font-size:44px;line-height:1;color:var(--forest);
+    display:flex;align-items:center;justify-content:center;gap:2px;
+    width:104px;height:104px;border-radius:50%;
+    border:1.5px solid var(--accent);
+    box-shadow:0 0 0 5px var(--panel-2), 0 0 0 6px var(--border);
+    flex:none;
+  }
+  .score-big span{font-size:14px;color:var(--text-dim);font-weight:500;font-family:'IBM Plex Mono';align-self:flex-end;margin-bottom:6px;}
+  .score-label{font-family:'Cinzel';font-size:10.5px;letter-spacing:.14em;color:var(--text-dim);text-transform:uppercase;margin-top:10px;text-align:center;}
+  .subscores{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:14px;}
+  .subscore .bar-track{height:4px;background:var(--panel-2);border-radius:3px;overflow:hidden;margin:6px 0 4px;}
+  .subscore .bar{height:100%;background:var(--accent);border-radius:3px;}
+  .subscore .lbl{font-size:11px;color:var(--text-dim);font-family:'IBM Plex Mono';display:flex;justify-content:space-between;}
+
+  .filmstrip-panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:24px;}
+  .panel-title{font-family:'Cormorant Garamond';font-weight:700;font-size:19px;color:var(--forest);display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;}
+  .panel-title .count{font-family:'IBM Plex Mono';font-size:11px;color:var(--text-dim);font-weight:400;}
+  .filmstrip{display:flex;gap:8px;overflow-x:auto;padding-bottom:6px;}
+  .frame-thumb{position:relative;flex:none;width:84px;height:150px;border-radius:4px;overflow:hidden;border:1px solid var(--border);background:#000;}
+  .frame-thumb img{width:100%;height:100%;object-fit:cover;display:block;}
+  .frame-thumb .tag{position:absolute;bottom:4px;left:4px;right:4px;font-family:'IBM Plex Mono';font-size:9px;text-align:center;padding:2px 3px;border-radius:3px;backdrop-filter:blur(2px);background:rgba(18,51,40,.72);}
+  .tag.g{color:#E9DAB8;border:1px solid rgba(184,150,90,.5);}
+  .tag.y{color:#E9C9A8;border:1px solid rgba(138,74,52,.5);}
+  .tag.t{position:absolute;top:4px;left:4px;font-family:'IBM Plex Mono';font-size:9px;color:#E9DAB8;background:rgba(18,51,40,.72);padding:1px 4px;border-radius:3px;}
+  .tag.shot{position:absolute;top:4px;right:4px;font-family:'IBM Plex Mono';font-size:9px;font-weight:600;color:#F5EFE1;background:rgba(59,91,169,.82);padding:1px 5px;border-radius:3px;cursor:help;}
+  .shottype-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border);font-size:12.5px;}
+  .shottype-row:last-child{border-bottom:none;}
+  .shottype-row .lbl{color:var(--text);}
+  .shottype-row .time{font-family:'IBM Plex Mono';font-size:11px;color:var(--text-dim);white-space:nowrap;}
+  .bbox-overlay{position:absolute;border:1.5px solid var(--accent);background:rgba(184,150,90,.14);}
+
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:24px;}
+  @media(max-width:720px){.grid{grid-template-columns:1fr;} .score-row{grid-template-columns:1fr;text-align:center;} .score-big{justify-content:center;margin:0 auto;}}
+
+  .card{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;}
+  .card h3{font-family:'Cormorant Garamond';font-weight:700;font-size:18px;color:var(--forest);margin:0 0 14px;display:flex;align-items:center;gap:8px;}
+  .card h3 .sw{width:5px;height:5px;border-radius:50%;background:var(--accent);}
+  .kv{display:flex;justify-content:space-between;gap:10px;font-size:13px;padding:7px 0;border-bottom:1px solid var(--border);}
+  .kv:last-child{border-bottom:none;}
+  .kv .k{color:var(--text-dim);}
+  .kv .v{font-family:'IBM Plex Mono';font-size:12px;text-align:right;}
+  .conf-row{display:flex;justify-content:space-between;align-items:center;font-size:13px;padding:8px 0;border-bottom:1px solid var(--border);gap:10px;}
+  .conf-row:last-child{border-bottom:none;}
+  .conf-row .lab{color:var(--text);}
+  .conf-row .pct{font-family:'IBM Plex Mono';font-size:11px;padding:2px 7px;border-radius:10px;white-space:nowrap;}
+  .pct.high{color:#8A6A2E;background:rgba(184,150,90,.14);border:1px solid rgba(184,150,90,.4);}
+  .pct.mid{color:var(--warn);background:rgba(138,74,52,.08);border:1px solid rgba(138,74,52,.25);}
+  .pct.low{color:var(--danger);background:rgba(138,46,46,.08);border:1px solid rgba(138,46,46,.25);}
+  .pct.measured{color:var(--blue);background:rgba(51,67,110,.08);border:1px solid rgba(51,67,110,.3);}
+  .text-block{font-size:13px;color:var(--text-dim);line-height:1.6;}
+  .badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;}
+  .badge{font-family:'IBM Plex Mono';font-size:10.5px;padding:4px 9px;border-radius:20px;border:1px solid var(--border);color:var(--text-dim);}
+
+  .recipe-panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:24px;margin-bottom:24px;}
+  .recipe-sub{font-family:'Cinzel';font-size:10.5px;font-weight:600;color:var(--blue);letter-spacing:.12em;text-transform:uppercase;margin:18px 0 10px;}
+  .recipe-steps{list-style:none;margin:14px 0 0;padding:0;counter-reset:step;}
+  .recipe-steps li{counter-increment:step;display:flex;gap:14px;padding:12px 0;border-bottom:1px solid var(--border);font-size:14px;line-height:1.55;font-family:'Inter';}
+  .recipe-steps li:last-child{border-bottom:none;}
+  .recipe-steps li::before{content:counter(step);font-family:'Cormorant Garamond';font-weight:700;font-size:13px;color:var(--forest);background:var(--accent-dim);width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:none;}
+  .measured-box{background:var(--panel-2);border:1px solid rgba(59,91,169,.2);border-radius:6px;padding:14px 16px;margin-top:10px;}
+  .measured-box .kv .v{color:var(--blue);}
+
+  .zoom-table{width:100%;border-collapse:collapse;}
+  .zoom-table th{font-family:'Cinzel';font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--text-dim);text-align:left;padding:6px 10px;border-bottom:1px solid var(--border);}
+  .zoom-table td{padding:8px 10px;font-size:13px;border-bottom:1px solid var(--border);}
+  .zoom-table tr:last-child td{border-bottom:none;}
+  .zoom-table .tcol{font-family:'IBM Plex Mono';font-size:12px;color:var(--text-dim);white-space:nowrap;}
+  .zoom-pill{font-family:'IBM Plex Mono';font-size:12px;font-weight:600;padding:3px 10px;border-radius:20px;display:inline-block;}
+  .zoom-pill.z100{color:var(--text-dim);background:var(--panel-2);border:1px solid var(--border);}
+  .zoom-pill.zup{color:#8A6A2E;background:rgba(198,161,91,.14);border:1px solid rgba(198,161,91,.4);}
+  .zoom-bar-track{height:4px;background:var(--panel-2);border-radius:2px;overflow:hidden;margin-top:4px;width:80px;}
+  .zoom-bar{height:100%;background:var(--accent);border-radius:2px;}
+
+  .disclaimer{font-size:12.5px;color:var(--text-dim);line-height:1.65;border-left:2px solid var(--accent);padding-left:16px;margin-bottom:24px;font-family:'Inter';}
+  .disclaimer b{color:var(--forest);}
+
+  .limits-list{margin:0;padding-left:18px;font-size:12.5px;color:var(--text-dim);line-height:1.7;font-family:'Inter';}
+  .limits-list li{margin-bottom:4px;}
+  .structure-table{width:100%;border-collapse:collapse;font-size:13px;}
+  .structure-table th{text-align:left;font-family:'Cinzel';font-size:11px;letter-spacing:.04em;color:var(--text-dim);padding:6px 10px;border-bottom:1px solid var(--border);}
+  .structure-table td{padding:8px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
+  .broll-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .broll-row:last-child{border-bottom:none;}
+  .font-badge-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+
+  .actions{display:flex;gap:10px;flex-wrap:wrap;}
+  button{font-family:'Cinzel';font-weight:600;font-size:12.5px;letter-spacing:.04em;padding:12px 22px;border-radius:3px;border:1px solid var(--border);background:var(--panel-2);color:var(--forest);cursor:pointer;transition:border-color .15s ease, transform .1s ease;}
+  button:hover{border-color:var(--accent);}
+  button:active{transform:scale(.98);}
+  button.primary{background:var(--forest);color:#F5EFE1;border-color:var(--forest);}
+  button.primary:hover{background:var(--forest-2);}
+  button:focus-visible, .upload:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+
+  .error-banner{display:none;background:rgba(138,46,46,.06);border:1px solid rgba(138,46,46,.25);color:var(--danger);padding:12px 16px;border-radius:6px;font-size:13px;margin-top:16px;}
+  .info-banner{display:none;background:rgba(51,67,110,.05);border:1px solid rgba(51,67,110,.2);color:var(--blue);padding:12px 16px;border-radius:6px;font-size:12.5px;margin-top:16px;line-height:1.5;}
+
+  @media (prefers-reduced-motion: reduce){ .scanline, .step.active .dot{animation:none;} }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="eyebrow">Dossier d'analyse vidéo</div>
+  <div class="titlerow"><h1>Zahra</h1><span class="vbadge">V</span></div>
+  <p class="sub">Dépose une vidéo pour en extraire la <b>structure</b> : coupes (détection par histogrammes), style visuel estimé et audio.</p>
+
+  <label class="upload" id="uploadZone" tabindex="0">
+    <input type="file" id="fileInput" accept="video/*" />
+    <div class="upload-icon">▲</div>
+    <div class="upload-title">Glisse ta vidéo ici</div>
+    <div class="upload-hint">ou clique pour parcourir — MP4, MOV · tout se fait dans ton navigateur</div>
+    <div class="filename-chip" id="filenameChip"></div>
+  </label>
+
+  <div class="error-banner" id="errorBanner"></div>
+  <div class="info-banner" id="infoBanner"></div>
+
+  <div class="processing" id="processing">
+    <div class="scanline-wrap"><div class="scanline"></div></div>
+    <div class="steps" id="steps">
+      <div class="step" data-step="meta"><div class="dot"></div>Lecture des métadonnées</div>
+      <div class="step" data-step="scenes"><div class="dot"></div>Détection des coupes (histogrammes de luminance)</div>
+      <div class="step" data-step="audio"><div class="dot"></div>Analyse de la piste audio</div>
+      <div class="step" data-step="vision"><div class="dot"></div>Analyse du style visuel (IA)</div>
+      <div class="step" data-step="report"><div class="dot"></div>Génération du rapport</div>
+    </div>
+  </div>
+
+  <div class="results" id="results">
+    <div class="score-row">
+      <div>
+        <div class="score-big" id="scoreBig">—<span>/100</span></div>
+        <div class="score-label">Score indicatif</div>
+      </div>
+      <div class="subscores" id="subscores"></div>
+    </div>
+
+    <div class="filmstrip-panel">
+      <div class="panel-title">Chronologie des plans <span class="count" id="cutCount"></span></div>
+      <div class="filmstrip" id="filmstrip"></div>
+    </div>
+
+    <div class="grid">
+      <div class="card"><h3><span class="sw"></span>Vidéo</h3><div id="videoCard"></div></div>
+      <div class="card"><h3><span class="sw"></span>Audio</h3><div id="audioCard"></div></div>
+      <div class="card"><h3><span class="sw"></span>Style visuel (estimé par IA)</h3><div id="styleCard"></div></div>
+      <div class="card"><h3><span class="sw"></span>Police (hypothèse IA)</h3><div id="fontCard"></div></div>
+      <div class="card"><h3><span class="sw"></span>Animation des sous-titres (estimé par IA)</h3><div id="captionAnimCard"></div></div>
+      <div class="card"><h3><span class="sw"></span>Type de plan / cadrage (estimé par IA)</h3><div id="shotTypeCard"></div></div>
+    </div>
+
+    <div class="filmstrip-panel">
+      <div class="panel-title">Structure narrative détectée <span class="count" id="structureCount"></span></div>
+      <div id="structureCard"></div>
+    </div>
+
+    <div class="filmstrip-panel">
+      <div class="panel-title">B-roll détecté <span class="count" id="brollCount"></span></div>
+      <div id="brollCard"></div>
+    </div>
+
+    <div class="filmstrip-panel">
+      <div class="panel-title">Zoom recommandé par plan <span class="count">valeurs Scale % pour CapCut</span></div>
+      <div id="zoomCard"></div>
+    </div>
+
+    <div class="recipe-panel">
+      <div class="panel-title">Recette de reproduction</div>
+      <div class="recipe-sub">Étapes de style (estimées par IA)</div>
+      <div class="text-block" id="recipeIntro"></div>
+      <ol class="recipe-steps" id="recipeSteps"></ol>
+    </div>
+
+    <div class="disclaimer">
+      <b>Sur la fiabilité :</b> durée, résolution et coupes sont mesurées directement (analyse de fichier) — fiables. Le style typographique, le grading couleur, le type de transition, la structure narrative et le B-roll restent des <b>estimations visuelles IA</b> avec score de confiance affiché.
+    </div>
+
+    <div class="filmstrip-panel">
+      <div class="panel-title">Limites de l'analyse</div>
+      <ul class="limits-list" id="limitsCard"></ul>
+    </div>
+
+    <div class="actions">
+      <button class="primary" id="downloadBtn">Télécharger le résumé de l'analyse (.txt)</button>
+      <button id="resetBtn">Analyser une autre vidéo</button>
+    </div>
+  </div>
+</div>
+
+<video id="hiddenVideo" style="display:none"></video>
+<canvas id="workCanvas" style="display:none"></canvas>
+
+<script>
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+const filenameChip = document.getElementById('filenameChip');
+const processing = document.getElementById('processing');
+const results = document.getElementById('results');
+const errorBanner = document.getElementById('errorBanner');
+const infoBanner = document.getElementById('infoBanner');
+const hiddenVideo = document.getElementById('hiddenVideo');
+const workCanvas = document.getElementById('workCanvas');
+
+uploadZone.addEventListener('click', () => fileInput.click());
+uploadZone.addEventListener('keydown', e => { if(e.key==='Enter'||e.key===' ') fileInput.click(); });
+['dragover','dragenter'].forEach(evt => uploadZone.addEventListener(evt, e => { e.preventDefault(); uploadZone.classList.add('drag'); }));
+['dragleave','drop'].forEach(evt => uploadZone.addEventListener(evt, e => { e.preventDefault(); uploadZone.classList.remove('drag'); }));
+uploadZone.addEventListener('drop', e => { const f = e.dataTransfer.files[0]; if(f) handleFile(f); });
+fileInput.addEventListener('change', e => { if(e.target.files[0]) handleFile(e.target.files[0]); });
+document.getElementById('resetBtn').addEventListener('click', () => location.reload());
+
+function showError(msg){ errorBanner.textContent = msg; errorBanner.style.display = 'block'; }
+function showInfo(msg){ infoBanner.textContent = msg; infoBanner.style.display = 'block'; }
+function setStep(name, state){
+  const el = document.querySelector(`.step[data-step="${name}"]`);
+  if(!el) return;
+  el.classList.remove('active','done');
+  if(state) el.classList.add(state);
+}
+
+async function handleFile(file){
+  errorBanner.style.display='none';
+  infoBanner.style.display='none';
+  filenameChip.style.display='inline-block';
+  filenameChip.textContent = file.name;
+  uploadZone.style.pointerEvents = 'none';
+  processing.style.display = 'block';
+  results.style.display = 'none';
+
+  try {
+    const url = URL.createObjectURL(file);
+    hiddenVideo.src = url;
+    setStep('meta','active');
+    await new Promise((res,rej)=>{
+      hiddenVideo.onloadedmetadata = res;
+      hiddenVideo.onerror = () => rej(new Error("Impossible de lire ce fichier vidéo."));
+    });
+
+    const duration = hiddenVideo.duration;
+    const vw = hiddenVideo.videoWidth, vh = hiddenVideo.videoHeight;
+    let format = '16:9';
+    if (Math.abs(vw/vh - 9/16) < 0.05) format = '9:16 (vertical)';
+    else if (Math.abs(vw/vh - 1) < 0.05) format = '1:1 (carré)';
+    else if (vw > vh) format = '16:9 (paysage)';
+
+    // ---- FPS mesuré (approx.) via comptage de frames décodées sur une courte lecture ----
+    let fps = null;
+    try {
+      if (typeof hiddenVideo.getVideoPlaybackQuality === 'function') {
+        hiddenVideo.muted = true;
+        const t0 = performance.now();
+        const q0 = hiddenVideo.getVideoPlaybackQuality().totalVideoFrames;
+        await hiddenVideo.play();
+        await new Promise(r => setTimeout(r, 600));
+        const q1 = hiddenVideo.getVideoPlaybackQuality().totalVideoFrames;
+        const t1 = performance.now();
+        hiddenVideo.pause();
+        const dt = (t1 - t0) / 1000;
+        const df = q1 - q0;
+        if (dt > 0 && df > 0) fps = Math.round(df / dt);
+        hiddenVideo.currentTime = 0;
+      }
+    } catch(e) { fps = null; }
+    setStep('meta','done');
+
+    // ---- Scene detection via luminance histogram diff (more robust than raw pixel diff) ----
+    setStep('scenes','active');
+    const cWidth = 80, cHeight = Math.round(cWidth * vh/vw);
+    workCanvas.width = cWidth; workCanvas.height = cHeight;
+    const ctx = workCanvas.getContext('2d', { willReadFrequently: true });
+
+    const sampleInterval = duration > 90 ? 0.4 : duration > 30 ? 0.3 : 0.15;
+    const sampleTimes = [];
+    for(let t=0.05; t<duration; t+=sampleInterval) sampleTimes.push(t);
+
+    function luminanceHistogram(imgData){
+      const bins = new Float32Array(32);
+      const d = imgData.data;
+      for(let i=0;i<d.length;i+=4){
+        const lum = 0.299*d[i] + 0.587*d[i+1] + 0.114*d[i+2];
+        const bin = Math.min(31, Math.floor(lum/8));
+        bins[bin]++;
+      }
+      const total = d.length/4;
+      for(let i=0;i<32;i++) bins[i] /= total;
+      return bins;
+    }
+    function histDiff(a,b){
+      let diff = 0;
+      for(let i=0;i<a.length;i++) diff += Math.abs(a[i]-b[i]);
+      return diff; // range 0-2
+    }
+
+    let prevHist = null;
+    const cuts = [0];
+    for(const t of sampleTimes){
+      await seekTo(hiddenVideo, t);
+      ctx.drawImage(hiddenVideo, 0, 0, cWidth, cHeight);
+      const imgData = ctx.getImageData(0,0,cWidth,cHeight);
+      const hist = luminanceHistogram(imgData);
+      if(prevHist){
+        const d = histDiff(hist, prevHist);
+        if(d > 0.55){ // empirical threshold on histogram L1 distance
+          if(t - cuts[cuts.length-1] > 0.6) cuts.push(Number(t.toFixed(2)));
+        }
+      }
+      prevHist = hist;
+    }
+    cuts.push(Number(duration.toFixed(2)));
+    const plans = [];
+    for(let i=0;i<cuts.length-1;i++) plans.push({ start: cuts[i], end: cuts[i+1], dur: Number((cuts[i+1]-cuts[i]).toFixed(2)) });
+    setStep('scenes','done');
+
+    // ---- Audio analysis ----
+    setStep('audio','active');
+    let audioStats = null;
+    try {
+      const arrayBuf = await file.arrayBuffer();
+      const AC = window.AudioContext || window.webkitAudioContext;
+      const actx = new AC();
+      const audioBuf = await actx.decodeAudioData(arrayBuf.slice(0));
+      const ch = audioBuf.getChannelData(0);
+      const winSize = Math.floor(audioBuf.sampleRate * 0.1);
+      const windows = [];
+      for(let i=0;i<ch.length;i+=winSize){
+        let sum=0, n=0;
+        for(let j=i;j<Math.min(i+winSize,ch.length);j++){ sum += ch[j]*ch[j]; n++; }
+        windows.push(Math.sqrt(sum/n));
+      }
+      const maxRms = Math.max(...windows, 0.0001);
+      const norm = windows.map(w => w/maxRms);
+      const silences = norm.filter(v => v < 0.04).length;
+      const silenceRatio = silences / norm.length;
+      let volChanges = 0;
+      for(let i=1;i<norm.length;i++){ if(Math.abs(norm[i]-norm[i-1]) > 0.35) volChanges++; }
+      audioStats = { silenceRatio: (silenceRatio*100).toFixed(1), volChanges, dynamicRange: (Math.max(...norm)-Math.min(...norm)).toFixed(2) };
+      actx.close();
+    } catch(e){ audioStats = null; }
+    setStep('audio','done');
+
+    // ---- Capture representative frames ----
+    const sortedPlans = [...plans].sort((a,b)=>b.dur-a.dur);
+    const chosenPlans = plans.length <= 8 ? plans : sortedPlans.slice(0,8).sort((a,b)=>a.start-b.start);
+    const bigW = 480, bigH = Math.round(bigW * vh/vw);
+    workCanvas.width = bigW; workCanvas.height = bigH;
+    const frames = [];
+    for(const p of chosenPlans){
+      const t = Math.min(p.start + p.dur/2, duration-0.05);
+      await seekTo(hiddenVideo, t);
+      ctx.clearRect(0,0,bigW,bigH);
+      ctx.drawImage(hiddenVideo, 0, 0, bigW, bigH);
+      const dataUrl = workCanvas.toDataURL('image/jpeg', 0.75);
+      frames.push({ time: Number(t.toFixed(2)), dataUrl, planDur: p.dur, w: bigW, h: bigH });
+    }
+
+    // ---- AI style analysis ----
+    setStep('vision','active');
+    let aiResult = null, aiError = null;
+    try {
+      aiResult = await analyzeStyleWithAI(frames, { duration, format, plansCount: plans.length });
+    } catch(e){ aiError = e.message; }
+    setStep('vision','done');
+
+    setStep('report','active');
+    renderReport({ file, duration, vw, vh, format, fps, plans, audioStats, frames, aiResult, aiError });
+    setStep('report','done');
+
+    await new Promise(r=>setTimeout(r,300));
+    processing.style.display='none';
+    results.style.display='block';
+
+  } catch(err){
+    processing.style.display='none';
+    uploadZone.style.pointerEvents='auto';
+    showError(err.message || "Une erreur est survenue pendant l'analyse.");
+  }
+}
+
+function seekTo(video, t){
+  return new Promise(res => {
+    const handler = () => { video.removeEventListener('seeked', handler); res(); };
+    video.addEventListener('seeked', handler);
+    video.currentTime = t;
+  });
+}
+
+async function analyzeStyleWithAI(frames, meta){
+  const imageBlocks = frames.map(f => ({ type:"image", source:{ type:"base64", media_type:"image/jpeg", data: f.dataUrl.split(',')[1] } }));
+
+  const prompt = `Tu analyses ${frames.length} frames extraites d'une vidéo courte (format ${meta.format}, ${meta.duration.toFixed(1)}s, ${meta.plansCount} plans détectés).
+
+Fais un reverse engineering complet du style, sur le modèle d'une fiche d'analyse concurrentielle professionnelle :
+
+1. Pour chaque frame, par rapport à la frame précédente :
+   - transition_technique : nomme la technique avec un vocabulaire de montage précis parmi ["Jump Cut", "Zoom Cut", "Punch-in", "Punch-out", "Fondu", "Glitch/Spin", "Insertion B-roll", "Aucune détectée"]
+   - transition_confidence (0-100)
+   - is_broll (booléen) : true si cette frame semble appartenir à une séquence visuellement différente du plan principal (rendu different, noir et blanc, archives, illustration, plan d'un autre sujet) insérée pour illustrer le propos
+   - broll_reason (courte raison, uniquement si is_broll est true)
+   - shot_type : la taille de cadrage de ce plan, un terme précis de vocabulaire cinéma parmi ["Gros plan", "Plan rapproché", "Plan moyen", "Plan large", "Plan d'ensemble", "Insert/Détail"]
+   - shot_type_confidence (0-100)
+
+2. Classification générale :
+   - content_type : type de contenu et positionnement (ex: "Short-form vertical — podcast face caméra cinématique") + content_type_confidence (0-100)
+   - style_global (2-4 mots)
+
+3. Colorimétrie :
+   - grading_couleur (description courte incluant température et contraste perçus) + grading_confidence (0-100)
+   - palette (2-3 couleurs dominantes en mots)
+
+4. Typographie (hypothèse, jamais une certitude) :
+   - font_style_description (adjectifs courts sur le style de la police)
+   - font_candidates : 2-3 noms de polices précis les plus probables (ex: "Cairo Bold", "Tajawal Bold", "Noto Kufi Arabic Bold" si texte arabe ; équivalents latins sinon)
+   - font_confidence (0-100, reste modérée par nature sur un export compressé)
+
+5. Animation des sous-titres :
+   - caption_animation_type (ex: "apparition progressive / pop, kinetic captions")
+   - caption_keywords_highlighted (booléen : les mots-clés changent-ils de couleur/surlignage pour capter l'attention ?)
+   - caption_animation_confidence (0-100)
+
+6. Structure narrative : découpe la vidéo en 3 à 6 segments chronologiques du type Hook/Introduction, Contenu principal, B-roll (si détecté), Retour présentateur, Conclusion/CTA. Pour chaque segment donne un start et end approximatifs en secondes (dans la durée totale ${meta.duration.toFixed(1)}s) et la technique de montage dominante utilisée sur ce segment.
+
+7. Recette de reproduction :
+   - recipe_intro (1 phrase)
+   - recipe : 4-6 étapes concrètes et génériques pour reproduire ce style dans CapCut/Premiere, en français, sans copier le contenu
+
+Réponds UNIQUEMENT en JSON strict, sans texte avant/après ni balises markdown, selon ce schéma exact:
+{
+  "frames": [{"time": number, "transition_technique": string, "transition_confidence": number, "is_broll": boolean, "broll_reason": string, "shot_type": string, "shot_type_confidence": number}],
+  "content_type": string,
+  "content_type_confidence": number,
+  "style_global": string,
+  "grading_couleur": string,
+  "grading_confidence": number,
+  "palette": [string],
+  "font_style_description": string,
+  "font_candidates": [string],
+  "font_confidence": number,
+  "caption_animation_type": string,
+  "caption_keywords_highlighted": boolean,
+  "caption_animation_confidence": number,
+  "narrative_structure": [{"label": string, "start": number, "end": number, "technique": string}],
+  "recipe_intro": string,
+  "recipe": [string]
+}`;
+
+  const response = await fetch("https://api.anthropic.com/v1/messages", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      model: "claude-sonnet-4-6",
+      max_tokens: 4000,
+      messages: [{ role:"user", content: [...imageBlocks, { type:"text", text: prompt }] }]
+    })
+  });
+  if(!response.ok) throw new Error("L'analyse IA a échoué (réseau ou service indisponible).");
+  const data = await response.json();
+  const textBlock = data.content.find(b => b.type === 'text');
+  if(!textBlock) throw new Error("Réponse IA vide.");
+  let clean = textBlock.text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
+  try { return JSON.parse(clean); } catch(e){ throw new Error("Impossible d'interpréter la réponse de l'analyse IA."); }
+}
+
+function shotTypeAbbr(type){
+  const map = { 'Gros plan':'GP', 'Plan rapproché':'PR', 'Plan moyen':'PM', 'Plan large':'PL', "Plan d'ensemble":'PE', 'Insert/Détail':'INS' };
+  return map[type] || type.slice(0,3).toUpperCase();
+}
+function confClass(v){ if(v>=80) return 'high'; if(v>=55) return 'mid'; return 'low'; }
+function fmtTime(s){ const m=Math.floor(s/60), sec=Math.floor(s%60); return `${m}:${sec.toString().padStart(2,'0')}`; }
+
+function computeZoomPlan(plans){
+  // Alternates 100% with varied zoom levels so no two consecutive segments repeat the same value —
+  // mirrors the "push-in numérique" technique for turning a single fixed shot into simulated camera moves.
+  const variants = [106, 111, 108, 114, 105, 112, 109];
+  let variantIdx = 0;
+  return plans.map((p, i) => {
+    let scale;
+    if (i % 2 === 0) {
+      scale = 100;
+    } else {
+      scale = variants[variantIdx % variants.length];
+      variantIdx++;
+    }
+    return { start: p.start, end: p.end, dur: p.dur, scale };
+  });
+}
+
+function renderReport(d){
+  const { duration, vw, vh, format, fps, plans, audioStats, frames, aiResult, aiError, file } = d;
+
+  const cutScore = Math.max(0, Math.min(100, 100 - Math.abs((plans.length / (duration/8)) - 1)*40));
+  const audioScore = audioStats ? Math.max(20, 100 - Number(audioStats.silenceRatio)*1.4) : 50;
+  const captionScore = aiResult ? Math.round(aiResult.caption_animation_confidence||50) : 40;
+  const visualScore = aiResult ? Math.round(aiResult.grading_confidence||60) : 40;
+  const overall = Math.round((cutScore+audioScore+captionScore+visualScore)/4);
+
+  document.getElementById('scoreBig').innerHTML = `${overall}<span>/100</span>`;
+  const subs = [['Montage',Math.round(cutScore)],['Audio',Math.round(audioScore)],['Sous-titres',Math.round(captionScore)],['Visuel',Math.round(visualScore)]];
+  document.getElementById('subscores').innerHTML = subs.map(([lbl,val])=>`
+    <div class="subscore"><div class="lbl"><span>${lbl}</span><span>${val}</span></div><div class="bar-track"><div class="bar" style="width:${val}%"></div></div></div>`).join('');
+
+  document.getElementById('cutCount').textContent = `${plans.length} plans détectés`;
+  document.getElementById('filmstrip').innerHTML = frames.map((f,i) => {
+    const info = aiResult ? aiResult.frames[i] : null;
+    const tag = info ? (info.transition_technique && info.transition_technique !== 'Aucune détectée' ? info.transition_technique : 'Cut') : 'plan';
+    const cls = info && info.transition_confidence >= 70 ? 'g' : 'y';
+    const brollMark = info && info.is_broll ? ' · B-roll' : '';
+    const shotAbbr = info && info.shot_type ? shotTypeAbbr(info.shot_type) : '';
+    const shotBadge = shotAbbr ? `<span class="tag shot" title="${info.shot_type} (${info.shot_type_confidence}%)">${shotAbbr}</span>` : '';
+    return `<div class="frame-thumb"><span class="t">${fmtTime(f.time)}</span>${shotBadge}<img src="${f.dataUrl}" alt="frame ${fmtTime(f.time)}"/><span class="tag ${cls}">${tag}${brollMark}</span></div>`;
+  }).join('');
+
+  const avgPlan = (plans.reduce((a,p)=>a+p.dur,0)/plans.length).toFixed(1);
+  document.getElementById('videoCard').innerHTML = `
+    <div class="kv"><span class="k">Durée</span><span class="v">${duration.toFixed(1)}s</span></div>
+    <div class="kv"><span class="k">Résolution</span><span class="v">${vw}×${vh}</span></div>
+    <div class="kv"><span class="k">Format</span><span class="v">${format}</span></div>
+    <div class="kv"><span class="k">Fréquence (FPS)</span><span class="v">${fps ? `≈ ${fps} fps (mesuré)` : 'non mesurable dans ce navigateur'}</span></div>
+    <div class="kv"><span class="k">Plans détectés</span><span class="v">${plans.length}</span></div>
+    <div class="kv"><span class="k">Durée moy. par plan</span><span class="v">${avgPlan}s</span></div>
+    <div class="kv"><span class="k">Fichier</span><span class="v">${(file.size/1024/1024).toFixed(1)} Mo</span></div>
+    ${aiResult ? `<div class="kv"><span class="k">Type de contenu (IA)</span><span class="v">${aiResult.content_type} <span style="color:var(--text-dim);font-size:11px;">(${aiResult.content_type_confidence}%)</span></span></div>` : ''}
+  `;
+
+  // ---- zoom recommendation table ----
+  const zoomPlan = computeZoomPlan(plans);
+  document.getElementById('zoomCard').innerHTML = `
+    <table class="zoom-table">
+      <thead><tr><th>Segment</th><th>Durée</th><th>Scale CapCut</th></tr></thead>
+      <tbody>
+        ${zoomPlan.map(z => `
+          <tr>
+            <td class="tcol">${fmtTime(z.start)} – ${fmtTime(z.end)}</td>
+            <td class="tcol">${z.dur}s</td>
+            <td>
+              <span class="zoom-pill ${z.scale===100?'z100':'zup'}">${z.scale}%</span>
+              <div class="zoom-bar-track"><div class="zoom-bar" style="width:${Math.min(100,(z.scale-95)/25*100)}%"></div></div>
+            </td>
+          </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="text-block" style="margin-top:12px;">Suggestion générée à partir des plans détectés : alterne 100% avec des paliers de zoom variables (105–114%) pour simuler un changement de caméra sur un plan fixe unique. À affiner selon les respirations naturelles de ta vidéo.</div>
+  `;
+
+  document.getElementById('audioCard').innerHTML = audioStats ? `
+    <div class="kv"><span class="k">Silences détectés</span><span class="v">${audioStats.silenceRatio}% du temps</span></div>
+    <div class="kv"><span class="k">Changements de volume</span><span class="v">${audioStats.volChanges}</span></div>
+    <div class="kv"><span class="k">Dynamique</span><span class="v">${audioStats.dynamicRange}</span></div>
+    <div class="text-block" style="margin-top:8px;">Mesuré directement sur la piste audio — fiable.</div>
+  ` : `<div class="text-block">Aucune piste audio détectée ou décodage impossible dans ce navigateur.</div>`;
+
+  // ---- style card (AI) ----
+  if(aiResult){
+    document.getElementById('styleCard').innerHTML = `
+      <div class="conf-row"><span class="lab">Style global</span><span class="pct high">${aiResult.style_global}</span></div>
+      <div class="conf-row"><span class="lab">Grading couleur : ${aiResult.grading_couleur}</span><span class="pct ${confClass(aiResult.grading_confidence)}">${aiResult.grading_confidence}%</span></div>
+      <div class="badge-row">${(aiResult.palette||[]).map(p=>`<span class="badge">${p}</span>`).join('')}</div>
+    `;
+    document.getElementById('recipeIntro').textContent = aiResult.recipe_intro || '';
+    document.getElementById('recipeSteps').innerHTML = (aiResult.recipe||[]).map(s=>`<li>${s}</li>`).join('');
+
+    // ---- font hypothesis card ----
+    document.getElementById('fontCard').innerHTML = `
+      <div class="conf-row"><span class="lab">${aiResult.font_style_description||''}</span><span class="pct ${confClass(aiResult.font_confidence)}">${aiResult.font_confidence}%</span></div>
+      <div class="font-badge-row">${(aiResult.font_candidates||[]).map(f=>`<span class="badge">${f}</span>`).join('')}</div>
+      <div class="text-block" style="margin-top:8px;">Hypothèse visuelle uniquement — la police exacte ne peut être confirmée sans le fichier source du montage.</div>
+    `;
+
+    // ---- caption animation card ----
+    document.getElementById('captionAnimCard').innerHTML = `
+      <div class="conf-row"><span class="lab">${aiResult.caption_animation_type||''}</span><span class="pct ${confClass(aiResult.caption_animation_confidence)}">${aiResult.caption_animation_confidence}%</span></div>
+      <div class="text-block" style="margin-top:8px;">Mots-clés surlignés / mis en couleur détectés : <b>${aiResult.caption_keywords_highlighted ? 'oui' : 'non'}</b></div>
+    `;
+
+    // ---- shot type (cadrage) card ----
+    document.getElementById('shotTypeCard').innerHTML = frames.map((f,i) => {
+      const info = aiResult.frames[i];
+      const st = info && info.shot_type ? info.shot_type : 'Non déterminé';
+      const stc = info && info.shot_type_confidence != null ? info.shot_type_confidence : 0;
+      return `<div class="shottype-row"><span class="time">${fmtTime(f.time)}</span><span class="lab">${st}</span><span class="pct ${confClass(stc)}">${stc}%</span></div>`;
+    }).join('') + `<div class="text-block" style="margin-top:8px;">Taille de cadrage estimée par plan — gros plan, rapproché, moyen, large, d'ensemble ou insert/détail.</div>`;
+
+    // ---- narrative structure card ----
+    const structure = aiResult.narrative_structure || [];
+    document.getElementById('structureCount').textContent = structure.length ? `${structure.length} segments` : '';
+    document.getElementById('structureCard').innerHTML = structure.length ? `
+      <table class="structure-table">
+        <thead><tr><th>Zone temporelle</th><th>Segment</th><th>Technique dominante</th></tr></thead>
+        <tbody>
+          ${structure.map(s => `<tr><td>${fmtTime(s.start)} – ${fmtTime(s.end)}</td><td>${s.label}</td><td>${s.technique||''}</td></tr>`).join('')}
+        </tbody>
+      </table>
+    ` : `<div class="text-block">Structure narrative non détectée par l'IA sur cette vidéo.</div>`;
+
+    // ---- B-roll card ----
+    const brollFrames = frames.map((f,i)=>({f, info: aiResult.frames[i]})).filter(x => x.info && x.info.is_broll);
+    document.getElementById('brollCount').textContent = brollFrames.length ? `${brollFrames.length} séquence(s)` : 'aucune détectée';
+    document.getElementById('brollCard').innerHTML = brollFrames.length ? brollFrames.map(x => `
+      <div class="broll-row"><span>${fmtTime(x.f.time)} — ${x.info.broll_reason||'rendu visuellement différent du plan principal'}</span><span class="pct ${confClass(x.info.transition_confidence)}">${x.info.transition_confidence}%</span></div>
+    `).join('') : `<div class="text-block">Aucune séquence B-roll détectée sur les frames échantillonnées — la vidéo semble reposer uniquement sur le plan principal.</div>`;
+  } else {
+    document.getElementById('styleCard').innerHTML = `<div class="text-block">Analyse IA indisponible${aiError ? ' — ' + aiError : ''}. Les données de montage et audio ci-dessus restent fiables.</div>`;
+    document.getElementById('recipeIntro').textContent = 'Étapes de style indisponibles sans analyse IA — voir les réglages mesurés ci-dessus, toujours valables.';
+    document.getElementById('recipeSteps').innerHTML = '';
+    document.getElementById('fontCard').innerHTML = `<div class="text-block">Hypothèse de police indisponible sans analyse IA.</div>`;
+    document.getElementById('captionAnimCard').innerHTML = `<div class="text-block">Animation des sous-titres indisponible sans analyse IA.</div>`;
+    document.getElementById('shotTypeCard').innerHTML = `<div class="text-block">Type de plan indisponible sans analyse IA.</div>`;
+    document.getElementById('structureCard').innerHTML = `<div class="text-block">Structure narrative indisponible sans analyse IA.</div>`;
+    document.getElementById('brollCard').innerHTML = `<div class="text-block">Détection B-roll indisponible sans analyse IA.</div>`;
+  }
+
+  // ---- limites de l'analyse (évergreen) ----
+  document.getElementById('limitsCard').innerHTML = `
+    <li>Le nom exact du filtre, de la police ou du template source n'est pas déterminable avec certitude à partir d'un export final compressé.</li>
+    <li>La structure narrative, le B-roll et les transitions sont des estimations visuelles IA sur un échantillon de frames, pas une analyse image par image exhaustive.</li>
+    <li>Pour identifier un template exact, il faudrait comparer la vidéo à une bibliothèque de templates CapCut/Premiere/After Effects.</li>
+    <li>Le FPS affiché est une mesure approximative dépendant du navigateur ; certains navigateurs ne l'exposent pas.</li>
+  `;
+
+  document.getElementById('downloadBtn').onclick = () => {
+    const md = buildMarkdown(d, overall, subs);
+    const blob = new Blob([md], { type: 'text/plain' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `resume-analyse-zahra-${new Date().toISOString().slice(0,10)}.txt`;
+    a.click();
+  };
+}
+
+function buildMarkdown(d, overall, subs){
+  const { duration, vw, vh, format, fps, plans, audioStats, aiResult, aiError, frames, file } = d;
+  const line = '─'.repeat(40);
+  let md = `ZAHRA — RÉSUMÉ D'ANALYSE VIDÉO\n${line}\n\n`;
+  md += `Fichier : ${file.name}\nDate : ${new Date().toISOString().slice(0,10)}\n\n`;
+  md += `SCORE INDICATIF : ${overall}/100\n`;
+  subs.forEach(([l,v]) => md += `  ${l} : ${v}\n`);
+  md += `\n${line}\nVIDÉO\n${line}\nDurée : ${duration.toFixed(1)}s\nRésolution : ${vw}×${vh}\nFormat : ${format}\nFPS : ${fps ? `≈ ${fps} (mesuré)` : 'non mesurable'}\nPlans détectés : ${plans.length}\n`;
+  if(aiResult) md += `Type de contenu (IA) : ${aiResult.content_type} (confiance ${aiResult.content_type_confidence}%)\n`;
+  md += `\n${line}\nZOOM RECOMMANDÉ (Scale % CapCut)\n${line}\n`;
+  computeZoomPlan(plans).forEach(z => md += `${fmtTime(z.start)} – ${fmtTime(z.end)} (${z.dur}s)  →  ${z.scale}%\n`);
+  md += `\n${line}\nAUDIO\n${line}\n`;
+  md += audioStats ? `Silences : ${audioStats.silenceRatio}%\nChangements de volume : ${audioStats.volChanges}\n` : `Aucune piste audio analysable\n`;
+  if(aiResult){
+    md += `\n${line}\nSTYLE ESTIMÉ (IA)\n${line}\nStyle global : ${aiResult.style_global}\nGrading couleur : ${aiResult.grading_couleur} (confiance ${aiResult.grading_confidence}%)\nPalette : ${(aiResult.palette||[]).join(', ')}\n`;
+    md += `\n${line}\nPOLICE (HYPOTHÈSE IA)\n${line}\n${aiResult.font_style_description||''} (confiance ${aiResult.font_confidence}%)\nCandidats : ${(aiResult.font_candidates||[]).join(', ')}\n`;
+    md += `\n${line}\nANIMATION DES SOUS-TITRES (IA)\n${line}\n${aiResult.caption_animation_type||''} (confiance ${aiResult.caption_animation_confidence}%)\nMots-clés surlignés : ${aiResult.caption_keywords_highlighted ? 'oui' : 'non'}\n`;
+    md += `\n${line}\nTYPE DE PLAN / CADRAGE (IA)\n${line}\n`;
+    (frames||[]).forEach((f,i) => {
+      const info = aiResult.frames[i];
+      const st = info && info.shot_type ? info.shot_type : 'Non déterminé';
+      const stc = info && info.shot_type_confidence != null ? info.shot_type_confidence : 0;
+      md += `${fmtTime(f.time)} — ${st} (confiance ${stc}%)\n`;
+    });
+    const structure = aiResult.narrative_structure || [];
+    if(structure.length){
+      md += `\n${line}\nSTRUCTURE NARRATIVE (IA)\n${line}\n`;
+      structure.forEach(s => md += `${fmtTime(s.start)} – ${fmtTime(s.end)} : ${s.label} — ${s.technique||''}\n`);
+    }
+    const brollFrames = (frames||[]).map((f,i)=>({f, info: aiResult.frames[i]})).filter(x => x.info && x.info.is_broll);
+    md += `\n${line}\nB-ROLL DÉTECTÉ (IA)\n${line}\n`;
+    md += brollFrames.length ? brollFrames.map(x => `${fmtTime(x.f.time)} — ${x.info.broll_reason||'rendu différent du plan principal'}\n`).join('') : `Aucune séquence B-roll détectée\n`;
+    md += `\n${line}\nRECETTE DE REPRODUCTION\n${line}\n${aiResult.recipe_intro||''}\n\n`;
+    (aiResult.recipe||[]).forEach((s,i) => md += `${i+1}. ${s}\n`);
+  } else {
+    md += `\n${line}\nANALYSE IA\n${line}\nÉchec de l'analyse IA — style, police, sous-titres, type de plan, structure narrative et B-roll non disponibles.\nRaison : ${aiError || 'inconnue'}\n`;
+  }
+  md += `\n${line}\nLIMITES DE L'ANALYSE\n${line}\n`;
+  md += `- Nom exact du filtre/police/template non déterminable avec certitude à partir d'un export compressé.\n`;
+  md += `- Structure narrative, B-roll et transitions sont des estimations IA sur un échantillon de frames.\n`;
+  md += `- Pour un template exact, comparer à une bibliothèque de templates CapCut/Premiere/After Effects.\n`;
+  md += `- Le FPS mesuré est approximatif et dépend du navigateur.\n`;
+  md += `\n${line}\nDurée, résolution, coupes et audio sont mesurés directement.\nStyle typographique, grading, transitions, structure narrative et B-roll sont des estimations IA avec score de confiance.\n`;
+  return md;
+}
+</script>
+</body>
+</html>
