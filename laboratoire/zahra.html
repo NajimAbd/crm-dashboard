@@ -54,6 +54,14 @@
     background:var(--accent);
   }
   .titlerow{display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid var(--border);margin-bottom:18px;}
+  .lang-switch{margin-inline-start:auto;display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap;}
+  .lang-btn{
+    font-family:'Inter';font-size:12px;font-weight:600;
+    background:var(--panel);border:1px solid var(--border);color:var(--text-dim);
+    padding:6px 12px;border-radius:20px;cursor:pointer;transition:all .15s ease;
+  }
+  .lang-btn:hover{border-color:var(--accent);color:var(--text);}
+  .lang-btn.active{border-color:var(--accent);color:var(--forest);background:var(--accent-dim);}
   h1{
     font-family:'Playfair Display', serif;
     font-weight:900;
@@ -226,15 +234,23 @@
 <a href="../laboratoire.html" style="position:fixed;top:14px;left:14px;z-index:99999;display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;background:rgba(13,26,18,0.9);border:1px solid #B8965A;color:#D4AF7A;text-decoration:none;font-family:Inter,Arial,sans-serif;font-size:12.5px;font-weight:600;backdrop-filter:blur(4px)">&larr; Laboratoire</a>
 
 <div class="app">
-  <div class="eyebrow">Dossier d'analyse vidéo</div>
-  <div class="titlerow"><h1>Zahra</h1><span class="vbadge">V</span></div>
-  <p class="sub">Dépose une vidéo pour en extraire la <b>structure</b> : coupes (détection par histogrammes), style visuel estimé et audio.</p>
+  <div class="eyebrow" data-i18n="eyebrow">Dossier d'analyse vidéo</div>
+  <div class="titlerow">
+    <h1>Zahra</h1><span class="vbadge">V</span>
+    <div class="lang-switch">
+      <button type="button" class="lang-btn" data-lang="ar">عربي</button>
+      <button type="button" class="lang-btn" data-lang="fr">Français</button>
+      <button type="button" class="lang-btn" data-lang="de">Deutsch</button>
+      <button type="button" class="lang-btn" data-lang="sq">Shqip</button>
+    </div>
+  </div>
+  <p class="sub" data-i18n-html="sub">Dépose une vidéo pour en extraire la <b>structure</b> : coupes (détection par histogrammes), style visuel estimé et audio.</p>
 
   <label class="upload" id="uploadZone" tabindex="0">
     <input type="file" id="fileInput" accept="video/*" />
     <div class="upload-icon">▲</div>
-    <div class="upload-title">Glisse ta vidéo ici</div>
-    <div class="upload-hint">ou clique pour parcourir — MP4, MOV · tout se fait dans ton navigateur</div>
+    <div class="upload-title" data-i18n="upload_title">Glisse ta vidéo ici</div>
+    <div class="upload-hint" data-i18n="upload_hint">ou clique pour parcourir — MP4, MOV · tout se fait dans ton navigateur</div>
     <div class="filename-chip" id="filenameChip"></div>
   </label>
 
@@ -244,11 +260,11 @@
   <div class="processing" id="processing">
     <div class="scanline-wrap"><div class="scanline"></div></div>
     <div class="steps" id="steps">
-      <div class="step" data-step="meta"><div class="dot"></div>Lecture des métadonnées</div>
-      <div class="step" data-step="scenes"><div class="dot"></div>Détection des coupes (histogrammes de luminance)</div>
-      <div class="step" data-step="audio"><div class="dot"></div>Analyse de la piste audio</div>
-      <div class="step" data-step="vision"><div class="dot"></div>Analyse du style visuel (IA)</div>
-      <div class="step" data-step="report"><div class="dot"></div>Génération du rapport</div>
+      <div class="step" data-step="meta"><div class="dot"></div><span data-i18n="step_meta">Lecture des métadonnées</span></div>
+      <div class="step" data-step="scenes"><div class="dot"></div><span data-i18n="step_scenes">Détection des coupes (histogrammes de luminance)</span></div>
+      <div class="step" data-step="audio"><div class="dot"></div><span data-i18n="step_audio">Analyse de la piste audio</span></div>
+      <div class="step" data-step="vision"><div class="dot"></div><span data-i18n="step_vision">Analyse du style visuel (IA)</span></div>
+      <div class="step" data-step="report"><div class="dot"></div><span data-i18n="step_report">Génération du rapport</span></div>
     </div>
   </div>
 
@@ -256,59 +272,59 @@
     <div class="score-row">
       <div>
         <div class="score-big" id="scoreBig">—<span>/100</span></div>
-        <div class="score-label">Score indicatif</div>
+        <div class="score-label" data-i18n="score_label">Score indicatif</div>
       </div>
       <div class="subscores" id="subscores"></div>
     </div>
 
     <div class="filmstrip-panel">
-      <div class="panel-title">Chronologie des plans <span class="count" id="cutCount"></span></div>
+      <div class="panel-title"><span data-i18n="panel_filmstrip">Chronologie des plans</span> <span class="count" id="cutCount"></span></div>
       <div class="filmstrip" id="filmstrip"></div>
     </div>
 
     <div class="grid">
-      <div class="card"><h3><span class="sw"></span>Vidéo</h3><div id="videoCard"></div></div>
-      <div class="card"><h3><span class="sw"></span>Audio</h3><div id="audioCard"></div></div>
-      <div class="card"><h3><span class="sw"></span>Style visuel (estimé par IA)</h3><div id="styleCard"></div></div>
-      <div class="card"><h3><span class="sw"></span>Police (hypothèse IA)</h3><div id="fontCard"></div></div>
-      <div class="card"><h3><span class="sw"></span>Animation des sous-titres (estimé par IA)</h3><div id="captionAnimCard"></div></div>
-      <div class="card"><h3><span class="sw"></span>Type de plan / cadrage (estimé par IA)</h3><div id="shotTypeCard"></div></div>
+      <div class="card"><h3><span class="sw"></span><span data-i18n="card_video">Vidéo</span></h3><div id="videoCard"></div></div>
+      <div class="card"><h3><span class="sw"></span><span data-i18n="card_audio">Audio</span></h3><div id="audioCard"></div></div>
+      <div class="card"><h3><span class="sw"></span><span data-i18n="card_style">Style visuel (estimé par IA)</span></h3><div id="styleCard"></div></div>
+      <div class="card"><h3><span class="sw"></span><span data-i18n="card_font">Police (hypothèse IA)</span></h3><div id="fontCard"></div></div>
+      <div class="card"><h3><span class="sw"></span><span data-i18n="card_captionanim">Animation des sous-titres (estimé par IA)</span></h3><div id="captionAnimCard"></div></div>
+      <div class="card"><h3><span class="sw"></span><span data-i18n="card_shottype">Type de plan / cadrage (estimé par IA)</span></h3><div id="shotTypeCard"></div></div>
     </div>
 
     <div class="filmstrip-panel">
-      <div class="panel-title">Structure narrative détectée <span class="count" id="structureCount"></span></div>
+      <div class="panel-title"><span data-i18n="panel_structure">Structure narrative détectée</span> <span class="count" id="structureCount"></span></div>
       <div id="structureCard"></div>
     </div>
 
     <div class="filmstrip-panel">
-      <div class="panel-title">B-roll détecté <span class="count" id="brollCount"></span></div>
+      <div class="panel-title"><span data-i18n="panel_broll">B-roll détecté</span> <span class="count" id="brollCount"></span></div>
       <div id="brollCard"></div>
     </div>
 
     <div class="filmstrip-panel">
-      <div class="panel-title">Zoom recommandé par plan <span class="count">valeurs Scale % pour CapCut</span></div>
+      <div class="panel-title"><span data-i18n="panel_zoom">Zoom recommandé par plan</span> <span class="count" data-i18n="zoom_count_label">valeurs Scale % pour CapCut</span></div>
       <div id="zoomCard"></div>
     </div>
 
     <div class="recipe-panel">
-      <div class="panel-title">Recette de reproduction</div>
-      <div class="recipe-sub">Étapes de style (estimées par IA)</div>
+      <div class="panel-title" data-i18n="panel_recipe">Recette de reproduction</div>
+      <div class="recipe-sub" data-i18n="recipe_sub">Étapes de style (estimées par IA)</div>
       <div class="text-block" id="recipeIntro"></div>
       <ol class="recipe-steps" id="recipeSteps"></ol>
     </div>
 
     <div class="disclaimer">
-      <b>Sur la fiabilité :</b> durée, résolution et coupes sont mesurées directement (analyse de fichier) — fiables. Le style typographique, le grading couleur, le type de transition, la structure narrative et le B-roll restent des <b>estimations visuelles IA</b> avec score de confiance affiché.
+      <b data-i18n="disclaimer_label">Sur la fiabilité :</b> <span data-i18n-html="disclaimer_text">durée, résolution et coupes sont mesurées directement (analyse de fichier) — fiables. Le style typographique, le grading couleur, le type de transition, la structure narrative et le B-roll restent des <b>estimations visuelles IA</b> avec score de confiance affiché.</span>
     </div>
 
     <div class="filmstrip-panel">
-      <div class="panel-title">Limites de l'analyse</div>
+      <div class="panel-title" data-i18n="panel_limits">Limites de l'analyse</div>
       <ul class="limits-list" id="limitsCard"></ul>
     </div>
 
     <div class="actions">
-      <button class="primary" id="downloadBtn">Télécharger le résumé de l'analyse (.txt)</button>
-      <button id="resetBtn">Analyser une autre vidéo</button>
+      <button class="primary" id="downloadBtn" data-i18n="btn_download">Télécharger le résumé de l'analyse (.txt)</button>
+      <button id="resetBtn" data-i18n="btn_reset">Analyser une autre vidéo</button>
     </div>
   </div>
 </div>
@@ -317,6 +333,433 @@
 <canvas id="workCanvas" style="display:none"></canvas>
 
 <script>
+// ---------- i18n ----------
+const I18N = {
+  fr: {
+    eyebrow: "Dossier d'analyse vidéo",
+    sub: "Dépose une vidéo pour en extraire la <b>structure</b> : coupes (détection par histogrammes), style visuel estimé et audio.",
+    upload_title: "Glisse ta vidéo ici",
+    upload_hint: "ou clique pour parcourir — MP4, MOV · tout se fait dans ton navigateur",
+    step_meta: "Lecture des métadonnées",
+    step_scenes: "Détection des coupes (histogrammes de luminance)",
+    step_audio: "Analyse de la piste audio",
+    step_vision: "Analyse du style visuel (IA)",
+    step_report: "Génération du rapport",
+    score_label: "Score indicatif",
+    panel_filmstrip: "Chronologie des plans",
+    card_video: "Vidéo",
+    card_audio: "Audio",
+    card_style: "Style visuel (estimé par IA)",
+    card_font: "Police (hypothèse IA)",
+    card_captionanim: "Animation des sous-titres (estimé par IA)",
+    card_shottype: "Type de plan / cadrage (estimé par IA)",
+    panel_structure: "Structure narrative détectée",
+    panel_broll: "B-roll détecté",
+    panel_zoom: "Zoom recommandé par plan",
+    zoom_count_label: "valeurs Scale % pour CapCut",
+    panel_recipe: "Recette de reproduction",
+    recipe_sub: "Étapes de style (estimées par IA)",
+    disclaimer_label: "Sur la fiabilité :",
+    disclaimer_text: "durée, résolution et coupes sont mesurées directement (analyse de fichier) — fiables. Le style typographique, le grading couleur, le type de transition, la structure narrative et le B-roll restent des <b>estimations visuelles IA</b> avec score de confiance affiché.",
+    panel_limits: "Limites de l'analyse",
+    btn_download: "Télécharger le résumé de l'analyse (.txt)",
+    btn_reset: "Analyser une autre vidéo",
+    err_read_video: "Impossible de lire ce fichier vidéo.",
+    err_generic: "Une erreur est survenue pendant l'analyse.",
+    err_ai_network: "L'analyse IA a échoué (réseau ou service indisponible).",
+    err_ai_empty: "Réponse IA vide.",
+    err_ai_parse: "Impossible d'interpréter la réponse de l'analyse IA.",
+    kv_duration: "Durée",
+    kv_resolution: "Résolution",
+    kv_format: "Format",
+    kv_fps: "Fréquence (FPS)",
+    kv_fps_measured: "≈ {n} fps (mesuré)",
+    kv_fps_unmeasurable: "non mesurable dans ce navigateur",
+    kv_cuts_detected: "Plans détectés",
+    kv_avg_plan: "Durée moy. par plan",
+    kv_file: "Fichier",
+    kv_content_type_ai: "Type de contenu (IA)",
+    cutcount_label: "{n} plans détectés",
+    filmstrip_cut_tag: "Cut",
+    filmstrip_plan_tag: "plan",
+    broll_suffix: " · B-roll",
+    format_916: "9:16 (vertical)",
+    format_11: "1:1 (carré)",
+    format_169: "16:9 (paysage)",
+    sub_montage: "Montage",
+    sub_audio: "Audio",
+    sub_soustitres: "Sous-titres",
+    sub_visuel: "Visuel",
+    zoom_th_segment: "Segment",
+    zoom_th_duree: "Durée",
+    zoom_th_scale: "Scale CapCut",
+    zoom_suggestion_text: "Suggestion générée à partir des plans détectés : alterne 100% avec des paliers de zoom variables (105–114%) pour simuler un changement de caméra sur un plan fixe unique. À affiner selon les respirations naturelles de ta vidéo.",
+    kv_silences: "Silences détectés",
+    kv_silences_val: "{p}% du temps",
+    kv_volchanges: "Changements de volume",
+    kv_dynamic: "Dynamique",
+    audio_measured_note: "Mesuré directement sur la piste audio — fiable.",
+    audio_no_track: "Aucune piste audio détectée ou décodage impossible dans ce navigateur.",
+    style_global_label: "Style global",
+    grading_prefix: "Grading couleur : ",
+    font_hypothesis_note: "Hypothèse visuelle uniquement — la police exacte ne peut être confirmée sans le fichier source du montage.",
+    captionanim_keywords_label: "Mots-clés surlignés / mis en couleur détectés : ",
+    oui: "oui",
+    non: "non",
+    shot_type_note: "Taille de cadrage estimée par plan — gros plan, rapproché, moyen, large, d'ensemble ou insert/détail.",
+    shot_type_undetermined: "Non déterminé",
+    structure_none: "Structure narrative non détectée par l'IA sur cette vidéo.",
+    structure_th_zone: "Zone temporelle",
+    structure_th_segment: "Segment",
+    structure_th_technique: "Technique dominante",
+    broll_none: "Aucune séquence B-roll détectée sur les frames échantillonnées — la vidéo semble reposer uniquement sur le plan principal.",
+    broll_default_reason: "rendu visuellement différent du plan principal",
+    broll_count_none: "aucune détectée",
+    broll_count_n: "{n} séquence(s)",
+    structure_count_n: "{n} segments",
+    ai_unavailable: "Analyse IA indisponible",
+    ai_unavailable_note: "Les données de montage et audio ci-dessus restent fiables.",
+    recipe_unavailable: "Étapes de style indisponibles sans analyse IA — voir les réglages mesurés ci-dessus, toujours valables.",
+    font_unavailable: "Hypothèse de police indisponible sans analyse IA.",
+    captionanim_unavailable: "Animation des sous-titres indisponible sans analyse IA.",
+    shottype_unavailable: "Type de plan indisponible sans analyse IA.",
+    structure_unavailable: "Structure narrative indisponible sans analyse IA.",
+    broll_unavailable: "Détection B-roll indisponible sans analyse IA.",
+    limit_1: "Le nom exact du filtre, de la police ou du template source n'est pas déterminable avec certitude à partir d'un export final compressé.",
+    limit_2: "La structure narrative, le B-roll et les transitions sont des estimations visuelles IA sur un échantillon de frames, pas une analyse image par image exhaustive.",
+    limit_3: "Pour identifier un template exact, il faudrait comparer la vidéo à une bibliothèque de templates CapCut/Premiere/After Effects.",
+    limit_4: "Le FPS affiché est une mesure approximative dépendant du navigateur ; certains navigateurs ne l'exposent pas.",
+    ai_language_name: "français",
+    shot_labels: { "Gros plan":"Gros plan", "Plan rapproché":"Plan rapproché", "Plan moyen":"Plan moyen", "Plan large":"Plan large", "Plan d'ensemble":"Plan d'ensemble", "Insert/Détail":"Insert/Détail" },
+    transition_labels: { "Jump Cut":"Jump Cut", "Zoom Cut":"Zoom Cut", "Punch-in":"Punch-in", "Punch-out":"Punch-out", "Fondu":"Fondu", "Glitch/Spin":"Glitch/Spin", "Insertion B-roll":"Insertion B-roll", "Aucune détectée":"Aucune détectée" }
+  },
+  ar: {
+    eyebrow: "ملف تحليل الفيديو",
+    sub: "أضف فيديو لاستخراج <b>هيكله</b>: القطعات (كشف عبر الهيستوغرام)، النمط البصري المقدَّر والصوت.",
+    upload_title: "اسحب فيديوك هنا",
+    upload_hint: "أو اضغط للتصفح — MP4, MOV · كل شيء يتم داخل متصفحك",
+    step_meta: "قراءة البيانات الوصفية",
+    step_scenes: "كشف القطعات (هيستوغرام الإضاءة)",
+    step_audio: "تحليل المسار الصوتي",
+    step_vision: "تحليل النمط البصري (ذكاء اصطناعي)",
+    step_report: "إنشاء التقرير",
+    score_label: "النتيجة الإرشادية",
+    panel_filmstrip: "الجدول الزمني للقطعات",
+    card_video: "الفيديو",
+    card_audio: "الصوت",
+    card_style: "النمط البصري (مقدَّر بالذكاء الاصطناعي)",
+    card_font: "الخط (فرضية الذكاء الاصطناعي)",
+    card_captionanim: "حركة الترجمة (مقدَّرة بالذكاء الاصطناعي)",
+    card_shottype: "نوع اللقطة / الإطار (مقدَّر بالذكاء الاصطناعي)",
+    panel_structure: "البنية السردية المكتشفة",
+    panel_broll: "لقطات B-roll المكتشفة",
+    panel_zoom: "التكبير الموصى به لكل قطعة",
+    zoom_count_label: "قيم Scale % لبرنامج CapCut",
+    panel_recipe: "وصفة إعادة الإنتاج",
+    recipe_sub: "خطوات النمط (مقدَّرة بالذكاء الاصطناعي)",
+    disclaimer_label: "حول الموثوقية:",
+    disclaimer_text: "المدة والدقة والقطعات تُقاس مباشرة (تحليل الملف) — موثوقة. يبقى نمط الخط، تصحيح الألوان، نوع الانتقال، البنية السردية وB-roll <b>تقديرات بصرية بالذكاء الاصطناعي</b> مع درجة ثقة معروضة.",
+    panel_limits: "حدود التحليل",
+    btn_download: "تحميل ملخص التحليل (.txt)",
+    btn_reset: "تحليل فيديو آخر",
+    err_read_video: "تعذّرت قراءة ملف الفيديو هذا.",
+    err_generic: "حدث خطأ أثناء التحليل.",
+    err_ai_network: "فشل تحليل الذكاء الاصطناعي (مشكلة شبكة أو خدمة غير متاحة).",
+    err_ai_empty: "استجابة الذكاء الاصطناعي فارغة.",
+    err_ai_parse: "تعذّر تفسير استجابة تحليل الذكاء الاصطناعي.",
+    kv_duration: "المدة",
+    kv_resolution: "الدقة",
+    kv_format: "الصيغة",
+    kv_fps: "معدل الإطارات (FPS)",
+    kv_fps_measured: "≈ {n} إطار/ثانية (مقاس)",
+    kv_fps_unmeasurable: "غير قابل للقياس في هذا المتصفح",
+    kv_cuts_detected: "القطعات المكتشفة",
+    kv_avg_plan: "متوسط مدة القطعة",
+    kv_file: "الملف",
+    kv_content_type_ai: "نوع المحتوى (ذكاء اصطناعي)",
+    cutcount_label: "{n} قطعة مكتشفة",
+    filmstrip_cut_tag: "قطع",
+    filmstrip_plan_tag: "لقطة",
+    broll_suffix: " · B-roll",
+    format_916: "9:16 (عمودي)",
+    format_11: "1:1 (مربع)",
+    format_169: "16:9 (أفقي)",
+    sub_montage: "المونتاج",
+    sub_audio: "الصوت",
+    sub_soustitres: "الترجمة",
+    sub_visuel: "البصري",
+    zoom_th_segment: "المقطع",
+    zoom_th_duree: "المدة",
+    zoom_th_scale: "نسبة Scale في CapCut",
+    zoom_suggestion_text: "اقتراح مبني على القطعات المكتشفة: تناوب بين 100% ومستويات تكبير متغيرة (105–114%) لمحاكاة تغيير الكاميرا على لقطة ثابتة واحدة. اضبطه حسب الإيقاع الطبيعي لفيديوك.",
+    kv_silences: "الصمت المكتشف",
+    kv_silences_val: "{p}% من الوقت",
+    kv_volchanges: "تغيرات مستوى الصوت",
+    kv_dynamic: "المدى الديناميكي",
+    audio_measured_note: "مقاس مباشرة من المسار الصوتي — موثوق.",
+    audio_no_track: "لم يتم اكتشاف مسار صوتي أو تعذّر فك تشفيره في هذا المتصفح.",
+    style_global_label: "النمط العام",
+    grading_prefix: "تصحيح الألوان: ",
+    font_hypothesis_note: "فرضية بصرية فقط — لا يمكن تأكيد الخط الدقيق دون ملف المونتاج المصدر.",
+    captionanim_keywords_label: "الكلمات المفتاحية المميزة بلون/تظليل مكتشفة: ",
+    oui: "نعم",
+    non: "لا",
+    shot_type_note: "حجم الإطار المقدَّر لكل قطعة — لقطة قريبة جدًا، قريبة، متوسطة، واسعة، عامة أو تفصيلية.",
+    shot_type_undetermined: "غير محدد",
+    structure_none: "لم يكتشف الذكاء الاصطناعي بنية سردية في هذا الفيديو.",
+    structure_th_zone: "النطاق الزمني",
+    structure_th_segment: "المقطع",
+    structure_th_technique: "التقنية المهيمنة",
+    broll_none: "لم يتم اكتشاف أي لقطة B-roll ضمن الإطارات المأخوذة — يبدو أن الفيديو يعتمد فقط على اللقطة الرئيسية.",
+    broll_default_reason: "يظهر بصريًا مختلفًا عن اللقطة الرئيسية",
+    broll_count_none: "لم يُكتشف أي منها",
+    broll_count_n: "{n} مقطع (مقاطع)",
+    structure_count_n: "{n} مقاطع",
+    ai_unavailable: "تحليل الذكاء الاصطناعي غير متاح",
+    ai_unavailable_note: "بيانات المونتاج والصوت أعلاه تبقى موثوقة.",
+    recipe_unavailable: "خطوات النمط غير متاحة دون تحليل الذكاء الاصطناعي — راجع الإعدادات المقاسة أعلاه، تبقى صالحة.",
+    font_unavailable: "فرضية الخط غير متاحة دون تحليل الذكاء الاصطناعي.",
+    captionanim_unavailable: "حركة الترجمة غير متاحة دون تحليل الذكاء الاصطناعي.",
+    shottype_unavailable: "نوع اللقطة غير متاح دون تحليل الذكاء الاصطناعي.",
+    structure_unavailable: "البنية السردية غير متاحة دون تحليل الذكاء الاصطناعي.",
+    broll_unavailable: "اكتشاف B-roll غير متاح دون تحليل الذكاء الاصطناعي.",
+    limit_1: "لا يمكن تحديد الاسم الدقيق للفلتر أو الخط أو القالب المصدر بثقة انطلاقًا من تصدير نهائي مضغوط.",
+    limit_2: "البنية السردية وB-roll والانتقالات هي تقديرات بصرية بالذكاء الاصطناعي على عيّنة من الإطارات، وليست تحليلًا شاملًا صورة بصورة.",
+    limit_3: "لتحديد قالب دقيق، يجب مقارنة الفيديو بمكتبة قوالب CapCut/Premiere/After Effects.",
+    limit_4: "معدل FPS المعروض قياس تقريبي يعتمد على المتصفح؛ بعض المتصفحات لا تعرضه.",
+    ai_language_name: "العربية",
+    shot_labels: { "Gros plan":"لقطة قريبة جدًا", "Plan rapproché":"لقطة قريبة", "Plan moyen":"لقطة متوسطة", "Plan large":"لقطة واسعة", "Plan d'ensemble":"لقطة عامة", "Insert/Détail":"لقطة تفصيلية" },
+    transition_labels: { "Jump Cut":"قطع مفاجئ", "Zoom Cut":"قطع بتكبير", "Punch-in":"تقريب مفاجئ", "Punch-out":"إبعاد مفاجئ", "Fondu":"تلاشي", "Glitch/Spin":"تشويش/دوران", "Insertion B-roll":"إدراج B-roll", "Aucune détectée":"لم يُكتشف شيء" }
+  },
+  de: {
+    eyebrow: "Video-Analysebericht",
+    sub: "Lade ein Video hoch, um seine <b>Struktur</b> zu extrahieren: Schnitte (Histogramm-Erkennung), geschätzter visueller Stil und Audio.",
+    upload_title: "Ziehe dein Video hierher",
+    upload_hint: "oder klicke zum Durchsuchen — MP4, MOV · alles geschieht in deinem Browser",
+    step_meta: "Metadaten werden gelesen",
+    step_scenes: "Schnitterkennung (Helligkeitshistogramme)",
+    step_audio: "Analyse der Audiospur",
+    step_vision: "Analyse des visuellen Stils (KI)",
+    step_report: "Bericht wird erstellt",
+    score_label: "Richtwert-Score",
+    panel_filmstrip: "Zeitachse der Einstellungen",
+    card_video: "Video",
+    card_audio: "Audio",
+    card_style: "Visueller Stil (von KI geschätzt)",
+    card_font: "Schriftart (KI-Hypothese)",
+    card_captionanim: "Untertitel-Animation (von KI geschätzt)",
+    card_shottype: "Einstellungsgröße / Bildausschnitt (von KI geschätzt)",
+    panel_structure: "Erkannte Erzählstruktur",
+    panel_broll: "Erkanntes B-Roll",
+    panel_zoom: "Empfohlener Zoom pro Einstellung",
+    zoom_count_label: "Scale-%-Werte für CapCut",
+    panel_recipe: "Reproduktionsrezept",
+    recipe_sub: "Stilschritte (von KI geschätzt)",
+    disclaimer_label: "Zur Zuverlässigkeit:",
+    disclaimer_text: "Dauer, Auflösung und Schnitte werden direkt gemessen (Dateianalyse) — zuverlässig. Typografischer Stil, Farbkorrektur, Übergangsart, Erzählstruktur und B-Roll bleiben <b>visuelle KI-Schätzungen</b> mit angezeigtem Konfidenzwert.",
+    panel_limits: "Grenzen der Analyse",
+    btn_download: "Analysezusammenfassung herunterladen (.txt)",
+    btn_reset: "Ein weiteres Video analysieren",
+    err_read_video: "Diese Videodatei kann nicht gelesen werden.",
+    err_generic: "Bei der Analyse ist ein Fehler aufgetreten.",
+    err_ai_network: "Die KI-Analyse ist fehlgeschlagen (Netzwerk- oder Dienstproblem).",
+    err_ai_empty: "Leere KI-Antwort.",
+    err_ai_parse: "Die Antwort der KI-Analyse konnte nicht interpretiert werden.",
+    kv_duration: "Dauer",
+    kv_resolution: "Auflösung",
+    kv_format: "Format",
+    kv_fps: "Bildrate (FPS)",
+    kv_fps_measured: "≈ {n} fps (gemessen)",
+    kv_fps_unmeasurable: "in diesem Browser nicht messbar",
+    kv_cuts_detected: "Erkannte Einstellungen",
+    kv_avg_plan: "Ø Dauer pro Einstellung",
+    kv_file: "Datei",
+    kv_content_type_ai: "Inhaltstyp (KI)",
+    cutcount_label: "{n} Einstellungen erkannt",
+    filmstrip_cut_tag: "Schnitt",
+    filmstrip_plan_tag: "Einstellung",
+    broll_suffix: " · B-Roll",
+    format_916: "9:16 (vertikal)",
+    format_11: "1:1 (quadratisch)",
+    format_169: "16:9 (Querformat)",
+    sub_montage: "Schnitt",
+    sub_audio: "Audio",
+    sub_soustitres: "Untertitel",
+    sub_visuel: "Visuell",
+    zoom_th_segment: "Segment",
+    zoom_th_duree: "Dauer",
+    zoom_th_scale: "CapCut-Scale",
+    zoom_suggestion_text: "Vorschlag basierend auf den erkannten Einstellungen: Abwechslung zwischen 100% und variablen Zoomstufen (105–114%), um einen Kamerawechsel bei einer einzigen festen Einstellung zu simulieren. An den natürlichen Rhythmus deines Videos anpassen.",
+    kv_silences: "Erkannte Stille",
+    kv_silences_val: "{p}% der Zeit",
+    kv_volchanges: "Lautstärkeänderungen",
+    kv_dynamic: "Dynamikumfang",
+    audio_measured_note: "Direkt aus der Audiospur gemessen — zuverlässig.",
+    audio_no_track: "Keine Audiospur erkannt oder Dekodierung in diesem Browser nicht möglich.",
+    style_global_label: "Gesamtstil",
+    grading_prefix: "Farbkorrektur: ",
+    font_hypothesis_note: "Nur eine visuelle Hypothese — die genaue Schriftart kann ohne die Quelldatei des Schnitts nicht bestätigt werden.",
+    captionanim_keywords_label: "Hervorgehobene/farbig markierte Schlüsselwörter erkannt: ",
+    oui: "ja",
+    non: "nein",
+    shot_type_note: "Geschätzte Einstellungsgröße pro Szene — Nahaufnahme, halbnah, halbtotal, Totale, Weit oder Detail/Insert.",
+    shot_type_undetermined: "Nicht bestimmt",
+    structure_none: "Von der KI wurde in diesem Video keine Erzählstruktur erkannt.",
+    structure_th_zone: "Zeitbereich",
+    structure_th_segment: "Segment",
+    structure_th_technique: "Dominante Technik",
+    broll_none: "In den erfassten Frames wurde kein B-Roll erkannt — das Video scheint nur auf der Hauptaufnahme zu basieren.",
+    broll_default_reason: "visuell anders als die Hauptaufnahme",
+    broll_count_none: "keines erkannt",
+    broll_count_n: "{n} Sequenz(en)",
+    structure_count_n: "{n} Segmente",
+    ai_unavailable: "KI-Analyse nicht verfügbar",
+    ai_unavailable_note: "Die obigen Schnitt- und Audiodaten bleiben zuverlässig.",
+    recipe_unavailable: "Stilschritte ohne KI-Analyse nicht verfügbar — siehe die oben gemessenen Einstellungen, die weiterhin gültig sind.",
+    font_unavailable: "Schrifthypothese ohne KI-Analyse nicht verfügbar.",
+    captionanim_unavailable: "Untertitel-Animation ohne KI-Analyse nicht verfügbar.",
+    shottype_unavailable: "Einstellungsgröße ohne KI-Analyse nicht verfügbar.",
+    structure_unavailable: "Erzählstruktur ohne KI-Analyse nicht verfügbar.",
+    broll_unavailable: "B-Roll-Erkennung ohne KI-Analyse nicht verfügbar.",
+    limit_1: "Der genaue Name des Filters, der Schriftart oder der Quellvorlage lässt sich aus einem komprimierten Endexport nicht mit Sicherheit bestimmen.",
+    limit_2: "Erzählstruktur, B-Roll und Übergänge sind visuelle KI-Schätzungen auf Basis einer Frame-Stichprobe, keine erschöpfende Bild-für-Bild-Analyse.",
+    limit_3: "Um eine exakte Vorlage zu identifizieren, müsste das Video mit einer Bibliothek von CapCut-/Premiere-/After-Effects-Vorlagen verglichen werden.",
+    limit_4: "Die angezeigte FPS-Zahl ist ein browserabhängiger Näherungswert; manche Browser zeigen sie gar nicht an.",
+    ai_language_name: "Deutsch",
+    shot_labels: { "Gros plan":"Nahaufnahme", "Plan rapproché":"Halbnah", "Plan moyen":"Halbtotale", "Plan large":"Totale", "Plan d'ensemble":"Weit", "Insert/Détail":"Detail/Insert" },
+    transition_labels: { "Jump Cut":"Jump Cut", "Zoom Cut":"Zoom Cut", "Punch-in":"Punch-in", "Punch-out":"Punch-out", "Fondu":"Überblendung", "Glitch/Spin":"Glitch/Drehung", "Insertion B-roll":"B-Roll-Einfügung", "Aucune détectée":"Keine erkannt" }
+  },
+  sq: {
+    eyebrow: "Dosje analize video",
+    sub: "Ngarko një video për të nxjerrë <b>strukturën</b> e saj: prerjet (zbulim me histogram), stili vizual i vlerësuar dhe audio.",
+    upload_title: "Tërhiq videon tënde këtu",
+    upload_hint: "ose kliko për të shfletuar — MP4, MOV · gjithçka ndodh në shfletuesin tënd",
+    step_meta: "Duke lexuar metadatat",
+    step_scenes: "Zbulimi i prerjeve (histogramet e ndriçimit)",
+    step_audio: "Analiza e pistës audio",
+    step_vision: "Analiza e stilit vizual (AI)",
+    step_report: "Gjenerimi i raportit",
+    score_label: "Rezultati indikativ",
+    panel_filmstrip: "Kronologjia e planeve",
+    card_video: "Video",
+    card_audio: "Audio",
+    card_style: "Stili vizual (vlerësuar nga AI)",
+    card_font: "Fonti (hipotezë e AI)",
+    card_captionanim: "Animacioni i titrave (vlerësuar nga AI)",
+    card_shottype: "Lloji i planit / kuadrimi (vlerësuar nga AI)",
+    panel_structure: "Struktura narrative e zbuluar",
+    panel_broll: "B-roll i zbuluar",
+    panel_zoom: "Zoom i rekomanduar për plan",
+    zoom_count_label: "vlerat Scale % për CapCut",
+    panel_recipe: "Receta e riprodhimit",
+    recipe_sub: "Hapat e stilit (vlerësuar nga AI)",
+    disclaimer_label: "Rreth besueshmërisë:",
+    disclaimer_text: "kohëzgjatja, rezolucioni dhe prerjet maten drejtpërdrejt (analizë e skedarit) — të besueshme. Stili tipografik, korrigjimi i ngjyrave, lloji i tranzicionit, struktura narrative dhe B-roll mbeten <b>vlerësime vizuale të AI</b> me shkallë besueshmërie të shfaqur.",
+    panel_limits: "Kufizimet e analizës",
+    btn_download: "Shkarko përmbledhjen e analizës (.txt)",
+    btn_reset: "Analizo një video tjetër",
+    err_read_video: "Nuk mund të lexohet ky skedar video.",
+    err_generic: "Ndodhi një gabim gjatë analizës.",
+    err_ai_network: "Analiza AI dështoi (rrjet ose shërbim i padisponueshëm).",
+    err_ai_empty: "Përgjigje boshe nga AI.",
+    err_ai_parse: "Nuk mund të interpretohet përgjigja e analizës AI.",
+    kv_duration: "Kohëzgjatja",
+    kv_resolution: "Rezolucioni",
+    kv_format: "Formati",
+    kv_fps: "Frekuenca (FPS)",
+    kv_fps_measured: "≈ {n} fps (matur)",
+    kv_fps_unmeasurable: "e pamatshme në këtë shfletues",
+    kv_cuts_detected: "Plane të zbuluara",
+    kv_avg_plan: "Kohëzgjatja mesatare e planit",
+    kv_file: "Skedari",
+    kv_content_type_ai: "Lloji i përmbajtjes (AI)",
+    cutcount_label: "{n} plane të zbuluara",
+    filmstrip_cut_tag: "Prerje",
+    filmstrip_plan_tag: "plan",
+    broll_suffix: " · B-roll",
+    format_916: "9:16 (vertikal)",
+    format_11: "1:1 (katror)",
+    format_169: "16:9 (horizontal)",
+    sub_montage: "Montazhi",
+    sub_audio: "Audio",
+    sub_soustitres: "Titrat",
+    sub_visuel: "Vizuali",
+    zoom_th_segment: "Segmenti",
+    zoom_th_duree: "Kohëzgjatja",
+    zoom_th_scale: "Scale për CapCut",
+    zoom_suggestion_text: "Sugjerim i gjeneruar nga planet e zbuluara: alternim mes 100% dhe niveleve të ndryshueshme të zoom-it (105–114%) për të simuluar një ndryshim kamere në një plan të vetëm fiks. Rregulloje sipas ritmit natyror të videos tënde.",
+    kv_silences: "Heshtje të zbuluara",
+    kv_silences_val: "{p}% e kohës",
+    kv_volchanges: "Ndryshime të volumit",
+    kv_dynamic: "Diapazoni dinamik",
+    audio_measured_note: "Matur drejtpërdrejt nga pista audio — e besueshme.",
+    audio_no_track: "Nuk u zbulua asnjë pistë audio ose dekodimi nuk është i mundur në këtë shfletues.",
+    style_global_label: "Stili i përgjithshëm",
+    grading_prefix: "Korrigjimi i ngjyrave: ",
+    font_hypothesis_note: "Vetëm hipotezë vizuale — fonti i saktë nuk mund të konfirmohet pa skedarin burimor të montazhit.",
+    captionanim_keywords_label: "Fjalë kyçe të theksuara/me ngjyrë të zbuluara: ",
+    oui: "po",
+    non: "jo",
+    shot_type_note: "Madhësia e kuadrimit e vlerësuar për plan — shumë afër, afër, mesatare, e gjerë, e përgjithshme ose detaj.",
+    shot_type_undetermined: "E papërcaktuar",
+    structure_none: "AI nuk zbuloi asnjë strukturë narrative në këtë video.",
+    structure_th_zone: "Zona kohore",
+    structure_th_segment: "Segmenti",
+    structure_th_technique: "Teknika dominuese",
+    broll_none: "Nuk u zbulua asnjë sekuencë B-roll në kornizat e marra në kampion — video duket se mbështetet vetëm te plani kryesor.",
+    broll_default_reason: "duket vizualisht ndryshe nga plani kryesor",
+    broll_count_none: "asnjë e zbuluar",
+    broll_count_n: "{n} sekuencë(a)",
+    structure_count_n: "{n} segmente",
+    ai_unavailable: "Analiza AI e padisponueshme",
+    ai_unavailable_note: "Të dhënat e montazhit dhe audios më sipër mbeten të besueshme.",
+    recipe_unavailable: "Hapat e stilit të padisponueshëm pa analizë AI — shiko cilësimet e matura më sipër, ende të vlefshme.",
+    font_unavailable: "Hipoteza e fontit e padisponueshme pa analizë AI.",
+    captionanim_unavailable: "Animacioni i titrave i padisponueshëm pa analizë AI.",
+    shottype_unavailable: "Lloji i planit i padisponueshëm pa analizë AI.",
+    structure_unavailable: "Struktura narrative e padisponueshme pa analizë AI.",
+    broll_unavailable: "Zbulimi i B-roll i padisponueshëm pa analizë AI.",
+    limit_1: "Emri i saktë i filtrit, fontit ose shabllonit burimor nuk mund të përcaktohet me siguri nga një eksport final i kompresuar.",
+    limit_2: "Struktura narrative, B-roll dhe tranzicionet janë vlerësime vizuale të AI mbi një kampion kornizash, jo një analizë e plotë kornizë-për-kornizë.",
+    limit_3: "Për të identifikuar një shabllon të saktë, do të duhej krahasuar videoja me një bibliotekë shabllonesh CapCut/Premiere/After Effects.",
+    limit_4: "FPS-ja e shfaqur është një matje e përafërt që varet nga shfletuesi; disa shfletues nuk e shfaqin fare.",
+    ai_language_name: "shqip",
+    shot_labels: { "Gros plan":"Shumë afër", "Plan rapproché":"Afër", "Plan moyen":"Mesatare", "Plan large":"E gjerë", "Plan d'ensemble":"E përgjithshme", "Insert/Détail":"Detaj" },
+    transition_labels: { "Jump Cut":"Jump Cut", "Zoom Cut":"Zoom Cut", "Punch-in":"Punch-in", "Punch-out":"Punch-out", "Fondu":"Zbehje", "Glitch/Spin":"Glitch/Rrotullim", "Insertion B-roll":"Fut B-roll", "Aucune détectée":"Asnjë e zbuluar" }
+  }
+};
+
+let currentLang = 'fr';
+try{ currentLang = localStorage.getItem('zahra_lang') || 'fr'; }catch(e){}
+
+function t(key){
+  return (I18N[currentLang] && I18N[currentLang][key] !== undefined) ? I18N[currentLang][key] : key;
+}
+function tf(key, params){
+  let s = t(key);
+  if (params) for (const k in params) s = s.replace('{'+k+'}', params[k]);
+  return s;
+}
+function shotLabel(fr){ return (I18N[currentLang].shot_labels && I18N[currentLang].shot_labels[fr]) || fr; }
+function transitionLabel(fr){ return (I18N[currentLang].transition_labels && I18N[currentLang].transition_labels[fr]) || fr; }
+
+function applyI18n(){
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.getAttribute('data-i18n')); });
+  document.querySelectorAll('[data-i18n-html]').forEach(el => { el.innerHTML = t(el.getAttribute('data-i18n-html')); });
+}
+function setLang(lang){
+  currentLang = lang;
+  try{ localStorage.setItem('zahra_lang', lang); }catch(e){}
+  document.documentElement.lang = lang;
+  document.documentElement.dir = (lang === 'ar') ? 'rtl' : 'ltr';
+  document.querySelectorAll('.lang-btn').forEach(b => b.classList.toggle('active', b.dataset.lang === lang));
+  applyI18n();
+}
+document.querySelectorAll('.lang-btn').forEach(btn => {
+  btn.addEventListener('click', () => setLang(btn.dataset.lang));
+});
+setLang(currentLang);
+
 const uploadZone = document.getElementById('uploadZone');
 const fileInput = document.getElementById('fileInput');
 const filenameChip = document.getElementById('filenameChip');
@@ -359,15 +802,15 @@ async function handleFile(file){
     setStep('meta','active');
     await new Promise((res,rej)=>{
       hiddenVideo.onloadedmetadata = res;
-      hiddenVideo.onerror = () => rej(new Error("Impossible de lire ce fichier vidéo."));
+      hiddenVideo.onerror = () => rej(new Error(t('err_read_video')));
     });
 
     const duration = hiddenVideo.duration;
     const vw = hiddenVideo.videoWidth, vh = hiddenVideo.videoHeight;
-    let format = '16:9';
-    if (Math.abs(vw/vh - 9/16) < 0.05) format = '9:16 (vertical)';
-    else if (Math.abs(vw/vh - 1) < 0.05) format = '1:1 (carré)';
-    else if (vw > vh) format = '16:9 (paysage)';
+    let format = t('format_169');
+    if (Math.abs(vw/vh - 9/16) < 0.05) format = t('format_916');
+    else if (Math.abs(vw/vh - 1) < 0.05) format = t('format_11');
+    else if (vw > vh) format = t('format_169');
 
     // ---- FPS mesuré (approx.) via comptage de frames décodées sur une courte lecture ----
     let fps = null;
@@ -498,7 +941,7 @@ async function handleFile(file){
   } catch(err){
     processing.style.display='none';
     uploadZone.style.pointerEvents='auto';
-    showError(err.message || "Une erreur est survenue pendant l'analyse.");
+    showError(err.message || t('err_generic'));
   }
 }
 
@@ -512,42 +955,43 @@ function seekTo(video, t){
 
 async function analyzeStyleWithAI(frames, meta){
   const imageBlocks = frames.map(f => ({ type:"image", source:{ type:"base64", media_type:"image/jpeg", data: f.dataUrl.split(',')[1] } }));
+  const langName = t('ai_language_name');
 
   const prompt = `Tu analyses ${frames.length} frames extraites d'une vidéo courte (format ${meta.format}, ${meta.duration.toFixed(1)}s, ${meta.plansCount} plans détectés).
 
 Fais un reverse engineering complet du style, sur le modèle d'une fiche d'analyse concurrentielle professionnelle :
 
 1. Pour chaque frame, par rapport à la frame précédente :
-   - transition_technique : nomme la technique avec un vocabulaire de montage précis parmi ["Jump Cut", "Zoom Cut", "Punch-in", "Punch-out", "Fondu", "Glitch/Spin", "Insertion B-roll", "Aucune détectée"]
+   - transition_technique : nomme la technique avec un vocabulaire de montage précis parmi ["Jump Cut", "Zoom Cut", "Punch-in", "Punch-out", "Fondu", "Glitch/Spin", "Insertion B-roll", "Aucune détectée"] (garde IMPÉRATIVEMENT ces valeurs exactes en français, elles sont traduites automatiquement par l'interface)
    - transition_confidence (0-100)
    - is_broll (booléen) : true si cette frame semble appartenir à une séquence visuellement différente du plan principal (rendu different, noir et blanc, archives, illustration, plan d'un autre sujet) insérée pour illustrer le propos
-   - broll_reason (courte raison, uniquement si is_broll est true)
-   - shot_type : la taille de cadrage de ce plan, un terme précis de vocabulaire cinéma parmi ["Gros plan", "Plan rapproché", "Plan moyen", "Plan large", "Plan d'ensemble", "Insert/Détail"]
+   - broll_reason (courte raison, uniquement si is_broll est true — en ${langName})
+   - shot_type : la taille de cadrage de ce plan, un terme précis de vocabulaire cinéma parmi ["Gros plan", "Plan rapproché", "Plan moyen", "Plan large", "Plan d'ensemble", "Insert/Détail"] (garde IMPÉRATIVEMENT ces valeurs exactes en français, elles sont traduites automatiquement par l'interface)
    - shot_type_confidence (0-100)
 
 2. Classification générale :
-   - content_type : type de contenu et positionnement (ex: "Short-form vertical — podcast face caméra cinématique") + content_type_confidence (0-100)
-   - style_global (2-4 mots)
+   - content_type : type de contenu et positionnement (ex: "Short-form vertical — podcast face caméra cinématique") en ${langName} + content_type_confidence (0-100)
+   - style_global (2-4 mots, en ${langName})
 
 3. Colorimétrie :
-   - grading_couleur (description courte incluant température et contraste perçus) + grading_confidence (0-100)
-   - palette (2-3 couleurs dominantes en mots)
+   - grading_couleur (description courte incluant température et contraste perçus, en ${langName}) + grading_confidence (0-100)
+   - palette (2-3 couleurs dominantes en mots, en ${langName})
 
 4. Typographie (hypothèse, jamais une certitude) :
-   - font_style_description (adjectifs courts sur le style de la police)
-   - font_candidates : 2-3 noms de polices précis les plus probables (ex: "Cairo Bold", "Tajawal Bold", "Noto Kufi Arabic Bold" si texte arabe ; équivalents latins sinon)
+   - font_style_description (adjectifs courts sur le style de la police, en ${langName})
+   - font_candidates : 2-3 noms de polices précis les plus probables (ex: "Cairo Bold", "Tajawal Bold", "Noto Kufi Arabic Bold" si texte arabe ; équivalents latins sinon) — les noms de polices restent tels quels, non traduits
    - font_confidence (0-100, reste modérée par nature sur un export compressé)
 
 5. Animation des sous-titres :
-   - caption_animation_type (ex: "apparition progressive / pop, kinetic captions")
+   - caption_animation_type (ex: "apparition progressive / pop, kinetic captions", en ${langName})
    - caption_keywords_highlighted (booléen : les mots-clés changent-ils de couleur/surlignage pour capter l'attention ?)
    - caption_animation_confidence (0-100)
 
-6. Structure narrative : découpe la vidéo en 3 à 6 segments chronologiques du type Hook/Introduction, Contenu principal, B-roll (si détecté), Retour présentateur, Conclusion/CTA. Pour chaque segment donne un start et end approximatifs en secondes (dans la durée totale ${meta.duration.toFixed(1)}s) et la technique de montage dominante utilisée sur ce segment.
+6. Structure narrative : découpe la vidéo en 3 à 6 segments chronologiques du type Hook/Introduction, Contenu principal, B-roll (si détecté), Retour présentateur, Conclusion/CTA (le "label" de chaque segment doit être écrit en ${langName}). Pour chaque segment donne un start et end approximatifs en secondes (dans la durée totale ${meta.duration.toFixed(1)}s) et la technique de montage dominante utilisée sur ce segment (en ${langName}).
 
 7. Recette de reproduction :
-   - recipe_intro (1 phrase)
-   - recipe : 4-6 étapes concrètes et génériques pour reproduire ce style dans CapCut/Premiere, en français, sans copier le contenu
+   - recipe_intro (1 phrase, en ${langName})
+   - recipe : 4-6 étapes concrètes et génériques pour reproduire ce style dans CapCut/Premiere, en ${langName}, sans copier le contenu
 
 Réponds UNIQUEMENT en JSON strict, sans texte avant/après ni balises markdown, selon ce schéma exact:
 {
@@ -578,12 +1022,12 @@ Réponds UNIQUEMENT en JSON strict, sans texte avant/après ni balises markdown,
       messages: [{ role:"user", content: [...imageBlocks, { type:"text", text: prompt }] }]
     })
   });
-  if(!response.ok) throw new Error("L'analyse IA a échoué (réseau ou service indisponible).");
+  if(!response.ok) throw new Error(t('err_ai_network'));
   const data = await response.json();
   const textBlock = data.content.find(b => b.type === 'text');
-  if(!textBlock) throw new Error("Réponse IA vide.");
+  if(!textBlock) throw new Error(t('err_ai_empty'));
   let clean = textBlock.text.trim().replace(/^```json/i,'').replace(/^```/,'').replace(/```$/,'').trim();
-  try { return JSON.parse(clean); } catch(e){ throw new Error("Impossible d'interpréter la réponse de l'analyse IA."); }
+  try { return JSON.parse(clean); } catch(e){ throw new Error(t('err_ai_parse')); }
 }
 
 function shotTypeAbbr(type){
@@ -620,38 +1064,38 @@ function renderReport(d){
   const overall = Math.round((cutScore+audioScore+captionScore+visualScore)/4);
 
   document.getElementById('scoreBig').innerHTML = `${overall}<span>/100</span>`;
-  const subs = [['Montage',Math.round(cutScore)],['Audio',Math.round(audioScore)],['Sous-titres',Math.round(captionScore)],['Visuel',Math.round(visualScore)]];
+  const subs = [[t('sub_montage'),Math.round(cutScore)],[t('sub_audio'),Math.round(audioScore)],[t('sub_soustitres'),Math.round(captionScore)],[t('sub_visuel'),Math.round(visualScore)]];
   document.getElementById('subscores').innerHTML = subs.map(([lbl,val])=>`
     <div class="subscore"><div class="lbl"><span>${lbl}</span><span>${val}</span></div><div class="bar-track"><div class="bar" style="width:${val}%"></div></div></div>`).join('');
 
-  document.getElementById('cutCount').textContent = `${plans.length} plans détectés`;
+  document.getElementById('cutCount').textContent = tf('cutcount_label', {n: plans.length});
   document.getElementById('filmstrip').innerHTML = frames.map((f,i) => {
     const info = aiResult ? aiResult.frames[i] : null;
-    const tag = info ? (info.transition_technique && info.transition_technique !== 'Aucune détectée' ? info.transition_technique : 'Cut') : 'plan';
+    const tag = info ? (info.transition_technique && info.transition_technique !== 'Aucune détectée' ? transitionLabel(info.transition_technique) : t('filmstrip_cut_tag')) : t('filmstrip_plan_tag');
     const cls = info && info.transition_confidence >= 70 ? 'g' : 'y';
-    const brollMark = info && info.is_broll ? ' · B-roll' : '';
+    const brollMark = info && info.is_broll ? t('broll_suffix') : '';
     const shotAbbr = info && info.shot_type ? shotTypeAbbr(info.shot_type) : '';
-    const shotBadge = shotAbbr ? `<span class="tag shot" title="${info.shot_type} (${info.shot_type_confidence}%)">${shotAbbr}</span>` : '';
+    const shotBadge = shotAbbr ? `<span class="tag shot" title="${shotLabel(info.shot_type)} (${info.shot_type_confidence}%)">${shotAbbr}</span>` : '';
     return `<div class="frame-thumb"><span class="t">${fmtTime(f.time)}</span>${shotBadge}<img src="${f.dataUrl}" alt="frame ${fmtTime(f.time)}"/><span class="tag ${cls}">${tag}${brollMark}</span></div>`;
   }).join('');
 
   const avgPlan = (plans.reduce((a,p)=>a+p.dur,0)/plans.length).toFixed(1);
   document.getElementById('videoCard').innerHTML = `
-    <div class="kv"><span class="k">Durée</span><span class="v">${duration.toFixed(1)}s</span></div>
-    <div class="kv"><span class="k">Résolution</span><span class="v">${vw}×${vh}</span></div>
-    <div class="kv"><span class="k">Format</span><span class="v">${format}</span></div>
-    <div class="kv"><span class="k">Fréquence (FPS)</span><span class="v">${fps ? `≈ ${fps} fps (mesuré)` : 'non mesurable dans ce navigateur'}</span></div>
-    <div class="kv"><span class="k">Plans détectés</span><span class="v">${plans.length}</span></div>
-    <div class="kv"><span class="k">Durée moy. par plan</span><span class="v">${avgPlan}s</span></div>
-    <div class="kv"><span class="k">Fichier</span><span class="v">${(file.size/1024/1024).toFixed(1)} Mo</span></div>
-    ${aiResult ? `<div class="kv"><span class="k">Type de contenu (IA)</span><span class="v">${aiResult.content_type} <span style="color:var(--text-dim);font-size:11px;">(${aiResult.content_type_confidence}%)</span></span></div>` : ''}
+    <div class="kv"><span class="k">${t('kv_duration')}</span><span class="v">${duration.toFixed(1)}s</span></div>
+    <div class="kv"><span class="k">${t('kv_resolution')}</span><span class="v">${vw}×${vh}</span></div>
+    <div class="kv"><span class="k">${t('kv_format')}</span><span class="v">${format}</span></div>
+    <div class="kv"><span class="k">${t('kv_fps')}</span><span class="v">${fps ? tf('kv_fps_measured',{n:fps}) : t('kv_fps_unmeasurable')}</span></div>
+    <div class="kv"><span class="k">${t('kv_cuts_detected')}</span><span class="v">${plans.length}</span></div>
+    <div class="kv"><span class="k">${t('kv_avg_plan')}</span><span class="v">${avgPlan}s</span></div>
+    <div class="kv"><span class="k">${t('kv_file')}</span><span class="v">${(file.size/1024/1024).toFixed(1)} Mo</span></div>
+    ${aiResult ? `<div class="kv"><span class="k">${t('kv_content_type_ai')}</span><span class="v">${aiResult.content_type} <span style="color:var(--text-dim);font-size:11px;">(${aiResult.content_type_confidence}%)</span></span></div>` : ''}
   `;
 
   // ---- zoom recommendation table ----
   const zoomPlan = computeZoomPlan(plans);
   document.getElementById('zoomCard').innerHTML = `
     <table class="zoom-table">
-      <thead><tr><th>Segment</th><th>Durée</th><th>Scale CapCut</th></tr></thead>
+      <thead><tr><th>${t('zoom_th_segment')}</th><th>${t('zoom_th_duree')}</th><th>${t('zoom_th_scale')}</th></tr></thead>
       <tbody>
         ${zoomPlan.map(z => `
           <tr>
@@ -664,21 +1108,21 @@ function renderReport(d){
           </tr>`).join('')}
       </tbody>
     </table>
-    <div class="text-block" style="margin-top:12px;">Suggestion générée à partir des plans détectés : alterne 100% avec des paliers de zoom variables (105–114%) pour simuler un changement de caméra sur un plan fixe unique. À affiner selon les respirations naturelles de ta vidéo.</div>
+    <div class="text-block" style="margin-top:12px;">${t('zoom_suggestion_text')}</div>
   `;
 
   document.getElementById('audioCard').innerHTML = audioStats ? `
-    <div class="kv"><span class="k">Silences détectés</span><span class="v">${audioStats.silenceRatio}% du temps</span></div>
-    <div class="kv"><span class="k">Changements de volume</span><span class="v">${audioStats.volChanges}</span></div>
-    <div class="kv"><span class="k">Dynamique</span><span class="v">${audioStats.dynamicRange}</span></div>
-    <div class="text-block" style="margin-top:8px;">Mesuré directement sur la piste audio — fiable.</div>
-  ` : `<div class="text-block">Aucune piste audio détectée ou décodage impossible dans ce navigateur.</div>`;
+    <div class="kv"><span class="k">${t('kv_silences')}</span><span class="v">${tf('kv_silences_val',{p:audioStats.silenceRatio})}</span></div>
+    <div class="kv"><span class="k">${t('kv_volchanges')}</span><span class="v">${audioStats.volChanges}</span></div>
+    <div class="kv"><span class="k">${t('kv_dynamic')}</span><span class="v">${audioStats.dynamicRange}</span></div>
+    <div class="text-block" style="margin-top:8px;">${t('audio_measured_note')}</div>
+  ` : `<div class="text-block">${t('audio_no_track')}</div>`;
 
   // ---- style card (AI) ----
   if(aiResult){
     document.getElementById('styleCard').innerHTML = `
-      <div class="conf-row"><span class="lab">Style global</span><span class="pct high">${aiResult.style_global}</span></div>
-      <div class="conf-row"><span class="lab">Grading couleur : ${aiResult.grading_couleur}</span><span class="pct ${confClass(aiResult.grading_confidence)}">${aiResult.grading_confidence}%</span></div>
+      <div class="conf-row"><span class="lab">${t('style_global_label')}</span><span class="pct high">${aiResult.style_global}</span></div>
+      <div class="conf-row"><span class="lab">${t('grading_prefix')}${aiResult.grading_couleur}</span><span class="pct ${confClass(aiResult.grading_confidence)}">${aiResult.grading_confidence}%</span></div>
       <div class="badge-row">${(aiResult.palette||[]).map(p=>`<span class="badge">${p}</span>`).join('')}</div>
     `;
     document.getElementById('recipeIntro').textContent = aiResult.recipe_intro || '';
@@ -688,58 +1132,58 @@ function renderReport(d){
     document.getElementById('fontCard').innerHTML = `
       <div class="conf-row"><span class="lab">${aiResult.font_style_description||''}</span><span class="pct ${confClass(aiResult.font_confidence)}">${aiResult.font_confidence}%</span></div>
       <div class="font-badge-row">${(aiResult.font_candidates||[]).map(f=>`<span class="badge">${f}</span>`).join('')}</div>
-      <div class="text-block" style="margin-top:8px;">Hypothèse visuelle uniquement — la police exacte ne peut être confirmée sans le fichier source du montage.</div>
+      <div class="text-block" style="margin-top:8px;">${t('font_hypothesis_note')}</div>
     `;
 
     // ---- caption animation card ----
     document.getElementById('captionAnimCard').innerHTML = `
       <div class="conf-row"><span class="lab">${aiResult.caption_animation_type||''}</span><span class="pct ${confClass(aiResult.caption_animation_confidence)}">${aiResult.caption_animation_confidence}%</span></div>
-      <div class="text-block" style="margin-top:8px;">Mots-clés surlignés / mis en couleur détectés : <b>${aiResult.caption_keywords_highlighted ? 'oui' : 'non'}</b></div>
+      <div class="text-block" style="margin-top:8px;">${t('captionanim_keywords_label')}<b>${aiResult.caption_keywords_highlighted ? t('oui') : t('non')}</b></div>
     `;
 
     // ---- shot type (cadrage) card ----
     document.getElementById('shotTypeCard').innerHTML = frames.map((f,i) => {
       const info = aiResult.frames[i];
-      const st = info && info.shot_type ? info.shot_type : 'Non déterminé';
+      const st = info && info.shot_type ? shotLabel(info.shot_type) : t('shot_type_undetermined');
       const stc = info && info.shot_type_confidence != null ? info.shot_type_confidence : 0;
       return `<div class="shottype-row"><span class="time">${fmtTime(f.time)}</span><span class="lab">${st}</span><span class="pct ${confClass(stc)}">${stc}%</span></div>`;
-    }).join('') + `<div class="text-block" style="margin-top:8px;">Taille de cadrage estimée par plan — gros plan, rapproché, moyen, large, d'ensemble ou insert/détail.</div>`;
+    }).join('') + `<div class="text-block" style="margin-top:8px;">${t('shot_type_note')}</div>`;
 
     // ---- narrative structure card ----
     const structure = aiResult.narrative_structure || [];
-    document.getElementById('structureCount').textContent = structure.length ? `${structure.length} segments` : '';
+    document.getElementById('structureCount').textContent = structure.length ? tf('structure_count_n',{n:structure.length}) : '';
     document.getElementById('structureCard').innerHTML = structure.length ? `
       <table class="structure-table">
-        <thead><tr><th>Zone temporelle</th><th>Segment</th><th>Technique dominante</th></tr></thead>
+        <thead><tr><th>${t('structure_th_zone')}</th><th>${t('structure_th_segment')}</th><th>${t('structure_th_technique')}</th></tr></thead>
         <tbody>
           ${structure.map(s => `<tr><td>${fmtTime(s.start)} – ${fmtTime(s.end)}</td><td>${s.label}</td><td>${s.technique||''}</td></tr>`).join('')}
         </tbody>
       </table>
-    ` : `<div class="text-block">Structure narrative non détectée par l'IA sur cette vidéo.</div>`;
+    ` : `<div class="text-block">${t('structure_none')}</div>`;
 
     // ---- B-roll card ----
     const brollFrames = frames.map((f,i)=>({f, info: aiResult.frames[i]})).filter(x => x.info && x.info.is_broll);
-    document.getElementById('brollCount').textContent = brollFrames.length ? `${brollFrames.length} séquence(s)` : 'aucune détectée';
+    document.getElementById('brollCount').textContent = brollFrames.length ? tf('broll_count_n',{n:brollFrames.length}) : t('broll_count_none');
     document.getElementById('brollCard').innerHTML = brollFrames.length ? brollFrames.map(x => `
-      <div class="broll-row"><span>${fmtTime(x.f.time)} — ${x.info.broll_reason||'rendu visuellement différent du plan principal'}</span><span class="pct ${confClass(x.info.transition_confidence)}">${x.info.transition_confidence}%</span></div>
-    `).join('') : `<div class="text-block">Aucune séquence B-roll détectée sur les frames échantillonnées — la vidéo semble reposer uniquement sur le plan principal.</div>`;
+      <div class="broll-row"><span>${fmtTime(x.f.time)} — ${x.info.broll_reason||t('broll_default_reason')}</span><span class="pct ${confClass(x.info.transition_confidence)}">${x.info.transition_confidence}%</span></div>
+    `).join('') : `<div class="text-block">${t('broll_none')}</div>`;
   } else {
-    document.getElementById('styleCard').innerHTML = `<div class="text-block">Analyse IA indisponible${aiError ? ' — ' + aiError : ''}. Les données de montage et audio ci-dessus restent fiables.</div>`;
-    document.getElementById('recipeIntro').textContent = 'Étapes de style indisponibles sans analyse IA — voir les réglages mesurés ci-dessus, toujours valables.';
+    document.getElementById('styleCard').innerHTML = `<div class="text-block">${t('ai_unavailable')}${aiError ? ' — ' + aiError : ''}. ${t('ai_unavailable_note')}</div>`;
+    document.getElementById('recipeIntro').textContent = t('recipe_unavailable');
     document.getElementById('recipeSteps').innerHTML = '';
-    document.getElementById('fontCard').innerHTML = `<div class="text-block">Hypothèse de police indisponible sans analyse IA.</div>`;
-    document.getElementById('captionAnimCard').innerHTML = `<div class="text-block">Animation des sous-titres indisponible sans analyse IA.</div>`;
-    document.getElementById('shotTypeCard').innerHTML = `<div class="text-block">Type de plan indisponible sans analyse IA.</div>`;
-    document.getElementById('structureCard').innerHTML = `<div class="text-block">Structure narrative indisponible sans analyse IA.</div>`;
-    document.getElementById('brollCard').innerHTML = `<div class="text-block">Détection B-roll indisponible sans analyse IA.</div>`;
+    document.getElementById('fontCard').innerHTML = `<div class="text-block">${t('font_unavailable')}</div>`;
+    document.getElementById('captionAnimCard').innerHTML = `<div class="text-block">${t('captionanim_unavailable')}</div>`;
+    document.getElementById('shotTypeCard').innerHTML = `<div class="text-block">${t('shottype_unavailable')}</div>`;
+    document.getElementById('structureCard').innerHTML = `<div class="text-block">${t('structure_unavailable')}</div>`;
+    document.getElementById('brollCard').innerHTML = `<div class="text-block">${t('broll_unavailable')}</div>`;
   }
 
   // ---- limites de l'analyse (évergreen) ----
   document.getElementById('limitsCard').innerHTML = `
-    <li>Le nom exact du filtre, de la police ou du template source n'est pas déterminable avec certitude à partir d'un export final compressé.</li>
-    <li>La structure narrative, le B-roll et les transitions sont des estimations visuelles IA sur un échantillon de frames, pas une analyse image par image exhaustive.</li>
-    <li>Pour identifier un template exact, il faudrait comparer la vidéo à une bibliothèque de templates CapCut/Premiere/After Effects.</li>
-    <li>Le FPS affiché est une mesure approximative dépendant du navigateur ; certains navigateurs ne l'exposent pas.</li>
+    <li>${t('limit_1')}</li>
+    <li>${t('limit_2')}</li>
+    <li>${t('limit_3')}</li>
+    <li>${t('limit_4')}</li>
   `;
 
   document.getElementById('downloadBtn').onclick = () => {
