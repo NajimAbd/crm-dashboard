@@ -293,6 +293,7 @@
 
   <div style="display:flex;align-items:center;gap:10px">
     <div class="product-switch-group" style="display:flex;background:rgba(255,255,255,0.03);border:1px solid #2A3A2A;border-radius:10px;padding:4px;gap:6px">
+      <a id="laboratoireLink" href="laboratoire.html" class="product-btn" style="display:none">Laboratoire</a>
       <a id="adminLink" href="admin.html" class="product-btn" style="display:none">Panel Admin</a>
       <a class="product-btn" onclick="goToIris()">Iris</a>
       <a id="iriscueBtn" class="product-btn" onclick="goToIriscue()" style="display:none">IrisCue</a>
@@ -592,6 +593,8 @@
   if (session.role === 'super_admin') {
     const adminLinkEl = document.getElementById('adminLink');
     if (adminLinkEl) adminLinkEl.style.display = 'flex';
+    const laboratoireLinkEl = document.getElementById('laboratoireLink');
+    if (laboratoireLinkEl) laboratoireLinkEl.style.display = 'flex';
   }
   if (localStorage.getItem('crm_force_pwd_change') === '1') {
     window.location.href = 'change-password.html';
