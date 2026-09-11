@@ -710,8 +710,87 @@
     }
   }
 
+  function renderFormationStudent(data) {
+    const l = data.lead;
+    const f = data.formation;
+    const fullName = ((l.prenom || '') + ' ' + (l.nom || '')).trim() || 'Élève sans nom';
+
+    const statutLabels = { inscrit: 'Inscrit', en_cours: 'En cours', termine: 'Terminé', abandonne: 'Abandonné' };
+    const paiementLabels = { paye: '💰 Payé', non_paye: '⏳ Non payé', gratuit: '🎁 Gratuit' };
+
+    function kv(label, value) {
+      return '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13.5px">' +
+        '<span style="color:var(--text-soft)">' + label + '</span><span style="font-weight:600">' + value + '</span></div>';
+    }
+
+    let html = '';
+    html += '<div class="lead-header">';
+    html += '<div>';
+    html += '<h1 class="lead-name">' + esc(fullName) + ' <span class="type-badge" title="Élève de la formation">Élève</span></h1>';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 6px">';
+    if (f) {
+      html += '<span class="header-chip">🎓 ' + esc(f.niveau_nom) + '</span>';
+      html += '<span class="header-chip">' + (paiementLabels[f.paiement_statut] || f.paiement_statut) + (f.paiement_montant ? ' — ' + parseFloat(f.paiement_montant).toFixed(2) + ' ' + (f.devise || '') : '') + '</span>';
+    }
+    html += '<span class="header-chip">📅 Inscrit le ' + fmtDate(l.date_inscription) + '</span>';
+    html += '</div>';
+    html += '</div>';
+    html += '</div>';
+
+    if (f) {
+      html += sectionWrap('🎓', 'Formation', '', function() {
+        let b = '';
+        b += kv('Niveau', esc(f.niveau_nom));
+        b += kv('Prix du niveau', parseFloat(f.niveau_prix).toFixed(2) + ' ' + esc(f.niveau_devise));
+        if (f.duree_semaines) b += kv('Durée', f.duree_semaines + ' semaines');
+        if (f.nombre_modules) b += kv('Modules', f.nombre_modules);
+        if (f.nom_certificat) b += kv('Certificat prévu', esc(f.nom_certificat));
+        let sel = '<select onchange="changeFormationStatut(' + f.id + ', this.value)" style="padding:5px 10px;border-radius:6px;border:1px solid var(--border-soft);font-size:13px">';
+        ['inscrit','en_cours','termine','abandonne'].forEach(function(s) {
+          sel += '<option value="' + s + '"' + (f.statut === s ? ' selected' : '') + '>' + statutLabels[s] + '</option>';
+        });
+        sel += '</select>';
+        b += kv('Statut de progression', sel);
+        if (f.date_completion) b += kv('Terminé le', fmtDate(f.date_completion));
+        return b;
+      });
+
+      html += sectionWrap('💳', 'Paiement', '', function() {
+        let b = '';
+        b += kv('Statut', paiementLabels[f.paiement_statut] || f.paiement_statut);
+        if (f.paiement_montant) b += kv('Montant', parseFloat(f.paiement_montant).toFixed(2) + ' ' + esc(f.devise));
+        b += kv('Conditions générales', f.conditions_acceptees === 'oui' ? '✅ Acceptées' : '❌ Non acceptées');
+        return b;
+      });
+
+      html += sectionWrap('🔐', 'Accès de l\'élève', '', function() {
+        let b = '';
+        b += kv('E-mail / identifiant', esc(f.login || l.email));
+        b += kv('Mot de passe', f.must_change_password == 1 ? '⏳ Temporaire (pas encore changé)' : '✅ Défini par l\'élève');
+        return b;
+      });
+    } else {
+      html += '<div class="section"><div class="section-body"><p style="color:var(--text-soft)">Aucune inscription de formation liée à ce lead.</p></div></div>';
+    }
+
+    document.getElementById('pageContent').innerHTML = html;
+  }
+
+  async function changeFormationStatut(etudiantId, statut) {
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-formation', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'update_etudiant_statut', account_id: session.account_id, etudiant_id: etudiantId, statut: statut })
+      });
+      const data = await resp.json();
+      if (data.ok) alert('Statut mis à jour.');
+    } catch (e) {}
+  }
+
   function render(data) {
     const l = data.lead;
+    if (l.type_client === 'Fr') { renderFormationStudent(data); return; }
     const fullName = ((l.prenom || '') + ' ' + (l.nom || '')).trim() || 'Lead sans nom';
     const statutMap = {
       client: { label: 'Client', cls: 'status-buyer' },
