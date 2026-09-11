@@ -39,16 +39,15 @@
 
   .sidebar { background: var(--card); border-left: 1px solid var(--line); padding: 0; overflow-y: auto; }
   .sidebar-header { padding: 16px 18px; border-bottom: 1px solid var(--line); font-family:'Cormorant Garamond',serif; font-size: 17px; font-weight: 600; }
-  .section-block { border-bottom: 1px solid var(--line); }
-  .section-row-header { display:flex; justify-content:space-between; align-items:center; gap:6px; padding: 12px 16px; }
-  .section-row-header strong { font-size:13.5px; flex:1; }
-  .section-actions { display:flex; gap:4px; flex-shrink:0; }
-  .lecon-row { display:flex; justify-content:space-between; align-items:center; gap:6px; padding: 8px 16px 8px 28px; font-size:13px; border-top:1px solid var(--line); }
-  .lecon-info { flex:1; min-width:0; }
-  .lecon-url { color:var(--ink-soft); font-size:10.5px; word-break:break-all; }
-  .lecon-actions { display:flex; gap:4px; align-items:center; flex-shrink:0; }
-  .add-lecon-row { padding: 8px 16px 12px 28px; }
-  .add-section-row { padding: 14px 16px; }
+  .section-block { border-bottom: 1px solid var(--line); padding: 14px 18px; }
+  .section-title-line { font-size: 14px; font-weight: 600; cursor: pointer; }
+  .section-title-line:hover { color: var(--gold-dark); }
+  .section-progress-line { font-size: 12px; color: var(--ink-soft); margin: 2px 0 8px; }
+  .chapitre-line { font-size: 13px; padding: 6px 0 6px 4px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .chapitre-line:hover { color: var(--gold-dark); }
+  .chapitre-icon { color: var(--ink-soft); flex-shrink: 0; }
+  .sidebar-add-buttons { display: flex; gap: 8px; padding: 16px 18px; }
+  .sidebar-add-buttons button { flex: 1; }
 
   .overlay { position:fixed; inset:0; background:rgba(43,38,32,0.4); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
   .overlay.open { display:flex; }
@@ -112,7 +111,10 @@
   <div class="sidebar">
     <div class="sidebar-header">Contenu du cours</div>
     <div id="sections-container"></div>
-    <div class="add-section-row"><button class="btn-small" onclick="openSectionModal()">+ Ajouter une section</button></div>
+    <div class="sidebar-add-buttons">
+      <button class="btn-small" onclick="openSectionModal()">+ Ajouter une section</button>
+      <button class="btn-small" onclick="promptAddChapitre()">+ Ajouter un chapitre</button>
+    </div>
   </div>
 </div>
 
@@ -139,6 +141,7 @@
     <div class="field"><label>Titre de la section</label><input type="text" id="section-titre" placeholder="Ex: Section 1 : Introduction"></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('modal-section')">Fermer</button>
+      <button class="btn-danger" id="section-delete-btn" style="display:none;flex:1" onclick="deleteSectionFromModal()">Supprimer</button>
       <button class="btn-primary" id="section-submit-btn" onclick="saveSection()">Ajouter la section</button>
     </div>
     <div class="already-added" id="section-already-wrap" style="display:none;">
@@ -153,6 +156,7 @@
     <h3 id="lecon-modal-title">Ajouter une leçon</h3>
     <input type="hidden" id="lecon-section-id">
     <input type="hidden" id="lecon-id">
+    <div class="field"><label>Section</label><select id="lecon-section-select" onchange="document.getElementById('lecon-section-id').value=this.value"></select></div>
     <div class="field"><label>Titre de la leçon</label><input type="text" id="lecon-titre" placeholder="Ex: Introduction"></div>
     <div class="field">
       <label>URL de la vidéo</label>
@@ -163,6 +167,7 @@
     </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('modal-lecon')">Fermer</button>
+      <button class="btn-danger" id="lecon-delete-btn" style="display:none;flex:1" onclick="deleteLeconFromModal()">Supprimer</button>
       <button class="btn-primary" id="lecon-submit-btn" onclick="saveLecon()">Ajouter la leçon</button>
     </div>
     <div class="already-added" id="lecon-already-wrap" style="display:none;">
@@ -248,27 +253,13 @@ function renderCourseView() {
 
   container.innerHTML = f.sections.map(s => `
     <div class="section-block">
-      <div class="section-row-header">
-        <strong>${s.titre}</strong>
-        <div class="section-actions">
-          <button class="btn-small" onclick="openSectionModal(${s.id})">Modifier</button>
-          <button class="btn-danger" onclick="deleteSection(${s.id})">Suppr.</button>
-        </div>
-      </div>
-      ${s.lecons.map((l, lIdx) => `
-        <div class="lecon-row">
-          <div style="display:flex;gap:2px;flex-shrink:0;">
-            <button class="btn-move" ${lIdx === 0 ? 'disabled' : ''} onclick="moveLecon(${s.id}, ${l.id}, -1)">▲</button>
-            <button class="btn-move" ${lIdx === s.lecons.length - 1 ? 'disabled' : ''} onclick="moveLecon(${s.id}, ${l.id}, 1)">▼</button>
-          </div>
-          <div class="lecon-info">${l.titre}<div class="lecon-url">${l.url_video}</div></div>
-          <div class="lecon-actions">
-            <button class="btn-small" onclick="openLeconModal(${s.id}, ${l.id})">✎</button>
-            <button class="btn-danger" onclick="deleteLecon(${l.id})">✕</button>
-          </div>
+      <div class="section-title-line" onclick="openSectionModal(${s.id})">${s.titre}</div>
+      <div class="section-progress-line">${s.lecons.length} chapitre${s.lecons.length > 1 ? 's' : ''}</div>
+      ${s.lecons.map(l => `
+        <div class="chapitre-line" onclick="openLeconModal(${s.id}, ${l.id})">
+          <span class="chapitre-icon">▷</span><span>${l.titre}</span>
         </div>
       `).join('')}
-      <div class="add-lecon-row"><button class="btn-small" onclick="openLeconModal(${s.id})">+ Ajouter un chapitre</button></div>
     </div>
   `).join('');
 }
@@ -322,19 +313,30 @@ function openSectionModal(sectionId) {
   document.getElementById('section-id').value = sectionId || '';
   document.getElementById('section-titre').value = '';
   const f = getCurrentFormation();
+  const delBtn = document.getElementById('section-delete-btn');
   if (sectionId) {
     document.getElementById('section-modal-title').textContent = 'Modifier la section';
     document.getElementById('section-submit-btn').textContent = 'Enregistrer';
     const s = f.sections.find(s => s.id === sectionId);
     document.getElementById('section-titre').value = s.titre;
     document.getElementById('section-already-wrap').style.display = 'none';
+    delBtn.style.display = 'block';
   } else {
     document.getElementById('section-modal-title').textContent = 'Ajouter une section';
     document.getElementById('section-submit-btn').textContent = 'Ajouter la section';
     renderAlreadyAddedSections(f);
+    delBtn.style.display = 'none';
   }
   document.getElementById('modal-section').classList.add('open');
   document.getElementById('section-titre').focus();
+}
+
+async function deleteSectionFromModal() {
+  const id = document.getElementById('section-id').value;
+  if (!confirm('Supprimer cette section et ses chapitres ?')) return;
+  await callCrud({ action: 'delete_section', id });
+  closeModal('modal-section');
+  loadFormations(true);
 }
 
 function renderAlreadyAddedSections(f) {
@@ -377,12 +379,23 @@ function findSection(sectionId) {
   return f.sections.find(s => s.id === sectionId);
 }
 
+function promptAddChapitre() {
+  const f = getCurrentFormation();
+  if (!f || f.sections.length === 0) { alert('Ajoute d\'abord une section.'); return; }
+  openLeconModal(f.sections[0].id, null);
+}
+
 function openLeconModal(sectionId, leconId) {
+  const f = getCurrentFormation();
+  const sel = document.getElementById('lecon-section-select');
+  sel.innerHTML = f.sections.map(s => `<option value="${s.id}">${s.titre}</option>`).join('');
+  sel.value = sectionId;
   document.getElementById('lecon-section-id').value = sectionId;
   document.getElementById('lecon-id').value = leconId || '';
   document.getElementById('lecon-titre').value = '';
   document.getElementById('lecon-url').value = '';
   const section = findSection(sectionId);
+  const delBtn = document.getElementById('lecon-delete-btn');
   if (leconId) {
     document.getElementById('lecon-modal-title').textContent = 'Modifier la leçon';
     document.getElementById('lecon-submit-btn').textContent = 'Enregistrer';
@@ -390,13 +403,23 @@ function openLeconModal(sectionId, leconId) {
     document.getElementById('lecon-titre').value = l.titre;
     document.getElementById('lecon-url').value = l.url_video;
     document.getElementById('lecon-already-wrap').style.display = 'none';
+    delBtn.style.display = 'block';
   } else {
     document.getElementById('lecon-modal-title').textContent = 'Ajouter une leçon';
     document.getElementById('lecon-submit-btn').textContent = 'Ajouter la leçon';
     renderAlreadyAddedLecons(section);
+    delBtn.style.display = 'none';
   }
   document.getElementById('modal-lecon').classList.add('open');
   document.getElementById('lecon-titre').focus();
+}
+
+async function deleteLeconFromModal() {
+  const id = document.getElementById('lecon-id').value;
+  if (!confirm('Supprimer cette leçon ?')) return;
+  await callCrud({ action: 'delete_lecon', id });
+  closeModal('modal-lecon');
+  loadFormations(true);
 }
 
 function renderAlreadyAddedLecons(section) {
