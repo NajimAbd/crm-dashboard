@@ -9,51 +9,51 @@
   :root { --ink: #2b2620; --ink-soft: #6b6255; --cream: #f7f3ec; --gold: #b8863f; --gold-dark: #8f6a2f; --line: #e2d9c8; --danger: #a3402e; --card: #ffffff; }
   * { box-sizing: border-box; }
   body { margin:0; font-family:'Inter',sans-serif; background:var(--cream); color:var(--ink); min-height:100vh; }
-  header { background:var(--card); border-bottom:1px solid var(--line); padding:16px 24px; }
-  .brand-mark { font-family:'Cormorant Garamond',serif; font-size:20px; font-weight:600; }
-  .brand-sub { font-size:12px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em; }
-  .container { max-width:900px; margin:0 auto; padding:32px 24px; }
-  .top-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
-  .top-row h2 { font-family:'Cormorant Garamond',serif; font-size:24px; margin:0; }
+  header { background:var(--card); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .brand-mark { font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:600; }
+  .brand-sub { font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em; }
   button { font-family:'Inter',sans-serif; cursor:pointer; border:none; }
-  .btn-primary { background:var(--gold-dark); color:#fff; padding:10px 18px; border-radius:8px; font-size:14px; font-weight:500; }
+  .btn-primary { background:var(--gold-dark); color:#fff; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:500; }
   .btn-primary:hover { background:var(--gold); }
-  .btn-small { background:var(--cream); color:var(--ink); border:1px solid var(--line); padding:6px 12px; border-radius:6px; font-size:13px; }
+  .btn-small { background:var(--cream); color:var(--ink); border:1px solid var(--line); padding:5px 11px; border-radius:6px; font-size:12.5px; }
   .btn-small:hover { border-color:var(--gold); }
-  .btn-danger { background:#fbeceb; color:var(--danger); border:1px solid #f0c9c4; padding:6px 10px; border-radius:6px; font-size:12px; }
+  .btn-danger { background:#fbeceb; color:var(--danger); border:1px solid #f0c9c4; padding:5px 9px; border-radius:6px; font-size:11.5px; }
   .btn-danger:hover { background:#f5d9d6; }
-  .btn-move { background:var(--cream); border:1px solid var(--line); border-radius:6px; width:26px; height:26px; font-size:12px; color:var(--ink-soft); padding:0; }
-  .btn-move:hover { border-color:var(--gold); color:var(--gold-dark); }
+  .btn-move { background:var(--cream); border:1px solid var(--line); border-radius:6px; width:24px; height:24px; font-size:11px; color:var(--ink-soft); padding:0; }
   .btn-move:disabled { opacity:.3; cursor:default; }
-  .formation-block { background:var(--card); border:1px solid var(--line); border-radius:14px; margin-bottom:16px; overflow:hidden; }
-  .formation-header { padding:18px 20px; display:flex; justify-content:space-between; align-items:flex-start; cursor:pointer; }
-  .formation-header h3 { font-family:'Cormorant Garamond',serif; font-size:19px; margin:0 0 4px; }
-  .formation-header p { font-size:13px; color:var(--ink-soft); margin:0; }
-  .formation-meta { font-size:12px; color:var(--ink-soft); margin-top:6px; }
-  .btn-publish { display:inline-flex; align-items:center; gap:5px; margin-left:10px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; background:#f1ece0; color:#8a7d5f; border:1px solid #ddd0b0; }
+
+  .top-select { padding: 10px 24px; background: var(--card); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
+  .top-select select { padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 13.5px; font-family: 'Inter', sans-serif; background: var(--cream); flex: 1; max-width: 400px; }
+
+  .course-layout { display: grid; grid-template-columns: 1fr 340px; min-height: calc(100vh - 110px); }
+  @media (max-width: 900px) { .course-layout { grid-template-columns: 1fr; } }
+
+  .main-area { padding: 32px; }
+  .formation-meta-box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; margin-bottom: 16px; }
+  .field { margin-bottom: 14px; }
+  .field label { display:block; font-size:12.5px; font-weight:500; margin-bottom:5px; }
+  .field input, .field textarea { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-size:14px; font-family:'Inter',sans-serif; background:var(--cream); }
+  .field textarea { resize:vertical; min-height:60px; }
+  .btn-publish { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; background:#f1ece0; color:#8a7d5f; border:1px solid #ddd0b0; }
   .btn-publish.is-published { background:#e3f0d9; color:#3b6d11; border-color:#b9dd9a; }
-  .btn-publish:hover { filter:brightness(0.96); }
-  .formation-actions { display:flex; gap:6px; flex-shrink:0; align-items:center; }
-  .formation-body { border-top:1px solid var(--line); padding:16px 20px; display:none; }
-  .formation-body.open { display:block; }
-  .section-row { border:1px solid var(--line); border-radius:10px; padding:12px 14px; margin-bottom:10px; }
-  .section-row-header { display:flex; justify-content:space-between; align-items:center; gap:8px; }
-  .section-row-header strong { font-size:14px; flex:1; }
-  .move-group { display:flex; gap:3px; }
-  .lecon-row { display:flex; justify-content:space-between; align-items:center; gap:8px; padding:8px 4px; font-size:13px; border-top:1px solid var(--line); }
-  .lecon-row:first-of-type { border-top:none; margin-top:8px; }
+
+  .sidebar { background: var(--card); border-left: 1px solid var(--line); padding: 0; overflow-y: auto; }
+  .sidebar-header { padding: 16px 18px; border-bottom: 1px solid var(--line); font-family:'Cormorant Garamond',serif; font-size: 17px; font-weight: 600; }
+  .section-block { border-bottom: 1px solid var(--line); }
+  .section-row-header { display:flex; justify-content:space-between; align-items:center; gap:6px; padding: 12px 16px; }
+  .section-row-header strong { font-size:13.5px; flex:1; }
+  .section-actions { display:flex; gap:4px; flex-shrink:0; }
+  .lecon-row { display:flex; justify-content:space-between; align-items:center; gap:6px; padding: 8px 16px 8px 28px; font-size:13px; border-top:1px solid var(--line); }
   .lecon-info { flex:1; min-width:0; }
-  .lecon-url { color:var(--ink-soft); font-size:11px; word-break:break-all; }
+  .lecon-url { color:var(--ink-soft); font-size:10.5px; word-break:break-all; }
   .lecon-actions { display:flex; gap:4px; align-items:center; flex-shrink:0; }
-  .add-row { margin-top:10px; }
+  .add-lecon-row { padding: 8px 16px 12px 28px; }
+  .add-section-row { padding: 14px 16px; }
+
   .overlay { position:fixed; inset:0; background:rgba(43,38,32,0.4); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
   .overlay.open { display:flex; }
   .modal { background:#fff; border-radius:14px; padding:28px; width:100%; max-width:460px; max-height:85vh; overflow-y:auto; }
   .modal h3 { font-family:'Cormorant Garamond',serif; font-size:20px; margin:0 0 18px; }
-  .field { margin-bottom:14px; }
-  .field label { display:block; font-size:13px; font-weight:500; margin-bottom:5px; }
-  .field input, .field textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px; font-family:'Inter',sans-serif; background:var(--cream); }
-  .field textarea { resize:vertical; min-height:60px; }
   .modal-actions { display:flex; gap:8px; margin-top:8px; }
   .modal-actions button { flex:1; padding:10px; border-radius:8px; font-size:14px; }
   .btn-cancel { background:var(--cream); color:var(--ink-soft); }
@@ -62,12 +62,12 @@
   .already-item { font-size:13px; padding:7px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; }
   .already-item:last-child { border-bottom:none; }
   .loading { text-align:center; padding:40px; color:var(--ink-soft); }
-  .empty { text-align:center; padding:40px; color:var(--ink-soft); font-size:14px; }
+  .empty { text-align:center; padding:40px 20px; color:var(--ink-soft); font-size:13.5px; }
   .video-item { padding:10px 14px; font-size:13px; cursor:pointer; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
-  .video-item:last-child { border-bottom:none; }
   .video-item:hover { background:var(--cream); }
   .video-item-name { word-break:break-all; }
   .video-empty { padding:20px; text-align:center; color:var(--ink-soft); font-size:13px; }
+  .hidden { display: none; }
 </style>
 </head>
 <body>
@@ -84,23 +84,45 @@
 
 <div id="admin-content" style="display:none;">
 <header>
-  <div class="brand-mark">Academy</div>
-  <div class="brand-sub">Administration</div>
+  <div><div class="brand-mark">Academy</div><div class="brand-sub">Administration</div></div>
+  <button class="btn-primary" onclick="openFormationModal()">+ Nouvelle formation</button>
 </header>
 
-<div class="container">
-  <div class="top-row">
-    <h2>Formations</h2>
-    <button class="btn-primary" onclick="openFormationModal()">+ Nouvelle formation</button>
+<div class="top-select">
+  <label style="font-size:13px;color:var(--ink-soft)">Formation :</label>
+  <select id="formation-select" onchange="selectFormation(this.value)"></select>
+</div>
+
+<div id="loading" class="loading">Chargement…</div>
+
+<div id="course-view" class="course-layout hidden">
+  <div class="main-area">
+    <div class="formation-meta-box">
+      <div class="field"><label>Titre</label><input type="text" id="meta-titre"></div>
+      <div class="field"><label>Description</label><textarea id="meta-description"></textarea></div>
+      <div class="field"><label>Prix (CHF)</label><input type="number" id="meta-prix"></div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn-small" onclick="saveMeta()">Enregistrer les infos</button>
+        <button class="btn-publish" id="publish-btn" onclick="togglePublish()"></button>
+        <button class="btn-danger" onclick="deleteCurrentFormation()">Supprimer la formation</button>
+      </div>
+    </div>
   </div>
-  <div id="loading" class="loading">Chargement…</div>
-  <div id="formations-container"></div>
+
+  <div class="sidebar">
+    <div class="sidebar-header">Contenu du cours</div>
+    <div id="sections-container"></div>
+    <div class="add-section-row"><button class="btn-small" onclick="openSectionModal()">+ Ajouter une section</button></div>
+  </div>
+</div>
+
+<div id="empty-state" class="empty hidden">Aucune formation. Cliquez sur "+ Nouvelle formation" pour commencer.</div>
+
 </div>
 
 <div class="overlay" id="modal-formation">
   <div class="modal">
-    <h3 id="formation-modal-title">Nouvelle formation</h3>
-    <input type="hidden" id="formation-id">
+    <h3>Nouvelle formation</h3>
     <div class="field"><label>Titre</label><input type="text" id="formation-titre" placeholder="Ex: Niveau 1 - Fondamentaux"></div>
     <div class="field"><label>Description</label><textarea id="formation-description" placeholder="Courte description"></textarea></div>
     <div class="modal-actions">
@@ -113,7 +135,6 @@
 <div class="overlay" id="modal-section">
   <div class="modal">
     <h3 id="section-modal-title">Ajouter une section</h3>
-    <input type="hidden" id="section-formation-id">
     <input type="hidden" id="section-id">
     <div class="field"><label>Titre de la section</label><input type="text" id="section-titre" placeholder="Ex: Section 1 : Introduction"></div>
     <div class="modal-actions">
@@ -170,124 +191,86 @@
 const API_BASE = 'https://n8n.srv936251.hstgr.cloud/webhook';
 const ACCOUNT_ID = 5;
 let formationsData = [];
-let editingFormationId = null;
-let collapsedSections = new Set();
+let currentFormationId = null;
 
-async function loadFormations() {
-  document.getElementById('loading').style.display = 'block';
+async function loadFormations(keepSelection) {
+  document.getElementById('loading').classList.remove('hidden');
+  document.getElementById('course-view').classList.add('hidden');
+  document.getElementById('empty-state').classList.add('hidden');
   try {
     const res = await fetch(`${API_BASE}/academy-admin-list`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: ACCOUNT_ID }) });
     const data = await res.json();
     formationsData = data.formations || [];
-    document.getElementById('loading').style.display = 'none';
-    render();
-  } catch (e) { document.getElementById('loading').textContent = 'Erreur de chargement.'; }
-}
+    document.getElementById('loading').classList.add('hidden');
 
-function render() {
-  const container = document.getElementById('formations-container');
-  const openBodies = new Set([...document.querySelectorAll('.formation-body.open')].map(el => el.id));
-  container.innerHTML = '';
+    const sel = document.getElementById('formation-select');
+    sel.innerHTML = formationsData.map(f => `<option value="${f.id}">${f.titre}</option>`).join('');
 
-  if (formationsData.length === 0) { container.innerHTML = '<div class="empty">Aucune formation. Créez-en une pour commencer.</div>'; return; }
-
-  formationsData.forEach(f => {
-    const totalLecons = f.sections.reduce((sum, s) => sum + s.lecons.length, 0);
-    const isOpen = openBodies.has(`body-${f.id}`);
-    const block = document.createElement('div');
-    block.className = 'formation-block';
-
-    if (editingFormationId === f.id) {
-      block.innerHTML = `
-        <div class="formation-header">
-          <div style="flex:1;">
-            <div class="field"><label>Titre</label><input type="text" id="inline-titre-${f.id}" value="${f.titre.replace(/"/g,'&quot;')}"></div>
-            <div class="field"><label>Description</label><textarea id="inline-description-${f.id}">${f.description || ''}</textarea></div>
-            <div class="field"><label>Prix (CHF)</label><input type="number" id="inline-prix-${f.id}" value="${f.prix}"></div>
-          </div>
-          <div class="formation-actions" style="flex-direction:column;">
-            <button class="btn-primary" onclick="saveFormationInline(${f.id})">Enregistrer</button>
-            <button class="btn-cancel btn-small" onclick="cancelEditFormation()">Fermer</button>
-          </div>
-        </div>
-        <div class="formation-body open" id="body-${f.id}"></div>`;
-      container.appendChild(block);
+    if (formationsData.length === 0) {
+      document.getElementById('empty-state').classList.remove('hidden');
+      currentFormationId = null;
       return;
     }
 
-    block.innerHTML = `
-      <div class="formation-header" onclick="toggleFormation(${f.id})">
-        <div>
-          <h3>${f.titre}</h3>
-          <p>${f.description || ''}</p>
-          <div class="formation-meta">${f.sections.length} section(s) · ${totalLecons} leçon(s)
-            <button class="btn-publish ${f.statut === 'publie' ? 'is-published' : ''}" onclick="event.stopPropagation(); togglePublish(${f.id}, '${f.statut}')">${f.statut === 'publie' ? '● En ligne — visible par les étudiants' : '○ Hors ligne — cliquer pour publier'}</button>
-          </div>
-        </div>
-        <div class="formation-actions" onclick="event.stopPropagation()">
-          <button class="btn-small" onclick="closeAllInFormation(${f.id})">Fermer</button>
-          <button class="btn-small" onclick="saveFormationQuick(${f.id})">Enregistrer</button>
-          <button class="btn-small" onclick="startEditFormation(${f.id})">Modifier</button>
-          <button class="btn-danger" onclick="deleteFormation(${f.id})">Supprimer</button>
+    const target = keepSelection && formationsData.find(f => f.id === currentFormationId) ? currentFormationId : formationsData[0].id;
+    sel.value = target;
+    selectFormation(target);
+  } catch (e) { document.getElementById('loading').textContent = 'Erreur de chargement.'; }
+}
+
+function selectFormation(id) {
+  currentFormationId = parseInt(id);
+  document.getElementById('formation-select').value = currentFormationId;
+  document.getElementById('course-view').classList.remove('hidden');
+  document.getElementById('empty-state').classList.add('hidden');
+  renderCourseView();
+}
+
+function getCurrentFormation() { return formationsData.find(f => f.id === currentFormationId); }
+
+function renderCourseView() {
+  const f = getCurrentFormation();
+  if (!f) return;
+
+  document.getElementById('meta-titre').value = f.titre;
+  document.getElementById('meta-description').value = f.description || '';
+  document.getElementById('meta-prix').value = f.prix;
+
+  const pubBtn = document.getElementById('publish-btn');
+  pubBtn.textContent = f.statut === 'publie' ? '● En ligne — visible' : '○ Hors ligne — publier';
+  pubBtn.className = 'btn-publish' + (f.statut === 'publie' ? ' is-published' : '');
+
+  const container = document.getElementById('sections-container');
+  if (f.sections.length === 0) {
+    container.innerHTML = '<div class="empty">Aucune section. Ajoutez-en une ci-dessous.</div>';
+    return;
+  }
+
+  container.innerHTML = f.sections.map(s => `
+    <div class="section-block">
+      <div class="section-row-header">
+        <strong>${s.titre}</strong>
+        <div class="section-actions">
+          <button class="btn-small" onclick="openSectionModal(${s.id})">Modifier</button>
+          <button class="btn-danger" onclick="deleteSection(${s.id})">Suppr.</button>
         </div>
       </div>
-      <div class="formation-body ${isOpen ? 'open' : ''}" id="body-${f.id}">
-        ${f.sections.map((s) => {
-          const sectionKey = `${f.id}-${s.id}`;
-          const isCollapsed = collapsedSections.has(sectionKey);
-          return `
-          <div class="section-row">
-            <div class="section-row-header">
-              <button class="btn-move" onclick="toggleSectionCollapse('${sectionKey}')">${isCollapsed ? '▼' : '▲'}</button>
-              <strong>${s.titre}</strong>
-              <div class="formation-actions">
-                <button class="btn-small" onclick="openSectionModal(${f.id}, ${s.id})">Modifier</button>
-                <button class="btn-danger" onclick="deleteSection(${s.id})">Supprimer</button>
-              </div>
-            </div>
-            <div class="${isCollapsed ? 'hidden' : ''}">
-            ${s.lecons.map((l, lIdx) => `
-              <div class="lecon-row">
-                <div class="move-group">
-                  <button class="btn-move" ${lIdx === 0 ? 'disabled' : ''} onclick="moveLecon(${s.id}, ${l.id}, -1)">◀</button>
-                  <button class="btn-move" ${lIdx === s.lecons.length - 1 ? 'disabled' : ''} onclick="moveLecon(${s.id}, ${l.id}, 1)">▶</button>
-                </div>
-                <div class="lecon-info">${l.titre}<br><span class="lecon-url">${l.url_video}</span></div>
-                <div class="lecon-actions">
-                  <button class="btn-small" onclick="openLeconModal(${s.id}, ${l.id})">Modifier</button>
-                  <button class="btn-danger" onclick="deleteLecon(${l.id})">Supprimer</button>
-                </div>
-              </div>
-            `).join('')}
-            <div class="add-row"><button class="btn-small" onclick="openLeconModal(${s.id})">+ Ajouter une leçon</button></div>
-            </div>
-          </div>`;}).join('')}
-        <div class="add-row"><button class="btn-small" onclick="openSectionModal(${f.id})">+ Ajouter une section</button></div>
-      </div>`;
-    container.appendChild(block);
-  });
-}
-
-function toggleFormation(id) { document.getElementById(`body-${id}`).classList.toggle('open'); }
-function toggleSectionCollapse(sectionKey) { if (collapsedSections.has(sectionKey)) collapsedSections.delete(sectionKey); else collapsedSections.add(sectionKey); render(); }
-function closeAllInFormation(formationId) {
-  document.getElementById(`body-${formationId}`).classList.remove('open');
-  const formation = formationsData.find(f => f.id === formationId);
-  formation.sections.forEach(s => collapsedSections.add(`${formationId}-${s.id}`));
-}
-
-async function togglePublish(id, currentStatut) {
-  const formation = formationsData.find(f => f.id === id);
-  const newStatut = currentStatut === 'publie' ? 'brouillon' : 'publie';
-  await callCrud({ action: 'update_formation', id, titre: formation.titre, description: formation.description, prix: formation.prix, statut: newStatut });
-  loadFormations();
-}
-
-async function saveFormationQuick(id) {
-  const formation = formationsData.find(f => f.id === id);
-  await callCrud({ action: 'update_formation', id, titre: formation.titre, description: formation.description, prix: formation.prix, statut: formation.statut });
-  const btns = document.querySelectorAll(`.formation-block button[onclick="saveFormationQuick(${id})"]`);
-  btns.forEach(btn => { const original = btn.textContent; btn.textContent = 'Enregistré ✓'; setTimeout(() => { btn.textContent = original; }, 1500); });
+      ${s.lecons.map((l, lIdx) => `
+        <div class="lecon-row">
+          <div style="display:flex;gap:2px;flex-shrink:0;">
+            <button class="btn-move" ${lIdx === 0 ? 'disabled' : ''} onclick="moveLecon(${s.id}, ${l.id}, -1)">▲</button>
+            <button class="btn-move" ${lIdx === s.lecons.length - 1 ? 'disabled' : ''} onclick="moveLecon(${s.id}, ${l.id}, 1)">▼</button>
+          </div>
+          <div class="lecon-info">${l.titre}<div class="lecon-url">${l.url_video}</div></div>
+          <div class="lecon-actions">
+            <button class="btn-small" onclick="openLeconModal(${s.id}, ${l.id})">✎</button>
+            <button class="btn-danger" onclick="deleteLecon(${l.id})">✕</button>
+          </div>
+        </div>
+      `).join('')}
+      <div class="add-lecon-row"><button class="btn-small" onclick="openLeconModal(${s.id})">+ Ajouter un chapitre</button></div>
+    </div>
+  `).join('');
 }
 
 async function callCrud(payload) {
@@ -296,22 +279,31 @@ async function callCrud(payload) {
   return res.json();
 }
 
-function startEditFormation(id) { editingFormationId = id; render(); }
-function cancelEditFormation() { editingFormationId = null; render(); }
-
-async function saveFormationInline(id) {
-  const titre = document.getElementById(`inline-titre-${id}`).value.trim();
-  const description = document.getElementById(`inline-description-${id}`).value.trim();
-  const prix = document.getElementById(`inline-prix-${id}`).value || 0;
+async function saveMeta() {
+  const titre = document.getElementById('meta-titre').value.trim();
+  const description = document.getElementById('meta-description').value.trim();
+  const prix = document.getElementById('meta-prix').value || 0;
   if (!titre) { alert('Le titre est obligatoire.'); return; }
-  await callCrud({ action: 'update_formation', id, titre, description, prix });
-  editingFormationId = null;
+  const f = getCurrentFormation();
+  await callCrud({ action: 'update_formation', id: currentFormationId, titre, description, prix, statut: f.statut });
+  loadFormations(true);
+}
+
+async function togglePublish() {
+  const f = getCurrentFormation();
+  const newStatut = f.statut === 'publie' ? 'brouillon' : 'publie';
+  await callCrud({ action: 'update_formation', id: currentFormationId, titre: f.titre, description: f.description, prix: f.prix, statut: newStatut });
+  loadFormations(true);
+}
+
+async function deleteCurrentFormation() {
+  if (!confirm('Supprimer cette formation et tout son contenu ?')) return;
+  await callCrud({ action: 'delete_formation', id: currentFormationId });
+  currentFormationId = null;
   loadFormations();
 }
 
 function openFormationModal() {
-  document.getElementById('formation-modal-title').textContent = 'Nouvelle formation';
-  document.getElementById('formation-id').value = '';
   document.getElementById('formation-titre').value = '';
   document.getElementById('formation-description').value = '';
   document.getElementById('modal-formation').classList.add('open');
@@ -326,65 +318,64 @@ async function saveFormation() {
   loadFormations();
 }
 
-async function deleteFormation(id) {
-  if (!confirm('Supprimer cette formation et tout son contenu ?')) return;
-  await callCrud({ action: 'delete_formation', id });
-  loadFormations();
-}
-
-function openSectionModal(formationId, sectionId) {
-  document.getElementById('section-formation-id').value = formationId;
+function openSectionModal(sectionId) {
   document.getElementById('section-id').value = sectionId || '';
   document.getElementById('section-titre').value = '';
-  const formation = formationsData.find(f => f.id === formationId);
+  const f = getCurrentFormation();
   if (sectionId) {
     document.getElementById('section-modal-title').textContent = 'Modifier la section';
     document.getElementById('section-submit-btn').textContent = 'Enregistrer';
-    const s = formation.sections.find(s => s.id === sectionId);
+    const s = f.sections.find(s => s.id === sectionId);
     document.getElementById('section-titre').value = s.titre;
     document.getElementById('section-already-wrap').style.display = 'none';
   } else {
     document.getElementById('section-modal-title').textContent = 'Ajouter une section';
     document.getElementById('section-submit-btn').textContent = 'Ajouter la section';
-    renderAlreadyAddedSections(formation);
+    renderAlreadyAddedSections(f);
   }
   document.getElementById('modal-section').classList.add('open');
   document.getElementById('section-titre').focus();
 }
 
-function renderAlreadyAddedSections(formation) {
+function renderAlreadyAddedSections(f) {
   const wrap = document.getElementById('section-already-wrap');
   const list = document.getElementById('section-already-list');
-  if (!formation.sections.length) { wrap.style.display = 'none'; return; }
+  if (!f.sections.length) { wrap.style.display = 'none'; return; }
   wrap.style.display = 'block';
-  list.innerHTML = formation.sections.map(s => `<div class="already-item"><span>${s.titre}</span></div>`).join('');
+  list.innerHTML = f.sections.map(s => `<div class="already-item"><span>${s.titre}</span></div>`).join('');
 }
 
 async function saveSection() {
-  const formation_id = document.getElementById('section-formation-id').value;
   const sectionId = document.getElementById('section-id').value;
   const titre = document.getElementById('section-titre').value.trim();
   if (!titre) { alert('Le titre est obligatoire.'); return; }
+  const f = getCurrentFormation();
   if (sectionId) {
-    const formation = formationsData.find(f => f.id === parseInt(formation_id));
-    const s = formation.sections.find(s => s.id === parseInt(sectionId));
+    const s = f.sections.find(s => s.id === parseInt(sectionId));
     await callCrud({ action: 'update_section', id: sectionId, titre, ordre: s.ordre });
     closeModal('modal-section');
+    loadFormations(true);
   } else {
-    const formation = formationsData.find(f => f.id === parseInt(formation_id));
-    const nextOrdre = formation.sections.length + 1;
-    await callCrud({ action: 'create_section', formation_id, titre, ordre: nextOrdre });
-    await loadFormations();
-    const updated = formationsData.find(f => f.id === parseInt(formation_id));
+    const nextOrdre = f.sections.length + 1;
+    await callCrud({ action: 'create_section', formation_id: currentFormationId, titre, ordre: nextOrdre });
+    await loadFormations(true);
+    const updated = getCurrentFormation();
     renderAlreadyAddedSections(updated);
     document.getElementById('section-titre').value = '';
     document.getElementById('section-titre').focus();
-    return;
   }
-  loadFormations();
 }
 
-async function deleteSection(id) { if (!confirm('Supprimer cette section et ses leçons ?')) return; await callCrud({ action: 'delete_section', id }); loadFormations(); }
+async function deleteSection(id) {
+  if (!confirm('Supprimer cette section et ses leçons ?')) return;
+  await callCrud({ action: 'delete_section', id });
+  loadFormations(true);
+}
+
+function findSection(sectionId) {
+  const f = getCurrentFormation();
+  return f.sections.find(s => s.id === sectionId);
+}
 
 function openLeconModal(sectionId, leconId) {
   document.getElementById('lecon-section-id').value = sectionId;
@@ -408,8 +399,6 @@ function openLeconModal(sectionId, leconId) {
   document.getElementById('lecon-titre').focus();
 }
 
-function findSection(sectionId) { for (const f of formationsData) { const s = f.sections.find(s => s.id === sectionId); if (s) return s; } return null; }
-
 function renderAlreadyAddedLecons(section) {
   const wrap = document.getElementById('lecon-already-wrap');
   const list = document.getElementById('lecon-already-list');
@@ -429,22 +418,21 @@ async function saveLecon() {
     const l = section.lecons.find(l => l.id === parseInt(leconId));
     await callCrud({ action: 'update_lecon', id: leconId, titre, url_video, ordre: l.ordre });
     closeModal('modal-lecon');
+    loadFormations(true);
   } else {
     const section = findSection(parseInt(section_id));
     const nextOrdre = section.lecons.length + 1;
     await callCrud({ action: 'create_lecon', section_id, titre, url_video, ordre: nextOrdre });
-    await loadFormations();
+    await loadFormations(true);
     const updatedSection = findSection(parseInt(section_id));
     renderAlreadyAddedLecons(updatedSection);
     document.getElementById('lecon-titre').value = '';
     document.getElementById('lecon-url').value = '';
     document.getElementById('lecon-titre').focus();
-    return;
   }
-  loadFormations();
 }
 
-async function deleteLecon(id) { if (!confirm('Supprimer cette leçon ?')) return; await callCrud({ action: 'delete_lecon', id }); loadFormations(); }
+async function deleteLecon(id) { if (!confirm('Supprimer cette leçon ?')) return; await callCrud({ action: 'delete_lecon', id }); loadFormations(true); }
 
 async function moveLecon(sectionId, leconId, direction) {
   const section = findSection(sectionId);
@@ -455,7 +443,7 @@ async function moveLecon(sectionId, leconId, direction) {
   const b = section.lecons[targetIdx];
   await callCrud({ action: 'update_lecon', id: a.id, titre: a.titre, url_video: a.url_video, ordre: b.ordre });
   await callCrud({ action: 'update_lecon', id: b.id, titre: b.titre, url_video: b.url_video, ordre: a.ordre });
-  loadFormations();
+  loadFormations(true);
 }
 
 function closeModal(id) { document.getElementById(id).classList.remove('open'); }
