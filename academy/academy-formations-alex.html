@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Academy — Mes formations</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap');
+  :root { --ink: #2b2620; --ink-soft: #6b6255; --cream: #f7f3ec; --gold: #b8863f; --gold-dark: #8f6a2f; --line: #e2d9c8; --success: #4d7c3f; --card: #ffffff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; }
+  header { background: var(--card); border-bottom: 1px solid var(--line); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; }
+  .brand-mark { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; }
+  .user-info { font-size: 13px; color: var(--ink-soft); display: flex; align-items: center; gap: 12px; }
+  .logout { color: var(--gold-dark); text-decoration: none; cursor: pointer; font-weight: 500; }
+  .container { max-width: 1100px; margin: 0 auto; padding: 32px 24px; }
+  #formations-list { display: grid; gap: 16px; }
+  .formation-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; cursor: pointer; transition: border-color 0.15s; }
+  .formation-card:hover { border-color: var(--gold); }
+  .formation-card h3 { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; margin: 0 0 6px; }
+  .formation-card p { font-size: 14px; color: var(--ink-soft); margin: 0 0 12px; }
+  .progress-bar-outer { height: 6px; background: var(--line); border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+  .progress-bar-inner { height: 100%; background: var(--gold); }
+  .progress-label { font-size: 12px; color: var(--ink-soft); }
+  .detail-layout { display: grid; grid-template-columns: 280px 1fr; gap: 24px; }
+  @media (max-width: 800px) { .detail-layout { grid-template-columns: 1fr; } }
+  .back-link { display: inline-block; margin-bottom: 20px; font-size: 13px; color: var(--ink-soft); text-decoration: none; cursor: pointer; }
+  .back-link:hover { color: var(--gold-dark); }
+  .sidebar { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; align-self: start; }
+  .sidebar-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; margin: 0 0 4px; }
+  .sidebar-progress { font-size: 12px; color: var(--ink-soft); margin-bottom: 16px; }
+  .section-block { margin-bottom: 8px; }
+  .section-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--line); cursor: pointer; font-size: 13px; font-weight: 500; }
+  .section-header .chevron { transition: transform 0.15s; color: var(--ink-soft); }
+  .section-header.collapsed .chevron { transform: rotate(-90deg); }
+  .lecons-list { padding: 4px 0; }
+  .lecons-list.collapsed { display: none; }
+  .lecon-item { display: flex; align-items: center; gap: 8px; padding: 9px 4px; border-radius: 6px; cursor: pointer; font-size: 13px; }
+  .lecon-item:hover { background: var(--cream); }
+  .lecon-item.active { background: #f0e6d2; font-weight: 500; }
+  .lecon-icon { width: 16px; height: 16px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; color: var(--ink-soft); }
+  .lecon-item.done .lecon-icon { color: var(--success); }
+  .player-area { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
+  .player-area video { width: 100%; border-radius: 8px; background: #000; display: block; }
+  .player-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; margin: 16px 0 4px; }
+  .player-sub { font-size: 13px; color: var(--ink-soft); }
+  .placeholder { display: flex; align-items: center; justify-content: center; height: 320px; color: var(--ink-soft); font-size: 14px; background: var(--cream); border-radius: 8px; }
+  .hidden { display: none; }
+  .loading { text-align: center; padding: 60px 0; color: var(--ink-soft); font-size: 14px; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand-mark">Academy</div>
+  <div class="user-info"><span id="user-name"></span><a class="logout" onclick="logout()">Déconnexion</a></div>
+</header>
+
+<div class="container">
+  <div id="loading" class="loading">Chargement de vos formations…</div>
+  <div id="view-list" class="hidden"><div id="formations-list"></div></div>
+  <div id="view-detail" class="hidden">
+    <a class="back-link" id="back-link" onclick="showList()">← Retour à mes formations</a>
+    <div class="detail-layout">
+      <div class="sidebar">
+        <p class="sidebar-title" id="detail-titre"></p>
+        <p class="sidebar-progress" id="detail-progress"></p>
+        <div id="sections-container"></div>
+      </div>
+      <div class="player-area">
+        <div id="placeholder" class="placeholder">Sélectionnez une leçon pour commencer</div>
+        <video id="video-player" class="hidden" controls controlsList="nodownload" disablePictureInPicture oncontextmenu="return false;"></video>
+        <p class="player-title" id="player-title"></p>
+        <p class="player-sub" id="player-sub"></p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://n8n.srv936251.hstgr.cloud/webhook';
+const clientId = sessionStorage.getItem('academy_client_id');
+const clientNom = sessionStorage.getItem('academy_nom');
+
+if (!clientId) window.location.href = 'academy-login-alex.html';
+
+document.getElementById('user-name').textContent = clientNom || '';
+
+let formationsData = [];
+let currentFormation = null;
+let currentLeconId = null;
+let saveInterval = null;
+
+async function loadData() {
+  try {
+    const res = await fetch(`${API_BASE}/academy-get-data`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: parseInt(clientId) }) });
+    const data = await res.json();
+    formationsData = data.formations || [];
+    if (data.client && data.client.nom) { document.getElementById('user-name').textContent = data.client.nom; sessionStorage.setItem('academy_nom', data.client.nom); }
+    document.getElementById('loading').classList.add('hidden');
+    if (formationsData.length === 1) showDetail(formationsData[0].id); else renderList();
+  } catch (e) { document.getElementById('loading').textContent = 'Impossible de charger vos formations. Réessayez.'; }
+}
+
+function countLecons(formation) {
+  let total = 0, done = 0;
+  formation.sections.forEach(s => s.lecons.forEach(l => { total++; if (l.termine) done++; }));
+  return { total, done };
+}
+
+function renderList() {
+  document.getElementById('view-detail').classList.add('hidden');
+  document.getElementById('view-list').classList.remove('hidden');
+  const container = document.getElementById('formations-list');
+  container.innerHTML = '';
+  if (formationsData.length === 0) { container.innerHTML = '<p style="color:var(--ink-soft);font-size:14px;">Vous n\'avez pas encore accès à une formation.</p>'; return; }
+  formationsData.forEach(f => {
+    const { total, done } = countLecons(f);
+    const pct = total > 0 ? Math.round((done / total) * 100) : 0;
+    const card = document.createElement('div');
+    card.className = 'formation-card';
+    card.onclick = () => showDetail(f.id);
+    card.innerHTML = `<h3>${f.titre}</h3><p>${f.description || ''}</p><div class="progress-bar-outer"><div class="progress-bar-inner" style="width:${pct}%"></div></div><div class="progress-label">${done} sur ${total} leçons terminées</div>`;
+    container.appendChild(card);
+  });
+}
+
+function showList() { stopSaveInterval(); renderList(); }
+
+function showDetail(formationId) {
+  currentFormation = formationsData.find(f => f.id === formationId);
+  if (!currentFormation) return;
+  document.getElementById('view-list').classList.add('hidden');
+  document.getElementById('view-detail').classList.remove('hidden');
+  document.getElementById('detail-titre').textContent = currentFormation.titre;
+  document.getElementById('back-link').style.display = formationsData.length > 1 ? 'inline-block' : 'none';
+  const { total, done } = countLecons(currentFormation);
+  document.getElementById('detail-progress').textContent = `${done} sur ${total} leçons terminées`;
+  renderSections();
+  document.getElementById('placeholder').classList.remove('hidden');
+  document.getElementById('video-player').classList.add('hidden');
+  document.getElementById('player-title').textContent = '';
+  document.getElementById('player-sub').textContent = '';
+  currentLeconId = null;
+}
+
+function renderSections() {
+  const container = document.getElementById('sections-container');
+  container.innerHTML = '';
+  currentFormation.sections.forEach((s, sIdx) => {
+    const block = document.createElement('div');
+    block.className = 'section-block';
+    const header = document.createElement('div');
+    header.className = 'section-header';
+    header.innerHTML = `<span>${s.titre}</span><span class="chevron">▾</span>`;
+    header.onclick = () => { header.classList.toggle('collapsed'); lecList.classList.toggle('collapsed'); };
+    const lecList = document.createElement('div');
+    lecList.className = 'lecons-list';
+    if (sIdx > 0) { header.classList.add('collapsed'); lecList.classList.add('collapsed'); }
+    s.lecons.forEach(l => {
+      const item = document.createElement('div');
+      item.className = 'lecon-item' + (l.termine ? ' done' : '') + (l.id === currentLeconId ? ' active' : '');
+      item.dataset.leconId = l.id;
+      item.innerHTML = `<span class="lecon-icon">${l.termine ? '✓' : '○'}</span><span>${l.titre}</span>`;
+      item.onclick = () => playLecon(l, s.titre);
+      lecList.appendChild(item);
+    });
+    block.appendChild(header);
+    block.appendChild(lecList);
+    container.appendChild(block);
+  });
+}
+
+function playLecon(lecon, sectionTitre) {
+  stopSaveInterval();
+  currentLeconId = lecon.id;
+  document.querySelectorAll('.lecon-item').forEach(el => { el.classList.toggle('active', parseInt(el.dataset.leconId) === lecon.id); });
+  document.getElementById('placeholder').classList.add('hidden');
+  const player = document.getElementById('video-player');
+  player.classList.remove('hidden');
+  player.src = lecon.url_video;
+  if (lecon.position_secondes && !lecon.termine) player.currentTime = lecon.position_secondes;
+  document.getElementById('player-title').textContent = lecon.titre;
+  document.getElementById('player-sub').textContent = sectionTitre;
+  player.play().catch(() => {});
+  saveInterval = setInterval(() => saveProgress(lecon.id, false), 10000);
+  player.onended = () => { saveProgress(lecon.id, true); lecon.termine = true; renderSections(); };
+}
+
+function saveProgress(leconId, termine) {
+  const player = document.getElementById('video-player');
+  const position = Math.floor(player.currentTime || 0);
+  fetch(`${API_BASE}/academy-save-progress`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: parseInt(clientId), lecon_id: leconId, termine: termine, position_secondes: position }) }).catch(() => {});
+}
+
+function stopSaveInterval() {
+  if (saveInterval) { clearInterval(saveInterval); saveInterval = null; }
+  const player = document.getElementById('video-player');
+  if (currentLeconId && player && !player.paused) saveProgress(currentLeconId, false);
+}
+
+window.addEventListener('beforeunload', stopSaveInterval);
+
+function logout() { stopSaveInterval(); sessionStorage.clear(); window.location.href = 'academy-login-alex.html'; }
+
+loadData();
+</script>
+</body>
+</html>
