@@ -124,13 +124,6 @@
     <div class="card-title">Ma formation</div>
     <div class="card-text" id="niveauInfo">Chargement…</div>
   </div>
-
-  <div class="card">
-    <div class="card-title">Récupération du compte</div>
-    <div class="card-text">Si tu perds ton mot de passe, c'est cette sécurité qui te permettra de récupérer ton compte. Active-la maintenant pour ne jamais rester bloqué.</div>
-    <div id="securityStatus"></div>
-    <a href="eleve-2fa-setup.html" class="btn-gold" id="securityBtn">Configurer la 2FA</a>
-  </div>
 </div>
 
 <script>
@@ -143,16 +136,6 @@
   } else {
     document.getElementById('welcome').textContent = 'Bonjour, ' + (session.prenom || session.nom || '');
     document.getElementById('niveauInfo').textContent = 'Niveau en cours — informations mises à jour prochainement.';
-
-    const statusEl = document.getElementById('securityStatus');
-    const btnEl = document.getElementById('securityBtn');
-    if (session.totp_enabled) {
-      statusEl.innerHTML = '<span class="security-badge security-on">✓ 2FA activée</span>';
-      btnEl.textContent = 'Gérer la 2FA';
-    } else {
-      statusEl.innerHTML = '<span class="security-badge security-off">2FA non activée</span>';
-      btnEl.textContent = 'Activer la 2FA';
-    }
   }
 
   function logout() {
