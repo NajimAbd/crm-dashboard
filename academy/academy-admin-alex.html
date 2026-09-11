@@ -133,7 +133,6 @@
     <input type="hidden" id="lecon-section-id">
     <input type="hidden" id="lecon-id">
     <div class="field"><label>Titre de la leçon</label><input type="text" id="lecon-titre" placeholder="Ex: Introduction"></div>
-    <div class="field"><label>Durée (minutes)</label><input type="number" id="lecon-duree" placeholder="Ex: 5" min="0"></div>
     <div class="field">
       <label>URL de la vidéo</label>
       <div style="display:flex; gap:8px;">
@@ -253,7 +252,7 @@ function render() {
                   <button class="btn-move" ${lIdx === 0 ? 'disabled' : ''} onclick="moveLecon(${s.id}, ${l.id}, -1)">◀</button>
                   <button class="btn-move" ${lIdx === s.lecons.length - 1 ? 'disabled' : ''} onclick="moveLecon(${s.id}, ${l.id}, 1)">▶</button>
                 </div>
-                <div class="lecon-info">${l.titre}${l.duree_secondes ? ' <span style="color:var(--ink-soft)">· ' + Math.round(l.duree_secondes/60) + ' min</span>' : ''}<br><span class="lecon-url">${l.url_video}</span></div>
+                <div class="lecon-info">${l.titre}<br><span class="lecon-url">${l.url_video}</span></div>
                 <div class="lecon-actions">
                   <button class="btn-small" onclick="openLeconModal(${s.id}, ${l.id})">Modifier</button>
                   <button class="btn-danger" onclick="deleteLecon(${l.id})">Supprimer</button>
@@ -392,7 +391,6 @@ function openLeconModal(sectionId, leconId) {
   document.getElementById('lecon-id').value = leconId || '';
   document.getElementById('lecon-titre').value = '';
   document.getElementById('lecon-url').value = '';
-  document.getElementById('lecon-duree').value = '';
   const section = findSection(sectionId);
   if (leconId) {
     document.getElementById('lecon-modal-title').textContent = 'Modifier la leçon';
@@ -400,7 +398,6 @@ function openLeconModal(sectionId, leconId) {
     const l = section.lecons.find(l => l.id === leconId);
     document.getElementById('lecon-titre').value = l.titre;
     document.getElementById('lecon-url').value = l.url_video;
-    document.getElementById('lecon-duree').value = l.duree_secondes ? Math.round(l.duree_secondes / 60) : '';
     document.getElementById('lecon-already-wrap').style.display = 'none';
   } else {
     document.getElementById('lecon-modal-title').textContent = 'Ajouter une leçon';
@@ -426,24 +423,21 @@ async function saveLecon() {
   const leconId = document.getElementById('lecon-id').value;
   const titre = document.getElementById('lecon-titre').value.trim();
   const url_video = document.getElementById('lecon-url').value.trim();
-  const dureeMin = document.getElementById('lecon-duree').value;
-  const duree_secondes = dureeMin ? Math.round(parseFloat(dureeMin) * 60) : null;
   if (!titre || !url_video) { alert('Titre et URL sont obligatoires.'); return; }
   if (leconId) {
     const section = findSection(parseInt(section_id));
     const l = section.lecons.find(l => l.id === parseInt(leconId));
-    await callCrud({ action: 'update_lecon', id: leconId, titre, url_video, ordre: l.ordre, duree_secondes });
+    await callCrud({ action: 'update_lecon', id: leconId, titre, url_video, ordre: l.ordre });
     closeModal('modal-lecon');
   } else {
     const section = findSection(parseInt(section_id));
     const nextOrdre = section.lecons.length + 1;
-    await callCrud({ action: 'create_lecon', section_id, titre, url_video, ordre: nextOrdre, duree_secondes });
+    await callCrud({ action: 'create_lecon', section_id, titre, url_video, ordre: nextOrdre });
     await loadFormations();
     const updatedSection = findSection(parseInt(section_id));
     renderAlreadyAddedLecons(updatedSection);
     document.getElementById('lecon-titre').value = '';
     document.getElementById('lecon-url').value = '';
-    document.getElementById('lecon-duree').value = '';
     document.getElementById('lecon-titre').focus();
     return;
   }
@@ -459,8 +453,8 @@ async function moveLecon(sectionId, leconId, direction) {
   if (targetIdx < 0 || targetIdx >= section.lecons.length) return;
   const a = section.lecons[idx];
   const b = section.lecons[targetIdx];
-  await callCrud({ action: 'update_lecon', id: a.id, titre: a.titre, url_video: a.url_video, ordre: b.ordre, duree_secondes: a.duree_secondes });
-  await callCrud({ action: 'update_lecon', id: b.id, titre: b.titre, url_video: b.url_video, ordre: a.ordre, duree_secondes: b.duree_secondes });
+  await callCrud({ action: 'update_lecon', id: a.id, titre: a.titre, url_video: a.url_video, ordre: b.ordre });
+  await callCrud({ action: 'update_lecon', id: b.id, titre: b.titre, url_video: b.url_video, ordre: a.ordre });
   loadFormations();
 }
 

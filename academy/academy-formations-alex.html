@@ -33,9 +33,6 @@
   .section-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--line); cursor: pointer; font-size: 13px; font-weight: 500; }
   .section-header .chevron { transition: transform 0.15s; color: var(--ink-soft); }
   .section-header.collapsed .chevron { transform: rotate(-90deg); }
-  .section-header-title { display: flex; flex-direction: column; gap: 2px; }
-  .section-header-meta { font-size: 11px; color: var(--ink-soft); font-weight: 400; }
-  .lecon-duree { font-size: 11px; color: var(--ink-soft); margin-left: auto; padding-left: 8px; }
   .lecons-list { padding: 4px 0; }
   .lecons-list.collapsed { display: none; }
   .lecon-item { display: flex; align-items: center; gap: 8px; padding: 9px 4px; border-radius: 6px; cursor: pointer; font-size: 13px; }
@@ -111,20 +108,6 @@ function countLecons(formation) {
   return { total, done };
 }
 
-function countSection(section) {
-  let total = section.lecons.length, done = 0, dureeTotal = 0;
-  section.lecons.forEach(l => { if (l.termine) done++; dureeTotal += (l.duree_secondes || 0); });
-  return { total, done, dureeTotal };
-}
-
-function fmtDuree(secondes) {
-  if (!secondes) return '';
-  const m = Math.round(secondes / 60);
-  if (m < 60) return m + ' min';
-  const h = Math.floor(m / 60), rm = m % 60;
-  return h + ' h ' + (rm ? rm + ' min' : '');
-}
-
 function renderList() {
   document.getElementById('view-detail').classList.add('hidden');
   document.getElementById('view-list').classList.remove('hidden');
@@ -169,8 +152,7 @@ function renderSections() {
     block.className = 'section-block';
     const header = document.createElement('div');
     header.className = 'section-header';
-    const meta = countSection(s);
-    header.innerHTML = `<div class="section-header-title"><span>${s.titre}</span><span class="section-header-meta">${meta.done} / ${meta.total}${meta.dureeTotal ? ' · ' + fmtDuree(meta.dureeTotal) : ''}</span></div><span class="chevron">▾</span>`;
+    header.innerHTML = `<span>${s.titre}</span><span class="chevron">▾</span>`;
     header.onclick = () => { header.classList.toggle('collapsed'); lecList.classList.toggle('collapsed'); };
     const lecList = document.createElement('div');
     lecList.className = 'lecons-list';
@@ -179,7 +161,7 @@ function renderSections() {
       const item = document.createElement('div');
       item.className = 'lecon-item' + (l.termine ? ' done' : '') + (l.id === currentLeconId ? ' active' : '');
       item.dataset.leconId = l.id;
-      item.innerHTML = `<span class="lecon-icon">${l.termine ? '✓' : '○'}</span><span>${l.titre}</span>${l.duree_secondes ? '<span class="lecon-duree">' + fmtDuree(l.duree_secondes) + '</span>' : ''}`;
+      item.innerHTML = `<span class="lecon-icon">${l.termine ? '✓' : '○'}</span><span>${l.titre}</span>`;
       item.onclick = () => playLecon(l, s.titre);
       lecList.appendChild(item);
     });
