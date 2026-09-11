@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Académie — Mon espace</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-deep: #0D1A12;
+    --green-mid: #16261A;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --bg-soft: #FAF7F1;
+    --text-main: #2C2C2A;
+    --text-soft: #6B6B68;
+    --border-soft: #E5DECF;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg-soft);
+    font-family: 'Inter', sans-serif;
+    color: var(--text-main);
+    min-height: 100vh;
+  }
+  .topbar {
+    background: var(--green-deep);
+    color: var(--cream);
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--gold);
+  }
+  .brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 20px;
+  }
+  .logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: rgba(224, 104, 90, 0.12);
+    border: 1px solid rgba(224, 104, 90, 0.35);
+    border-radius: 24px;
+    color: #E0685A;
+    cursor: pointer;
+    font-size: 13px;
+    font-family: 'Inter', sans-serif;
+  }
+  .page { max-width: 720px; margin: 0 auto; padding: 40px 24px 60px; }
+  .eyebrow {
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 600;
+    font-size: 34px;
+    margin: 0 0 30px;
+    color: var(--green-deep);
+  }
+  .card {
+    background: white;
+    border: 1px solid var(--border-soft);
+    border-radius: 14px;
+    padding: 24px;
+    margin-bottom: 18px;
+  }
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--green-deep);
+    margin: 0 0 6px;
+  }
+  .card-text { font-size: 14px; color: var(--text-soft); line-height: 1.6; }
+  .security-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 12px;
+    margin-top: 10px;
+  }
+  .security-on { background: rgba(90,140,90,0.15); color: #5A8C5A; }
+  .security-off { background: rgba(196,96,78,0.15); color: #C4604E; }
+  .btn-gold {
+    display: inline-block;
+    margin-top: 14px;
+    padding: 10px 18px;
+    border-radius: 8px;
+    background: linear-gradient(135deg,#C9A86A 0%,#B8965A 100%);
+    color: var(--green-deep);
+    font-weight: 700;
+    font-size: 13.5px;
+    text-decoration: none;
+    font-family: 'Inter', sans-serif;
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand">Académie</div>
+  <button class="logout-btn" onclick="logout()">Déconnexion</button>
+</div>
+
+<div class="page">
+  <div class="eyebrow">Mon espace</div>
+  <h1 id="welcome">Bonjour</h1>
+
+  <div class="card">
+    <div class="card-title">Ma formation</div>
+    <div class="card-text" id="niveauInfo">Chargement…</div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Sécurité du compte</div>
+    <div class="card-text">Active la double authentification (2FA) pour protéger ton accès avec un code en plus de ton mot de passe.</div>
+    <div id="securityStatus"></div>
+    <a href="eleve-2fa-setup.html" class="btn-gold" id="securityBtn">Configurer la 2FA</a>
+  </div>
+</div>
+
+<script>
+  const SESSION_KEY = 'eleve_session';
+  const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
+  if (!session) {
+    window.location.href = 'eleve-login.html';
+  } else {
+    document.getElementById('welcome').textContent = 'Bonjour, ' + (session.prenom || session.nom || '');
+    document.getElementById('niveauInfo').textContent = 'Niveau en cours — informations mises à jour prochainement.';
+
+    const statusEl = document.getElementById('securityStatus');
+    const btnEl = document.getElementById('securityBtn');
+    if (session.totp_enabled) {
+      statusEl.innerHTML = '<span class="security-badge security-on">✓ 2FA activée</span>';
+      btnEl.textContent = 'Gérer la 2FA';
+    } else {
+      statusEl.innerHTML = '<span class="security-badge security-off">2FA non activée</span>';
+      btnEl.textContent = 'Activer la 2FA';
+    }
+  }
+
+  function logout() {
+    localStorage.removeItem(SESSION_KEY);
+    window.location.href = 'eleve-login.html';
+  }
+</script>
+
+</body>
+</html>
