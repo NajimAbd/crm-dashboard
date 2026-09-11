@@ -38,16 +38,16 @@
   .btn-publish.is-published { background:#e3f0d9; color:#3b6d11; border-color:#b9dd9a; }
 
   .sidebar { background: var(--card); border-left: 1px solid var(--line); padding: 0; overflow-y: auto; }
-  .sidebar-header { padding: 16px 18px; border-bottom: 1px solid var(--line); font-family:'Cormorant Garamond',serif; font-size: 17px; font-weight: 600; }
+  .sidebar-header { padding: 16px 18px; border-bottom: 1px solid var(--line); font-family:'Cormorant Garamond',serif; font-size: 17px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
   .section-block { border-bottom: 1px solid var(--line); padding: 14px 18px; }
-  .section-title-line { font-size: 14px; font-weight: 600; cursor: pointer; }
+  .section-title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .section-title-line { font-size: 14px; font-weight: 600; cursor: pointer; flex: 1; }
   .section-title-line:hover { color: var(--gold-dark); }
+  .section-title-actions { display: flex; gap: 4px; flex-shrink: 0; }
   .section-progress-line { font-size: 12px; color: var(--ink-soft); margin: 2px 0 8px; }
   .chapitre-line { font-size: 13px; padding: 6px 0 6px 4px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
   .chapitre-line:hover { color: var(--gold-dark); }
   .chapitre-icon { color: var(--ink-soft); flex-shrink: 0; }
-  .sidebar-add-buttons { display: flex; gap: 8px; padding: 16px 18px; }
-  .sidebar-add-buttons button { flex: 1; }
 
   .overlay { position:fixed; inset:0; background:rgba(43,38,32,0.4); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
   .overlay.open { display:flex; }
@@ -109,12 +109,11 @@
   </div>
 
   <div class="sidebar">
-    <div class="sidebar-header">Contenu du cours</div>
-    <div id="sections-container"></div>
-    <div class="sidebar-add-buttons">
-      <button class="btn-small" onclick="openSectionModal()">+ Ajouter une section</button>
-      <button class="btn-small" onclick="promptAddChapitre()">+ Ajouter un chapitre</button>
+    <div class="sidebar-header">
+      <span>Contenu du cours</span>
+      <button class="btn-small" onclick="openSectionModal()">+ Section</button>
     </div>
+    <div id="sections-container"></div>
   </div>
 </div>
 
@@ -158,6 +157,7 @@
     <input type="hidden" id="lecon-id">
     <div class="field"><label>Section</label><select id="lecon-section-select" onchange="document.getElementById('lecon-section-id').value=this.value"></select></div>
     <div class="field"><label>Titre de la leçon</label><input type="text" id="lecon-titre" placeholder="Ex: Introduction"></div>
+    <div class="field"><label>Durée (minutes)</label><input type="number" id="lecon-duree" placeholder="Ex: 5" min="0"></div>
     <div class="field">
       <label>URL de la vidéo</label>
       <div style="display:flex; gap:8px;">
@@ -251,17 +251,26 @@ function renderCourseView() {
     return;
   }
 
-  container.innerHTML = f.sections.map(s => `
+  container.innerHTML = f.sections.map(s => {
+    const dureeTotal = s.lecons.reduce((sum, l) => sum + (l.duree_secondes || 0), 0);
+    const dureeLabel = dureeTotal ? Math.round(dureeTotal / 60) + ' min' : '';
+    return `
     <div class="section-block">
-      <div class="section-title-line" onclick="openSectionModal(${s.id})">${s.titre}</div>
-      <div class="section-progress-line">${s.lecons.length} chapitre${s.lecons.length > 1 ? 's' : ''}</div>
+      <div class="section-title-row">
+        <div class="section-title-line" onclick="openSectionModal(${s.id})">${s.titre}</div>
+        <div class="section-title-actions">
+          <button class="btn-small" onclick="openSectionModal()">+ Section</button>
+          <button class="btn-small" onclick="openLeconModal(${s.id}, null)">+ Chapitre</button>
+        </div>
+      </div>
+      <div class="section-progress-line">${s.lecons.length}/${s.lecons.length}${dureeLabel ? ' | ' + dureeLabel : ''}</div>
       ${s.lecons.map(l => `
         <div class="chapitre-line" onclick="openLeconModal(${s.id}, ${l.id})">
           <span class="chapitre-icon">▷</span><span>${l.titre}</span>
         </div>
       `).join('')}
     </div>
-  `).join('');
+  `;}).join('');
 }
 
 async function callCrud(payload) {
@@ -379,12 +388,6 @@ function findSection(sectionId) {
   return f.sections.find(s => s.id === sectionId);
 }
 
-function promptAddChapitre() {
-  const f = getCurrentFormation();
-  if (!f || f.sections.length === 0) { alert('Ajoute d\'abord une section.'); return; }
-  openLeconModal(f.sections[0].id, null);
-}
-
 function openLeconModal(sectionId, leconId) {
   const f = getCurrentFormation();
   const sel = document.getElementById('lecon-section-select');
@@ -394,6 +397,7 @@ function openLeconModal(sectionId, leconId) {
   document.getElementById('lecon-id').value = leconId || '';
   document.getElementById('lecon-titre').value = '';
   document.getElementById('lecon-url').value = '';
+  document.getElementById('lecon-duree').value = '';
   const section = findSection(sectionId);
   const delBtn = document.getElementById('lecon-delete-btn');
   if (leconId) {
@@ -402,6 +406,7 @@ function openLeconModal(sectionId, leconId) {
     const l = section.lecons.find(l => l.id === leconId);
     document.getElementById('lecon-titre').value = l.titre;
     document.getElementById('lecon-url').value = l.url_video;
+    document.getElementById('lecon-duree').value = l.duree_secondes ? Math.round(l.duree_secondes / 60) : '';
     document.getElementById('lecon-already-wrap').style.display = 'none';
     delBtn.style.display = 'block';
   } else {
@@ -435,22 +440,25 @@ async function saveLecon() {
   const leconId = document.getElementById('lecon-id').value;
   const titre = document.getElementById('lecon-titre').value.trim();
   const url_video = document.getElementById('lecon-url').value.trim();
+  const dureeMin = document.getElementById('lecon-duree').value;
+  const duree_secondes = dureeMin ? Math.round(parseFloat(dureeMin) * 60) : null;
   if (!titre || !url_video) { alert('Titre et URL sont obligatoires.'); return; }
   if (leconId) {
     const section = findSection(parseInt(section_id));
     const l = section.lecons.find(l => l.id === parseInt(leconId));
-    await callCrud({ action: 'update_lecon', id: leconId, titre, url_video, ordre: l.ordre });
+    await callCrud({ action: 'update_lecon', id: leconId, titre, url_video, ordre: l.ordre, duree_secondes });
     closeModal('modal-lecon');
     loadFormations(true);
   } else {
     const section = findSection(parseInt(section_id));
     const nextOrdre = section.lecons.length + 1;
-    await callCrud({ action: 'create_lecon', section_id, titre, url_video, ordre: nextOrdre });
+    await callCrud({ action: 'create_lecon', section_id, titre, url_video, ordre: nextOrdre, duree_secondes });
     await loadFormations(true);
     const updatedSection = findSection(parseInt(section_id));
     renderAlreadyAddedLecons(updatedSection);
     document.getElementById('lecon-titre').value = '';
     document.getElementById('lecon-url').value = '';
+    document.getElementById('lecon-duree').value = '';
     document.getElementById('lecon-titre').focus();
   }
 }
