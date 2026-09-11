@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Academy — Connexion</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap');
+  :root { --ink: #2b2620; --ink-soft: #6b6255; --cream: #f7f3ec; --gold: #b8863f; --gold-dark: #8f6a2f; --line: #e2d9c8; --error: #a3402e; --card: #ffffff; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: 'Inter', sans-serif; background: var(--cream); color: var(--ink); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
+  .wrap { width: 100%; max-width: 420px; }
+  .brand { text-align: center; margin-bottom: 32px; }
+  .brand-mark { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-weight: 600; color: var(--ink); letter-spacing: 0.02em; }
+  .brand-sub { font-size: 13px; color: var(--ink-soft); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 4px; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 36px 32px; }
+  .step-title { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 600; margin: 0 0 6px; }
+  .step-desc { font-size: 14px; color: var(--ink-soft); margin: 0 0 24px; line-height: 1.5; }
+  .field { margin-bottom: 16px; }
+  .field label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 6px; color: var(--ink); }
+  .field input { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 8px; font-size: 15px; font-family: 'Inter', sans-serif; background: var(--cream); color: var(--ink); transition: border-color 0.15s; }
+  .field input:focus { outline: none; border-color: var(--gold); }
+  .code-input { letter-spacing: 0.5em; text-align: center; font-size: 22px; font-weight: 600; }
+  button.primary { width: 100%; padding: 13px; border: none; border-radius: 8px; background: var(--gold-dark); color: #fff; font-size: 15px; font-weight: 500; font-family: 'Inter', sans-serif; cursor: pointer; transition: background 0.15s; margin-top: 4px; }
+  button.primary:hover { background: var(--gold); }
+  button.primary:disabled { background: #c9bfa9; cursor: not-allowed; }
+  .link-back { display: block; text-align: center; margin-top: 18px; font-size: 13px; color: var(--ink-soft); text-decoration: none; cursor: pointer; }
+  .link-back:hover { color: var(--gold-dark); }
+  .error-msg { display: none; background: #fbeceb; border: 1px solid #f0c9c4; color: var(--error); font-size: 13px; padding: 10px 12px; border-radius: 8px; margin-bottom: 16px; }
+  .resend { text-align: center; font-size: 13px; color: var(--ink-soft); margin-top: 16px; }
+  .resend a { color: var(--gold-dark); text-decoration: none; cursor: pointer; font-weight: 500; }
+  .step { display: none; }
+  .step.active { display: block; }
+  .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: #fff; border-radius: 50%; animation: spin 0.6s linear infinite; vertical-align: -2px; margin-right: 6px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .logo-img { max-height: 56px; margin-bottom: 8px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="brand">
+    <div id="logo-container"></div>
+    <div class="brand-mark" id="academy-name">Academy</div>
+    <div class="brand-sub">Espace formation</div>
+  </div>
+
+  <div class="card">
+    <div class="step active" id="step1">
+      <p class="step-title">Connexion</p>
+      <p class="step-desc">Entrez votre email et votre mot de passe pour accéder à vos formations.</p>
+      <div class="error-msg" id="error1"></div>
+      <div class="field"><label for="email">Email</label><input type="email" id="email" placeholder="vous@exemple.com" autocomplete="email"></div>
+      <div class="field"><label for="password">Mot de passe</label><input type="password" id="password" placeholder="Votre mot de passe" autocomplete="current-password"></div>
+      <button class="primary" id="btn-step1" onclick="submitStep1()">Continuer</button>
+    </div>
+
+    <div class="step" id="step2">
+      <p class="step-title">Vérification</p>
+      <p class="step-desc">Un code à 6 chiffres a été envoyé à <strong id="email-display"></strong>. Entrez-le ci-dessous.</p>
+      <div class="error-msg" id="error2"></div>
+      <div class="field"><label for="code">Code de vérification</label><input type="text" id="code" class="code-input" maxlength="6" inputmode="numeric" placeholder="——————" autocomplete="one-time-code"></div>
+      <button class="primary" id="btn-step2" onclick="submitStep2()">Se connecter</button>
+      <div class="resend">Vous n'avez rien reçu ? <a onclick="resendCode()">Renvoyer le code</a></div>
+      <a class="link-back" onclick="backToStep1()">← Revenir à la connexion</a>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://n8n.srv936251.hstgr.cloud/webhook';
+const ACCOUNT_ID = 27;
+let currentEmail = '';
+let currentPassword = '';
+
+async function loadBranding() {
+  try {
+    const res = await fetch(`${API_BASE}/academy-get-branding`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: ACCOUNT_ID }) });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('academy-name').textContent = data.nom_academie;
+      document.title = data.nom_academie + ' — Connexion';
+      document.documentElement.style.setProperty('--gold-dark', data.couleur_primaire);
+      document.body.style.background = data.couleur_fond;
+      if (data.logo_url) document.getElementById('logo-container').innerHTML = `<img src="${data.logo_url}" class="logo-img" alt="${data.nom_academie}">`;
+    }
+  } catch (e) {}
+}
+
+function showError(stepId, message) { const el = document.getElementById(stepId); el.textContent = message; el.style.display = 'block'; }
+function hideError(stepId) { document.getElementById(stepId).style.display = 'none'; }
+function setLoading(btnId, loading, label) { const btn = document.getElementById(btnId); btn.disabled = loading; btn.innerHTML = loading ? '<span class="spinner"></span>Patientez…' : label; }
+
+async function submitStep1() {
+  hideError('error1');
+  const email = document.getElementById('email').value.trim();
+  const password = document.getElementById('password').value;
+  if (!email || !password) { showError('error1', 'Merci de remplir les deux champs.'); return; }
+  setLoading('btn-step1', true, 'Continuer');
+  try {
+    const res = await fetch(`${API_BASE}/academy-login-step1`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password, account_id: ACCOUNT_ID }) });
+    const data = await res.json();
+    if (data.success) {
+      currentEmail = email; currentPassword = password;
+      document.getElementById('email-display').textContent = email;
+      document.getElementById('step1').classList.remove('active');
+      document.getElementById('step2').classList.add('active');
+      document.getElementById('code').focus();
+    } else { showError('error1', data.message || 'Email ou mot de passe incorrect.'); }
+  } catch (e) { showError('error1', 'Connexion impossible. Réessayez.'); }
+  setLoading('btn-step1', false, 'Continuer');
+}
+
+async function submitStep2() {
+  hideError('error2');
+  const code = document.getElementById('code').value.trim();
+  if (code.length !== 6) { showError('error2', 'Le code doit contenir 6 chiffres.'); return; }
+  setLoading('btn-step2', true, 'Se connecter');
+  try {
+    const res = await fetch(`${API_BASE}/academy-login-step2`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentEmail, code }) });
+    const data = await res.json();
+    if (data.success) {
+      sessionStorage.setItem('academy_client_id', data.client_id);
+      sessionStorage.setItem('academy_email', data.email);
+      sessionStorage.setItem('academy_nom', data.nom);
+      window.location.href = 'academy-formations.html';
+    } else { showError('error2', data.message || 'Code incorrect.'); }
+  } catch (e) { showError('error2', 'Connexion impossible. Réessayez.'); }
+  setLoading('btn-step2', false, 'Se connecter');
+}
+
+async function resendCode() {
+  hideError('error2');
+  try {
+    await fetch(`${API_BASE}/academy-login-step1`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: currentEmail, password: currentPassword, account_id: ACCOUNT_ID }) });
+    showError('error2', 'Un nouveau code a été envoyé.');
+    document.getElementById('error2').style.background = '#eaf3de';
+    document.getElementById('error2').style.borderColor = '#c0dd97';
+    document.getElementById('error2').style.color = '#3b6d11';
+  } catch (e) { showError('error2', 'Impossible de renvoyer le code.'); }
+}
+
+function backToStep1() {
+  document.getElementById('step2').classList.remove('active');
+  document.getElementById('step1').classList.add('active');
+  document.getElementById('code').value = '';
+  hideError('error2');
+}
+
+document.getElementById('code').addEventListener('keypress', function(e) { if (e.key === 'Enter') submitStep2(); });
+document.getElementById('password').addEventListener('keypress', function(e) { if (e.key === 'Enter') submitStep1(); });
+
+loadBranding();
+</script>
+</body>
+</html>

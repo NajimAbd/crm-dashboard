@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Academy — Administration</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap');
+  :root { --ink: #2b2620; --ink-soft: #6b6255; --cream: #f7f3ec; --gold: #b8863f; --gold-dark: #8f6a2f; --line: #e2d9c8; --danger: #a3402e; --card: #ffffff; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Inter',sans-serif; background:var(--cream); color:var(--ink); min-height:100vh; }
+  header { background:var(--card); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .brand-mark { font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:600; }
+  .brand-sub { font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em; }
+  button { font-family:'Inter',sans-serif; cursor:pointer; border:none; }
+  .btn-primary { background:var(--gold-dark); color:#fff; padding:9px 16px; border-radius:8px; font-size:13px; font-weight:500; }
+  .btn-primary:hover { background:var(--gold); }
+  .btn-small { background:var(--cream); color:var(--ink); border:1px solid var(--line); padding:5px 11px; border-radius:6px; font-size:12.5px; }
+  .btn-small:hover { border-color:var(--gold); }
+  .btn-danger { background:#fbeceb; color:var(--danger); border:1px solid #f0c9c4; padding:5px 9px; border-radius:6px; font-size:11.5px; }
+  .btn-danger:hover { background:#f5d9d6; }
+  .btn-move { background:var(--cream); border:1px solid var(--line); border-radius:6px; width:24px; height:24px; font-size:11px; color:var(--ink-soft); padding:0; }
+  .btn-move:disabled { opacity:.3; cursor:default; }
+
+  .top-select { padding: 10px 24px; background: var(--card); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
+  .top-select select { padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 13.5px; font-family: 'Inter', sans-serif; background: var(--cream); flex: 1; max-width: 400px; }
+
+  .course-layout { display: grid; grid-template-columns: 1fr 340px; min-height: calc(100vh - 110px); }
+  @media (max-width: 900px) { .course-layout { grid-template-columns: 1fr; } }
+
+  .main-area { padding: 32px; }
+  .formation-meta-box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; margin-bottom: 16px; }
+  .field { margin-bottom: 14px; }
+  .field label { display:block; font-size:12.5px; font-weight:500; margin-bottom:5px; }
+  .field input, .field textarea { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-size:14px; font-family:'Inter',sans-serif; background:var(--cream); }
+  .field textarea { resize:vertical; min-height:60px; }
+  .btn-publish { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; background:#f1ece0; color:#8a7d5f; border:1px solid #ddd0b0; }
+  .btn-publish.is-published { background:#e3f0d9; color:#3b6d11; border-color:#b9dd9a; }
+
+  .sidebar { background: var(--card); border-left: 1px solid var(--line); padding: 0; overflow-y: auto; }
+  .sidebar-header { padding: 16px 18px; border-bottom: 1px solid var(--line); font-family:'Cormorant Garamond',serif; font-size: 17px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+  .section-block { border-bottom: 1px solid var(--line); padding: 14px 18px; }
+  .section-title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .section-title-line { font-size: 14px; font-weight: 600; cursor: pointer; flex: 1; }
+  .section-title-line:hover { color: var(--gold-dark); }
+  .section-title-actions { display: flex; gap: 4px; flex-shrink: 0; }
+  .section-progress-line { font-size: 12px; color: var(--ink-soft); margin: 2px 0 8px; }
+  .chapitre-line { font-size: 13px; padding: 6px 0 6px 4px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+  .chapitre-line:hover { color: var(--gold-dark); }
+  .chapitre-icon { color: var(--ink-soft); flex-shrink: 0; }
+
+  .overlay { position:fixed; inset:0; background:rgba(43,38,32,0.4); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
+  .overlay.open { display:flex; }
+  .modal { background:#fff; border-radius:14px; padding:28px; width:100%; max-width:460px; max-height:85vh; overflow-y:auto; }
+  .modal h3 { font-family:'Cormorant Garamond',serif; font-size:20px; margin:0 0 18px; }
+  .modal-actions { display:flex; gap:8px; margin-top:8px; }
+  .modal-actions button { flex:1; padding:10px; border-radius:8px; font-size:14px; }
+  .btn-cancel { background:var(--cream); color:var(--ink-soft); }
+  .already-added { margin-top:20px; border-top:1px solid var(--line); padding-top:14px; }
+  .already-added-title { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:8px; }
+  .already-item { font-size:13px; padding:7px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; }
+  .already-item:last-child { border-bottom:none; }
+  .loading { text-align:center; padding:40px; color:var(--ink-soft); }
+  .empty { text-align:center; padding:40px 20px; color:var(--ink-soft); font-size:13.5px; }
+  .video-item { padding:10px 14px; font-size:13px; cursor:pointer; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
+  .video-item:hover { background:var(--cream); }
+  .video-item-name { word-break:break-all; }
+  .video-empty { padding:20px; text-align:center; color:var(--ink-soft); font-size:13px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div id="login-gate" style="position:fixed; inset:0; background:var(--cream); display:flex; align-items:center; justify-content:center; z-index:1000;">
+  <div style="background:#fff; border:1px solid var(--line); border-radius:14px; padding:36px 32px; width:100%; max-width:380px;">
+    <h3 style="font-family:'Cormorant Garamond',serif; font-size:22px; margin:0 0 6px;">Administration Academy</h3>
+    <p style="font-size:14px; color:var(--ink-soft); margin:0 0 20px;">Entrez le mot de passe administrateur.</p>
+    <div id="login-error" style="display:none; background:#fbeceb; border:1px solid #f0c9c4; color:#a3402e; font-size:13px; padding:10px 12px; border-radius:8px; margin-bottom:14px;"></div>
+    <input type="password" id="admin-password" placeholder="Mot de passe" style="width:100%; padding:12px 14px; border:1px solid var(--line); border-radius:8px; font-size:15px; margin-bottom:14px;">
+    <button onclick="adminLogin()" style="width:100%; padding:13px; border:none; border-radius:8px; background:var(--gold-dark); color:#fff; font-size:15px; font-weight:500; cursor:pointer;">Se connecter</button>
+  </div>
+</div>
+
+<div id="admin-content" style="display:none;">
+<header>
+  <div><div class="brand-mark">Academy</div><div class="brand-sub">Administration</div></div>
+  <button class="btn-primary" onclick="openFormationModal()">+ Nouvelle formation</button>
+</header>
+
+<div class="top-select">
+  <label style="font-size:13px;color:var(--ink-soft)">Formation :</label>
+  <select id="formation-select" onchange="selectFormation(this.value)"></select>
+</div>
+
+<div id="loading" class="loading">Chargement…</div>
+
+<div id="course-view" class="course-layout hidden">
+  <div class="main-area">
+    <div class="formation-meta-box">
+      <div class="field"><label>Titre</label><input type="text" id="meta-titre"></div>
+      <div class="field"><label>Description</label><textarea id="meta-description"></textarea></div>
+      <div class="field"><label>Prix (CHF)</label><input type="number" id="meta-prix"></div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <button class="btn-small" onclick="saveMeta()">Enregistrer les infos</button>
+        <button class="btn-publish" id="publish-btn" onclick="togglePublish()"></button>
+        <button class="btn-danger" onclick="deleteCurrentFormation()">Supprimer la formation</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <span>Contenu du cours</span>
+      <button class="btn-small" onclick="openSectionModal()">+ Section</button>
+    </div>
+    <div id="sections-container"></div>
+  </div>
+</div>
+
+<div id="empty-state" class="empty hidden">Aucune formation. Cliquez sur "+ Nouvelle formation" pour commencer.</div>
+
+</div>
+
+<div class="overlay" id="modal-formation">
+  <div class="modal">
+    <h3>Nouvelle formation</h3>
+    <div class="field"><label>Titre</label><input type="text" id="formation-titre" placeholder="Ex: Niveau 1 - Fondamentaux"></div>
+    <div class="field"><label>Description</label><textarea id="formation-description" placeholder="Courte description"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-formation')">Annuler</button>
+      <button class="btn-primary" onclick="saveFormation()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-section">
+  <div class="modal">
+    <h3 id="section-modal-title">Ajouter une section</h3>
+    <input type="hidden" id="section-id">
+    <div class="field"><label>Titre de la section</label><input type="text" id="section-titre" placeholder="Ex: Section 1 : Introduction"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-section')">Fermer</button>
+      <button class="btn-danger" id="section-delete-btn" style="display:none;flex:1" onclick="deleteSectionFromModal()">Supprimer</button>
+      <button class="btn-primary" id="section-submit-btn" onclick="saveSection()">Ajouter la section</button>
+    </div>
+    <div class="already-added" id="section-already-wrap" style="display:none;">
+      <div class="already-added-title">Sections déjà ajoutées</div>
+      <div id="section-already-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-lecon">
+  <div class="modal">
+    <h3 id="lecon-modal-title">Ajouter une leçon</h3>
+    <input type="hidden" id="lecon-section-id">
+    <input type="hidden" id="lecon-id">
+    <div class="field"><label>Section</label><select id="lecon-section-select" onchange="document.getElementById('lecon-section-id').value=this.value"></select></div>
+    <div class="field"><label>Titre de la leçon</label><input type="text" id="lecon-titre" placeholder="Ex: Introduction"></div>
+    <div class="field"><label>Durée (minutes)</label><input type="number" id="lecon-duree" placeholder="Ex: 5" min="0"></div>
+    <div class="field">
+      <label>URL de la vidéo</label>
+      <div style="display:flex; gap:8px;">
+        <input type="text" id="lecon-url" placeholder="https://videos.srv936251.hstgr.cloud/...">
+        <button type="button" class="btn-small" style="flex-shrink:0;" onclick="openVideoBrowser()">Parcourir</button>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-lecon')">Fermer</button>
+      <button class="btn-danger" id="lecon-delete-btn" style="display:none;flex:1" onclick="deleteLeconFromModal()">Supprimer</button>
+      <button class="btn-primary" id="lecon-submit-btn" onclick="saveLecon()">Ajouter la leçon</button>
+    </div>
+    <div class="already-added" id="lecon-already-wrap" style="display:none;">
+      <div class="already-added-title">Leçons déjà ajoutées dans cette section</div>
+      <div id="lecon-already-list"></div>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="modal-video-browser" style="z-index:200;">
+  <div class="modal">
+    <h3>Choisir une vidéo</h3>
+    <div class="field">
+      <label>Dossier</label>
+      <select id="video-folder-select" onchange="loadVideoList()">
+        <option value="academy-test">academy-test</option>
+        <option value="academy-niveau1">academy-niveau1</option>
+        <option value="academy-niveau2">academy-niveau2</option>
+        <option value="academy-niveau3">academy-niveau3</option>
+        <option value="webinaire-show">webinaire-show</option>
+        <option value="webinaire-test">webinaire-test</option>
+      </select>
+    </div>
+    <div class="field"><label>Rechercher</label><input type="text" id="video-search" placeholder="Filtrer par nom…" oninput="filterVideoList()"></div>
+    <div id="video-list" style="max-height:280px; overflow-y:auto; border:1px solid var(--line); border-radius:8px;"></div>
+    <div class="modal-actions"><button class="btn-cancel" onclick="closeModal('modal-video-browser')">Fermer</button></div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://n8n.srv936251.hstgr.cloud/webhook';
+const ACCOUNT_ID = 27;
+let formationsData = [];
+let currentFormationId = null;
+
+async function loadFormations(keepSelection) {
+  document.getElementById('loading').classList.remove('hidden');
+  document.getElementById('course-view').classList.add('hidden');
+  document.getElementById('empty-state').classList.add('hidden');
+  try {
+    const res = await fetch(`${API_BASE}/academy-admin-list`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: ACCOUNT_ID }) });
+    const data = await res.json();
+    formationsData = data.formations || [];
+    document.getElementById('loading').classList.add('hidden');
+
+    const sel = document.getElementById('formation-select');
+    sel.innerHTML = formationsData.map(f => `<option value="${f.id}">${f.titre}</option>`).join('');
+
+    if (formationsData.length === 0) {
+      document.getElementById('empty-state').classList.remove('hidden');
+      currentFormationId = null;
+      return;
+    }
+
+    const target = keepSelection && formationsData.find(f => f.id === currentFormationId) ? currentFormationId : formationsData[0].id;
+    sel.value = target;
+    selectFormation(target);
+  } catch (e) { document.getElementById('loading').textContent = 'Erreur de chargement.'; }
+}
+
+function selectFormation(id) {
+  currentFormationId = parseInt(id);
+  document.getElementById('formation-select').value = currentFormationId;
+  document.getElementById('course-view').classList.remove('hidden');
+  document.getElementById('empty-state').classList.add('hidden');
+  renderCourseView();
+}
+
+function getCurrentFormation() { return formationsData.find(f => f.id === currentFormationId); }
+
+function renderCourseView() {
+  const f = getCurrentFormation();
+  if (!f) return;
+
+  document.getElementById('meta-titre').value = f.titre;
+  document.getElementById('meta-description').value = f.description || '';
+  document.getElementById('meta-prix').value = f.prix;
+
+  const pubBtn = document.getElementById('publish-btn');
+  pubBtn.textContent = f.statut === 'publie' ? '● En ligne — visible' : '○ Hors ligne — publier';
+  pubBtn.className = 'btn-publish' + (f.statut === 'publie' ? ' is-published' : '');
+
+  const container = document.getElementById('sections-container');
+  if (f.sections.length === 0) {
+    container.innerHTML = '<div class="empty">Aucune section. Ajoutez-en une ci-dessous.</div>';
+    return;
+  }
+
+  container.innerHTML = f.sections.map(s => {
+    const dureeTotal = s.lecons.reduce((sum, l) => sum + (l.duree_secondes || 0), 0);
+    const dureeLabel = dureeTotal ? Math.round(dureeTotal / 60) + ' min' : '';
+    return `
+    <div class="section-block">
+      <div class="section-title-row">
+        <div class="section-title-line" onclick="openSectionModal(${s.id})">${s.titre}</div>
+        <div class="section-title-actions">
+          <button class="btn-small" onclick="openSectionModal()">+ Section</button>
+          <button class="btn-small" onclick="openLeconModal(${s.id}, null)">+ Chapitre</button>
+        </div>
+      </div>
+      <div class="section-progress-line">${s.lecons.length}/${s.lecons.length}${dureeLabel ? ' | ' + dureeLabel : ''}</div>
+      ${s.lecons.map(l => `
+        <div class="chapitre-line" onclick="openLeconModal(${s.id}, ${l.id})">
+          <span class="chapitre-icon">▷</span><span>${l.titre}</span>
+        </div>
+      `).join('')}
+    </div>
+  `;}).join('');
+}
+
+async function callCrud(payload) {
+  payload.account_id = ACCOUNT_ID;
+  const res = await fetch(`${API_BASE}/academy-admin-crud`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+  return res.json();
+}
+
+async function saveMeta() {
+  const titre = document.getElementById('meta-titre').value.trim();
+  const description = document.getElementById('meta-description').value.trim();
+  const prix = document.getElementById('meta-prix').value || 0;
+  if (!titre) { alert('Le titre est obligatoire.'); return; }
+  const f = getCurrentFormation();
+  await callCrud({ action: 'update_formation', id: currentFormationId, titre, description, prix, statut: f.statut });
+  loadFormations(true);
+}
+
+async function togglePublish() {
+  const f = getCurrentFormation();
+  const newStatut = f.statut === 'publie' ? 'brouillon' : 'publie';
+  await callCrud({ action: 'update_formation', id: currentFormationId, titre: f.titre, description: f.description, prix: f.prix, statut: newStatut });
+  loadFormations(true);
+}
+
+async function deleteCurrentFormation() {
+  if (!confirm('Supprimer cette formation et tout son contenu ?')) return;
+  await callCrud({ action: 'delete_formation', id: currentFormationId });
+  currentFormationId = null;
+  loadFormations();
+}
+
+function openFormationModal() {
+  document.getElementById('formation-titre').value = '';
+  document.getElementById('formation-description').value = '';
+  document.getElementById('modal-formation').classList.add('open');
+}
+
+async function saveFormation() {
+  const titre = document.getElementById('formation-titre').value.trim();
+  const description = document.getElementById('formation-description').value.trim();
+  if (!titre) { alert('Le titre est obligatoire.'); return; }
+  await callCrud({ action: 'create_formation', titre, description, prix: 0 });
+  closeModal('modal-formation');
+  loadFormations();
+}
+
+function openSectionModal(sectionId) {
+  document.getElementById('section-id').value = sectionId || '';
+  document.getElementById('section-titre').value = '';
+  const f = getCurrentFormation();
+  const delBtn = document.getElementById('section-delete-btn');
+  if (sectionId) {
+    document.getElementById('section-modal-title').textContent = 'Modifier la section';
+    document.getElementById('section-submit-btn').textContent = 'Enregistrer';
+    const s = f.sections.find(s => s.id === sectionId);
+    document.getElementById('section-titre').value = s.titre;
+    document.getElementById('section-already-wrap').style.display = 'none';
+    delBtn.style.display = 'block';
+  } else {
+    document.getElementById('section-modal-title').textContent = 'Ajouter une section';
+    document.getElementById('section-submit-btn').textContent = 'Ajouter la section';
+    renderAlreadyAddedSections(f);
+    delBtn.style.display = 'none';
+  }
+  document.getElementById('modal-section').classList.add('open');
+  document.getElementById('section-titre').focus();
+}
+
+async function deleteSectionFromModal() {
+  const id = document.getElementById('section-id').value;
+  if (!confirm('Supprimer cette section et ses chapitres ?')) return;
+  await callCrud({ action: 'delete_section', id });
+  closeModal('modal-section');
+  loadFormations(true);
+}
+
+function renderAlreadyAddedSections(f) {
+  const wrap = document.getElementById('section-already-wrap');
+  const list = document.getElementById('section-already-list');
+  if (!f.sections.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  list.innerHTML = f.sections.map(s => `<div class="already-item"><span>${s.titre}</span></div>`).join('');
+}
+
+async function saveSection() {
+  const sectionId = document.getElementById('section-id').value;
+  const titre = document.getElementById('section-titre').value.trim();
+  if (!titre) { alert('Le titre est obligatoire.'); return; }
+  const f = getCurrentFormation();
+  if (sectionId) {
+    const s = f.sections.find(s => s.id === parseInt(sectionId));
+    await callCrud({ action: 'update_section', id: sectionId, titre, ordre: s.ordre });
+    closeModal('modal-section');
+    loadFormations(true);
+  } else {
+    const nextOrdre = f.sections.length + 1;
+    await callCrud({ action: 'create_section', formation_id: currentFormationId, titre, ordre: nextOrdre });
+    await loadFormations(true);
+    const updated = getCurrentFormation();
+    renderAlreadyAddedSections(updated);
+    document.getElementById('section-titre').value = '';
+    document.getElementById('section-titre').focus();
+  }
+}
+
+async function deleteSection(id) {
+  if (!confirm('Supprimer cette section et ses leçons ?')) return;
+  await callCrud({ action: 'delete_section', id });
+  loadFormations(true);
+}
+
+function findSection(sectionId) {
+  const f = getCurrentFormation();
+  return f.sections.find(s => s.id === sectionId);
+}
+
+function openLeconModal(sectionId, leconId) {
+  const f = getCurrentFormation();
+  const sel = document.getElementById('lecon-section-select');
+  sel.innerHTML = f.sections.map(s => `<option value="${s.id}">${s.titre}</option>`).join('');
+  sel.value = sectionId;
+  document.getElementById('lecon-section-id').value = sectionId;
+  document.getElementById('lecon-id').value = leconId || '';
+  document.getElementById('lecon-titre').value = '';
+  document.getElementById('lecon-url').value = '';
+  document.getElementById('lecon-duree').value = '';
+  const section = findSection(sectionId);
+  const delBtn = document.getElementById('lecon-delete-btn');
+  if (leconId) {
+    document.getElementById('lecon-modal-title').textContent = 'Modifier la leçon';
+    document.getElementById('lecon-submit-btn').textContent = 'Enregistrer';
+    const l = section.lecons.find(l => l.id === leconId);
+    document.getElementById('lecon-titre').value = l.titre;
+    document.getElementById('lecon-url').value = l.url_video;
+    document.getElementById('lecon-duree').value = l.duree_secondes ? Math.round(l.duree_secondes / 60) : '';
+    document.getElementById('lecon-already-wrap').style.display = 'none';
+    delBtn.style.display = 'block';
+  } else {
+    document.getElementById('lecon-modal-title').textContent = 'Ajouter une leçon';
+    document.getElementById('lecon-submit-btn').textContent = 'Ajouter la leçon';
+    renderAlreadyAddedLecons(section);
+    delBtn.style.display = 'none';
+  }
+  document.getElementById('modal-lecon').classList.add('open');
+  document.getElementById('lecon-titre').focus();
+}
+
+async function deleteLeconFromModal() {
+  const id = document.getElementById('lecon-id').value;
+  if (!confirm('Supprimer cette leçon ?')) return;
+  await callCrud({ action: 'delete_lecon', id });
+  closeModal('modal-lecon');
+  loadFormations(true);
+}
+
+function renderAlreadyAddedLecons(section) {
+  const wrap = document.getElementById('lecon-already-wrap');
+  const list = document.getElementById('lecon-already-list');
+  if (!section.lecons.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  list.innerHTML = section.lecons.map(l => `<div class="already-item"><span>${l.titre}</span></div>`).join('');
+}
+
+async function saveLecon() {
+  const section_id = document.getElementById('lecon-section-id').value;
+  const leconId = document.getElementById('lecon-id').value;
+  const titre = document.getElementById('lecon-titre').value.trim();
+  const url_video = document.getElementById('lecon-url').value.trim();
+  const dureeMin = document.getElementById('lecon-duree').value;
+  const duree_secondes = dureeMin ? Math.round(parseFloat(dureeMin) * 60) : null;
+  if (!titre || !url_video) { alert('Titre et URL sont obligatoires.'); return; }
+  if (leconId) {
+    const section = findSection(parseInt(section_id));
+    const l = section.lecons.find(l => l.id === parseInt(leconId));
+    await callCrud({ action: 'update_lecon', id: leconId, titre, url_video, ordre: l.ordre, duree_secondes });
+    closeModal('modal-lecon');
+    loadFormations(true);
+  } else {
+    const section = findSection(parseInt(section_id));
+    const nextOrdre = section.lecons.length + 1;
+    await callCrud({ action: 'create_lecon', section_id, titre, url_video, ordre: nextOrdre, duree_secondes });
+    await loadFormations(true);
+    const updatedSection = findSection(parseInt(section_id));
+    renderAlreadyAddedLecons(updatedSection);
+    document.getElementById('lecon-titre').value = '';
+    document.getElementById('lecon-url').value = '';
+    document.getElementById('lecon-duree').value = '';
+    document.getElementById('lecon-titre').focus();
+  }
+}
+
+async function deleteLecon(id) { if (!confirm('Supprimer cette leçon ?')) return; await callCrud({ action: 'delete_lecon', id }); loadFormations(true); }
+
+async function moveLecon(sectionId, leconId, direction) {
+  const section = findSection(sectionId);
+  const idx = section.lecons.findIndex(l => l.id === leconId);
+  const targetIdx = idx + direction;
+  if (targetIdx < 0 || targetIdx >= section.lecons.length) return;
+  const a = section.lecons[idx];
+  const b = section.lecons[targetIdx];
+  await callCrud({ action: 'update_lecon', id: a.id, titre: a.titre, url_video: a.url_video, ordre: b.ordre });
+  await callCrud({ action: 'update_lecon', id: b.id, titre: b.titre, url_video: b.url_video, ordre: a.ordre });
+  loadFormations(true);
+}
+
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+const VIDEO_BASE = 'https://videos.srv936251.hstgr.cloud';
+let currentVideoFiles = [];
+
+function openVideoBrowser() { document.getElementById('modal-video-browser').classList.add('open'); document.getElementById('video-search').value = ''; loadVideoList(); }
+
+async function loadVideoList() {
+  const folder = document.getElementById('video-folder-select').value;
+  const list = document.getElementById('video-list');
+  list.innerHTML = '<div class="video-empty">Chargement…</div>';
+  try {
+    const res = await fetch(`${VIDEO_BASE}/${folder}/`);
+    const html = await res.text();
+    const matches = [...html.matchAll(/href="([^"]+\.mp4)"/gi)];
+    currentVideoFiles = matches.map(m => decodeURIComponent(m[1])).filter(f => !f.startsWith('..'));
+    renderVideoList(currentVideoFiles, folder);
+  } catch (e) { list.innerHTML = '<div class="video-empty">Impossible de charger ce dossier.</div>'; }
+}
+
+function renderVideoList(files, folder) {
+  const list = document.getElementById('video-list');
+  if (files.length === 0) { list.innerHTML = '<div class="video-empty">Aucune vidéo dans ce dossier.</div>'; return; }
+  list.innerHTML = files.map(f => `<div class="video-item" onclick="selectVideo('${folder}', '${f.replace(/'/g, "\\'")}')"><span class="video-item-name">${f}</span></div>`).join('');
+}
+
+function filterVideoList() {
+  const query = document.getElementById('video-search').value.toLowerCase();
+  const folder = document.getElementById('video-folder-select').value;
+  const filtered = currentVideoFiles.filter(f => f.toLowerCase().includes(query));
+  renderVideoList(filtered, folder);
+}
+
+function selectVideo(folder, filename) { document.getElementById('lecon-url').value = `${VIDEO_BASE}/${folder}/${filename}`; closeModal('modal-video-browser'); }
+
+async function adminLogin() {
+  const password = document.getElementById('admin-password').value;
+  const errorEl = document.getElementById('login-error');
+  errorEl.style.display = 'none';
+  if (!password) { errorEl.textContent = 'Merci d\'entrer un mot de passe.'; errorEl.style.display = 'block'; return; }
+  try {
+    const res = await fetch(`${API_BASE}/academy-admin-login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: ACCOUNT_ID, password }) });
+    const data = await res.json();
+    if (data.success) {
+      sessionStorage.setItem('academy_admin_token', data.token);
+      document.getElementById('login-gate').style.display = 'none';
+      document.getElementById('admin-content').style.display = 'block';
+      loadFormations();
+    } else { errorEl.textContent = data.message || 'Mot de passe incorrect.'; errorEl.style.display = 'block'; }
+  } catch (e) { errorEl.textContent = 'Connexion impossible. Réessayez.'; errorEl.style.display = 'block'; }
+}
+
+document.getElementById('admin-password').addEventListener('keypress', function(e) { if (e.key === 'Enter') adminLogin(); });
+
+if (sessionStorage.getItem('academy_admin_token')) {
+  document.getElementById('login-gate').style.display = 'none';
+  document.getElementById('admin-content').style.display = 'block';
+  loadFormations();
+}
+</script>
+</div>
+</body>
+</html>
