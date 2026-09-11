@@ -108,7 +108,12 @@
     <input type="email" id="login" autocomplete="username" required>
 
     <label for="password">Mot de passe</label>
-    <input type="password" id="password" autocomplete="current-password" required>
+    <div style="position:relative">
+      <input type="password" id="password" autocomplete="current-password" required style="padding-right:44px">
+      <button type="button" id="togglePwd" aria-label="Afficher le mot de passe" style="position:absolute;top:50%;right:6px;transform:translateY(-50%);width:32px;height:32px;padding:0;background:transparent;border:none;color:var(--text-soft);cursor:pointer;display:flex;align-items:center;justify-content:center">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+      </button>
+    </div>
 
     <div class="totp-row" id="totpRow">
       <label for="totpCode">Code de sécurité (2FA)</label>
@@ -123,6 +128,11 @@
 <script>
   const LOGIN_WEBHOOK = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-eleve-login';
   const SESSION_KEY = 'eleve_session';
+
+  document.getElementById('togglePwd').addEventListener('click', function() {
+    const pwd = document.getElementById('password');
+    pwd.type = pwd.type === 'password' ? 'text' : 'password';
+  });
 
   document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
