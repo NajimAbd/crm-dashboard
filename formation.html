@@ -132,8 +132,23 @@
       <label>Niveau</label>
       <select id="inscriptionNiveau" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px"></select>
     </div>
-    <div class="field"><label>Nom complet</label><input type="text" id="inscriptionNom"></div>
-    <div class="field"><label>E-mail (optionnel)</label><input type="email" id="inscriptionEmail"></div>
+    <div class="field"><label>Nom</label><input type="text" id="inscriptionNom"></div>
+    <div class="field"><label>Prénom</label><input type="text" id="inscriptionPrenom"></div>
+    <div class="field"><label>E-mail</label><input type="email" id="inscriptionEmail"></div>
+    <div class="field"><label>Téléphone (optionnel)</label><input type="tel" id="inscriptionTelephone"></div>
+    <div class="field">
+      <label>Statut du paiement</label>
+      <select id="inscriptionPaiementStatut" style="width:100%;padding:9px 11px;border:1px solid var(--border);border-radius:8px;font-size:14px">
+        <option value="non_paye">Non payé</option>
+        <option value="paye">Payé</option>
+        <option value="gratuit">Gratuit</option>
+      </select>
+    </div>
+    <div class="field" id="montantField"><label>Montant payé</label><input type="number" id="inscriptionMontant" step="0.01"></div>
+    <div class="field" style="display:flex;align-items:center;gap:8px">
+      <input type="checkbox" id="inscriptionConditions" style="width:auto">
+      <label style="margin:0" for="inscriptionConditions">A accepté les conditions générales</label>
+    </div>
     <div class="modal-actions">
       <button class="btn secondary" onclick="closeInscriptionModal()">Annuler</button>
       <button class="btn" onclick="submitInscription()">Inscrire</button>
@@ -232,11 +247,13 @@ async function loadEtudiants() {
 function renderEtudiants() {
   const el = document.getElementById('etudiantsList');
   if (etudiants.length === 0) { el.innerHTML = '<div class="empty-hint">Aucun étudiant inscrit pour le moment.</div>'; return; }
+  const paiementLabels = { paye: '💰 Payé', non_paye: '⏳ Non payé', gratuit: '🎁 Gratuit' };
   el.innerHTML = etudiants.map(function(e) {
+    const nomComplet = (e.prenom ? e.prenom + ' ' : '') + e.nom;
     return '<div class="etudiant-row">' +
       '<div>' +
-        '<div class="etudiant-name">' + esc(e.nom) + '</div>' +
-        '<div class="etudiant-meta">' + esc(e.niveau_nom) + (e.email ? ' · ' + esc(e.email) : '') + '</div>' +
+        '<div class="etudiant-name">' + esc(nomComplet) + '</div>' +
+        '<div class="etudiant-meta">' + esc(e.niveau_nom) + (e.email ? ' · ' + esc(e.email) : '') + (e.paiement_statut ? ' · ' + (paiementLabels[e.paiement_statut] || e.paiement_statut) : '') + '</div>' +
       '</div>' +
       '<div>' +
         '<span class="statut-chip statut-' + e.statut + '">' + e.statut.replace('_',' ') + '</span>' +
@@ -331,7 +348,12 @@ function openInscriptionModal() {
     return '<option value="' + n.id + '">' + esc(n.nom) + ' — ' + parseFloat(n.prix).toFixed(0) + ' ' + n.devise + '</option>';
   }).join('');
   document.getElementById('inscriptionNom').value = '';
+  document.getElementById('inscriptionPrenom').value = '';
   document.getElementById('inscriptionEmail').value = '';
+  document.getElementById('inscriptionTelephone').value = '';
+  document.getElementById('inscriptionPaiementStatut').value = 'non_paye';
+  document.getElementById('inscriptionMontant').value = '';
+  document.getElementById('inscriptionConditions').checked = false;
   document.getElementById('inscriptionModal').classList.add('show');
 }
 
@@ -340,13 +362,34 @@ function closeInscriptionModal() { document.getElementById('inscriptionModal').c
 async function submitInscription() {
   const niveauId = document.getElementById('inscriptionNiveau').value;
   const nom = document.getElementById('inscriptionNom').value.trim();
+  const prenom = document.getElementById('inscriptionPrenom').value.trim();
   const email = document.getElementById('inscriptionEmail').value.trim();
+  const telephone = document.getElementById('inscriptionTelephone').value.trim();
+  const paiementStatut = document.getElementById('inscriptionPaiementStatut').value;
+  const montant = document.getElementById('inscriptionMontant').value;
+  const conditionsAcceptees = document.getElementById('inscriptionConditions').checked;
+
   if (!nom) { alert('Le nom est requis.'); return; }
-  const data = await call('inscrire_etudiant', { niveau_id: parseInt(niveauId), data: { nom: nom, email: email } });
+  if (!email) { alert("L'e-mail est requis pour créer l'accès de l'étudiant."); return; }
+
+  const data = await call('inscrire_etudiant', {
+    niveau_id: parseInt(niveauId),
+    data: {
+      nom: nom,
+      prenom: prenom,
+      email: email,
+      telephone: telephone,
+      paiement_statut: paiementStatut,
+      paiement_montant: montant ? parseFloat(montant) : null,
+      conditions_acceptees: conditionsAcceptees
+    }
+  });
   if (data.ok) {
     closeInscriptionModal();
-    showToast('Étudiant inscrit');
+    showToast('Étudiant inscrit — un e-mail avec ses identifiants lui a été envoyé');
     loadEtudiants();
+  } else {
+    alert("Erreur lors de l'inscription.");
   }
 }
 
