@@ -138,6 +138,8 @@
   const session = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
   if (!session) {
     window.location.href = 'eleve-login.html';
+  } else if (session.must_change_password) {
+    window.location.href = 'eleve-change-password.html';
   } else {
     document.getElementById('welcome').textContent = 'Bonjour, ' + (session.prenom || session.nom || '');
     document.getElementById('niveauInfo').textContent = 'Niveau en cours — informations mises à jour prochainement.';

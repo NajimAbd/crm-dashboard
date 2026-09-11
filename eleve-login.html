@@ -172,9 +172,10 @@
           nom: data.nom,
           prenom: data.prenom,
           login: login,
-          totp_enabled: data.totp_enabled
+          totp_enabled: data.totp_enabled,
+          must_change_password: data.must_change_password
         }));
-        window.location.href = 'eleve-espace.html';
+        window.location.href = data.must_change_password ? 'eleve-change-password.html' : 'eleve-espace.html';
       } else {
         errEl.textContent = data.message || 'E-mail ou mot de passe incorrect.';
         errEl.style.display = 'block';
