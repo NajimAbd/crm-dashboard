@@ -19,25 +19,53 @@
   .btn-small:hover { border-color:var(--gold); }
   .btn-danger { background:#fbeceb; color:var(--danger); border:1px solid #f0c9c4; padding:5px 9px; border-radius:6px; font-size:11.5px; }
   .btn-danger:hover { background:#f5d9d6; }
-  .btn-move { background:var(--cream); border:1px solid var(--line); border-radius:6px; width:24px; height:24px; font-size:11px; color:var(--ink-soft); padding:0; }
-  .btn-move:disabled { opacity:.3; cursor:default; }
 
-  .top-select { padding: 10px 24px; background: var(--card); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
-  .top-select select { padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 13.5px; font-family: 'Inter', sans-serif; background: var(--cream); flex: 1; max-width: 400px; }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+  .top-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .top-row h2 { font-family:'Cormorant Garamond',serif; font-size:24px; margin:0; }
 
-  .course-layout { display: grid; grid-template-columns: 1fr 340px; min-height: calc(100vh - 110px); }
-  @media (max-width: 900px) { .course-layout { grid-template-columns: 1fr; } }
+  .formation-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin-bottom: 14px; cursor: pointer; transition: border-color .15s; }
+  .formation-card:hover { border-color: var(--gold); }
+  .formation-card h3 { font-family:'Cormorant Garamond',serif; font-size: 20px; margin: 0 0 6px; }
+  .formation-card p { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 10px; }
+  .formation-tags { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11.5px; }
+  .tag { background: rgba(184,150,90,0.12); color: var(--gold-dark); padding: 3px 9px; border-radius: 12px; }
+  .btn-publish { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:20px; background:#f1ece0; color:#8a7d5f; border:1px solid #ddd0b0; }
+  .btn-publish.is-published { background:#e3f0d9; color:#3b6d11; border-color:#b9dd9a; }
+  .empty { text-align:center; padding:40px 20px; color:var(--ink-soft); font-size:13.5px; }
+  .loading { text-align: center; padding: 40px; color: var(--ink-soft); }
 
-  .main-area { padding: 32px; }
-  .formation-meta-box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; margin-bottom: 16px; }
   .field { margin-bottom: 14px; }
   .field label { display:block; font-size:12.5px; font-weight:500; margin-bottom:5px; }
   .field input, .field textarea { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-size:14px; font-family:'Inter',sans-serif; background:var(--cream); }
-  .field textarea { resize:vertical; min-height:60px; }
-  .btn-publish { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; background:#f1ece0; color:#8a7d5f; border:1px solid #ddd0b0; }
-  .btn-publish.is-published { background:#e3f0d9; color:#3b6d11; border-color:#b9dd9a; }
+  .field textarea { resize:vertical; min-height:56px; }
+  .field-row { display:flex; gap:12px; }
+  .field-row .field { flex:1; }
 
-  .sidebar { background: var(--card); border-left: 1px solid var(--line); padding: 0; overflow-y: auto; }
+  .overlay { position:fixed; inset:0; background:rgba(43,38,32,0.4); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
+  .overlay.open { display:flex; }
+  .modal { background:#fff; border-radius:14px; padding:28px; width:100%; max-width:520px; max-height:88vh; overflow-y:auto; }
+  .modal h3 { font-family:'Cormorant Garamond',serif; font-size:20px; margin:0 0 18px; }
+  .modal-actions { display:flex; gap:8px; margin-top:8px; }
+  .modal-actions button { flex:1; padding:10px; border-radius:8px; font-size:14px; }
+  .btn-cancel { background:var(--cream); color:var(--ink-soft); }
+  .already-added { margin-top:20px; border-top:1px solid var(--line); padding-top:14px; }
+  .already-added-title { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:8px; }
+  .already-item { font-size:13px; padding:7px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; }
+  .already-item:last-child { border-bottom:none; }
+  .video-item { padding:10px 14px; font-size:13px; cursor:pointer; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
+  .video-item:hover { background:var(--cream); }
+  .video-item-name { word-break:break-all; }
+  .video-empty { padding:20px; text-align:center; color:var(--ink-soft); font-size:13px; }
+
+  .back-link { display: inline-block; margin-bottom: 16px; font-size: 13px; color: var(--ink-soft); text-decoration: none; cursor: pointer; }
+  .back-link:hover { color: var(--gold-dark); }
+
+  .course-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+  @media (max-width: 900px) { .course-layout { grid-template-columns: 1fr; } }
+  .formation-meta-box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
+
+  .sidebar { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; align-self: start; }
   .sidebar-header { padding: 16px 18px; border-bottom: 1px solid var(--line); font-family:'Cormorant Garamond',serif; font-size: 17px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
   .section-block { border-bottom: 1px solid var(--line); padding: 14px 18px; }
   .section-title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -48,24 +76,6 @@
   .chapitre-line { font-size: 13px; padding: 6px 0 6px 4px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
   .chapitre-line:hover { color: var(--gold-dark); }
   .chapitre-icon { color: var(--ink-soft); flex-shrink: 0; }
-
-  .overlay { position:fixed; inset:0; background:rgba(43,38,32,0.4); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
-  .overlay.open { display:flex; }
-  .modal { background:#fff; border-radius:14px; padding:28px; width:100%; max-width:460px; max-height:85vh; overflow-y:auto; }
-  .modal h3 { font-family:'Cormorant Garamond',serif; font-size:20px; margin:0 0 18px; }
-  .modal-actions { display:flex; gap:8px; margin-top:8px; }
-  .modal-actions button { flex:1; padding:10px; border-radius:8px; font-size:14px; }
-  .btn-cancel { background:var(--cream); color:var(--ink-soft); }
-  .already-added { margin-top:20px; border-top:1px solid var(--line); padding-top:14px; }
-  .already-added-title { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:8px; }
-  .already-item { font-size:13px; padding:7px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; }
-  .already-item:last-child { border-bottom:none; }
-  .loading { text-align:center; padding:40px; color:var(--ink-soft); }
-  .empty { text-align:center; padding:40px 20px; color:var(--ink-soft); font-size:13.5px; }
-  .video-item { padding:10px 14px; font-size:13px; cursor:pointer; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
-  .video-item:hover { background:var(--cream); }
-  .video-item-name { word-break:break-all; }
-  .video-empty { padding:20px; text-align:center; color:var(--ink-soft); font-size:13px; }
   .hidden { display: none; }
 </style>
 </head>
@@ -84,51 +94,67 @@
 <div id="admin-content" style="display:none;">
 <header>
   <div><div class="brand-mark">Academy</div><div class="brand-sub">Administration</div></div>
-  <button class="btn-primary" onclick="openFormationModal()">+ Nouvelle formation</button>
 </header>
 
-<div class="top-select">
-  <label style="font-size:13px;color:var(--ink-soft)">Formation :</label>
-  <select id="formation-select" onchange="selectFormation(this.value)"></select>
-</div>
+<div class="container">
 
-<div id="loading" class="loading">Chargement…</div>
+  <!-- ==== VUE 1 : LISTE DES FORMATIONS ==== -->
+  <div id="view-list">
+    <div class="top-row">
+      <h2>Mes formations</h2>
+      <button class="btn-primary" onclick="openFormationModal()">+ Nouvelle formation</button>
+    </div>
+    <div id="loading" class="loading">Chargement…</div>
+    <div id="formations-list"></div>
+  </div>
 
-<div id="course-view" class="course-layout hidden">
-  <div class="main-area">
-    <div class="formation-meta-box">
-      <div class="field"><label>Titre</label><input type="text" id="meta-titre"></div>
-      <div class="field"><label>Description</label><textarea id="meta-description"></textarea></div>
-      <div class="field"><label>Prix (CHF)</label><input type="number" id="meta-prix"></div>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <button class="btn-small" onclick="saveMeta()">Enregistrer les infos</button>
-        <button class="btn-publish" id="publish-btn" onclick="togglePublish()"></button>
-        <button class="btn-danger" onclick="deleteCurrentFormation()">Supprimer la formation</button>
+  <!-- ==== VUE 2 : CONSTRUCTEUR / VISIONNAGE ==== -->
+  <div id="view-course" class="hidden">
+    <a class="back-link" onclick="showListView()">← Retour à mes formations</a>
+    <div class="course-layout">
+      <div class="main-area">
+        <div class="formation-meta-box">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;margin:0 0 14px" id="course-titre-display"></h3>
+          <div class="btn-publish" id="publish-btn" onclick="togglePublish()" style="cursor:pointer;margin-bottom:14px"></div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-small" onclick="openFormationModal(currentFormationId)">Modifier les informations</button>
+            <button class="btn-danger" onclick="deleteCurrentFormation()">Supprimer la formation</button>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <span>Contenu du cours</span>
+          <button class="btn-small" onclick="openSectionModal()">+ Section</button>
+        </div>
+        <div id="sections-container"></div>
       </div>
     </div>
   </div>
 
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <span>Contenu du cours</span>
-      <button class="btn-small" onclick="openSectionModal()">+ Section</button>
-    </div>
-    <div id="sections-container"></div>
-  </div>
+</div>
 </div>
 
-<div id="empty-state" class="empty hidden">Aucune formation. Cliquez sur "+ Nouvelle formation" pour commencer.</div>
-
-</div>
-
+<!-- Modal formation (creation + edition complete) -->
 <div class="overlay" id="modal-formation">
   <div class="modal">
-    <h3>Nouvelle formation</h3>
-    <div class="field"><label>Titre</label><input type="text" id="formation-titre" placeholder="Ex: Niveau 1 - Fondamentaux"></div>
+    <h3 id="formation-modal-title">Nouvelle formation</h3>
+    <input type="hidden" id="formation-id">
+    <div class="field"><label>Nom de la formation</label><input type="text" id="formation-titre" placeholder="Ex: Niveau 1 - Fondamentaux"></div>
     <div class="field"><label>Description</label><textarea id="formation-description" placeholder="Courte description"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Niveau(x)</label><input type="text" id="formation-niveaux" placeholder="Ex: Débutant, ou 1/2/3"></div>
+      <div class="field"><label>Prix (CHF)</label><input type="number" id="formation-prix"></div>
+    </div>
+    <div class="field"><label>Prérequis</label><textarea id="formation-prerequis" placeholder="Ce que l'étudiant doit déjà savoir/avoir"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Durée totale</label><input type="text" id="formation-duree" placeholder="Ex: 6 semaines, 3h"></div>
+      <div class="field"><label>Dossier vidéo (VPS)</label><input type="text" id="formation-dossier" placeholder="Ex: academy-niveau1"></div>
+    </div>
+    <div class="field"><label>Objectif final</label><textarea id="formation-objectif" placeholder="Ce que l'étudiant saura faire à la fin"></textarea></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('modal-formation')">Annuler</button>
-      <button class="btn-primary" onclick="saveFormation()">Enregistrer</button>
+      <button class="btn-primary" id="formation-submit-btn" onclick="saveFormation()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -205,34 +231,48 @@ let currentFormationId = null;
 
 async function loadFormations(keepSelection) {
   document.getElementById('loading').classList.remove('hidden');
-  document.getElementById('course-view').classList.add('hidden');
-  document.getElementById('empty-state').classList.add('hidden');
   try {
     const res = await fetch(`${API_BASE}/academy-admin-list`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: ACCOUNT_ID }) });
     const data = await res.json();
     formationsData = data.formations || [];
     document.getElementById('loading').classList.add('hidden');
-
-    const sel = document.getElementById('formation-select');
-    sel.innerHTML = formationsData.map(f => `<option value="${f.id}">${f.titre}</option>`).join('');
-
-    if (formationsData.length === 0) {
-      document.getElementById('empty-state').classList.remove('hidden');
-      currentFormationId = null;
-      return;
+    renderList();
+    if (keepSelection && currentFormationId && formationsData.find(f => f.id === currentFormationId)) {
+      renderCourseView();
     }
-
-    const target = keepSelection && formationsData.find(f => f.id === currentFormationId) ? currentFormationId : formationsData[0].id;
-    sel.value = target;
-    selectFormation(target);
   } catch (e) { document.getElementById('loading').textContent = 'Erreur de chargement.'; }
 }
 
-function selectFormation(id) {
-  currentFormationId = parseInt(id);
-  document.getElementById('formation-select').value = currentFormationId;
-  document.getElementById('course-view').classList.remove('hidden');
-  document.getElementById('empty-state').classList.add('hidden');
+function renderList() {
+  const container = document.getElementById('formations-list');
+  if (formationsData.length === 0) { container.innerHTML = '<div class="empty">Aucune formation. Cliquez sur "+ Nouvelle formation" pour commencer.</div>'; return; }
+  container.innerHTML = formationsData.map(f => {
+    const totalLecons = f.sections.reduce((sum, s) => sum + s.lecons.length, 0);
+    return `
+    <div class="formation-card" onclick="openCourseView(${f.id})">
+      <h3>${f.titre}</h3>
+      <p>${f.description || ''}</p>
+      <div class="formation-tags">
+        ${f.niveaux ? '<span class="tag">🎯 ' + f.niveaux + '</span>' : ''}
+        ${f.duree_totale ? '<span class="tag">⏱ ' + f.duree_totale + '</span>' : ''}
+        <span class="tag">💰 ${parseFloat(f.prix || 0).toFixed(0)} CHF</span>
+        <span class="tag">${f.sections.length} section(s) · ${totalLecons} leçon(s)</span>
+        <span class="btn-publish ${f.statut === 'publie' ? 'is-published' : ''}">${f.statut === 'publie' ? '● En ligne' : '○ Hors ligne'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showListView() {
+  currentFormationId = null;
+  document.getElementById('view-course').classList.add('hidden');
+  document.getElementById('view-list').classList.remove('hidden');
+}
+
+function openCourseView(id) {
+  currentFormationId = id;
+  document.getElementById('view-list').classList.add('hidden');
+  document.getElementById('view-course').classList.remove('hidden');
   renderCourseView();
 }
 
@@ -242,19 +282,13 @@ function renderCourseView() {
   const f = getCurrentFormation();
   if (!f) return;
 
-  document.getElementById('meta-titre').value = f.titre;
-  document.getElementById('meta-description').value = f.description || '';
-  document.getElementById('meta-prix').value = f.prix;
-
+  document.getElementById('course-titre-display').textContent = f.titre;
   const pubBtn = document.getElementById('publish-btn');
-  pubBtn.textContent = f.statut === 'publie' ? '● En ligne — visible' : '○ Hors ligne — publier';
+  pubBtn.textContent = f.statut === 'publie' ? '● En ligne — visible par les étudiants' : '○ Hors ligne — cliquer pour publier';
   pubBtn.className = 'btn-publish' + (f.statut === 'publie' ? ' is-published' : '');
 
   const container = document.getElementById('sections-container');
-  if (f.sections.length === 0) {
-    container.innerHTML = '<div class="empty">Aucune section. Ajoutez-en une ci-dessous.</div>';
-    return;
-  }
+  if (f.sections.length === 0) { container.innerHTML = '<div class="empty">Aucune section. Ajoutez-en une avec le bouton "+ Section" ci-dessus.</div>'; return; }
 
   container.innerHTML = f.sections.map(s => {
     const dureeTotal = s.lecons.reduce((sum, l) => sum + (l.duree_secondes || 0), 0);
@@ -284,44 +318,65 @@ async function callCrud(payload) {
   return res.json();
 }
 
-async function saveMeta() {
-  const titre = document.getElementById('meta-titre').value.trim();
-  const description = document.getElementById('meta-description').value.trim();
-  const prix = document.getElementById('meta-prix').value || 0;
-  if (!titre) { alert('Le titre est obligatoire.'); return; }
-  const f = getCurrentFormation();
-  await callCrud({ action: 'update_formation', id: currentFormationId, titre, description, prix, statut: f.statut });
-  loadFormations(true);
-}
-
 async function togglePublish() {
   const f = getCurrentFormation();
   const newStatut = f.statut === 'publie' ? 'brouillon' : 'publie';
-  await callCrud({ action: 'update_formation', id: currentFormationId, titre: f.titre, description: f.description, prix: f.prix, statut: newStatut });
+  await callCrud({ action: 'update_formation', id: currentFormationId, titre: f.titre, description: f.description, prix: f.prix, statut: newStatut, niveaux: f.niveaux, prerequis: f.prerequis, duree_totale: f.duree_totale, objectif_final: f.objectif_final, dossier_video: f.dossier_video });
   loadFormations(true);
 }
 
 async function deleteCurrentFormation() {
   if (!confirm('Supprimer cette formation et tout son contenu ?')) return;
   await callCrud({ action: 'delete_formation', id: currentFormationId });
-  currentFormationId = null;
+  showListView();
   loadFormations();
 }
 
-function openFormationModal() {
-  document.getElementById('formation-titre').value = '';
-  document.getElementById('formation-description').value = '';
+function openFormationModal(id) {
+  document.getElementById('formation-id').value = id || '';
+  const fields = ['titre','description','niveaux','prerequis','duree','objectif','prix','dossier'];
+  const map = { titre:'titre', description:'description', niveaux:'niveaux', prerequis:'prerequis', duree:'duree_totale', objectif:'objectif_final', prix:'prix', dossier:'dossier_video' };
+  if (id) {
+    document.getElementById('formation-modal-title').textContent = 'Modifier la formation';
+    document.getElementById('formation-submit-btn').textContent = 'Enregistrer';
+    const f = formationsData.find(f => f.id === id);
+    fields.forEach(key => { document.getElementById('formation-' + key).value = f[map[key]] || ''; });
+  } else {
+    document.getElementById('formation-modal-title').textContent = 'Nouvelle formation';
+    document.getElementById('formation-submit-btn').textContent = 'Créer la formation';
+    fields.forEach(key => { document.getElementById('formation-' + key).value = ''; });
+  }
   document.getElementById('modal-formation').classList.add('open');
 }
 
 async function saveFormation() {
+  const id = document.getElementById('formation-id').value;
   const titre = document.getElementById('formation-titre').value.trim();
-  const description = document.getElementById('formation-description').value.trim();
-  if (!titre) { alert('Le titre est obligatoire.'); return; }
-  await callCrud({ action: 'create_formation', titre, description, prix: 0 });
+  if (!titre) { alert('Le nom de la formation est obligatoire.'); return; }
+  const payload = {
+    titre,
+    description: document.getElementById('formation-description').value.trim(),
+    niveaux: document.getElementById('formation-niveaux').value.trim(),
+    prerequis: document.getElementById('formation-prerequis').value.trim(),
+    duree_totale: document.getElementById('formation-duree').value.trim(),
+    objectif_final: document.getElementById('formation-objectif').value.trim(),
+    prix: document.getElementById('formation-prix').value || 0,
+    dossier_video: document.getElementById('formation-dossier').value.trim()
+  };
+  if (id) {
+    const f = formationsData.find(f => f.id === parseInt(id));
+    payload.action = 'update_formation';
+    payload.id = id;
+    payload.statut = f.statut;
+  } else {
+    payload.action = 'create_formation';
+  }
+  await callCrud(payload);
   closeModal('modal-formation');
-  loadFormations();
+  loadFormations(true);
 }
+
+function findSection(sectionId) { const f = getCurrentFormation(); return f.sections.find(s => s.id === sectionId); }
 
 function openSectionModal(sectionId) {
   document.getElementById('section-id').value = sectionId || '';
@@ -343,14 +398,6 @@ function openSectionModal(sectionId) {
   }
   document.getElementById('modal-section').classList.add('open');
   document.getElementById('section-titre').focus();
-}
-
-async function deleteSectionFromModal() {
-  const id = document.getElementById('section-id').value;
-  if (!confirm('Supprimer cette section et ses chapitres ?')) return;
-  await callCrud({ action: 'delete_section', id });
-  closeModal('modal-section');
-  loadFormations(true);
 }
 
 function renderAlreadyAddedSections(f) {
@@ -382,15 +429,12 @@ async function saveSection() {
   }
 }
 
-async function deleteSection(id) {
-  if (!confirm('Supprimer cette section et ses leçons ?')) return;
+async function deleteSectionFromModal() {
+  const id = document.getElementById('section-id').value;
+  if (!confirm('Supprimer cette section et ses chapitres ?')) return;
   await callCrud({ action: 'delete_section', id });
+  closeModal('modal-section');
   loadFormations(true);
-}
-
-function findSection(sectionId) {
-  const f = getCurrentFormation();
-  return f.sections.find(s => s.id === sectionId);
 }
 
 function openLeconModal(sectionId, leconId) {
@@ -422,14 +466,6 @@ function openLeconModal(sectionId, leconId) {
   }
   document.getElementById('modal-lecon').classList.add('open');
   document.getElementById('lecon-titre').focus();
-}
-
-async function deleteLeconFromModal() {
-  const id = document.getElementById('lecon-id').value;
-  if (!confirm('Supprimer cette leçon ?')) return;
-  await callCrud({ action: 'delete_lecon', id });
-  closeModal('modal-lecon');
-  loadFormations(true);
 }
 
 function renderAlreadyAddedLecons(section) {
@@ -468,17 +504,11 @@ async function saveLecon() {
   }
 }
 
-async function deleteLecon(id) { if (!confirm('Supprimer cette leçon ?')) return; await callCrud({ action: 'delete_lecon', id }); loadFormations(true); }
-
-async function moveLecon(sectionId, leconId, direction) {
-  const section = findSection(sectionId);
-  const idx = section.lecons.findIndex(l => l.id === leconId);
-  const targetIdx = idx + direction;
-  if (targetIdx < 0 || targetIdx >= section.lecons.length) return;
-  const a = section.lecons[idx];
-  const b = section.lecons[targetIdx];
-  await callCrud({ action: 'update_lecon', id: a.id, titre: a.titre, url_video: a.url_video, ordre: b.ordre });
-  await callCrud({ action: 'update_lecon', id: b.id, titre: b.titre, url_video: b.url_video, ordre: a.ordre });
+async function deleteLeconFromModal() {
+  const id = document.getElementById('lecon-id').value;
+  if (!confirm('Supprimer cette leçon ?')) return;
+  await callCrud({ action: 'delete_lecon', id });
+  closeModal('modal-lecon');
   loadFormations(true);
 }
 
@@ -542,6 +572,5 @@ if (sessionStorage.getItem('academy_admin_token')) {
   loadFormations();
 }
 </script>
-</div>
 </body>
 </html>
