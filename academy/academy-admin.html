@@ -375,39 +375,95 @@ async function togglePublish() {
   loadFormations(true);
 }
 
-function imprimerFiche() {
+const NIVEAU_COLORS = { 'Débutant': '#5A8C5A', 'Pro': '#3E6A93', 'Expert': '#B8965A' };
+
+async function imprimerFiche() {
   const f = getCurrentFormation();
   if (!f) return;
-  let niveauxHtml = '';
+
+  let nomAcademie = 'Academy';
+  try {
+    const brandResp = await fetch(`${API_BASE}/academy-get-branding`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: ACCOUNT_ID }) });
+    const brandData = await brandResp.json();
+    if (brandData.success) nomAcademie = brandData.nom_academie;
+  } catch (e) {}
+
+  let niveaux = [];
   if (f.structure_type === 'par_niveaux' && f.niveaux_json) {
-    try {
-      const niveaux = JSON.parse(f.niveaux_json);
-      niveauxHtml = '<h3>Niveaux</h3><ul>' + niveaux.map(n =>
-        `<li><b>${n.nom}</b> — ${n.prix || 0} CHF, durée ${n.duree || '—'}${n.date_debut ? ', du ' + n.date_debut : ''}${n.date_fin ? ' au ' + n.date_fin : ''}</li>`
-      ).join('') + '</ul>';
-    } catch (e) {}
+    try { niveaux = JSON.parse(f.niveaux_json); } catch (e) {}
   }
+
+  const badges = [
+    `<span class="badge">${f.format_type === 'direct' ? '🎥 En direct avec le coach' : '🎥 Vidéo enregistrée'}</span>`,
+    f.duree_totale ? `<span class="badge">⏱ ${f.duree_totale}</span>` : ''
+  ].filter(Boolean).join('');
+
+  const infoCards = [
+    { label: 'Prérequis', value: f.prerequis || 'Aucun' },
+    f.date_debut ? { label: 'Début', value: f.date_debut } : null,
+    f.date_fin ? { label: 'Fin', value: f.date_fin } : null,
+    (f.structure_type !== 'par_niveaux') ? { label: 'Prix', value: parseFloat(f.prix || 0).toFixed(0) + ' CHF' } : null
+  ].filter(Boolean);
+
+  const niveauxHtml = niveaux.length ? `
+    <div class="section">
+      <div class="section-title"><span class="dot"></span>Niveaux proposés</div>
+      ${niveaux.map(n => {
+        const color = NIVEAU_COLORS[n.nom] || '#8f6a2f';
+        const dates = (n.date_debut || n.date_fin) ? `du ${n.date_debut || '?'} au ${n.date_fin || '?'}` : '';
+        return `<div class="niveau-card" style="border-left-color:${color}">
+          <div><div class="niveau-nom">${n.nom}</div><div class="niveau-meta">Durée ${n.duree || '—'}${dates ? ' · ' + dates : ''}</div></div>
+          <div class="niveau-prix">${n.prix || 0} CHF</div>
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
   const win = window.open('', '_blank');
   win.document.write(`
     <html><head><title>${f.titre}</title>
-    <style>body{font-family:'Inter',Arial,sans-serif;padding:40px;color:#2b2620;max-width:700px;margin:0 auto}
-    h1{font-family:Georgia,serif}h3{margin-top:24px;border-bottom:1px solid #ccc;padding-bottom:4px}
-    p{line-height:1.6}</style></head><body>
-    <h1>${f.titre}</h1>
-    <p>${f.description || ''}</p>
-    <h3>Prérequis</h3><p>${f.prerequis || 'Aucun'}</p>
-    <h3>Objectif final</h3><p>${(f.objectif_final || '').replace(/\n/g, '<br>')}</p>
-    <h3>Informations pratiques</h3>
-    <p>Mode : ${f.format_type === 'direct' ? 'En direct avec le coach' : 'Vidéo enregistrée'}<br>
-    Durée totale : ${f.duree_totale || '—'}<br>
-    ${f.date_debut ? 'Début : ' + f.date_debut + '<br>' : ''}
-    ${f.date_fin ? 'Fin : ' + f.date_fin + '<br>' : ''}
-    Prix : ${f.structure_type === 'par_niveaux' ? 'voir niveaux ci-dessous' : (parseFloat(f.prix || 0).toFixed(0) + ' CHF')}</p>
-    ${niveauxHtml}
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+      :root { --ink:#2b2620; --ink-soft:#6b6255; --cream:#f7f3ec; --gold:#b8863f; --gold-dark:#8f6a2f; --line:#e2d9c8; }
+      * { box-sizing:border-box; }
+      body { margin:0; font-family:'Inter',sans-serif; }
+      .header { background:var(--ink); color:var(--cream); padding:40px 48px 32px; border-bottom:4px solid var(--gold); }
+      .eyebrow { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); font-weight:600; margin-bottom:10px; }
+      .header h1 { font-family:'Cormorant Garamond',serif; font-size:34px; font-weight:700; margin:0 0 10px; }
+      .header p { font-size:14px; color:rgba(247,243,236,.75); margin:0; line-height:1.6; max-width:520px; }
+      .badges { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+      .badge { background:rgba(184,134,63,.18); border:1px solid rgba(184,134,63,.4); color:#e8c98a; font-size:12px; padding:5px 12px; border-radius:20px; }
+      .body { padding:32px 48px 40px; max-width:700px; margin:0 auto; }
+      .section { margin-bottom:26px; }
+      .section-title { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; color:var(--ink); margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+      .section-title .dot { width:8px; height:8px; border-radius:50%; background:var(--gold); flex-shrink:0; }
+      .section p { font-size:14px; color:var(--ink-soft); line-height:1.7; margin:0; }
+      .info-grid { display:grid; grid-template-columns:repeat(${infoCards.length >= 3 ? 3 : infoCards.length}, 1fr); gap:12px; margin-bottom:26px; }
+      .info-card { background:var(--cream); border-radius:10px; padding:14px 16px; border:1px solid var(--line); }
+      .info-card .label { font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--gold-dark); font-weight:600; margin-bottom:6px; }
+      .info-card .value { font-size:14px; color:var(--ink); font-weight:600; }
+      .niveau-card { border-radius:10px; padding:14px 16px; margin-bottom:10px; border-left:5px solid; background:var(--cream); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+      .niveau-nom { font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:700; color:var(--ink); }
+      .niveau-meta { font-size:12.5px; color:var(--ink-soft); }
+      .niveau-prix { font-size:16px; font-weight:700; color:var(--gold-dark); }
+      .footer { background:var(--cream); padding:16px 48px; border-top:1px solid var(--line); display:flex; justify-content:space-between; font-size:11.5px; color:var(--ink-soft); }
+      @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+    </style></head><body>
+    <div class="header">
+      <div class="eyebrow">${nomAcademie}</div>
+      <h1>${f.titre}</h1>
+      <p>${f.description || ''}</p>
+      <div class="badges">${badges}</div>
+    </div>
+    <div class="body">
+      <div class="info-grid">${infoCards.map(c => `<div class="info-card"><div class="label">${c.label}</div><div class="value">${c.value}</div></div>`).join('')}</div>
+      ${f.objectif_final ? `<div class="section"><div class="section-title"><span class="dot"></span>Objectif final</div><p>${f.objectif_final.replace(/\n/g, '<br>')}</p></div>` : ''}
+      ${niveauxHtml}
+    </div>
+    <div class="footer"><span>${nomAcademie}</span><span>Document généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
+    <script>window.print();</script>
     </body></html>
   `);
   win.document.close();
-  win.print();
 }
 
 async function deleteCurrentFormation() {  if (!confirm('Supprimer cette formation et tout son contenu ?')) return;

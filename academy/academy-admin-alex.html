@@ -19,25 +19,62 @@
   .btn-small:hover { border-color:var(--gold); }
   .btn-danger { background:#fbeceb; color:var(--danger); border:1px solid #f0c9c4; padding:5px 9px; border-radius:6px; font-size:11.5px; }
   .btn-danger:hover { background:#f5d9d6; }
-  .btn-move { background:var(--cream); border:1px solid var(--line); border-radius:6px; width:24px; height:24px; font-size:11px; color:var(--ink-soft); padding:0; }
-  .btn-move:disabled { opacity:.3; cursor:default; }
 
-  .top-select { padding: 10px 24px; background: var(--card); border-bottom: 1px solid var(--line); display: flex; align-items: center; gap: 12px; }
-  .top-select select { padding: 7px 10px; border: 1px solid var(--line); border-radius: 8px; font-size: 13.5px; font-family: 'Inter', sans-serif; background: var(--cream); flex: 1; max-width: 400px; }
+  .container { max-width: 960px; margin: 0 auto; padding: 32px 24px; }
+  .top-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; }
+  .top-row h2 { font-family:'Cormorant Garamond',serif; font-size:24px; margin:0; }
 
-  .course-layout { display: grid; grid-template-columns: 1fr 340px; min-height: calc(100vh - 110px); }
-  @media (max-width: 900px) { .course-layout { grid-template-columns: 1fr; } }
+  .formation-card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 22px; margin-bottom: 14px; cursor: pointer; transition: border-color .15s; }
+  .formation-card:hover { border-color: var(--gold); }
+  .formation-card h3 { font-family:'Cormorant Garamond',serif; font-size: 20px; margin: 0 0 6px; }
+  .formation-card p { font-size: 13.5px; color: var(--ink-soft); margin: 0 0 10px; }
+  .formation-tags { display: flex; flex-wrap: wrap; gap: 6px; font-size: 11.5px; }
+  .tag { background: rgba(184,150,90,0.12); color: var(--gold-dark); padding: 3px 9px; border-radius: 12px; }
+  .btn-publish { display:inline-flex; align-items:center; gap:5px; font-size:11.5px; font-weight:600; padding:3px 10px; border-radius:20px; background:#f1ece0; color:#8a7d5f; border:1px solid #ddd0b0; }
+  .btn-publish.is-published { background:#e3f0d9; color:#3b6d11; border-color:#b9dd9a; }
+  .empty { text-align:center; padding:40px 20px; color:var(--ink-soft); font-size:13.5px; }
+  .loading { text-align: center; padding: 40px; color: var(--ink-soft); }
 
-  .main-area { padding: 32px; }
-  .formation-meta-box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; margin-bottom: 16px; }
   .field { margin-bottom: 14px; }
   .field label { display:block; font-size:12.5px; font-weight:500; margin-bottom:5px; }
   .field input, .field textarea { width:100%; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font-size:14px; font-family:'Inter',sans-serif; background:var(--cream); }
-  .field textarea { resize:vertical; min-height:60px; }
-  .btn-publish { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:600; padding:5px 12px; border-radius:20px; background:#f1ece0; color:#8a7d5f; border:1px solid #ddd0b0; }
-  .btn-publish.is-published { background:#e3f0d9; color:#3b6d11; border-color:#b9dd9a; }
+  .field textarea { resize:vertical; min-height:56px; }
+  .field-row { display:flex; gap:12px; }
+  .field-row .field { flex:1; }
+  .niveau-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; background:var(--cream); padding:8px; border-radius:8px; border-left:4px solid var(--line); }
+  .niveau-row input { flex:1; padding:7px 9px; border:1px solid var(--line); border-radius:6px; font-size:13px; background:#fff; }
+  .niveau-row .btn-danger { flex-shrink:0; }
+  .niveau-row.niveau-debutant { border-left-color: #5A8C5A; }
+  .niveau-row.niveau-pro { border-left-color: #3E6A93; }
+  .niveau-row.niveau-expert { border-left-color: #B8965A; }
+  .btn-obj-debutant { background: rgba(90,140,90,0.12) !important; color: #3B6D11 !important; border-color: rgba(90,140,90,0.35) !important; }
+  .btn-obj-pro { background: rgba(62,106,147,0.12) !important; color: #2A4D6E !important; border-color: rgba(62,106,147,0.35) !important; }
+  .btn-obj-expert { background: rgba(184,150,90,0.15) !important; color: #8A6D1F !important; border-color: rgba(184,150,90,0.4) !important; }
 
-  .sidebar { background: var(--card); border-left: 1px solid var(--line); padding: 0; overflow-y: auto; }
+  .overlay { position:fixed; inset:0; background:rgba(43,38,32,0.4); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
+  .overlay.open { display:flex; }
+  .modal { background:#fff; border-radius:14px; padding:28px; width:100%; max-width:520px; max-height:88vh; overflow-y:auto; }
+  .modal h3 { font-family:'Cormorant Garamond',serif; font-size:20px; margin:0 0 18px; }
+  .modal-actions { display:flex; gap:8px; margin-top:8px; }
+  .modal-actions button { flex:1; padding:10px; border-radius:8px; font-size:14px; }
+  .btn-cancel { background:var(--cream); color:var(--ink-soft); }
+  .already-added { margin-top:20px; border-top:1px solid var(--line); padding-top:14px; }
+  .already-added-title { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:8px; }
+  .already-item { font-size:13px; padding:7px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; }
+  .already-item:last-child { border-bottom:none; }
+  .video-item { padding:10px 14px; font-size:13px; cursor:pointer; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
+  .video-item:hover { background:var(--cream); }
+  .video-item-name { word-break:break-all; }
+  .video-empty { padding:20px; text-align:center; color:var(--ink-soft); font-size:13px; }
+
+  .back-link { display: inline-block; margin-bottom: 16px; font-size: 13px; color: var(--ink-soft); text-decoration: none; cursor: pointer; }
+  .back-link:hover { color: var(--gold-dark); }
+
+  .course-layout { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+  @media (max-width: 900px) { .course-layout { grid-template-columns: 1fr; } }
+  .formation-meta-box { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 24px; }
+
+  .sidebar { background: var(--card); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; align-self: start; }
   .sidebar-header { padding: 16px 18px; border-bottom: 1px solid var(--line); font-family:'Cormorant Garamond',serif; font-size: 17px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
   .section-block { border-bottom: 1px solid var(--line); padding: 14px 18px; }
   .section-title-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
@@ -48,24 +85,6 @@
   .chapitre-line { font-size: 13px; padding: 6px 0 6px 4px; cursor: pointer; display: flex; align-items: center; gap: 8px; }
   .chapitre-line:hover { color: var(--gold-dark); }
   .chapitre-icon { color: var(--ink-soft); flex-shrink: 0; }
-
-  .overlay { position:fixed; inset:0; background:rgba(43,38,32,0.4); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
-  .overlay.open { display:flex; }
-  .modal { background:#fff; border-radius:14px; padding:28px; width:100%; max-width:460px; max-height:85vh; overflow-y:auto; }
-  .modal h3 { font-family:'Cormorant Garamond',serif; font-size:20px; margin:0 0 18px; }
-  .modal-actions { display:flex; gap:8px; margin-top:8px; }
-  .modal-actions button { flex:1; padding:10px; border-radius:8px; font-size:14px; }
-  .btn-cancel { background:var(--cream); color:var(--ink-soft); }
-  .already-added { margin-top:20px; border-top:1px solid var(--line); padding-top:14px; }
-  .already-added-title { font-size:12px; text-transform:uppercase; letter-spacing:.05em; color:var(--ink-soft); margin-bottom:8px; }
-  .already-item { font-size:13px; padding:7px 0; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; }
-  .already-item:last-child { border-bottom:none; }
-  .loading { text-align:center; padding:40px; color:var(--ink-soft); }
-  .empty { text-align:center; padding:40px 20px; color:var(--ink-soft); font-size:13.5px; }
-  .video-item { padding:10px 14px; font-size:13px; cursor:pointer; border-bottom:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; }
-  .video-item:hover { background:var(--cream); }
-  .video-item-name { word-break:break-all; }
-  .video-empty { padding:20px; text-align:center; color:var(--ink-soft); font-size:13px; }
   .hidden { display: none; }
 </style>
 </head>
@@ -84,51 +103,99 @@
 <div id="admin-content" style="display:none;">
 <header>
   <div><div class="brand-mark">Academy</div><div class="brand-sub">Administration</div></div>
-  <button class="btn-primary" onclick="openFormationModal()">+ Nouvelle formation</button>
 </header>
 
-<div class="top-select">
-  <label style="font-size:13px;color:var(--ink-soft)">Formation :</label>
-  <select id="formation-select" onchange="selectFormation(this.value)"></select>
-</div>
+<div class="container">
 
-<div id="loading" class="loading">Chargement…</div>
+  <!-- ==== VUE 1 : LISTE DES FORMATIONS ==== -->
+  <div id="view-list">
+    <div class="top-row">
+      <h2>Mes formations</h2>
+      <button class="btn-primary" onclick="openFormationModal()">+ Nouvelle formation</button>
+    </div>
+    <div id="loading" class="loading">Chargement…</div>
+    <div id="formations-list"></div>
+  </div>
 
-<div id="course-view" class="course-layout hidden">
-  <div class="main-area">
-    <div class="formation-meta-box">
-      <div class="field"><label>Titre</label><input type="text" id="meta-titre"></div>
-      <div class="field"><label>Description</label><textarea id="meta-description"></textarea></div>
-      <div class="field"><label>Prix (CHF)</label><input type="number" id="meta-prix"></div>
-      <div style="display:flex; gap:8px; align-items:center;">
-        <button class="btn-small" onclick="saveMeta()">Enregistrer les infos</button>
-        <button class="btn-publish" id="publish-btn" onclick="togglePublish()"></button>
-        <button class="btn-danger" onclick="deleteCurrentFormation()">Supprimer la formation</button>
+  <!-- ==== VUE 2 : CONSTRUCTEUR / VISIONNAGE ==== -->
+  <div id="view-course" class="hidden">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <a class="back-link" style="margin:0" onclick="showListView()">← Retour à mes formations</a>
+      <select id="formation-quick-switch" onchange="openCourseView(parseInt(this.value))" style="padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--card)"></select>
+    </div>
+    <div class="course-layout">
+      <div class="main-area">
+        <div class="formation-meta-box">
+          <h3 style="font-family:'Cormorant Garamond',serif;font-size:20px;margin:0 0 14px" id="course-titre-display"></h3>
+          <div class="btn-publish" id="publish-btn" onclick="togglePublish()" style="cursor:pointer;margin-bottom:14px"></div>
+          <div style="display:flex; gap:8px;">
+            <button class="btn-small" onclick="openFormationModal(currentFormationId)">Modifier les informations</button>
+            <button class="btn-small" onclick="imprimerFiche()">🖨 Imprimer la fiche</button>
+            <button class="btn-danger" onclick="deleteCurrentFormation()">Supprimer la formation</button>
+          </div>
+        </div>
+      </div>
+      <div class="sidebar">
+        <div class="sidebar-header">
+          <span>Contenu du cours</span>
+          <button class="btn-small" onclick="openSectionModal()">+ Section</button>
+        </div>
+        <div id="sections-container"></div>
       </div>
     </div>
   </div>
 
-  <div class="sidebar">
-    <div class="sidebar-header">
-      <span>Contenu du cours</span>
-      <button class="btn-small" onclick="openSectionModal()">+ Section</button>
-    </div>
-    <div id="sections-container"></div>
-  </div>
+</div>
 </div>
 
-<div id="empty-state" class="empty hidden">Aucune formation. Cliquez sur "+ Nouvelle formation" pour commencer.</div>
-
-</div>
-
+<!-- Modal formation (creation + edition complete) -->
 <div class="overlay" id="modal-formation">
   <div class="modal">
-    <h3>Nouvelle formation</h3>
-    <div class="field"><label>Titre</label><input type="text" id="formation-titre" placeholder="Ex: Niveau 1 - Fondamentaux"></div>
+    <h3 id="formation-modal-title">Nouvelle formation</h3>
+    <input type="hidden" id="formation-id">
+    <div class="field"><label>Nom de la formation</label><input type="text" id="formation-titre" placeholder="Ex: Niveau 1 - Fondamentaux"></div>
     <div class="field"><label>Description</label><textarea id="formation-description" placeholder="Courte description"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Type de formation</label>
+        <select id="formation-structure-type" onchange="toggleStructureType()" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:var(--cream)">
+          <option value="complete">Formation complète</option>
+          <option value="par_niveaux">Formation par niveaux</option>
+        </select>
+      </div>
+      <div class="field" id="formation-prix-field"><label>Prix (CHF)</label><input type="number" id="formation-prix"></div>
+    </div>
+    <div id="niveaux-builder" class="hidden" style="margin-bottom:14px">
+      <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:8px">Niveaux</label>
+      <div id="niveaux-rows"></div>
+      <button type="button" class="btn-small" onclick="addNiveauRow()">+ Ajouter un niveau</button>
+    </div>
+    <div class="field"><label>Prérequis</label><textarea id="formation-prerequis" placeholder="Ce que l'étudiant doit déjà savoir/avoir"></textarea></div>
+    <div class="field-row">
+      <div class="field"><label>Mode de formation</label>
+        <select id="formation-format-type" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:var(--cream)">
+          <option value="enregistre">En vidéo enregistrée</option>
+          <option value="direct">En direct avec le coach</option>
+        </select>
+      </div>
+      <div class="field"><label>Dossier vidéo (VPS)</label><input type="text" id="formation-dossier" placeholder="Ex: academy-niveau1"></div>
+    </div>
+    <div class="field-row" id="formation-dates-globales">
+      <div class="field"><label>Date de début</label><input type="date" id="formation-date-debut" onchange="updateGlobalDateFin()"></div>
+      <div class="field"><label>Date de fin</label><input type="date" id="formation-date-fin" readonly></div>
+    </div>
+    <div class="field"><label>Durée totale <span style="font-weight:400;color:var(--ink-soft)">(calculée automatiquement si formation par niveaux)</span></label><input type="text" id="formation-duree" placeholder="Ex: 6 semaines, 3h" oninput="updateGlobalDateFin()"></div>
+    <div class="field">
+      <label>Objectif final</label>
+      <textarea id="formation-objectif" placeholder="Ce que l'étudiant saura faire à la fin"></textarea>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        <button type="button" class="btn-small btn-obj-debutant" onclick="insererObjectif('debutant')">+ Phrase Débutant</button>
+        <button type="button" class="btn-small btn-obj-pro" onclick="insererObjectif('pro')">+ Phrase Pro</button>
+        <button type="button" class="btn-small btn-obj-expert" onclick="insererObjectif('expert')">+ Phrase Expert</button>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('modal-formation')">Annuler</button>
-      <button class="btn-primary" onclick="saveFormation()">Enregistrer</button>
+      <button class="btn-primary" id="formation-submit-btn" onclick="saveFormation()">Enregistrer</button>
     </div>
   </div>
 </div>
@@ -200,34 +267,57 @@ let currentFormationId = null;
 
 async function loadFormations(keepSelection) {
   document.getElementById('loading').classList.remove('hidden');
-  document.getElementById('course-view').classList.add('hidden');
-  document.getElementById('empty-state').classList.add('hidden');
   try {
     const res = await fetch(`${API_BASE}/academy-admin-list`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: ACCOUNT_ID }) });
     const data = await res.json();
     formationsData = data.formations || [];
     document.getElementById('loading').classList.add('hidden');
-
-    const sel = document.getElementById('formation-select');
-    sel.innerHTML = formationsData.map(f => `<option value="${f.id}">${f.titre}</option>`).join('');
-
-    if (formationsData.length === 0) {
-      document.getElementById('empty-state').classList.remove('hidden');
-      currentFormationId = null;
-      return;
+    renderList();
+    if (keepSelection && currentFormationId && formationsData.find(f => f.id === currentFormationId)) {
+      renderCourseView();
     }
-
-    const target = keepSelection && formationsData.find(f => f.id === currentFormationId) ? currentFormationId : formationsData[0].id;
-    sel.value = target;
-    selectFormation(target);
   } catch (e) { document.getElementById('loading').textContent = 'Erreur de chargement.'; }
 }
 
-function selectFormation(id) {
-  currentFormationId = parseInt(id);
-  document.getElementById('formation-select').value = currentFormationId;
-  document.getElementById('course-view').classList.remove('hidden');
-  document.getElementById('empty-state').classList.add('hidden');
+function renderList() {
+  const container = document.getElementById('formations-list');
+  if (formationsData.length === 0) { container.innerHTML = '<div class="empty">Aucune formation. Cliquez sur "+ Nouvelle formation" pour commencer.</div>'; return; }
+  container.innerHTML = formationsData.map(f => {
+    const totalLecons = f.sections.reduce((sum, s) => sum + s.lecons.length, 0);
+    let prixTag = '<span class="tag">💰 ' + parseFloat(f.prix || 0).toFixed(0) + ' CHF</span>';
+    if (f.structure_type === 'par_niveaux' && f.niveaux_json) {
+      try {
+        const niveaux = JSON.parse(f.niveaux_json);
+        prixTag = niveaux.map(n => '<span class="tag">🎯 ' + n.nom + (n.prix ? ' — ' + n.prix + ' CHF' : '') + (n.duree ? ' · ' + n.duree : '') + '</span>').join('');
+      } catch (e) {}
+    }
+    return `
+    <div class="formation-card" onclick="openCourseView(${f.id})">
+      <h3>${f.titre}</h3>
+      <p>${f.description || ''}</p>
+      <div class="formation-tags">
+        ${prixTag}
+        ${f.duree_totale ? '<span class="tag">⏱ ' + f.duree_totale + '</span>' : ''}
+        <span class="tag">${f.sections.length} section(s) · ${totalLecons} leçon(s)</span>
+        <span class="btn-publish ${f.statut === 'publie' ? 'is-published' : ''}">${f.statut === 'publie' ? '● En ligne' : '○ Hors ligne'}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function showListView() {
+  currentFormationId = null;
+  document.getElementById('view-course').classList.add('hidden');
+  document.getElementById('view-list').classList.remove('hidden');
+}
+
+function openCourseView(id) {
+  currentFormationId = id;
+  document.getElementById('view-list').classList.add('hidden');
+  document.getElementById('view-course').classList.remove('hidden');
+  const sel = document.getElementById('formation-quick-switch');
+  sel.innerHTML = formationsData.map(f => `<option value="${f.id}">${f.titre}</option>`).join('');
+  sel.value = id;
   renderCourseView();
 }
 
@@ -237,19 +327,13 @@ function renderCourseView() {
   const f = getCurrentFormation();
   if (!f) return;
 
-  document.getElementById('meta-titre').value = f.titre;
-  document.getElementById('meta-description').value = f.description || '';
-  document.getElementById('meta-prix').value = f.prix;
-
+  document.getElementById('course-titre-display').textContent = f.titre;
   const pubBtn = document.getElementById('publish-btn');
-  pubBtn.textContent = f.statut === 'publie' ? '● En ligne — visible' : '○ Hors ligne — publier';
+  pubBtn.textContent = f.statut === 'publie' ? '● En ligne — visible par les étudiants' : '○ Hors ligne — cliquer pour publier';
   pubBtn.className = 'btn-publish' + (f.statut === 'publie' ? ' is-published' : '');
 
   const container = document.getElementById('sections-container');
-  if (f.sections.length === 0) {
-    container.innerHTML = '<div class="empty">Aucune section. Ajoutez-en une ci-dessous.</div>';
-    return;
-  }
+  if (f.sections.length === 0) { container.innerHTML = '<div class="empty">Aucune section. Ajoutez-en une avec le bouton "+ Section" ci-dessus.</div>'; return; }
 
   container.innerHTML = f.sections.map(s => {
     const dureeTotal = s.lecons.reduce((sum, l) => sum + (l.duree_secondes || 0), 0);
@@ -279,44 +363,299 @@ async function callCrud(payload) {
   return res.json();
 }
 
-async function saveMeta() {
-  const titre = document.getElementById('meta-titre').value.trim();
-  const description = document.getElementById('meta-description').value.trim();
-  const prix = document.getElementById('meta-prix').value || 0;
-  if (!titre) { alert('Le titre est obligatoire.'); return; }
-  const f = getCurrentFormation();
-  await callCrud({ action: 'update_formation', id: currentFormationId, titre, description, prix, statut: f.statut });
-  loadFormations(true);
-}
-
 async function togglePublish() {
   const f = getCurrentFormation();
   const newStatut = f.statut === 'publie' ? 'brouillon' : 'publie';
-  await callCrud({ action: 'update_formation', id: currentFormationId, titre: f.titre, description: f.description, prix: f.prix, statut: newStatut });
+  await callCrud({ action: 'update_formation', id: currentFormationId, titre: f.titre, description: f.description, prix: f.prix, statut: newStatut, niveaux: f.niveaux, prerequis: f.prerequis, duree_totale: f.duree_totale, objectif_final: f.objectif_final, dossier_video: f.dossier_video, structure_type: f.structure_type, niveaux_json: f.niveaux_json, format_type: f.format_type, date_debut: f.date_debut, date_fin: f.date_fin });
   loadFormations(true);
 }
 
-async function deleteCurrentFormation() {
-  if (!confirm('Supprimer cette formation et tout son contenu ?')) return;
+const NIVEAU_COLORS = { 'Débutant': '#5A8C5A', 'Pro': '#3E6A93', 'Expert': '#B8965A' };
+
+async function imprimerFiche() {
+  const f = getCurrentFormation();
+  if (!f) return;
+
+  let nomAcademie = 'Academy';
+  try {
+    const brandResp = await fetch(`${API_BASE}/academy-get-branding`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: ACCOUNT_ID }) });
+    const brandData = await brandResp.json();
+    if (brandData.success) nomAcademie = brandData.nom_academie;
+  } catch (e) {}
+
+  let niveaux = [];
+  if (f.structure_type === 'par_niveaux' && f.niveaux_json) {
+    try { niveaux = JSON.parse(f.niveaux_json); } catch (e) {}
+  }
+
+  const badges = [
+    `<span class="badge">${f.format_type === 'direct' ? '🎥 En direct avec le coach' : '🎥 Vidéo enregistrée'}</span>`,
+    f.duree_totale ? `<span class="badge">⏱ ${f.duree_totale}</span>` : ''
+  ].filter(Boolean).join('');
+
+  const infoCards = [
+    { label: 'Prérequis', value: f.prerequis || 'Aucun' },
+    f.date_debut ? { label: 'Début', value: f.date_debut } : null,
+    f.date_fin ? { label: 'Fin', value: f.date_fin } : null,
+    (f.structure_type !== 'par_niveaux') ? { label: 'Prix', value: parseFloat(f.prix || 0).toFixed(0) + ' CHF' } : null
+  ].filter(Boolean);
+
+  const niveauxHtml = niveaux.length ? `
+    <div class="section">
+      <div class="section-title"><span class="dot"></span>Niveaux proposés</div>
+      ${niveaux.map(n => {
+        const color = NIVEAU_COLORS[n.nom] || '#8f6a2f';
+        const dates = (n.date_debut || n.date_fin) ? `du ${n.date_debut || '?'} au ${n.date_fin || '?'}` : '';
+        return `<div class="niveau-card" style="border-left-color:${color}">
+          <div><div class="niveau-nom">${n.nom}</div><div class="niveau-meta">Durée ${n.duree || '—'}${dates ? ' · ' + dates : ''}</div></div>
+          <div class="niveau-prix">${n.prix || 0} CHF</div>
+        </div>`;
+      }).join('')}
+    </div>` : '';
+
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <html><head><title>${f.titre}</title>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+      :root { --ink:#2b2620; --ink-soft:#6b6255; --cream:#f7f3ec; --gold:#b8863f; --gold-dark:#8f6a2f; --line:#e2d9c8; }
+      * { box-sizing:border-box; }
+      body { margin:0; font-family:'Inter',sans-serif; }
+      .header { background:var(--ink); color:var(--cream); padding:40px 48px 32px; border-bottom:4px solid var(--gold); }
+      .eyebrow { font-size:11px; letter-spacing:.18em; text-transform:uppercase; color:var(--gold); font-weight:600; margin-bottom:10px; }
+      .header h1 { font-family:'Cormorant Garamond',serif; font-size:34px; font-weight:700; margin:0 0 10px; }
+      .header p { font-size:14px; color:rgba(247,243,236,.75); margin:0; line-height:1.6; max-width:520px; }
+      .badges { display:flex; gap:10px; margin-top:18px; flex-wrap:wrap; }
+      .badge { background:rgba(184,134,63,.18); border:1px solid rgba(184,134,63,.4); color:#e8c98a; font-size:12px; padding:5px 12px; border-radius:20px; }
+      .body { padding:32px 48px 40px; max-width:700px; margin:0 auto; }
+      .section { margin-bottom:26px; }
+      .section-title { font-family:'Cormorant Garamond',serif; font-size:18px; font-weight:700; color:var(--ink); margin:0 0 12px; display:flex; align-items:center; gap:8px; }
+      .section-title .dot { width:8px; height:8px; border-radius:50%; background:var(--gold); flex-shrink:0; }
+      .section p { font-size:14px; color:var(--ink-soft); line-height:1.7; margin:0; }
+      .info-grid { display:grid; grid-template-columns:repeat(${infoCards.length >= 3 ? 3 : infoCards.length}, 1fr); gap:12px; margin-bottom:26px; }
+      .info-card { background:var(--cream); border-radius:10px; padding:14px 16px; border:1px solid var(--line); }
+      .info-card .label { font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--gold-dark); font-weight:600; margin-bottom:6px; }
+      .info-card .value { font-size:14px; color:var(--ink); font-weight:600; }
+      .niveau-card { border-radius:10px; padding:14px 16px; margin-bottom:10px; border-left:5px solid; background:var(--cream); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; }
+      .niveau-nom { font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:700; color:var(--ink); }
+      .niveau-meta { font-size:12.5px; color:var(--ink-soft); }
+      .niveau-prix { font-size:16px; font-weight:700; color:var(--gold-dark); }
+      .footer { background:var(--cream); padding:16px 48px; border-top:1px solid var(--line); display:flex; justify-content:space-between; font-size:11.5px; color:var(--ink-soft); }
+      @media print { body { -webkit-print-color-adjust:exact; print-color-adjust:exact; } }
+    </style></head><body>
+    <div class="header">
+      <div class="eyebrow">${nomAcademie}</div>
+      <h1>${f.titre}</h1>
+      <p>${f.description || ''}</p>
+      <div class="badges">${badges}</div>
+    </div>
+    <div class="body">
+      <div class="info-grid">${infoCards.map(c => `<div class="info-card"><div class="label">${c.label}</div><div class="value">${c.value}</div></div>`).join('')}</div>
+      ${f.objectif_final ? `<div class="section"><div class="section-title"><span class="dot"></span>Objectif final</div><p>${f.objectif_final.replace(/\n/g, '<br>')}</p></div>` : ''}
+      ${niveauxHtml}
+    </div>
+    <div class="footer"><span>${nomAcademie}</span><span>Document généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
+    <script>window.print();</script>
+    </body></html>
+  `);
+  win.document.close();
+}
+
+async function deleteCurrentFormation() {  if (!confirm('Supprimer cette formation et tout son contenu ?')) return;
   await callCrud({ action: 'delete_formation', id: currentFormationId });
-  currentFormationId = null;
+  showListView();
   loadFormations();
 }
 
-function openFormationModal() {
-  document.getElementById('formation-titre').value = '';
-  document.getElementById('formation-description').value = '';
+function toggleStructureType() {
+  const type = document.getElementById('formation-structure-type').value;
+  document.getElementById('niveaux-builder').classList.toggle('hidden', type !== 'par_niveaux');
+  document.getElementById('formation-prix-field').classList.toggle('hidden', type === 'par_niveaux');
+  document.getElementById('formation-dates-globales').classList.toggle('hidden', type === 'par_niveaux');
+}
+
+const PHRASES_OBJECTIF = {
+  debutant: "À la fin du niveau Débutant, l'étudiant maîtrise les bases essentielles et se sent à l'aise pour pratiquer seul en toute sécurité.",
+  pro: "À la fin du niveau Pro, l'étudiant exécute les techniques avec précision, régularité et une vraie autonomie.",
+  expert: "À la fin du niveau Expert, l'étudiant maîtrise pleinement la discipline et peut perfectionner sa pratique de façon autonome."
+};
+
+function insererObjectif(niveau) {
+  const el = document.getElementById('formation-objectif');
+  el.value = PHRASES_OBJECTIF[niveau];
+}
+
+function addNiveauRow(nom, prix, dureeNombre, dureeUnite, dateDebut, dateFin) {
+  const container = document.getElementById('niveaux-rows');
+  const row = document.createElement('div');
+  row.className = 'niveau-row';
+  row.style.flexWrap = 'wrap';
+  row.innerHTML = `
+    <select class="niveau-nom" onchange="updateNiveauColor(this)" style="flex:1;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fff">
+      <option value="Débutant" ${nom === 'Débutant' ? 'selected' : ''}>Débutant</option>
+      <option value="Pro" ${nom === 'Pro' ? 'selected' : ''}>Pro</option>
+      <option value="Expert" ${nom === 'Expert' ? 'selected' : ''}>Expert</option>
+    </select>
+    <input type="number" placeholder="Prix CHF" class="niveau-prix" value="${prix || ''}" style="max-width:90px">
+    <input type="number" placeholder="Durée" class="niveau-duree-nombre" value="${dureeNombre || ''}" min="1" style="max-width:70px" oninput="if(this.value<1)this.value='';updateDureeTotaleField();updateNiveauDateFin(this.closest('.niveau-row'))">
+    <select class="niveau-duree-unite" style="max-width:100px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fff" onchange="updateDureeTotaleField();updateNiveauDateFin(this.closest('.niveau-row'))">
+      <option value="jours" ${dureeUnite === 'jours' ? 'selected' : ''}>Jours</option>
+      <option value="semaines" ${(!dureeUnite || dureeUnite === 'semaines') ? 'selected' : ''}>Semaines</option>
+      <option value="mois" ${dureeUnite === 'mois' ? 'selected' : ''}>Mois</option>
+    </select>
+    <button type="button" class="btn-danger" onclick="this.parentElement.remove(); updateDureeTotaleField()">✕</button>
+    <div style="display:flex;gap:6px;width:100%;margin-top:4px">
+      <input type="date" class="niveau-date-debut" value="${dateDebut || ''}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:12.5px" onchange="updateNiveauDateFin(this.closest('.niveau-row'))">
+      <input type="date" class="niveau-date-fin" value="${dateFin || ''}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:12.5px" readonly>
+    </div>
+  `;
+  container.appendChild(row);
+  updateNiveauColor(row.querySelector('.niveau-nom'));
+  updateDureeTotaleField();
+}
+
+function updateNiveauDateFin(row) {
+  const debut = row.querySelector('.niveau-date-debut').value;
+  const nombre = parseFloat(row.querySelector('.niveau-duree-nombre').value);
+  const unite = row.querySelector('.niveau-duree-unite').value;
+  const finInput = row.querySelector('.niveau-date-fin');
+  if (!debut || !nombre || nombre <= 0) { finInput.value = ''; return; }
+  const enJours = { jours: 1, semaines: 7, mois: 30 };
+  const d = new Date(debut + 'T00:00:00');
+  d.setDate(d.getDate() + Math.round(nombre * (enJours[unite] || 1)));
+  finInput.value = d.toISOString().slice(0, 10);
+}
+
+function updateGlobalDateFin() {
+  const debut = document.getElementById('formation-date-debut').value;
+  const dureeTxt = document.getElementById('formation-duree').value;
+  const finInput = document.getElementById('formation-date-fin');
+  const match = dureeTxt.match(/(\d+(?:[.,]\d+)?)\s*(jour|semaine|mois)/i);
+  if (!debut || !match) { finInput.value = ''; return; }
+  const enJours = { jour: 1, semaine: 7, mois: 30 };
+  const unite = match[2].toLowerCase();
+  const nombre = parseFloat(match[1].replace(',', '.'));
+  const d = new Date(debut + 'T00:00:00');
+  d.setDate(d.getDate() + Math.round(nombre * (enJours[unite] || 1)));
+  finInput.value = d.toISOString().slice(0, 10);
+}
+
+function updateNiveauColor(selectEl) {
+  const row = selectEl.closest('.niveau-row');
+  row.classList.remove('niveau-debutant', 'niveau-pro', 'niveau-expert');
+  const map = { 'Débutant': 'niveau-debutant', 'Pro': 'niveau-pro', 'Expert': 'niveau-expert' };
+  row.classList.add(map[selectEl.value]);
+}
+
+function updateDureeTotaleField() {
+  const niveaux = collectNiveaux();
+  const totale = calculerDureeTotale(niveaux);
+  if (totale) document.getElementById('formation-duree').value = totale;
+}
+
+function collectNiveaux() {
+  const rows = document.querySelectorAll('#niveaux-rows .niveau-row');
+  const niveaux = [];
+  rows.forEach(row => {
+    const nom = row.querySelector('.niveau-nom').value;
+    const prix = row.querySelector('.niveau-prix').value;
+    const dureeNombre = row.querySelector('.niveau-duree-nombre').value;
+    const dureeUnite = row.querySelector('.niveau-duree-unite').value;
+    const dateDebut = row.querySelector('.niveau-date-debut').value;
+    const dateFin = row.querySelector('.niveau-date-fin').value;
+    niveaux.push({ nom, prix: prix ? parseFloat(prix) : 0, duree: dureeNombre ? dureeNombre + ' ' + dureeUnite : '', date_debut: dateDebut, date_fin: dateFin });
+  });
+  return niveaux;
+}
+
+function calculerDureeTotale(niveaux) {
+  const enJours = { jours: 1, semaines: 7, mois: 30 };
+  let totalJours = 0;
+  niveaux.forEach(n => {
+    const match = String(n.duree || '').match(/(\d+(?:[.,]\d+)?)\s*(\w+)/);
+    if (match) totalJours += parseFloat(match[1].replace(',', '.')) * (enJours[match[2]] || 1);
+  });
+  if (totalJours === 0) return '';
+  if (totalJours % 30 === 0) return (totalJours / 30) + ' mois';
+  if (totalJours % 7 === 0) return (totalJours / 7) + ' semaines';
+  return totalJours + ' jours';
+}
+
+function openFormationModal(id) {
+  document.getElementById('formation-id').value = id || '';
+  document.getElementById('niveaux-rows').innerHTML = '';
+  const fields = ['titre','description','prerequis','duree','objectif','prix','dossier'];
+  const map = { titre:'titre', description:'description', prerequis:'prerequis', duree:'duree_totale', objectif:'objectif_final', prix:'prix', dossier:'dossier_video' };
+  if (id) {
+    document.getElementById('formation-modal-title').textContent = 'Modifier la formation';
+    document.getElementById('formation-submit-btn').textContent = 'Enregistrer';
+    const f = formationsData.find(f => f.id === id);
+    fields.forEach(key => { document.getElementById('formation-' + key).value = f[map[key]] || ''; });
+    document.getElementById('formation-format-type').value = f.format_type || 'enregistre';
+    document.getElementById('formation-date-debut').value = f.date_debut || '';
+    document.getElementById('formation-date-fin').value = f.date_fin || '';
+    const type = f.structure_type || 'complete';
+    document.getElementById('formation-structure-type').value = type;
+    toggleStructureType();
+    if (type === 'par_niveaux' && f.niveaux_json) {
+      try {
+        const niveaux = JSON.parse(f.niveaux_json);
+        niveaux.forEach(n => {
+          const match = String(n.duree || '').match(/(\d+(?:[.,]\d+)?)\s*(\w+)/);
+          const dureeNombre = match ? match[1] : '';
+          const dureeUnite = match ? match[2] : 'semaines';
+          addNiveauRow(n.nom, n.prix, dureeNombre, dureeUnite, n.date_debut, n.date_fin);
+        });
+      } catch (e) {}
+    }
+  } else {
+    document.getElementById('formation-modal-title').textContent = 'Nouvelle formation';
+    document.getElementById('formation-submit-btn').textContent = 'Créer la formation';
+    fields.forEach(key => { document.getElementById('formation-' + key).value = ''; });
+    document.getElementById('formation-format-type').value = 'enregistre';
+    document.getElementById('formation-date-debut').value = '';
+    document.getElementById('formation-date-fin').value = '';
+    document.getElementById('formation-structure-type').value = 'complete';
+    toggleStructureType();
+  }
   document.getElementById('modal-formation').classList.add('open');
 }
 
 async function saveFormation() {
+  const id = document.getElementById('formation-id').value;
   const titre = document.getElementById('formation-titre').value.trim();
-  const description = document.getElementById('formation-description').value.trim();
-  if (!titre) { alert('Le titre est obligatoire.'); return; }
-  await callCrud({ action: 'create_formation', titre, description, prix: 0 });
+  if (!titre) { alert('Le nom de la formation est obligatoire.'); return; }
+  const structureType = document.getElementById('formation-structure-type').value;
+  const niveaux = structureType === 'par_niveaux' ? collectNiveaux() : [];
+  const payload = {
+    titre,
+    description: document.getElementById('formation-description').value.trim(),
+    prerequis: document.getElementById('formation-prerequis').value.trim(),
+    duree_totale: document.getElementById('formation-duree').value.trim(),
+    objectif_final: document.getElementById('formation-objectif').value.trim(),
+    prix: structureType === 'par_niveaux' ? 0 : (document.getElementById('formation-prix').value || 0),
+    dossier_video: document.getElementById('formation-dossier').value.trim(),
+    structure_type: structureType,
+    niveaux_json: JSON.stringify(niveaux),
+    niveaux: niveaux.map(n => n.nom).join(', '),
+    format_type: document.getElementById('formation-format-type').value,
+    date_debut: document.getElementById('formation-date-debut').value || null,
+    date_fin: document.getElementById('formation-date-fin').value || null
+  };
+  if (id) {
+    const f = formationsData.find(f => f.id === parseInt(id));
+    payload.action = 'update_formation';
+    payload.id = id;
+    payload.statut = f.statut;
+  } else {
+    payload.action = 'create_formation';
+  }
+  await callCrud(payload);
   closeModal('modal-formation');
-  loadFormations();
+  loadFormations(true);
 }
+
+function findSection(sectionId) { const f = getCurrentFormation(); return f.sections.find(s => s.id === sectionId); }
 
 function openSectionModal(sectionId) {
   document.getElementById('section-id').value = sectionId || '';
@@ -338,14 +677,6 @@ function openSectionModal(sectionId) {
   }
   document.getElementById('modal-section').classList.add('open');
   document.getElementById('section-titre').focus();
-}
-
-async function deleteSectionFromModal() {
-  const id = document.getElementById('section-id').value;
-  if (!confirm('Supprimer cette section et ses chapitres ?')) return;
-  await callCrud({ action: 'delete_section', id });
-  closeModal('modal-section');
-  loadFormations(true);
 }
 
 function renderAlreadyAddedSections(f) {
@@ -377,15 +708,12 @@ async function saveSection() {
   }
 }
 
-async function deleteSection(id) {
-  if (!confirm('Supprimer cette section et ses leçons ?')) return;
+async function deleteSectionFromModal() {
+  const id = document.getElementById('section-id').value;
+  if (!confirm('Supprimer cette section et ses chapitres ?')) return;
   await callCrud({ action: 'delete_section', id });
+  closeModal('modal-section');
   loadFormations(true);
-}
-
-function findSection(sectionId) {
-  const f = getCurrentFormation();
-  return f.sections.find(s => s.id === sectionId);
 }
 
 function openLeconModal(sectionId, leconId) {
@@ -417,14 +745,6 @@ function openLeconModal(sectionId, leconId) {
   }
   document.getElementById('modal-lecon').classList.add('open');
   document.getElementById('lecon-titre').focus();
-}
-
-async function deleteLeconFromModal() {
-  const id = document.getElementById('lecon-id').value;
-  if (!confirm('Supprimer cette leçon ?')) return;
-  await callCrud({ action: 'delete_lecon', id });
-  closeModal('modal-lecon');
-  loadFormations(true);
 }
 
 function renderAlreadyAddedLecons(section) {
@@ -463,17 +783,11 @@ async function saveLecon() {
   }
 }
 
-async function deleteLecon(id) { if (!confirm('Supprimer cette leçon ?')) return; await callCrud({ action: 'delete_lecon', id }); loadFormations(true); }
-
-async function moveLecon(sectionId, leconId, direction) {
-  const section = findSection(sectionId);
-  const idx = section.lecons.findIndex(l => l.id === leconId);
-  const targetIdx = idx + direction;
-  if (targetIdx < 0 || targetIdx >= section.lecons.length) return;
-  const a = section.lecons[idx];
-  const b = section.lecons[targetIdx];
-  await callCrud({ action: 'update_lecon', id: a.id, titre: a.titre, url_video: a.url_video, ordre: b.ordre });
-  await callCrud({ action: 'update_lecon', id: b.id, titre: b.titre, url_video: b.url_video, ordre: a.ordre });
+async function deleteLeconFromModal() {
+  const id = document.getElementById('lecon-id').value;
+  if (!confirm('Supprimer cette leçon ?')) return;
+  await callCrud({ action: 'delete_lecon', id });
+  closeModal('modal-lecon');
   loadFormations(true);
 }
 
@@ -537,6 +851,5 @@ if (sessionStorage.getItem('academy_admin_token')) {
   loadFormations();
 }
 </script>
-</div>
 </body>
 </html>
