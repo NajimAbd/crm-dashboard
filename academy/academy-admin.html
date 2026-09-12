@@ -41,6 +41,9 @@
   .field textarea { resize:vertical; min-height:56px; }
   .field-row { display:flex; gap:12px; }
   .field-row .field { flex:1; }
+  .niveau-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; background:var(--cream); padding:8px; border-radius:8px; }
+  .niveau-row input { flex:1; padding:7px 9px; border:1px solid var(--line); border-radius:6px; font-size:13px; background:#fff; }
+  .niveau-row .btn-danger { flex-shrink:0; }
 
   .overlay { position:fixed; inset:0; background:rgba(43,38,32,0.4); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
   .overlay.open { display:flex; }
@@ -143,8 +146,18 @@
     <div class="field"><label>Nom de la formation</label><input type="text" id="formation-titre" placeholder="Ex: Niveau 1 - Fondamentaux"></div>
     <div class="field"><label>Description</label><textarea id="formation-description" placeholder="Courte description"></textarea></div>
     <div class="field-row">
-      <div class="field"><label>Niveau(x)</label><input type="text" id="formation-niveaux" placeholder="Ex: Débutant, ou 1/2/3"></div>
-      <div class="field"><label>Prix (CHF)</label><input type="number" id="formation-prix"></div>
+      <div class="field"><label>Type de formation</label>
+        <select id="formation-structure-type" onchange="toggleStructureType()" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:var(--cream)">
+          <option value="complete">Formation complète</option>
+          <option value="par_niveaux">Formation par niveaux</option>
+        </select>
+      </div>
+      <div class="field" id="formation-prix-field"><label>Prix (CHF)</label><input type="number" id="formation-prix"></div>
+    </div>
+    <div id="niveaux-builder" class="hidden" style="margin-bottom:14px">
+      <label style="display:block;font-size:12.5px;font-weight:500;margin-bottom:8px">Niveaux</label>
+      <div id="niveaux-rows"></div>
+      <button type="button" class="btn-small" onclick="addNiveauRow()">+ Ajouter un niveau</button>
     </div>
     <div class="field"><label>Prérequis</label><textarea id="formation-prerequis" placeholder="Ce que l'étudiant doit déjà savoir/avoir"></textarea></div>
     <div class="field-row">
@@ -248,14 +261,20 @@ function renderList() {
   if (formationsData.length === 0) { container.innerHTML = '<div class="empty">Aucune formation. Cliquez sur "+ Nouvelle formation" pour commencer.</div>'; return; }
   container.innerHTML = formationsData.map(f => {
     const totalLecons = f.sections.reduce((sum, s) => sum + s.lecons.length, 0);
+    let prixTag = '<span class="tag">💰 ' + parseFloat(f.prix || 0).toFixed(0) + ' CHF</span>';
+    if (f.structure_type === 'par_niveaux' && f.niveaux_json) {
+      try {
+        const niveaux = JSON.parse(f.niveaux_json);
+        prixTag = niveaux.map(n => '<span class="tag">🎯 ' + n.nom + (n.prix ? ' — ' + n.prix + ' CHF' : '') + (n.duree ? ' · ' + n.duree : '') + '</span>').join('');
+      } catch (e) {}
+    }
     return `
     <div class="formation-card" onclick="openCourseView(${f.id})">
       <h3>${f.titre}</h3>
       <p>${f.description || ''}</p>
       <div class="formation-tags">
-        ${f.niveaux ? '<span class="tag">🎯 ' + f.niveaux + '</span>' : ''}
+        ${prixTag}
         ${f.duree_totale ? '<span class="tag">⏱ ' + f.duree_totale + '</span>' : ''}
-        <span class="tag">💰 ${parseFloat(f.prix || 0).toFixed(0)} CHF</span>
         <span class="tag">${f.sections.length} section(s) · ${totalLecons} leçon(s)</span>
         <span class="btn-publish ${f.statut === 'publie' ? 'is-published' : ''}">${f.statut === 'publie' ? '● En ligne' : '○ Hors ligne'}</span>
       </div>
@@ -321,7 +340,7 @@ async function callCrud(payload) {
 async function togglePublish() {
   const f = getCurrentFormation();
   const newStatut = f.statut === 'publie' ? 'brouillon' : 'publie';
-  await callCrud({ action: 'update_formation', id: currentFormationId, titre: f.titre, description: f.description, prix: f.prix, statut: newStatut, niveaux: f.niveaux, prerequis: f.prerequis, duree_totale: f.duree_totale, objectif_final: f.objectif_final, dossier_video: f.dossier_video });
+  await callCrud({ action: 'update_formation', id: currentFormationId, titre: f.titre, description: f.description, prix: f.prix, statut: newStatut, niveaux: f.niveaux, prerequis: f.prerequis, duree_totale: f.duree_totale, objectif_final: f.objectif_final, dossier_video: f.dossier_video, structure_type: f.structure_type, niveaux_json: f.niveaux_json });
   loadFormations(true);
 }
 
@@ -332,19 +351,62 @@ async function deleteCurrentFormation() {
   loadFormations();
 }
 
+function toggleStructureType() {
+  const type = document.getElementById('formation-structure-type').value;
+  document.getElementById('niveaux-builder').classList.toggle('hidden', type !== 'par_niveaux');
+  document.getElementById('formation-prix-field').classList.toggle('hidden', type === 'par_niveaux');
+}
+
+function addNiveauRow(nom, prix, duree) {
+  const container = document.getElementById('niveaux-rows');
+  const row = document.createElement('div');
+  row.className = 'niveau-row';
+  row.innerHTML = `
+    <input type="text" placeholder="Nom (ex: Débutant)" class="niveau-nom" value="${nom || ''}">
+    <input type="number" placeholder="Prix CHF" class="niveau-prix" value="${prix || ''}" style="max-width:100px">
+    <input type="text" placeholder="Durée" class="niveau-duree" value="${duree || ''}" style="max-width:110px">
+    <button type="button" class="btn-danger" onclick="this.parentElement.remove()">✕</button>
+  `;
+  container.appendChild(row);
+}
+
+function collectNiveaux() {
+  const rows = document.querySelectorAll('#niveaux-rows .niveau-row');
+  const niveaux = [];
+  rows.forEach(row => {
+    const nom = row.querySelector('.niveau-nom').value.trim();
+    const prix = row.querySelector('.niveau-prix').value;
+    const duree = row.querySelector('.niveau-duree').value.trim();
+    if (nom) niveaux.push({ nom, prix: prix ? parseFloat(prix) : 0, duree });
+  });
+  return niveaux;
+}
+
 function openFormationModal(id) {
   document.getElementById('formation-id').value = id || '';
-  const fields = ['titre','description','niveaux','prerequis','duree','objectif','prix','dossier'];
-  const map = { titre:'titre', description:'description', niveaux:'niveaux', prerequis:'prerequis', duree:'duree_totale', objectif:'objectif_final', prix:'prix', dossier:'dossier_video' };
+  document.getElementById('niveaux-rows').innerHTML = '';
+  const fields = ['titre','description','prerequis','duree','objectif','prix','dossier'];
+  const map = { titre:'titre', description:'description', prerequis:'prerequis', duree:'duree_totale', objectif:'objectif_final', prix:'prix', dossier:'dossier_video' };
   if (id) {
     document.getElementById('formation-modal-title').textContent = 'Modifier la formation';
     document.getElementById('formation-submit-btn').textContent = 'Enregistrer';
     const f = formationsData.find(f => f.id === id);
     fields.forEach(key => { document.getElementById('formation-' + key).value = f[map[key]] || ''; });
+    const type = f.structure_type || 'complete';
+    document.getElementById('formation-structure-type').value = type;
+    toggleStructureType();
+    if (type === 'par_niveaux' && f.niveaux_json) {
+      try {
+        const niveaux = JSON.parse(f.niveaux_json);
+        niveaux.forEach(n => addNiveauRow(n.nom, n.prix, n.duree));
+      } catch (e) {}
+    }
   } else {
     document.getElementById('formation-modal-title').textContent = 'Nouvelle formation';
     document.getElementById('formation-submit-btn').textContent = 'Créer la formation';
     fields.forEach(key => { document.getElementById('formation-' + key).value = ''; });
+    document.getElementById('formation-structure-type').value = 'complete';
+    toggleStructureType();
   }
   document.getElementById('modal-formation').classList.add('open');
 }
@@ -353,15 +415,19 @@ async function saveFormation() {
   const id = document.getElementById('formation-id').value;
   const titre = document.getElementById('formation-titre').value.trim();
   if (!titre) { alert('Le nom de la formation est obligatoire.'); return; }
+  const structureType = document.getElementById('formation-structure-type').value;
+  const niveaux = structureType === 'par_niveaux' ? collectNiveaux() : [];
   const payload = {
     titre,
     description: document.getElementById('formation-description').value.trim(),
-    niveaux: document.getElementById('formation-niveaux').value.trim(),
     prerequis: document.getElementById('formation-prerequis').value.trim(),
     duree_totale: document.getElementById('formation-duree').value.trim(),
     objectif_final: document.getElementById('formation-objectif').value.trim(),
-    prix: document.getElementById('formation-prix').value || 0,
-    dossier_video: document.getElementById('formation-dossier').value.trim()
+    prix: structureType === 'par_niveaux' ? 0 : (document.getElementById('formation-prix').value || 0),
+    dossier_video: document.getElementById('formation-dossier').value.trim(),
+    structure_type: structureType,
+    niveaux_json: JSON.stringify(niveaux),
+    niveaux: niveaux.map(n => n.nom).join(', ')
   };
   if (id) {
     const f = formationsData.find(f => f.id === parseInt(id));
