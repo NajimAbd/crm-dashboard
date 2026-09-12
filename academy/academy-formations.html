@@ -65,7 +65,7 @@
       <div class="sidebar">
         <p class="sidebar-title" id="detail-titre"></p>
         <p class="sidebar-progress" id="detail-progress"></p>
-        <button id="certificat-btn" class="hidden" onclick="voirCertificat()" style="width:100%;margin-bottom:14px;padding:10px;border:none;border-radius:8px;background:linear-gradient(135deg,#d4af37,#b8863f);color:#fff;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif">🎓 Voir mon certificat</button>
+        <button id="certificat-btn" onclick="voirCertificat()" style="width:100%;margin-bottom:14px;padding:10px;border:none;border-radius:8px;background:linear-gradient(135deg,#d4af37,#b8863f);color:#fff;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif">🎓 Voir mon certificat</button>
         <div id="sections-container"></div>
       </div>
       <div class="player-area">
@@ -138,7 +138,6 @@ function showDetail(formationId) {
   document.getElementById('back-link').style.display = formationsData.length > 1 ? 'inline-block' : 'none';
   const { total, done } = countLecons(currentFormation);
   document.getElementById('detail-progress').textContent = `${done} sur ${total} leçons terminées`;
-  document.getElementById('certificat-btn').classList.toggle('hidden', !(total > 0 && done >= total));
   renderSections();
   document.getElementById('placeholder').classList.remove('hidden');
   document.getElementById('video-player').classList.add('hidden');
