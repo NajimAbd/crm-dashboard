@@ -41,9 +41,15 @@
   .field textarea { resize:vertical; min-height:56px; }
   .field-row { display:flex; gap:12px; }
   .field-row .field { flex:1; }
-  .niveau-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; background:var(--cream); padding:8px; border-radius:8px; }
+  .niveau-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; background:var(--cream); padding:8px; border-radius:8px; border-left:4px solid var(--line); }
   .niveau-row input { flex:1; padding:7px 9px; border:1px solid var(--line); border-radius:6px; font-size:13px; background:#fff; }
   .niveau-row .btn-danger { flex-shrink:0; }
+  .niveau-row.niveau-debutant { border-left-color: #5A8C5A; }
+  .niveau-row.niveau-pro { border-left-color: #3E6A93; }
+  .niveau-row.niveau-expert { border-left-color: #B8965A; }
+  .btn-obj-debutant { background: rgba(90,140,90,0.12) !important; color: #3B6D11 !important; border-color: rgba(90,140,90,0.35) !important; }
+  .btn-obj-pro { background: rgba(62,106,147,0.12) !important; color: #2A4D6E !important; border-color: rgba(62,106,147,0.35) !important; }
+  .btn-obj-expert { background: rgba(184,150,90,0.15) !important; color: #8A6D1F !important; border-color: rgba(184,150,90,0.4) !important; }
 
   .overlay { position:fixed; inset:0; background:rgba(43,38,32,0.4); display:none; align-items:center; justify-content:center; padding:20px; z-index:100; }
   .overlay.open { display:flex; }
@@ -181,9 +187,9 @@
       <label>Objectif final</label>
       <textarea id="formation-objectif" placeholder="Ce que l'étudiant saura faire à la fin"></textarea>
       <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
-        <button type="button" class="btn-small" onclick="insererObjectif('debutant')">+ Phrase Débutant</button>
-        <button type="button" class="btn-small" onclick="insererObjectif('pro')">+ Phrase Pro</button>
-        <button type="button" class="btn-small" onclick="insererObjectif('expert')">+ Phrase Expert</button>
+        <button type="button" class="btn-small btn-obj-debutant" onclick="insererObjectif('debutant')">+ Phrase Débutant</button>
+        <button type="button" class="btn-small btn-obj-pro" onclick="insererObjectif('pro')">+ Phrase Pro</button>
+        <button type="button" class="btn-small btn-obj-expert" onclick="insererObjectif('expert')">+ Phrase Expert</button>
       </div>
     </div>
     <div class="modal-actions">
@@ -400,7 +406,7 @@ function addNiveauRow(nom, prix, dureeNombre, dureeUnite, dateDebut, dateFin) {
   row.className = 'niveau-row';
   row.style.flexWrap = 'wrap';
   row.innerHTML = `
-    <select class="niveau-nom" style="flex:1;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fff">
+    <select class="niveau-nom" onchange="updateNiveauColor(this)" style="flex:1;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fff">
       <option value="Débutant" ${nom === 'Débutant' ? 'selected' : ''}>Débutant</option>
       <option value="Pro" ${nom === 'Pro' ? 'selected' : ''}>Pro</option>
       <option value="Expert" ${nom === 'Expert' ? 'selected' : ''}>Expert</option>
@@ -419,7 +425,15 @@ function addNiveauRow(nom, prix, dureeNombre, dureeUnite, dateDebut, dateFin) {
     </div>
   `;
   container.appendChild(row);
+  updateNiveauColor(row.querySelector('.niveau-nom'));
   updateDureeTotaleField();
+}
+
+function updateNiveauColor(selectEl) {
+  const row = selectEl.closest('.niveau-row');
+  row.classList.remove('niveau-debutant', 'niveau-pro', 'niveau-expert');
+  const map = { 'Débutant': 'niveau-debutant', 'Pro': 'niveau-pro', 'Expert': 'niveau-expert' };
+  row.classList.add(map[selectEl.value]);
 }
 
 function updateDureeTotaleField() {
