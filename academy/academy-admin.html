@@ -113,7 +113,10 @@
 
   <!-- ==== VUE 2 : CONSTRUCTEUR / VISIONNAGE ==== -->
   <div id="view-course" class="hidden">
-    <a class="back-link" onclick="showListView()">← Retour à mes formations</a>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px">
+      <a class="back-link" style="margin:0" onclick="showListView()">← Retour à mes formations</a>
+      <select id="formation-quick-switch" onchange="openCourseView(parseInt(this.value))" style="padding:7px 10px;border:1px solid var(--line);border-radius:8px;font-size:13px;background:var(--card)"></select>
+    </div>
     <div class="course-layout">
       <div class="main-area">
         <div class="formation-meta-box">
@@ -161,9 +164,19 @@
     </div>
     <div class="field"><label>Prérequis</label><textarea id="formation-prerequis" placeholder="Ce que l'étudiant doit déjà savoir/avoir"></textarea></div>
     <div class="field-row">
-      <div class="field"><label>Durée totale</label><input type="text" id="formation-duree" placeholder="Ex: 6 semaines, 3h"></div>
+      <div class="field"><label>Mode de formation</label>
+        <select id="formation-format-type" style="width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:8px;font-size:14px;background:var(--cream)">
+          <option value="enregistre">En vidéo enregistrée</option>
+          <option value="direct">En direct avec le coach</option>
+        </select>
+      </div>
       <div class="field"><label>Dossier vidéo (VPS)</label><input type="text" id="formation-dossier" placeholder="Ex: academy-niveau1"></div>
     </div>
+    <div class="field-row">
+      <div class="field"><label>Date de début</label><input type="date" id="formation-date-debut"></div>
+      <div class="field"><label>Date de fin</label><input type="date" id="formation-date-fin"></div>
+    </div>
+    <div class="field"><label>Durée totale <span style="font-weight:400;color:var(--ink-soft)">(calculée automatiquement si formation par niveaux)</span></label><input type="text" id="formation-duree" placeholder="Ex: 6 semaines, 3h"></div>
     <div class="field"><label>Objectif final</label><textarea id="formation-objectif" placeholder="Ce que l'étudiant saura faire à la fin"></textarea></div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('modal-formation')">Annuler</button>
@@ -292,6 +305,9 @@ function openCourseView(id) {
   currentFormationId = id;
   document.getElementById('view-list').classList.add('hidden');
   document.getElementById('view-course').classList.remove('hidden');
+  const sel = document.getElementById('formation-quick-switch');
+  sel.innerHTML = formationsData.map(f => `<option value="${f.id}">${f.titre}</option>`).join('');
+  sel.value = id;
   renderCourseView();
 }
 
@@ -340,7 +356,7 @@ async function callCrud(payload) {
 async function togglePublish() {
   const f = getCurrentFormation();
   const newStatut = f.statut === 'publie' ? 'brouillon' : 'publie';
-  await callCrud({ action: 'update_formation', id: currentFormationId, titre: f.titre, description: f.description, prix: f.prix, statut: newStatut, niveaux: f.niveaux, prerequis: f.prerequis, duree_totale: f.duree_totale, objectif_final: f.objectif_final, dossier_video: f.dossier_video, structure_type: f.structure_type, niveaux_json: f.niveaux_json });
+  await callCrud({ action: 'update_formation', id: currentFormationId, titre: f.titre, description: f.description, prix: f.prix, statut: newStatut, niveaux: f.niveaux, prerequis: f.prerequis, duree_totale: f.duree_totale, objectif_final: f.objectif_final, dossier_video: f.dossier_video, structure_type: f.structure_type, niveaux_json: f.niveaux_json, format_type: f.format_type, date_debut: f.date_debut, date_fin: f.date_fin });
   loadFormations(true);
 }
 
@@ -364,10 +380,17 @@ function addNiveauRow(nom, prix, duree) {
   row.innerHTML = `
     <input type="text" placeholder="Nom (ex: Débutant)" class="niveau-nom" value="${nom || ''}">
     <input type="number" placeholder="Prix CHF" class="niveau-prix" value="${prix || ''}" style="max-width:100px">
-    <input type="text" placeholder="Durée" class="niveau-duree" value="${duree || ''}" style="max-width:110px">
-    <button type="button" class="btn-danger" onclick="this.parentElement.remove()">✕</button>
+    <input type="text" placeholder="Durée" class="niveau-duree" value="${duree || ''}" style="max-width:110px" oninput="updateDureeTotaleField()">
+    <button type="button" class="btn-danger" onclick="this.parentElement.remove(); updateDureeTotaleField()">✕</button>
   `;
   container.appendChild(row);
+  updateDureeTotaleField();
+}
+
+function updateDureeTotaleField() {
+  const niveaux = collectNiveaux();
+  const totale = calculerDureeTotale(niveaux);
+  if (totale) document.getElementById('formation-duree').value = totale;
 }
 
 function collectNiveaux() {
@@ -382,6 +405,20 @@ function collectNiveaux() {
   return niveaux;
 }
 
+function calculerDureeTotale(niveaux) {
+  let total = 0;
+  let unite = '';
+  niveaux.forEach(n => {
+    const match = String(n.duree || '').match(/(\d+(?:[.,]\d+)?)\s*(\w+)/);
+    if (match) {
+      total += parseFloat(match[1].replace(',', '.'));
+      if (!unite) unite = match[2];
+    }
+  });
+  if (total === 0) return '';
+  return total + ' ' + unite;
+}
+
 function openFormationModal(id) {
   document.getElementById('formation-id').value = id || '';
   document.getElementById('niveaux-rows').innerHTML = '';
@@ -392,6 +429,9 @@ function openFormationModal(id) {
     document.getElementById('formation-submit-btn').textContent = 'Enregistrer';
     const f = formationsData.find(f => f.id === id);
     fields.forEach(key => { document.getElementById('formation-' + key).value = f[map[key]] || ''; });
+    document.getElementById('formation-format-type').value = f.format_type || 'enregistre';
+    document.getElementById('formation-date-debut').value = f.date_debut || '';
+    document.getElementById('formation-date-fin').value = f.date_fin || '';
     const type = f.structure_type || 'complete';
     document.getElementById('formation-structure-type').value = type;
     toggleStructureType();
@@ -405,6 +445,9 @@ function openFormationModal(id) {
     document.getElementById('formation-modal-title').textContent = 'Nouvelle formation';
     document.getElementById('formation-submit-btn').textContent = 'Créer la formation';
     fields.forEach(key => { document.getElementById('formation-' + key).value = ''; });
+    document.getElementById('formation-format-type').value = 'enregistre';
+    document.getElementById('formation-date-debut').value = '';
+    document.getElementById('formation-date-fin').value = '';
     document.getElementById('formation-structure-type').value = 'complete';
     toggleStructureType();
   }
@@ -427,7 +470,10 @@ async function saveFormation() {
     dossier_video: document.getElementById('formation-dossier').value.trim(),
     structure_type: structureType,
     niveaux_json: JSON.stringify(niveaux),
-    niveaux: niveaux.map(n => n.nom).join(', ')
+    niveaux: niveaux.map(n => n.nom).join(', '),
+    format_type: document.getElementById('formation-format-type').value,
+    date_debut: document.getElementById('formation-date-debut').value || null,
+    date_fin: document.getElementById('formation-date-fin').value || null
   };
   if (id) {
     const f = formationsData.find(f => f.id === parseInt(id));
