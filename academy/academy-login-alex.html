@@ -40,9 +40,15 @@
 
 <div class="wrap">
   <div class="brand">
-    <div id="logo-container"></div>
+    <div id="logo-container">
+      <svg width="52" height="52" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" style="margin-bottom:8px">
+        <circle cx="50" cy="50" r="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+        <path d="M50 20 L58 42 L82 42 L62 56 L70 80 L50 65 L30 80 L38 56 L18 42 L42 42 Z" fill="#B8965A"/>
+      </svg>
+    </div>
     <div class="brand-mark" id="academy-name">Academy</div>
-    <div class="brand-sub">Espace formation</div>
+    <div class="brand-sub" id="academy-sub">Espace formation</div>
+    <div id="academy-promesse" style="font-size:13px;color:var(--ink-soft);margin-top:8px;max-width:340px;line-height:1.5;display:none"></div>
   </div>
 
   <div class="card">
@@ -83,6 +89,11 @@ async function loadBranding() {
       document.documentElement.style.setProperty('--gold-dark', data.couleur_primaire);
       document.body.style.background = data.couleur_fond;
       if (data.logo_url) document.getElementById('logo-container').innerHTML = `<img src="${data.logo_url}" class="logo-img" alt="${data.nom_academie}">`;
+      if (data.promesse) {
+        const el = document.getElementById('academy-promesse');
+        el.textContent = data.promesse;
+        el.style.display = 'block';
+      }
     }
   } catch (e) {}
 }

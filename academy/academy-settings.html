@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Academy — Paramètres</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600&family=Inter:wght@400;500;600&display=swap');
+  :root { --ink: #2b2620; --ink-soft: #6b6255; --cream: #f7f3ec; --gold: #b8863f; --gold-dark: #8f6a2f; --line: #e2d9c8; --card: #ffffff; }
+  * { box-sizing: border-box; }
+  body { margin:0; font-family:'Inter',sans-serif; background:var(--cream); color:var(--ink); min-height:100vh; }
+  header { background:var(--card); border-bottom:1px solid var(--line); padding:14px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .brand-mark { font-family:'Cormorant Garamond',serif; font-size:19px; font-weight:600; }
+  .brand-sub { font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:.06em; }
+  .back-link { font-size:13px; color:var(--ink-soft); text-decoration:none; cursor:pointer; }
+  .back-link:hover { color:var(--gold-dark); }
+  .container { max-width:640px; margin:0 auto; padding:32px 24px 60px; }
+  h2 { font-family:'Cormorant Garamond',serif; font-size:24px; margin:0 0 24px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:28px; }
+  .field { margin-bottom:18px; }
+  .field label { display:block; font-size:13px; font-weight:500; margin-bottom:6px; }
+  .field input, .field textarea { width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:8px; font-size:14px; font-family:'Inter',sans-serif; background:var(--cream); }
+  .field textarea { resize:vertical; min-height:70px; }
+  .field-row { display:flex; gap:12px; }
+  .field-row .field { flex:1; }
+  .logo-preview { display:flex; align-items:center; gap:16px; margin-bottom:18px; }
+  .logo-box { width:64px; height:64px; border-radius:50%; border:2px solid var(--gold); display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; background:var(--cream); }
+  .logo-box img { width:100%; height:100%; object-fit:cover; }
+  button { font-family:'Inter',sans-serif; cursor:pointer; border:none; }
+  .btn-primary { background:var(--gold-dark); color:#fff; padding:11px 22px; border-radius:8px; font-size:14px; font-weight:500; }
+  .btn-primary:hover { background:var(--gold); }
+  .save-msg { font-size:13px; margin-top:12px; display:none; }
+  .save-msg.ok { color:#3b6d11; display:block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div><div class="brand-mark">Academy</div><div class="brand-sub">Paramètres</div></div>
+  <a class="back-link" onclick="window.location.href='academy-admin.html'">← Retour à l'administration</a>
+</header>
+
+<div class="container">
+  <h2>Personnaliser mon Academy</h2>
+  <div class="card">
+    <div class="logo-preview">
+      <div class="logo-box" id="logo-box">
+        <svg id="logo-default" width="36" height="36" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="50" cy="50" r="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+          <path d="M50 20 L58 42 L82 42 L62 56 L70 80 L50 65 L30 80 L38 56 L18 42 L42 42 Z" fill="#B8965A"/>
+        </svg>
+        <img id="logo-img" style="display:none">
+      </div>
+      <div class="field" style="margin:0;flex:1">
+        <label>Lien vers ton logo (optionnel)</label>
+        <input type="text" id="logo-url" placeholder="https://... (colle un lien direct vers ton image)" oninput="previewLogo()">
+      </div>
+    </div>
+
+    <div class="field"><label>Nom de l'Academy</label><input type="text" id="nom-academie" placeholder="Ex: Alex Coaching Academy"></div>
+
+    <div class="field"><label>Ta promesse (affichée à tes futurs élèves)</label>
+      <textarea id="promesse" placeholder="Ex: Apprends à ton rythme, avec un accompagnement pensé pour ta réussite."></textarea>
+    </div>
+
+    <div class="field-row">
+      <div class="field"><label>Couleur principale</label><input type="color" id="couleur-primaire" style="height:42px;padding:4px"></div>
+      <div class="field"><label>Couleur de fond</label><input type="color" id="couleur-fond" style="height:42px;padding:4px"></div>
+    </div>
+
+    <div class="field"><label>E-mail de contact</label><input type="email" id="email-contact" placeholder="contact@..."></div>
+
+    <button class="btn-primary" onclick="saveSettings()">Enregistrer les modifications</button>
+    <div class="save-msg" id="save-msg"></div>
+  </div>
+</div>
+
+<script>
+const API_BASE = 'https://n8n.srv936251.hstgr.cloud/webhook';
+const params = new URLSearchParams(window.location.search);
+const ACCOUNT_ID = parseInt(params.get('account_id')) || 27;
+
+function previewLogo() {
+  const url = document.getElementById('logo-url').value.trim();
+  const img = document.getElementById('logo-img');
+  const def = document.getElementById('logo-default');
+  if (url) {
+    img.src = url;
+    img.style.display = 'block';
+    def.style.display = 'none';
+  } else {
+    img.style.display = 'none';
+    def.style.display = 'block';
+  }
+}
+
+async function loadSettings() {
+  try {
+    const res = await fetch(`${API_BASE}/academy-get-branding`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: ACCOUNT_ID }) });
+    const data = await res.json();
+    if (data.success) {
+      document.getElementById('nom-academie').value = data.nom_academie || '';
+      document.getElementById('logo-url').value = data.logo_url || '';
+      document.getElementById('promesse').value = data.promesse || '';
+      document.getElementById('couleur-primaire').value = data.couleur_primaire || '#8f6a2f';
+      document.getElementById('couleur-fond').value = data.couleur_fond || '#f7f3ec';
+      document.getElementById('email-contact').value = data.email_contact || '';
+      previewLogo();
+    }
+  } catch (e) {}
+}
+
+async function saveSettings() {
+  const msg = document.getElementById('save-msg');
+  try {
+    const resp = await fetch(`${API_BASE}/academy-update-settings`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        account_id: ACCOUNT_ID,
+        nom_academie: document.getElementById('nom-academie').value.trim(),
+        logo_url: document.getElementById('logo-url').value.trim(),
+        promesse: document.getElementById('promesse').value.trim(),
+        couleur_primaire: document.getElementById('couleur-primaire').value,
+        couleur_fond: document.getElementById('couleur-fond').value,
+        email_contact: document.getElementById('email-contact').value.trim()
+      })
+    });
+    const data = await resp.json();
+    msg.className = 'save-msg ok';
+    msg.textContent = data.success ? 'Modifications enregistrées.' : 'Erreur lors de l\'enregistrement.';
+  } catch (e) {
+    msg.className = 'save-msg ok';
+    msg.textContent = 'Erreur de connexion.';
+  }
+}
+
+loadSettings();
+</script>
+</body>
+</html>
