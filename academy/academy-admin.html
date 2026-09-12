@@ -460,10 +460,10 @@ async function imprimerFiche() {
       ${niveauxHtml}
     </div>
     <div class="footer"><span>${nomAcademie}</span><span>Document généré le ${new Date().toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}</span></div>
-    <script>window.print();</script>
     </body></html>
   `);
   win.document.close();
+  win.print();
 }
 
 async function deleteCurrentFormation() {  if (!confirm('Supprimer cette formation et tout son contenu ?')) return;

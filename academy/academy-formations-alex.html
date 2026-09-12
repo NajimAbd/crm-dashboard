@@ -193,10 +193,10 @@ function afficherCertificat(data) {
       <p>Délivré le ${dateStr}</p>
       <div class="numero">N° ${data.numero}</div>
     </div>
-    <script>window.print();</script>
     </body></html>
   `);
   win.document.close();
+  win.print();
 }
 
 function renderSections() {
