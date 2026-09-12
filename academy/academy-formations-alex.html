@@ -65,6 +65,7 @@
       <div class="sidebar">
         <p class="sidebar-title" id="detail-titre"></p>
         <p class="sidebar-progress" id="detail-progress"></p>
+        <button id="certificat-btn" class="hidden" onclick="voirCertificat()" style="width:100%;margin-bottom:14px;padding:10px;border:none;border-radius:8px;background:linear-gradient(135deg,#d4af37,#b8863f);color:#fff;font-weight:600;font-size:13px;cursor:pointer;font-family:'Inter',sans-serif">🎓 Voir mon certificat</button>
         <div id="sections-container"></div>
       </div>
       <div class="player-area">
@@ -79,6 +80,7 @@
 
 <script>
 const API_BASE = 'https://n8n.srv936251.hstgr.cloud/webhook';
+const ACCOUNT_ID = 5;
 const clientId = sessionStorage.getItem('academy_client_id');
 const clientNom = sessionStorage.getItem('academy_nom');
 
@@ -136,12 +138,65 @@ function showDetail(formationId) {
   document.getElementById('back-link').style.display = formationsData.length > 1 ? 'inline-block' : 'none';
   const { total, done } = countLecons(currentFormation);
   document.getElementById('detail-progress').textContent = `${done} sur ${total} leçons terminées`;
+  document.getElementById('certificat-btn').classList.toggle('hidden', !(total > 0 && done >= total));
   renderSections();
   document.getElementById('placeholder').classList.remove('hidden');
   document.getElementById('video-player').classList.add('hidden');
   document.getElementById('player-title').textContent = '';
   document.getElementById('player-sub').textContent = '';
   currentLeconId = null;
+}
+
+async function voirCertificat() {
+  const btn = document.getElementById('certificat-btn');
+  btn.disabled = true;
+  btn.textContent = 'Chargement…';
+  try {
+    const resp = await fetch(`${API_BASE}/academy-get-certificate`, {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ client_id: parseInt(clientId), formation_id: currentFormation.id, account_id: ACCOUNT_ID })
+    });
+    const data = await resp.json();
+    if (data.success) {
+      afficherCertificat(data);
+    } else {
+      alert(data.message || 'Impossible de générer le certificat.');
+    }
+  } catch (e) {
+    alert('Erreur de connexion.');
+  }
+  btn.disabled = false;
+  btn.textContent = '🎓 Voir mon certificat';
+}
+
+function afficherCertificat(data) {
+  const dateStr = new Date(data.date_delivrance).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const win = window.open('', '_blank');
+  win.document.write(`
+    <html><head><title>Certificat — ${data.formation_titre}</title>
+    <style>
+      body{font-family:Georgia,serif;background:#f7f3ec;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0}
+      .cert{background:#fff;border:10px solid #b8863f;padding:60px 50px;max-width:680px;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,0.15)}
+      .eyebrow{font-family:Arial,sans-serif;letter-spacing:.2em;text-transform:uppercase;color:#b8863f;font-size:12px;margin-bottom:18px}
+      h1{font-size:32px;margin:0 0 24px;color:#2b2620}
+      .nom{font-size:26px;color:#8f6a2f;margin:20px 0;border-bottom:2px solid #e2d9c8;display:inline-block;padding-bottom:8px}
+      p{font-size:15px;color:#6b6255;line-height:1.7}
+      .numero{font-family:Arial,sans-serif;font-size:11px;color:#999;margin-top:30px}
+    </style></head><body>
+    <div class="cert">
+      <div class="eyebrow">${data.nom_academie}</div>
+      <h1>Certificat de réussite</h1>
+      <p>Ce certificat est décerné à</p>
+      <div class="nom">${data.client_nom}</div>
+      <p>pour avoir terminé avec succès la formation</p>
+      <p style="font-size:19px;font-weight:bold;color:#2b2620">${data.formation_titre}</p>
+      <p>Délivré le ${dateStr}</p>
+      <div class="numero">N° ${data.numero}</div>
+    </div>
+    <script>window.print();</script>
+    </body></html>
+  `);
+  win.document.close();
 }
 
 function renderSections() {
