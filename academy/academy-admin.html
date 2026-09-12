@@ -172,12 +172,20 @@
       </div>
       <div class="field"><label>Dossier vidéo (VPS)</label><input type="text" id="formation-dossier" placeholder="Ex: academy-niveau1"></div>
     </div>
-    <div class="field-row">
+    <div class="field-row" id="formation-dates-globales">
       <div class="field"><label>Date de début</label><input type="date" id="formation-date-debut"></div>
       <div class="field"><label>Date de fin</label><input type="date" id="formation-date-fin"></div>
     </div>
     <div class="field"><label>Durée totale <span style="font-weight:400;color:var(--ink-soft)">(calculée automatiquement si formation par niveaux)</span></label><input type="text" id="formation-duree" placeholder="Ex: 6 semaines, 3h"></div>
-    <div class="field"><label>Objectif final</label><textarea id="formation-objectif" placeholder="Ce que l'étudiant saura faire à la fin"></textarea></div>
+    <div class="field">
+      <label>Objectif final</label>
+      <textarea id="formation-objectif" placeholder="Ce que l'étudiant saura faire à la fin"></textarea>
+      <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+        <button type="button" class="btn-small" onclick="insererObjectif('debutant')">+ Phrase Débutant</button>
+        <button type="button" class="btn-small" onclick="insererObjectif('pro')">+ Phrase Pro</button>
+        <button type="button" class="btn-small" onclick="insererObjectif('expert')">+ Phrase Expert</button>
+      </div>
+    </div>
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeModal('modal-formation')">Annuler</button>
       <button class="btn-primary" id="formation-submit-btn" onclick="saveFormation()">Enregistrer</button>
@@ -371,17 +379,44 @@ function toggleStructureType() {
   const type = document.getElementById('formation-structure-type').value;
   document.getElementById('niveaux-builder').classList.toggle('hidden', type !== 'par_niveaux');
   document.getElementById('formation-prix-field').classList.toggle('hidden', type === 'par_niveaux');
+  document.getElementById('formation-dates-globales').classList.toggle('hidden', type === 'par_niveaux');
 }
 
-function addNiveauRow(nom, prix, duree) {
+const PHRASES_OBJECTIF = {
+  debutant: "À la fin du niveau Débutant, l'étudiant maîtrise les bases essentielles et se sent à l'aise pour pratiquer seul en toute sécurité.",
+  pro: "À la fin du niveau Pro, l'étudiant exécute les techniques avec précision, régularité et une vraie autonomie.",
+  expert: "À la fin du niveau Expert, l'étudiant maîtrise pleinement la discipline et peut perfectionner sa pratique de façon autonome."
+};
+
+function insererObjectif(niveau) {
+  const el = document.getElementById('formation-objectif');
+  const phrase = PHRASES_OBJECTIF[niveau];
+  el.value = el.value ? el.value.trim() + '\n' + phrase : phrase;
+}
+
+function addNiveauRow(nom, prix, dureeNombre, dureeUnite, dateDebut, dateFin) {
   const container = document.getElementById('niveaux-rows');
   const row = document.createElement('div');
   row.className = 'niveau-row';
+  row.style.flexWrap = 'wrap';
   row.innerHTML = `
-    <input type="text" placeholder="Nom (ex: Débutant)" class="niveau-nom" value="${nom || ''}">
-    <input type="number" placeholder="Prix CHF" class="niveau-prix" value="${prix || ''}" style="max-width:100px">
-    <input type="text" placeholder="Durée" class="niveau-duree" value="${duree || ''}" style="max-width:110px" oninput="updateDureeTotaleField()">
+    <select class="niveau-nom" style="flex:1;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fff">
+      <option value="Débutant" ${nom === 'Débutant' ? 'selected' : ''}>Débutant</option>
+      <option value="Pro" ${nom === 'Pro' ? 'selected' : ''}>Pro</option>
+      <option value="Expert" ${nom === 'Expert' ? 'selected' : ''}>Expert</option>
+    </select>
+    <input type="number" placeholder="Prix CHF" class="niveau-prix" value="${prix || ''}" style="max-width:90px">
+    <input type="number" placeholder="Durée" class="niveau-duree-nombre" value="${dureeNombre || ''}" style="max-width:70px" oninput="updateDureeTotaleField()">
+    <select class="niveau-duree-unite" style="max-width:100px;padding:7px 9px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fff" onchange="updateDureeTotaleField()">
+      <option value="jours" ${dureeUnite === 'jours' ? 'selected' : ''}>Jours</option>
+      <option value="semaines" ${(!dureeUnite || dureeUnite === 'semaines') ? 'selected' : ''}>Semaines</option>
+      <option value="mois" ${dureeUnite === 'mois' ? 'selected' : ''}>Mois</option>
+    </select>
     <button type="button" class="btn-danger" onclick="this.parentElement.remove(); updateDureeTotaleField()">✕</button>
+    <div style="display:flex;gap:6px;width:100%;margin-top:4px">
+      <input type="date" class="niveau-date-debut" value="${dateDebut || ''}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:12.5px">
+      <input type="date" class="niveau-date-fin" value="${dateFin || ''}" style="flex:1;padding:6px 8px;border:1px solid var(--line);border-radius:6px;font-size:12.5px">
+    </div>
   `;
   container.appendChild(row);
   updateDureeTotaleField();
@@ -397,26 +432,28 @@ function collectNiveaux() {
   const rows = document.querySelectorAll('#niveaux-rows .niveau-row');
   const niveaux = [];
   rows.forEach(row => {
-    const nom = row.querySelector('.niveau-nom').value.trim();
+    const nom = row.querySelector('.niveau-nom').value;
     const prix = row.querySelector('.niveau-prix').value;
-    const duree = row.querySelector('.niveau-duree').value.trim();
-    if (nom) niveaux.push({ nom, prix: prix ? parseFloat(prix) : 0, duree });
+    const dureeNombre = row.querySelector('.niveau-duree-nombre').value;
+    const dureeUnite = row.querySelector('.niveau-duree-unite').value;
+    const dateDebut = row.querySelector('.niveau-date-debut').value;
+    const dateFin = row.querySelector('.niveau-date-fin').value;
+    niveaux.push({ nom, prix: prix ? parseFloat(prix) : 0, duree: dureeNombre ? dureeNombre + ' ' + dureeUnite : '', date_debut: dateDebut, date_fin: dateFin });
   });
   return niveaux;
 }
 
 function calculerDureeTotale(niveaux) {
-  let total = 0;
-  let unite = '';
+  const enJours = { jours: 1, semaines: 7, mois: 30 };
+  let totalJours = 0;
   niveaux.forEach(n => {
     const match = String(n.duree || '').match(/(\d+(?:[.,]\d+)?)\s*(\w+)/);
-    if (match) {
-      total += parseFloat(match[1].replace(',', '.'));
-      if (!unite) unite = match[2];
-    }
+    if (match) totalJours += parseFloat(match[1].replace(',', '.')) * (enJours[match[2]] || 1);
   });
-  if (total === 0) return '';
-  return total + ' ' + unite;
+  if (totalJours === 0) return '';
+  if (totalJours % 30 === 0) return (totalJours / 30) + ' mois';
+  if (totalJours % 7 === 0) return (totalJours / 7) + ' semaines';
+  return totalJours + ' jours';
 }
 
 function openFormationModal(id) {
@@ -438,7 +475,12 @@ function openFormationModal(id) {
     if (type === 'par_niveaux' && f.niveaux_json) {
       try {
         const niveaux = JSON.parse(f.niveaux_json);
-        niveaux.forEach(n => addNiveauRow(n.nom, n.prix, n.duree));
+        niveaux.forEach(n => {
+          const match = String(n.duree || '').match(/(\d+(?:[.,]\d+)?)\s*(\w+)/);
+          const dureeNombre = match ? match[1] : '';
+          const dureeUnite = match ? match[2] : 'semaines';
+          addNiveauRow(n.nom, n.prix, dureeNombre, dureeUnite, n.date_debut, n.date_fin);
+        });
       } catch (e) {}
     }
   } else {
