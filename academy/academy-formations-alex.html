@@ -28,10 +28,6 @@
   .back-link:hover { color: var(--gold-dark); }
   .sidebar { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; align-self: start; }
   .sidebar-title { font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 600; margin: 0 0 4px; }
-  .cert-step { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: #6b6255; padding: 4px 0; }
-  .cert-step.done { color: #3b6d11; font-weight: 500; }
-  .cert-step-icon { flex-shrink: 0; }
-  .cert-step.done .cert-step-icon { color: #3b6d11; }
   .sidebar-progress { font-size: 12px; color: var(--ink-soft); margin-bottom: 16px; }
   .section-block { margin-bottom: 8px; }
   .section-header { display: flex; align-items: center; justify-content: space-between; padding: 10px 4px; border-bottom: 1px solid var(--line); cursor: pointer; font-size: 13px; font-weight: 500; }
@@ -48,6 +44,12 @@
   .player-area video { width: 100%; border-radius: 8px; background: #000; display: block; }
   .player-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; margin: 16px 0 4px; }
   .player-sub { font-size: 13px; color: var(--ink-soft); }
+  .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+  .action-btn { flex: 1; min-width: 140px; padding: 12px 16px; border: none; border-radius: 8px; background: #e8a733; color: #fff; font-weight: 600; font-size: 13px; cursor: pointer; font-family: 'Inter', sans-serif; }
+  .action-btn:hover { background: #d6952a; }
+  .action-btn.cert { flex: 1.3; background: linear-gradient(135deg, #b8863f, #8f6a2f); }
+  .action-btn.cert:hover { background: #7a5926; }
+  .action-panel { background: var(--card); border: 1px solid var(--line); border-radius: 10px; padding: 20px; margin-top: 12px; font-size: 14px; color: var(--ink-soft); }
   .placeholder { display: flex; align-items: center; justify-content: center; height: 320px; color: var(--ink-soft); font-size: 14px; background: var(--cream); border-radius: 8px; }
   .hidden { display: none; }
   .loading { text-align: center; padding: 60px 0; color: var(--ink-soft); font-size: 14px; }
@@ -67,13 +69,6 @@
     <a class="back-link" id="back-link" onclick="showList()">← Retour à mes formations</a>
     <div class="detail-layout">
       <div class="sidebar">
-        <div id="certificat-steps" style="background:#fff8ec;border:1px solid #e8d8b8;border-radius:10px;padding:14px;margin-bottom:16px">
-          <div style="font-family:'Cormorant Garamond',serif;font-weight:700;font-size:15px;color:#8f6a2f;margin-bottom:10px">🎓 Chemin vers ton certificat</div>
-          <div id="step1" class="cert-step"><span class="cert-step-icon">○</span>1. Finir la formation</div>
-          <div id="step2" class="cert-step"><span class="cert-step-icon">○</span>2. Passer le test</div>
-          <div id="step3" class="cert-step"><span class="cert-step-icon">○</span>3. Vérification avec le formateur</div>
-          <button id="certificat-btn" onclick="voirCertificat()" style="width:100%;margin-top:10px;padding:9px;border:none;border-radius:8px;background:linear-gradient(135deg,#d4af37,#b8863f);color:#fff;font-weight:600;font-size:12.5px;cursor:pointer;font-family:'Inter',sans-serif">Voir mon avancement</button>
-        </div>
         <p class="sidebar-title" id="detail-titre"></p>
         <p class="sidebar-progress" id="detail-progress"></p>
         <div id="sections-container"></div>
@@ -85,6 +80,15 @@
         <p class="player-sub" id="player-sub"></p>
       </div>
     </div>
+    <div class="action-row">
+      <button class="action-btn" onclick="togglePanel('panel-qr')">Questions & réponses</button>
+      <button class="action-btn" onclick="togglePanel('panel-materiel')">Matériel additionnel</button>
+      <button class="action-btn" onclick="togglePanel('panel-bonus')">Bonus</button>
+      <button class="action-btn cert" onclick="voirCertificat()" id="certificat-btn">🎓 Voir mon certificat</button>
+    </div>
+    <div id="panel-qr" class="action-panel hidden"><p>Cette section sera bientôt remplie par le formateur.</p></div>
+    <div id="panel-materiel" class="action-panel hidden"><p>Aucun document, vidéo bonus ou lien complémentaire n'a encore été ajouté pour cette formation.</p></div>
+    <div id="panel-bonus" class="action-panel hidden"><p>Aucun contenu bonus n'a encore été ajouté pour cette formation.</p></div>
   </div>
 </div>
 
@@ -148,16 +152,20 @@ function showDetail(formationId) {
   document.getElementById('back-link').style.display = formationsData.length > 1 ? 'inline-block' : 'none';
   const { total, done } = countLecons(currentFormation);
   document.getElementById('detail-progress').textContent = `${done} sur ${total} leçons terminées`;
-  const step1 = document.getElementById('step1');
-  const step1Done = total > 0 && done >= total;
-  step1.classList.toggle('done', step1Done);
-  step1.querySelector('.cert-step-icon').textContent = step1Done ? '✓' : '○';
+  ['panel-qr', 'panel-materiel', 'panel-bonus'].forEach(p => document.getElementById(p).classList.add('hidden'));
   renderSections();
   document.getElementById('placeholder').classList.remove('hidden');
   document.getElementById('video-player').classList.add('hidden');
   document.getElementById('player-title').textContent = '';
   document.getElementById('player-sub').textContent = '';
   currentLeconId = null;
+}
+
+function togglePanel(id) {
+  const panel = document.getElementById(id);
+  const wasHidden = panel.classList.contains('hidden');
+  ['panel-qr', 'panel-materiel', 'panel-bonus'].forEach(p => document.getElementById(p).classList.add('hidden'));
+  if (wasHidden) panel.classList.remove('hidden');
 }
 
 async function voirCertificat() {
