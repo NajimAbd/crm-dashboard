@@ -42,6 +42,7 @@
   .lecon-item.done .lecon-icon { color: var(--success); }
   .player-area { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 20px; }
   .player-area video { width: 100%; border-radius: 8px; background: #000; display: block; }
+  .player-column { display: flex; flex-direction: column; min-width: 0; }
   .player-title { font-family: 'Cormorant Garamond', serif; font-size: 20px; font-weight: 600; margin: 16px 0 4px; }
   .player-sub { font-size: 13px; color: var(--ink-soft); }
   .action-row { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
@@ -73,22 +74,24 @@
         <p class="sidebar-progress" id="detail-progress"></p>
         <div id="sections-container"></div>
       </div>
-      <div class="player-area">
-        <div id="placeholder" class="placeholder">Sélectionnez une leçon pour commencer</div>
-        <video id="video-player" class="hidden" controls controlsList="nodownload" disablePictureInPicture oncontextmenu="return false;"></video>
-        <p class="player-title" id="player-title"></p>
-        <p class="player-sub" id="player-sub"></p>
+      <div class="player-column">
+        <div class="player-area">
+          <div id="placeholder" class="placeholder">Sélectionnez une leçon pour commencer</div>
+          <video id="video-player" class="hidden" controls controlsList="nodownload" disablePictureInPicture oncontextmenu="return false;"></video>
+          <p class="player-title" id="player-title"></p>
+          <p class="player-sub" id="player-sub"></p>
+        </div>
+        <div class="action-row">
+          <button class="action-btn" onclick="togglePanel('panel-qr')">Questions & réponses</button>
+          <button class="action-btn" onclick="togglePanel('panel-materiel')">Matériel additionnel</button>
+          <button class="action-btn" onclick="togglePanel('panel-bonus')">Bonus</button>
+          <button class="action-btn cert" onclick="voirCertificat()" id="certificat-btn">🎓 Voir mon certificat</button>
+        </div>
+        <div id="panel-qr" class="action-panel hidden"><p>Cette section sera bientôt remplie par le formateur.</p></div>
+        <div id="panel-materiel" class="action-panel hidden"><p>Aucun document, vidéo bonus ou lien complémentaire n'a encore été ajouté pour cette formation.</p></div>
+        <div id="panel-bonus" class="action-panel hidden"><p>Aucun contenu bonus n'a encore été ajouté pour cette formation.</p></div>
       </div>
     </div>
-    <div class="action-row">
-      <button class="action-btn" onclick="togglePanel('panel-qr')">Questions & réponses</button>
-      <button class="action-btn" onclick="togglePanel('panel-materiel')">Matériel additionnel</button>
-      <button class="action-btn" onclick="togglePanel('panel-bonus')">Bonus</button>
-      <button class="action-btn cert" onclick="voirCertificat()" id="certificat-btn">🎓 Voir mon certificat</button>
-    </div>
-    <div id="panel-qr" class="action-panel hidden"><p>Cette section sera bientôt remplie par le formateur.</p></div>
-    <div id="panel-materiel" class="action-panel hidden"><p>Aucun document, vidéo bonus ou lien complémentaire n'a encore été ajouté pour cette formation.</p></div>
-    <div id="panel-bonus" class="action-panel hidden"><p>Aucun contenu bonus n'a encore été ajouté pour cette formation.</p></div>
   </div>
 </div>
 
