@@ -132,7 +132,7 @@
     background: #FFFCF6;
   }
 
-  .dropzone-icon { font-size: 40px; margin-bottom: 12px; }
+  .dropzone-icon-svg { margin-bottom: 14px; }
 
   .dropzone-text { font-size: 16px; margin-bottom: 4px; }
 
@@ -271,12 +271,13 @@
   }
 
   .file-list-label {
+    font-family: 'Cormorant Garamond', serif;
     font-weight: 600;
-    color: var(--text-soft);
-    font-size: 13px;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    margin: 16px 0 8px;
+    color: var(--text-main);
+    font-size: 19px;
+    margin: 20px 0 10px;
+    padding-left: 12px;
+    border-left: 2px solid var(--gold);
   }
 
   .file-list-item {
@@ -289,7 +290,12 @@
     justify-content: space-between;
     align-items: center;
     gap: 12px;
+    transition: border-color 0.15s ease;
   }
+
+  .file-list-item:hover { border-color: var(--gold-light); }
+
+  .file-list-info { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 
   .file-list-name {
     font-weight: 500;
@@ -299,19 +305,36 @@
   .file-list-meta {
     color: var(--text-soft);
     font-size: 13px;
-    white-space: nowrap;
   }
+
+  .file-list-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .file-list-icon-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    color: var(--text-soft);
+    cursor: pointer;
+    transition: background 0.15s ease, color 0.15s ease;
+    text-decoration: none;
+  }
+
+  .file-list-icon-btn:hover { background: var(--bg-soft); color: var(--gold-dark, var(--gold)); }
+
+  .file-list-icon-btn.danger:hover { color: var(--status-error); }
 
   .file-list-empty {
     color: var(--text-soft);
     font-size: 14px;
     font-style: italic;
-  }
-
-  .file-list-link {
-    color: var(--gold);
-    text-decoration: none;
-    font-weight: 600;
   }
 </style>
 </head>
@@ -339,7 +362,10 @@
   </div>
 
   <div class="dropzone" id="dropzone">
-    <div class="dropzone-icon">📹</div>
+    <svg class="dropzone-icon-svg" width="46" height="46" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M7 18a4 4 0 0 1-.6-7.96A5.5 5.5 0 0 1 17 9.5a4.5 4.5 0 0 1-.5 9H7Z" stroke="#B8965A" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M12 11v7M12 11l-2.5 2.5M12 11l2.5 2.5" stroke="#B8965A" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
     <div class="dropzone-text">Glisse ta vidéo ici, ou clique pour choisir un fichier</div>
     <div class="dropzone-sub">MP4, MOV — taille selon ton espace disponible</div>
     <input type="file" id="fileInput" accept="video/*">
@@ -425,7 +451,8 @@ function updateQuotaDisplay(usageGo) {
   quotaUsed = parseFloat(usageGo) || quotaUsed;
   const pct = Math.min(100, (quotaUsed / QUOTA_TOTAL_GO) * 100);
   quotaFill.style.width = pct + '%';
-  quotaText.textContent = quotaUsed.toFixed(2) + ' Go / ' + QUOTA_TOTAL_GO + ' Go';
+  quotaFill.style.background = pct > 85 ? 'var(--status-error)' : 'var(--gold)';
+  quotaText.textContent = quotaUsed.toFixed(2) + ' Go sur ' + QUOTA_TOTAL_GO + ' Go';
 }
 
 function fileToBase64(blob) {
@@ -604,14 +631,42 @@ async function loadFilesList() {
     return;
   }
 
+  function formatSize(mo) {
+    const val = parseFloat(mo);
+    if (val >= 1000) return (val / 1000).toFixed(2) + ' Go';
+    return val.toFixed(1) + ' Mo';
+  }
+
+  function formatDate(dateStr) {
+    const d = new Date(dateStr);
+    const diffMs = Date.now() - d.getTime();
+    const diffH = diffMs / 3600000;
+    if (diffH < 1) return 'à l\'instant';
+    if (diffH < 24) return 'il y a ' + Math.round(diffH) + ' h';
+    const diffJ = Math.round(diffH / 24);
+    if (diffJ < 30) return 'il y a ' + diffJ + ' j';
+    return d.toLocaleDateString('fr-CH');
+  }
+
+  const eyeIcon = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" stroke="currentColor" stroke-width="1.5"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.5"/></svg>';
+  const trashIcon = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none"><path d="M4 7h16M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 12a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
   function renderGroup(label, files, groupTarget) {
     let html = '<div class="file-list-group"><div class="file-list-label">' + label + '</div>';
     if (!files.length) {
-      html += '<div class="file-list-empty">Aucun fichier pour l\'instant.</div>';
+      html += '<div class="file-list-empty">Rien envoyé ici pour l\'instant — glisse une vidéo au-dessus pour commencer.</div>';
     } else {
       files.forEach(f => {
-        html += '<div class="file-list-item"><span class="file-list-name">' + f.display_name + '</span>' +
-                '<span class="file-list-meta">' + f.size_mo + ' Mo — <a class="file-list-link" href="' + f.url + '" target="_blank">voir</a> — <a class="file-list-link" href="#" onclick="confirmDelete(\'' + groupTarget + '\',\'' + f.filename.replace(/'/g, "\\'") + '\',\'' + f.display_name.replace(/'/g, "\\'") + '\'); return false;">supprimer</a></span></div>';
+        html += '<div class="file-list-item">' +
+                  '<div class="file-list-info">' +
+                    '<span class="file-list-name">' + f.display_name + '</span>' +
+                    '<span class="file-list-meta">' + formatSize(f.size_mo) + ' · ' + formatDate(f.date) + '</span>' +
+                  '</div>' +
+                  '<div class="file-list-actions">' +
+                    '<a class="file-list-icon-btn" href="' + f.url + '" target="_blank" title="Voir la vidéo">' + eyeIcon + '</a>' +
+                    '<a class="file-list-icon-btn danger" href="#" title="Supprimer" onclick="confirmDelete(\'' + groupTarget + '\',\'' + f.filename.replace(/'/g, "\\'") + '\',\'' + f.display_name.replace(/'/g, "\\'") + '\'); return false;">' + trashIcon + '</a>' +
+                  '</div>' +
+                '</div>';
       });
     }
     html += '</div>';
