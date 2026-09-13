@@ -246,8 +246,12 @@ const API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-upload-video';
 const CHUNK_SIZE = 8 * 1024 * 1024; // 8 Mo
 const RETRY_LIMIT = 5;
 
-const session = JSON.parse(localStorage.getItem('nexa_session') || sessionStorage.getItem('nexa_session') || 'null');
+const session = JSON.parse(localStorage.getItem('crm_session_user') || 'null');
 const accountId = session ? session.account_id : null;
+
+if (!accountId) {
+  document.querySelector('main').innerHTML = '<div class="message error">Session expirée ou introuvable. Merci de te reconnecter au dashboard avant de revenir sur cette page.</div>';
+}
 
 let currentTarget = 'webinaire';
 let currentFile = null;
