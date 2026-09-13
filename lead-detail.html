@@ -788,6 +788,29 @@
     } catch (e) {}
   }
 
+  async function convertToEntrepreneur(leadId) {
+    const btn = document.getElementById('convertEntrepreneurBtn');
+    if (btn) { btn.disabled = true; btn.textContent = '⏳ Création en cours…'; }
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-convert-entrepreneur', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lead_id: leadId })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        alert('Compte entrepreneur créé : ' + (data.login || '') + (data.dossier_vps ? ' (dossier : ' + data.dossier_vps + ')' : ''));
+        loadLeadDetail();
+      } else {
+        alert('Erreur : ' + (data.message || 'Création impossible.'));
+        if (btn) { btn.disabled = false; btn.textContent = '🚀 Transformer en entrepreneur'; }
+      }
+    } catch (e) {
+      alert('Erreur de connexion. Réessaie.');
+      if (btn) { btn.disabled = false; btn.textContent = '🚀 Transformer en entrepreneur'; }
+    }
+  }
+
   function render(data) {
     const l = data.lead;
     if (l.type_client === 'Fr') { renderFormationStudent(data); return; }
@@ -831,6 +854,15 @@
     html += '<option value="DTAP" ' + (tallyTypeEffectif === 'DTAP' ? 'selected' : '') + '>📋 DTAP — Diagnostic payant</option>';
     html += '</select>';
     html += '</div>';
+
+    // ==== Transformation en compte entrepreneur ====
+    if (l.converted_account_id) {
+      html += '<div style="margin:8px 0;padding:10px 16px;border-radius:10px;background:#EDF4ED;border:1px solid #5A8C5A;color:#3E6B3E;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">✅ Entrepreneur — compte #' + l.converted_account_id + '</div>';
+    } else {
+      html += '<div style="margin:8px 0">';
+      html += '<button onclick="convertToEntrepreneur(' + l.id + ')" id="convertEntrepreneurBtn" class="btn-tip" data-tip="Cr\\u00e9e un compte entrepreneur Nexa pour ce lead (dossier VPS + identifiants)" style="padding:8px 16px;border:none;border-radius:6px;background:#8A6D1F;color:#fff;font-weight:700;font-size:13px;cursor:pointer">🚀 Transformer en entrepreneur</button>';
+      html += '</div>';
+    }
 
     // ==== Bannière obligation Diagnostic Tally (RP / RM) ====
     const tallyObligatoire = ['RP','RM'].includes(l.type_client) || l.tally_exige == 1;
