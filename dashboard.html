@@ -564,6 +564,7 @@
   <div style="display:flex;align-items:center;gap:10px">
     <div class="product-switch-group" style="display:flex;background:rgba(255,255,255,0.03);border:1px solid #2A3A2A;border-radius:10px;padding:4px;gap:6px">
       <a id="laboratoireLink" class="product-btn disabled" onclick="handleLockedClick('laboratoireLink', function(){ window.location.href='laboratoire.html'; })">Laboratoire</a>
+      <a id="showBtn" class="product-btn disabled" onclick="handleLockedClick('showBtn', function(){ window.location.href='show.html'; })">Show</a>
       <a id="adminLink" href="admin.html" class="product-btn" style="display:none">Panel Admin</a>
       <a id="irisBtn" class="product-btn disabled" onclick="handleLockedClick('irisBtn', goToIris)">Iris</a>
       <a id="iriscueBtn" class="product-btn disabled" onclick="handleLockedClick('iriscueBtn', goToIriscue)">IrisCue</a>
@@ -988,6 +989,21 @@
       } catch (e) {}
     })();
 
+    (async function checkShowAccess() {
+      try {
+        const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-show-access', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ account_id: session.account_id })
+        });
+        const data = await resp.json();
+        if (data.show) {
+          const btn = document.getElementById('showBtn');
+          if (btn) btn.classList.remove('disabled');
+        }
+      } catch (e) {}
+    })();
+
     (async function checkFormationAccess() {
       try {
         const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-formation-access', {
@@ -1008,6 +1024,7 @@
     if (session.role === 'super_admin') {
       document.getElementById('adminLink').style.display = 'inline-flex';
       document.getElementById('laboratoireLink').classList.remove('disabled');
+      document.getElementById('showBtn').classList.remove('disabled');
       document.getElementById('irisBtn').classList.remove('disabled');
       document.getElementById('iriscueBtn').classList.remove('disabled');
       document.getElementById('formationBtn').classList.remove('disabled');
