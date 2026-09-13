@@ -265,6 +265,54 @@
     color: var(--text-main);
     border: 1px solid var(--border-soft);
   }
+
+  .file-list-group {
+    margin-top: 12px;
+  }
+
+  .file-list-label {
+    font-weight: 600;
+    color: var(--text-soft);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    margin: 16px 0 8px;
+  }
+
+  .file-list-item {
+    background: #fff;
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .file-list-name {
+    font-weight: 500;
+    word-break: break-all;
+  }
+
+  .file-list-meta {
+    color: var(--text-soft);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .file-list-empty {
+    color: var(--text-soft);
+    font-size: 14px;
+    font-style: italic;
+  }
+
+  .file-list-link {
+    color: var(--gold);
+    text-decoration: none;
+    font-weight: 600;
+  }
 </style>
 </head>
 <body>
@@ -306,6 +354,9 @@
     </div>
     <div id="messageBox"></div>
   </div>
+
+  <h2 style="font-family:'Cormorant Garamond',serif; font-size:24px; margin-top:36px;">Mes fichiers</h2>
+  <div id="filesList"></div>
 </main>
 
 <div class="modal-overlay" id="modalOverlay">
@@ -513,6 +564,7 @@ async function finalizeUpload() {
     updateQuotaDisplay(res.usage_go);
     showMessage('success', 'Vidéo envoyée avec succès.<br><a class="video-link" href="' + res.url + '" target="_blank">' + res.url + '</a>');
     localStorage.removeItem('nexa_upload_' + currentFile.name + '_' + currentFile.size);
+    loadFilesList();
   } else {
     progressFill.classList.add('error');
     progressStatus.textContent = 'Erreur.';
@@ -542,6 +594,34 @@ function showRetryButton() {
   };
   messageBox.appendChild(btn);
 }
+
+async function loadFilesList() {
+  if (!accountId) return;
+  const res = await apiCall({ action: 'list', account_id: accountId });
+  const container = document.getElementById('filesList');
+  if (!res.success) {
+    container.innerHTML = '<div class="file-list-empty">Impossible de charger tes fichiers.</div>';
+    return;
+  }
+
+  function renderGroup(label, files) {
+    let html = '<div class="file-list-group"><div class="file-list-label">' + label + '</div>';
+    if (!files.length) {
+      html += '<div class="file-list-empty">Aucun fichier pour l\'instant.</div>';
+    } else {
+      files.forEach(f => {
+        html += '<div class="file-list-item"><span class="file-list-name">' + f.display_name + '</span>' +
+                '<span class="file-list-meta">' + f.size_mo + ' Mo — <a class="file-list-link" href="' + f.url + '" target="_blank">voir</a></span></div>';
+      });
+    }
+    html += '</div>';
+    return html;
+  }
+
+  container.innerHTML = renderGroup('Webinaire', res.webinaire) + renderGroup('Académie', res.academie);
+}
+
+loadFilesList();
 </script>
 
 </body>
