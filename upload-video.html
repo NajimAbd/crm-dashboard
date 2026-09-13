@@ -316,7 +316,7 @@ async function apiCall(body) {
   return resp.json();
 }
 
-async function startUpload(file) {
+async function startUpload(file, confirmReplace) {
   if (!accountId) {
     showMessage('error', 'Session expirée. Merci de te reconnecter.');
     return;
@@ -335,10 +335,16 @@ async function startUpload(file) {
     account_id: accountId,
     target: currentTarget,
     filename: file.name,
-    filesize: file.size
+    filesize: file.size,
+    confirm_replace: !!confirmReplace
   });
 
   if (!init.success) {
+    if (init.duplicate) {
+      progressStatus.textContent = 'En attente...';
+      showDuplicateChoice(file, init.message);
+      return;
+    }
     showMessage('error', init.message || 'Impossible de démarrer l\'envoi.');
     return;
   }
@@ -349,6 +355,29 @@ async function startUpload(file) {
   localStorage.setItem('nexa_upload_' + file.name + '_' + file.size, uploadId);
 
   await uploadAllChunks();
+}
+
+function showDuplicateChoice(file, message) {
+  messageBox.innerHTML = '<div class="message error">' + message + '</div>';
+  const btnReplace = document.createElement('button');
+  btnReplace.className = 'btn-retry';
+  btnReplace.textContent = 'Remplacer le fichier existant';
+  btnReplace.onclick = () => { messageBox.innerHTML = ''; startUpload(file, true); };
+
+  const btnCancel = document.createElement('button');
+  btnCancel.className = 'btn-retry';
+  btnCancel.style.background = '#fff';
+  btnCancel.style.color = 'var(--text-main)';
+  btnCancel.style.border = '1px solid var(--border-soft)';
+  btnCancel.style.marginLeft = '8px';
+  btnCancel.textContent = 'Annuler';
+  btnCancel.onclick = () => {
+    fileCard.style.display = 'none';
+    fileInput.value = '';
+  };
+
+  messageBox.appendChild(btnReplace);
+  messageBox.appendChild(btnCancel);
 }
 
 async function uploadAllChunks() {
