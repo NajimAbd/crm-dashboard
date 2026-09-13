@@ -604,21 +604,53 @@ async function loadFilesList() {
     return;
   }
 
-  function renderGroup(label, files) {
+  function renderGroup(label, files, groupTarget) {
     let html = '<div class="file-list-group"><div class="file-list-label">' + label + '</div>';
     if (!files.length) {
       html += '<div class="file-list-empty">Aucun fichier pour l\'instant.</div>';
     } else {
       files.forEach(f => {
         html += '<div class="file-list-item"><span class="file-list-name">' + f.display_name + '</span>' +
-                '<span class="file-list-meta">' + f.size_mo + ' Mo — <a class="file-list-link" href="' + f.url + '" target="_blank">voir</a></span></div>';
+                '<span class="file-list-meta">' + f.size_mo + ' Mo — <a class="file-list-link" href="' + f.url + '" target="_blank">voir</a> — <a class="file-list-link" href="#" onclick="confirmDelete(\'' + groupTarget + '\',\'' + f.filename.replace(/'/g, "\\'") + '\',\'' + f.display_name.replace(/'/g, "\\'") + '\'); return false;">supprimer</a></span></div>';
       });
     }
     html += '</div>';
     return html;
   }
 
-  container.innerHTML = renderGroup('Webinaire', res.webinaire) + renderGroup('Académie', res.academie);
+  container.innerHTML = renderGroup('Webinaire', res.webinaire, 'webinaire') + renderGroup('Académie', res.academie, 'academie');
+}
+
+function confirmDelete(target, filename, displayName) {
+  document.getElementById('modalText').textContent = 'Veux-tu vraiment supprimer "' + displayName + '" ? Cette action est définitive.';
+  document.querySelector('.modal-icon').textContent = '🗑️';
+  document.querySelector('.modal-title').textContent = 'Supprimer ce fichier ?';
+  const overlay = document.getElementById('modalOverlay');
+  overlay.classList.add('show');
+
+  const btnReplace = document.getElementById('modalReplace');
+  const btnCancel = document.getElementById('modalCancel');
+  btnReplace.textContent = 'Supprimer';
+
+  const cleanup = () => {
+    overlay.classList.remove('show');
+    btnReplace.onclick = null;
+    btnCancel.onclick = null;
+    btnReplace.textContent = 'Remplacer';
+    document.querySelector('.modal-icon').textContent = '⚠️';
+    document.querySelector('.modal-title').textContent = 'Fichier déjà envoyé';
+  };
+
+  btnReplace.onclick = async () => {
+    cleanup();
+    const res = await apiCall({ action: 'delete', account_id: accountId, target, filename });
+    if (res.success) {
+      loadFilesList();
+    } else {
+      alert(res.message || 'Erreur lors de la suppression.');
+    }
+  };
+  btnCancel.onclick = cleanup;
 }
 
 loadFilesList();
