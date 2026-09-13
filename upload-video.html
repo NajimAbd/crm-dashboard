@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexa — Envoyer une vidéo</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --green-deep: #0D1A12;
+    --green-mid: #16261A;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --bg-soft: #FAF7F1;
+    --text-main: #2C2C2A;
+    --text-soft: #6B6B68;
+    --border-soft: #E5DECF;
+    --status-paid: #5A8C5A;
+    --status-error: #A3402E;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Inter', sans-serif;
+    background: var(--bg-soft);
+    color: var(--text-main);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--green-deep);
+    color: var(--cream);
+    padding: 20px 32px;
+    border-bottom: 3px solid var(--gold);
+  }
+
+  header .brand {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--cream);
+  }
+
+  header .brand span { color: var(--gold); }
+
+  main {
+    max-width: 720px;
+    margin: 40px auto;
+    padding: 0 20px;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    color: var(--text-soft);
+    margin-bottom: 24px;
+  }
+
+  .quota-bar-wrap {
+    background: #fff;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-bottom: 24px;
+  }
+
+  .quota-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    margin-bottom: 8px;
+    color: var(--text-soft);
+  }
+
+  .quota-track {
+    background: var(--border-soft);
+    border-radius: 8px;
+    height: 10px;
+    overflow: hidden;
+  }
+
+  .quota-fill {
+    background: var(--gold);
+    height: 100%;
+    transition: width 0.4s ease;
+  }
+
+  .target-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .target-tab {
+    flex: 1;
+    text-align: center;
+    padding: 12px;
+    border: 1px solid var(--border-soft);
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    background: #fff;
+    transition: all 0.2s;
+  }
+
+  .target-tab.active {
+    background: var(--green-deep);
+    border-color: var(--green-deep);
+    color: var(--gold-light);
+  }
+
+  .dropzone {
+    background: #fff;
+    border: 2px dashed var(--border-soft);
+    border-radius: 16px;
+    padding: 48px 24px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .dropzone.dragover {
+    border-color: var(--gold);
+    background: #FFFCF6;
+  }
+
+  .dropzone-icon { font-size: 40px; margin-bottom: 12px; }
+
+  .dropzone-text { font-size: 16px; margin-bottom: 4px; }
+
+  .dropzone-sub { color: var(--text-soft); font-size: 13px; }
+
+  input[type=file] { display: none; }
+
+  .file-card {
+    background: #fff;
+    border: 1px solid var(--border-soft);
+    border-radius: 12px;
+    padding: 16px 20px;
+    margin-top: 20px;
+  }
+
+  .file-name { font-weight: 600; margin-bottom: 10px; word-break: break-all; }
+
+  .progress-track {
+    background: var(--border-soft);
+    border-radius: 8px;
+    height: 12px;
+    overflow: hidden;
+    margin-bottom: 8px;
+  }
+
+  .progress-fill {
+    background: var(--gold);
+    height: 100%;
+    width: 0%;
+    transition: width 0.2s ease;
+  }
+
+  .progress-fill.error { background: var(--status-error); }
+  .progress-fill.done { background: var(--status-paid); }
+
+  .progress-text { font-size: 13px; color: var(--text-soft); display: flex; justify-content: space-between; }
+
+  .message {
+    margin-top: 16px;
+    padding: 12px 16px;
+    border-radius: 10px;
+    font-size: 14px;
+  }
+
+  .message.error { background: #FBEAE6; color: var(--status-error); }
+  .message.success { background: #EAF3EA; color: var(--status-paid); }
+
+  .video-link {
+    display: inline-block;
+    margin-top: 8px;
+    color: var(--gold);
+    font-weight: 600;
+    word-break: break-all;
+  }
+
+  .btn-retry {
+    margin-top: 12px;
+    background: var(--green-deep);
+    color: var(--gold-light);
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="brand">Nexa <span>— Envoyer une vidéo</span></div>
+</header>
+
+<main>
+  <h1>Envoyer une vidéo</h1>
+  <p class="subtitle">Ta vidéo est envoyée automatiquement par petits morceaux — si ta connexion coupe, elle reprend où elle s'est arrêtée.</p>
+
+  <div class="quota-bar-wrap">
+    <div class="quota-label">
+      <span>Espace utilisé</span>
+      <span id="quotaText">chargement...</span>
+    </div>
+    <div class="quota-track"><div class="quota-fill" id="quotaFill" style="width:0%"></div></div>
+  </div>
+
+  <div class="target-tabs">
+    <div class="target-tab active" data-target="webinaire" id="tabWebinaire">Webinaire</div>
+    <div class="target-tab" data-target="academie" id="tabAcademie">Académie</div>
+  </div>
+
+  <div class="dropzone" id="dropzone">
+    <div class="dropzone-icon">📹</div>
+    <div class="dropzone-text">Glisse ta vidéo ici, ou clique pour choisir un fichier</div>
+    <div class="dropzone-sub">MP4, MOV — taille selon ton espace disponible</div>
+    <input type="file" id="fileInput" accept="video/*">
+  </div>
+
+  <div id="fileCard" style="display:none" class="file-card">
+    <div class="file-name" id="fileName"></div>
+    <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="progress-text">
+      <span id="progressPct">0%</span>
+      <span id="progressStatus">En attente...</span>
+    </div>
+    <div id="messageBox"></div>
+  </div>
+</main>
+
+<script>
+const API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-upload-video';
+const CHUNK_SIZE = 8 * 1024 * 1024; // 8 Mo
+const RETRY_LIMIT = 5;
+
+const session = JSON.parse(localStorage.getItem('nexa_session') || sessionStorage.getItem('nexa_session') || 'null');
+const accountId = session ? session.account_id : null;
+
+let currentTarget = 'webinaire';
+let currentFile = null;
+let uploadId = null;
+let totalChunks = 0;
+let uploadedIndices = new Set();
+let quotaUsed = 0;
+const QUOTA_TOTAL_GO = 10;
+
+const dropzone = document.getElementById('dropzone');
+const fileInput = document.getElementById('fileInput');
+const fileCard = document.getElementById('fileCard');
+const fileNameEl = document.getElementById('fileName');
+const progressFill = document.getElementById('progressFill');
+const progressPct = document.getElementById('progressPct');
+const progressStatus = document.getElementById('progressStatus');
+const messageBox = document.getElementById('messageBox');
+const quotaFill = document.getElementById('quotaFill');
+const quotaText = document.getElementById('quotaText');
+
+document.getElementById('tabWebinaire').onclick = () => setTarget('webinaire');
+document.getElementById('tabAcademie').onclick = () => setTarget('academie');
+
+function setTarget(t) {
+  currentTarget = t;
+  document.getElementById('tabWebinaire').classList.toggle('active', t === 'webinaire');
+  document.getElementById('tabAcademie').classList.toggle('active', t === 'academie');
+}
+
+dropzone.onclick = () => fileInput.click();
+dropzone.ondragover = (e) => { e.preventDefault(); dropzone.classList.add('dragover'); };
+dropzone.ondragleave = () => dropzone.classList.remove('dragover');
+dropzone.ondrop = (e) => {
+  e.preventDefault();
+  dropzone.classList.remove('dragover');
+  if (e.dataTransfer.files.length) startUpload(e.dataTransfer.files[0]);
+};
+fileInput.onchange = () => { if (fileInput.files.length) startUpload(fileInput.files[0]); };
+
+function updateQuotaDisplay(usageGo) {
+  quotaUsed = parseFloat(usageGo) || quotaUsed;
+  const pct = Math.min(100, (quotaUsed / QUOTA_TOTAL_GO) * 100);
+  quotaFill.style.width = pct + '%';
+  quotaText.textContent = quotaUsed.toFixed(2) + ' Go / ' + QUOTA_TOTAL_GO + ' Go';
+}
+
+function fileToBase64(blob) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result.split(',')[1]);
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
+
+async function apiCall(body) {
+  const resp = await fetch(API, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  });
+  return resp.json();
+}
+
+async function startUpload(file) {
+  if (!accountId) {
+    showMessage('error', 'Session expirée. Merci de te reconnecter.');
+    return;
+  }
+  currentFile = file;
+  fileCard.style.display = 'block';
+  fileNameEl.textContent = file.name;
+  progressFill.className = 'progress-fill';
+  progressFill.style.width = '0%';
+  progressPct.textContent = '0%';
+  progressStatus.textContent = 'Préparation...';
+  messageBox.innerHTML = '';
+
+  const init = await apiCall({
+    action: 'init',
+    account_id: accountId,
+    target: currentTarget,
+    filename: file.name,
+    filesize: file.size
+  });
+
+  if (!init.success) {
+    showMessage('error', init.message || 'Impossible de démarrer l\'envoi.');
+    return;
+  }
+
+  uploadId = init.upload_id;
+  totalChunks = init.total_chunks;
+  uploadedIndices = new Set();
+  localStorage.setItem('nexa_upload_' + file.name + '_' + file.size, uploadId);
+
+  await uploadAllChunks();
+}
+
+async function uploadAllChunks() {
+  for (let i = 0; i < totalChunks; i++) {
+    if (uploadedIndices.has(i)) continue;
+    let attempts = 0;
+    let ok = false;
+    while (attempts < RETRY_LIMIT && !ok) {
+      attempts++;
+      try {
+        const start = i * CHUNK_SIZE;
+        const end = Math.min(currentFile.size, start + CHUNK_SIZE);
+        const blob = currentFile.slice(start, end);
+        const base64 = await fileToBase64(blob);
+        const res = await apiCall({
+          action: 'chunk',
+          upload_id: uploadId,
+          chunk_index: i,
+          chunk: { data: base64, fileName: 'part' }
+        });
+        if (res.success) {
+          ok = true;
+          uploadedIndices.add(i);
+        }
+      } catch (e) {
+        // reessai automatique
+      }
+      if (!ok && attempts < RETRY_LIMIT) {
+        await new Promise(r => setTimeout(r, 1000 * attempts));
+        progressStatus.textContent = 'Nouvelle tentative (morceau ' + (i+1) + ')...';
+      }
+    }
+    if (!ok) {
+      progressFill.classList.add('error');
+      progressStatus.textContent = 'Coupure réseau.';
+      showRetryButton();
+      return;
+    }
+    const pct = Math.round(((i + 1) / totalChunks) * 100);
+    progressFill.style.width = pct + '%';
+    progressPct.textContent = pct + '%';
+    progressStatus.textContent = 'Envoi en cours...';
+  }
+
+  await finalizeUpload();
+}
+
+async function finalizeUpload() {
+  progressStatus.textContent = 'Finalisation...';
+  const res = await apiCall({ action: 'complete', upload_id: uploadId });
+  if (res.success) {
+    progressFill.classList.add('done');
+    progressStatus.textContent = 'Terminé !';
+    updateQuotaDisplay(res.usage_go);
+    showMessage('success', 'Vidéo envoyée avec succès.<br><a class="video-link" href="' + res.url + '" target="_blank">' + res.url + '</a>');
+    localStorage.removeItem('nexa_upload_' + currentFile.name + '_' + currentFile.size);
+  } else {
+    progressFill.classList.add('error');
+    progressStatus.textContent = 'Erreur.';
+    showMessage('error', res.message || 'Erreur lors de la finalisation.');
+  }
+}
+
+function showMessage(type, html) {
+  messageBox.innerHTML = '<div class="message ' + type + '">' + html + '</div>';
+}
+
+function showRetryButton() {
+  const btn = document.createElement('button');
+  btn.className = 'btn-retry';
+  btn.textContent = 'Reprendre l\'envoi';
+  btn.onclick = async () => {
+    btn.remove();
+    const status = await apiCall({ action: 'status', upload_id: uploadId });
+    if (status.success) {
+      uploadedIndices = new Set(status.received_indices);
+      progressFill.classList.remove('error');
+      progressStatus.textContent = 'Reprise...';
+      await uploadAllChunks();
+    } else {
+      showMessage('error', 'Impossible de reprendre. Merci de recommencer l\'envoi.');
+    }
+  };
+  messageBox.appendChild(btn);
+}
+</script>
+
+</body>
+</html>
