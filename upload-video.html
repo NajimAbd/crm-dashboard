@@ -198,6 +198,73 @@
     cursor: pointer;
     font-weight: 600;
   }
+
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(13, 26, 18, 0.55);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-overlay.show { display: flex; }
+
+  .modal-box {
+    background: #fff;
+    border-radius: 16px;
+    padding: 32px;
+    max-width: 420px;
+    width: 90%;
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .modal-icon {
+    font-size: 44px;
+    margin-bottom: 12px;
+  }
+
+  .modal-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 10px;
+  }
+
+  .modal-text {
+    color: var(--text-soft);
+    font-size: 15px;
+    margin-bottom: 24px;
+    line-height: 1.5;
+  }
+
+  .modal-buttons {
+    display: flex;
+    gap: 10px;
+  }
+
+  .modal-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    font-size: 14px;
+  }
+
+  .modal-btn.primary {
+    background: var(--gold);
+    color: var(--green-deep);
+  }
+
+  .modal-btn.secondary {
+    background: #fff;
+    color: var(--text-main);
+    border: 1px solid var(--border-soft);
+  }
 </style>
 </head>
 <body>
@@ -240,6 +307,18 @@
     <div id="messageBox"></div>
   </div>
 </main>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-box">
+    <div class="modal-icon">⚠️</div>
+    <div class="modal-title">Fichier déjà envoyé</div>
+    <div class="modal-text" id="modalText"></div>
+    <div class="modal-buttons">
+      <button class="modal-btn secondary" id="modalCancel">Annuler</button>
+      <button class="modal-btn primary" id="modalReplace">Remplacer</button>
+    </div>
+  </div>
+</div>
 
 <script>
 const API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-upload-video';
@@ -358,26 +437,26 @@ async function startUpload(file, confirmReplace) {
 }
 
 function showDuplicateChoice(file, message) {
-  messageBox.innerHTML = '<div class="message error">' + message + '</div>';
-  const btnReplace = document.createElement('button');
-  btnReplace.className = 'btn-retry';
-  btnReplace.textContent = 'Remplacer le fichier existant';
-  btnReplace.onclick = () => { messageBox.innerHTML = ''; startUpload(file, true); };
+  progressStatus.textContent = 'En attente de ta décision...';
+  document.getElementById('modalText').textContent = message + ' Veux-tu la remplacer ?';
+  const overlay = document.getElementById('modalOverlay');
+  overlay.classList.add('show');
 
-  const btnCancel = document.createElement('button');
-  btnCancel.className = 'btn-retry';
-  btnCancel.style.background = '#fff';
-  btnCancel.style.color = 'var(--text-main)';
-  btnCancel.style.border = '1px solid var(--border-soft)';
-  btnCancel.style.marginLeft = '8px';
-  btnCancel.textContent = 'Annuler';
+  const btnReplace = document.getElementById('modalReplace');
+  const btnCancel = document.getElementById('modalCancel');
+
+  const cleanup = () => {
+    overlay.classList.remove('show');
+    btnReplace.onclick = null;
+    btnCancel.onclick = null;
+  };
+
+  btnReplace.onclick = () => { cleanup(); startUpload(file, true); };
   btnCancel.onclick = () => {
+    cleanup();
     fileCard.style.display = 'none';
     fileInput.value = '';
   };
-
-  messageBox.appendChild(btnReplace);
-  messageBox.appendChild(btnCancel);
 }
 
 async function uploadAllChunks() {
