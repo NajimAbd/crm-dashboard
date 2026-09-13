@@ -619,6 +619,9 @@ async function loadFilesList() {
   }
 
   container.innerHTML = renderGroup('Webinaire', res.webinaire, 'webinaire') + renderGroup('Académie', res.academie, 'academie');
+
+  const totalMo = [...res.webinaire, ...res.academie].reduce((sum, f) => sum + parseFloat(f.size_mo || 0), 0);
+  updateQuotaDisplay(totalMo / 1000);
 }
 
 function confirmDelete(target, filename, displayName) {
