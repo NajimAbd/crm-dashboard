@@ -849,10 +849,12 @@
     if (l.type_client) html += '<span class="header-chip">🏷️ ' + esc(typeLabels[l.type_client] || l.type_client) + '</span>';
     if (l.roqya_status && l.roqya_status !== 'none') html += '<span class="header-chip">🕌 Roqya : ' + esc(l.roqya_status === 'in_progress' ? 'en cours' : 'terminée') + '</span>';
     const tallyTypeEffectif = l.tally_type || (l.type_client === 'DD' ? 'DTAP' : 'DTFF');
-    html += '<select id="tallyTypeSelect" onchange="setTallyType(' + l.id + ', this.value)" title="Type de diagnostic Tally" style="padding:5px 10px;border-radius:6px;border:1px solid ' + (tallyTypeEffectif === 'DTAP' ? '#B8965A' : '#5A8C5A') + ';font-weight:700;font-size:12.5px;cursor:pointer;background:' + (tallyTypeEffectif === 'DTAP' ? '#FCF3DC' : '#E8F3E8') + ';color:' + (tallyTypeEffectif === 'DTAP' ? '#8A6D1F' : '#3E6B3E') + '">';
-    html += '<option value="DTFF" ' + (tallyTypeEffectif === 'DTFF' ? 'selected' : '') + '>📋 DTFF — Diagnostic gratuit</option>';
-    html += '<option value="DTAP" ' + (tallyTypeEffectif === 'DTAP' ? 'selected' : '') + '>📋 DTAP — Diagnostic payant</option>';
-    html += '</select>';
+    if (l.type_client !== 'AA') {
+      html += '<select id="tallyTypeSelect" onchange="setTallyType(' + l.id + ', this.value)" title="Type de diagnostic Tally" style="padding:5px 10px;border-radius:6px;border:1px solid ' + (tallyTypeEffectif === 'DTAP' ? '#B8965A' : '#5A8C5A') + ';font-weight:700;font-size:12.5px;cursor:pointer;background:' + (tallyTypeEffectif === 'DTAP' ? '#FCF3DC' : '#E8F3E8') + ';color:' + (tallyTypeEffectif === 'DTAP' ? '#8A6D1F' : '#3E6B3E') + '">';
+      html += '<option value="DTFF" ' + (tallyTypeEffectif === 'DTFF' ? 'selected' : '') + '>📋 DTFF — Diagnostic gratuit</option>';
+      html += '<option value="DTAP" ' + (tallyTypeEffectif === 'DTAP' ? 'selected' : '') + '>📋 DTAP — Diagnostic payant</option>';
+      html += '</select>';
+    }
     html += '</div>';
 
     // ==== Transformation en compte entrepreneur ====
