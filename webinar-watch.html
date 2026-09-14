@@ -7,21 +7,35 @@
 <style>
   :root { --green-deep:#0D1A12; --gold:#B8965A; --cream:#FAF7F1; }
   * { box-sizing:border-box; }
-  body { font-family: Arial, sans-serif; background:var(--green-deep); margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
-  .wrap { max-width:900px; width:100%; }
-  .live-badge { display:inline-flex; align-items:center; gap:6px; background:#c0392b; color:#fff; font-size:12px; font-weight:700; padding:5px 12px; border-radius:20px; margin-bottom:14px; }
+  html, body { height:100%; margin:0; }
+  body { font-family: Arial, sans-serif; background:#000; }
+  .layout { display:flex; height:100vh; width:100vw; }
+  .main-col { flex:1; display:flex; flex-direction:column; min-width:0; }
+  .video-area { flex:1; position:relative; background:#000; display:flex; align-items:center; justify-content:center; }
+  video { width:100%; height:100%; object-fit:contain; background:#000; }
+  .live-badge { position:absolute; top:16px; left:16px; display:inline-flex; align-items:center; gap:6px; background:#c0392b; color:#fff; font-size:12px; font-weight:700; padding:5px 12px; border-radius:20px; z-index:5; }
   .live-dot { width:8px; height:8px; background:#fff; border-radius:50%; animation:pulse 1.4s infinite; }
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
-  h1 { color:var(--cream); font-size:22px; margin:0 0 16px; }
-  video { width:100%; border-radius:12px; background:#000; }
-  .waiting, .ended { background:var(--cream); border-radius:12px; padding:60px 30px; text-align:center; }
+  .viewer-count { position:absolute; top:16px; right:16px; background:rgba(0,0,0,0.6); color:#fff; font-size:12px; font-weight:600; padding:6px 14px; border-radius:20px; z-index:5; }
+  .title-bar { background:var(--green-deep); color:var(--cream); padding:16px 20px; border-top:2px solid var(--gold); }
+  .title-bar h1 { margin:0; font-size:17px; font-weight:700; }
+  .chat-col { width:340px; background:#161f19; border-left:1px solid #2a352d; display:flex; flex-direction:column; }
+  .chat-header { padding:14px 16px; color:var(--cream); font-weight:700; font-size:14px; border-bottom:1px solid #2a352d; }
+  .chat-messages { flex:1; overflow-y:auto; padding:10px 14px; }
+  .chat-msg { margin-bottom:12px; font-size:13px; line-height:1.4; animation:fadein 0.4s; }
+  @keyframes fadein { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)} }
+  .chat-msg .author { color:var(--gold); font-weight:700; margin-right:5px; }
+  .chat-msg .text { color:var(--cream); }
+  .unmute-btn { position:absolute; bottom:70px; left:50%; transform:translateX(-50%); padding:10px 20px; border:none; border-radius:24px; background:var(--gold); color:var(--green-deep); font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,0.3); z-index:5; }
+  .waiting, .ended { background:var(--cream); border-radius:12px; padding:60px 30px; text-align:center; margin:auto; max-width:500px; }
   .waiting h2, .ended h2 { color:var(--green-deep); margin:0 0 10px; }
   .countdown { font-size:36px; font-weight:700; color:var(--gold); margin:16px 0; }
-  .loading { color:var(--cream); text-align:center; padding:60px 0; }
+  .loading { color:var(--cream); text-align:center; margin:auto; }
+  @media (max-width:800px) { .layout { flex-direction:column; } .chat-col { width:100%; height:220px; } }
 </style>
 </head>
 <body>
-<div class="wrap" id="wrap">
+<div class="layout" id="layout">
   <div class="loading">Connexion au webinaire…</div>
 </div>
 
@@ -31,8 +45,27 @@
   const inscriptionId = params.get('id');
   let reportInterval = null;
 
+  const CHAT_SCRIPT = [
+    { at: 20, author: 'Sami', text: 'Bonsoir tout le monde ! 👋' },
+    { at: 45, author: 'Nadia', text: "J'ai hâte d'apprendre tout ça" },
+    { at: 90, author: 'Karim', text: 'Enfin quelqu\'un qui explique clairement' },
+    { at: 180, author: 'Malika', text: '🔥🔥🔥' },
+    { at: 320, author: 'Yassine', text: "C'est exactement ce que je cherchais" },
+    { at: 480, author: 'Amal', text: 'Merci pour ce partage !' },
+    { at: 650, author: 'Rachid', text: 'Je note tout ça 📝' },
+    { at: 820, author: 'Imane', text: "Wow je n'y avais jamais pensé comme ça" },
+    { at: 1000, author: 'Omar', text: '👏👏👏' },
+    { at: 1250, author: 'Sara', text: 'Ça confirme ce que je vivais' },
+    { at: 1500, author: 'Adil', text: 'On peut avoir le lien du bonus ?' },
+    { at: 1800, author: 'Hind', text: 'Incroyable, merci !' },
+    { at: 2200, author: 'Bilal', text: 'Est-ce que ça marche aussi pour mon cas ?' },
+    { at: 2600, author: 'Fatima', text: "J'ai déjà commencé à appliquer ça" },
+    { at: 3000, author: 'Hassan', text: 'Génial cette masterclass 🙏' }
+  ];
+  let shownCount = 0;
+
   if (!inscriptionId) {
-    document.getElementById('wrap').innerHTML = '<div class="ended"><h2>Lien invalide.</h2></div>';
+    document.getElementById('layout').innerHTML = '<div class="ended"><h2>Lien invalide.</h2></div>';
   } else {
     loadInfo();
   }
@@ -46,12 +79,12 @@
       });
       const data = await resp.json();
       if (!data.success) {
-        document.getElementById('wrap').innerHTML = '<div class="ended"><h2>' + (data.message || 'Webinaire introuvable.') + '</h2></div>';
+        document.getElementById('layout').innerHTML = '<div class="ended"><h2>' + (data.message || 'Webinaire introuvable.') + '</h2></div>';
         return;
       }
       render(data);
     } catch (err) {
-      document.getElementById('wrap').innerHTML = '<div class="ended"><h2>Erreur de connexion.</h2></div>';
+      document.getElementById('layout').innerHTML = '<div class="ended"><h2>Erreur de connexion.</h2></div>';
     }
   }
 
@@ -66,8 +99,7 @@
   }
 
   function renderWaiting(data) {
-    const wrap = document.getElementById('wrap');
-    wrap.innerHTML = '<div class="waiting"><h2>Le webinaire va bientôt commencer</h2><div class="countdown" id="cd"></div><div>Reste sur cette page, la lecture démarrera automatiquement.</div></div>';
+    document.getElementById('layout').innerHTML = '<div class="waiting"><h2>Le webinaire va bientôt commencer</h2><div class="countdown" id="cd"></div><div>Reste sur cette page, la lecture démarrera automatiquement.</div></div>';
     let secs = data.secondes_avant_debut;
     const cdEl = document.getElementById('cd');
     function tick() {
@@ -81,17 +113,24 @@
   }
 
   function renderEnded(data) {
-    document.getElementById('wrap').innerHTML = '<div class="ended"><h2>Ce webinaire est terminé</h2><div>Une nouvelle session commence bientôt — reviens vérifier plus tard.</div></div>';
+    document.getElementById('layout').innerHTML = '<div class="ended"><h2>Ce webinaire est terminé</h2><div>Une nouvelle session commence bientôt — reviens vérifier plus tard.</div></div>';
   }
 
   function renderPlayer(data) {
-    const wrap = document.getElementById('wrap');
-    wrap.innerHTML =
-      '<div class="live-badge"><span class="live-dot"></span> EN DIRECT</div>' +
-      '<h1>' + escHtml(data.titre) + '</h1>' +
-      '<div style="position:relative">' +
-      '<video id="videoPlayer" autoplay muted playsinline oncontextmenu="return false" controlsList="nodownload noremoteplayback nofullscreen"></video>' +
-      '<button id="unmuteBtn" style="position:absolute;bottom:70px;left:50%;transform:translateX(-50%);padding:10px 20px;border:none;border-radius:24px;background:var(--gold);color:var(--green-deep);font-weight:700;font-size:14px;cursor:pointer;box-shadow:0 4px 14px rgba(0,0,0,0.3)">🔊 Activer le son</button>' +
+    const layout = document.getElementById('layout');
+    layout.innerHTML =
+      '<div class="main-col">' +
+        '<div class="video-area">' +
+          '<div class="live-badge"><span class="live-dot"></span> EN DIRECT</div>' +
+          '<div class="viewer-count" id="viewerCount">' + (data.spectateurs_actuels || 1) + ' spectateurs</div>' +
+          '<video id="videoPlayer" autoplay muted playsinline oncontextmenu="return false" controlsList="nodownload noremoteplayback nofullscreen"></video>' +
+          '<button id="unmuteBtn" class="unmute-btn">🔊 Activer le son</button>' +
+        '</div>' +
+        '<div class="title-bar"><h1>' + escHtml(data.titre) + '</h1></div>' +
+      '</div>' +
+      '<div class="chat-col">' +
+        '<div class="chat-header">💬 Discussion en direct</div>' +
+        '<div class="chat-messages" id="chatMessages"></div>' +
       '</div>';
 
     const video = document.getElementById('videoPlayer');
@@ -106,6 +145,9 @@
       this.remove();
     });
 
+    catchUpChat(data.position_secondes);
+    setInterval(() => checkChat(video.currentTime), 1000);
+
     reportInterval = setInterval(() => {
       if (!video.paused) {
         fetch(CRM_WATCH_API, {
@@ -115,6 +157,30 @@
         }).catch(() => {});
       }
     }, 15000);
+  }
+
+  function catchUpChat(currentPos) {
+    while (shownCount < CHAT_SCRIPT.length && CHAT_SCRIPT[shownCount].at <= currentPos) {
+      appendChatMsg(CHAT_SCRIPT[shownCount]);
+      shownCount++;
+    }
+  }
+
+  function checkChat(currentPos) {
+    if (shownCount < CHAT_SCRIPT.length && CHAT_SCRIPT[shownCount].at <= currentPos) {
+      appendChatMsg(CHAT_SCRIPT[shownCount]);
+      shownCount++;
+    }
+  }
+
+  function appendChatMsg(msg) {
+    const container = document.getElementById('chatMessages');
+    if (!container) return;
+    const div = document.createElement('div');
+    div.className = 'chat-msg';
+    div.innerHTML = '<span class="author">' + escHtml(msg.author) + '</span><span class="text">' + escHtml(msg.text) + '</span>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
   }
 
   function escHtml(s) { return String(s||'').replace(/</g,'&lt;'); }
