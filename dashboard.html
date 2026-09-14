@@ -919,7 +919,7 @@
           blockedNom = data.nom_praticien || '';
         } else if (data.success && localStorage.getItem('crm_real_login_done') === '1') {
           localStorage.setItem(SESSION_KEY, JSON.stringify({
-            login: data.login, role: data.role, account_id: data.account_id, nom_praticien: data.nom_praticien
+            login: data.login, role: data.role, account_id: data.account_id, nom_praticien: data.nom_praticien, totp_enabled: data.totp_enabled
           }));
           localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
         }
@@ -939,6 +939,10 @@
     if (localStorage.getItem('crm_force_pwd_change') === '1') {
       window.location.href = 'change-password.html';
       throw new Error('Password change required');
+    }
+    if (session.role === 'praticien' && !session.totp_enabled) {
+      window.location.href = '2fa-setup.html?obligatoire=1';
+      throw new Error('2FA required');
     }
 
     // === Verifie l'acces Iris et active le bouton si actif ===
