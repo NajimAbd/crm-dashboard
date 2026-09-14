@@ -255,7 +255,8 @@
           login: data.login,
           role: data.role,
           account_id: data.account_id,
-          nom_praticien: data.nom_praticien
+          nom_praticien: data.nom_praticien,
+          totp_enabled: data.totp_enabled
         };
         localStorage.setItem(SESSION_KEY, JSON.stringify(session));
         localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
@@ -263,6 +264,8 @@
         if (data.must_change_password) {
           localStorage.setItem('crm_force_pwd_change', '1');
           window.location.href = 'change-password.html';
+        } else if (data.role === 'praticien' && !data.totp_enabled) {
+          window.location.href = '2fa-setup.html?obligatoire=1';
         } else {
           window.location.href = 'dashboard.html';
         }
