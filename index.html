@@ -200,6 +200,25 @@
   <p class="footer-note">Platform CRM</p>
 </div>
 
+<div class="login-card" id="totpCard" style="display:none">
+  <svg class="mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <ellipse cx="50" cy="50" rx="46" ry="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+    <circle cx="50" cy="50" r="6" fill="#B8965A"/>
+    <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
+  </svg>
+  <h1 style="font-size:22px">Code de sécurité</h1>
+  <p class="eyebrow">Ouvrez Google Authenticator</p>
+  <p style="font-size:13px;color:var(--text-soft);text-align:center;line-height:1.6;margin:0 0 20px">Entrez le code à 6 chiffres affiché dans l'application.</p>
+  <form id="totpForm" autocomplete="off">
+    <div class="field">
+      <label for="totpCode">Code à 6 chiffres</label>
+      <input type="text" id="totpCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" required>
+    </div>
+    <button type="submit" class="submit-btn" id="totpSubmitBtn">Vérifier</button>
+    <div class="error-msg" id="totpErrorMsg">Code incorrect. Réessayez.</div>
+  </form>
+</div>
+
 <script>
   // === Œil : afficher / masquer le mot de passe ===
   function toggleNexaPwd(btn) {
@@ -230,6 +249,51 @@
   const form = document.getElementById('loginForm');
   const btn = document.getElementById('submitBtn');
   const errorMsg = document.getElementById('errorMsg');
+  const CRM_2FA_VERIFY_WEBHOOK = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-2fa-verify-login';
+  let pendingSession = null;
+  let pendingMustChangePassword = false;
+
+  const totpForm = document.getElementById('totpForm');
+  const totpBtn = document.getElementById('totpSubmitBtn');
+  const totpErrorMsg = document.getElementById('totpErrorMsg');
+
+  totpForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const code = document.getElementById('totpCode').value.trim();
+    if (code.length !== 6) return;
+
+    totpBtn.disabled = true;
+    totpBtn.textContent = 'Vérification…';
+    totpErrorMsg.style.display = 'none';
+
+    try {
+      const resp = await fetch(CRM_2FA_VERIFY_WEBHOOK, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: pendingSession.login, code })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        localStorage.setItem(SESSION_KEY, JSON.stringify(pendingSession));
+        localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+        localStorage.setItem('crm_real_login_done', '1');
+        if (pendingMustChangePassword) {
+          localStorage.setItem('crm_force_pwd_change', '1');
+          window.location.href = 'change-password.html';
+        } else {
+          window.location.href = 'dashboard.html';
+        }
+      } else {
+        totpErrorMsg.textContent = data.message || 'Code incorrect. Réessayez.';
+        totpErrorMsg.style.display = 'block';
+      }
+    } catch (err) {
+      totpErrorMsg.textContent = 'Erreur de connexion. Réessayez.';
+      totpErrorMsg.style.display = 'block';
+    }
+    totpBtn.disabled = false;
+    totpBtn.textContent = 'Vérifier';
+  });
 
   form.addEventListener('submit', async function(e) {
     e.preventDefault();
@@ -258,16 +322,24 @@
           nom_praticien: data.nom_praticien,
           totp_enabled: data.totp_enabled
         };
-        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
-        localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
-        localStorage.setItem('crm_real_login_done', '1');
-        if (data.must_change_password) {
-          localStorage.setItem('crm_force_pwd_change', '1');
-          window.location.href = 'change-password.html';
-        } else if (data.role === 'praticien' && !data.totp_enabled) {
-          window.location.href = '2fa-setup.html?obligatoire=1';
+        if (data.role === 'praticien' && data.totp_enabled) {
+          pendingSession = session;
+          pendingMustChangePassword = !!data.must_change_password;
+          document.getElementById('loginForm').closest('.login-card').style.display = 'none';
+          document.getElementById('totpCard').style.display = 'block';
+          document.getElementById('totpCode').focus();
         } else {
-          window.location.href = 'dashboard.html';
+          localStorage.setItem(SESSION_KEY, JSON.stringify(session));
+          localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
+          localStorage.setItem('crm_real_login_done', '1');
+          if (data.must_change_password) {
+            localStorage.setItem('crm_force_pwd_change', '1');
+            window.location.href = 'change-password.html';
+          } else if (data.role === 'praticien' && !data.totp_enabled) {
+            window.location.href = '2fa-setup.html?obligatoire=1';
+          } else {
+            window.location.href = 'dashboard.html';
+          }
         }
       } else {
         errorMsg.style.display = 'block';
