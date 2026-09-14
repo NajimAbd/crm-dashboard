@@ -847,6 +847,11 @@
     html += '<span class="header-chip" style="background:#F2EEE4;border-color:#B8965A"><b>💰 Total payé : ' + (parseFloat(l.montant_total_paye || 0)).toFixed(2) + ' CHF</b></span>';
     html += '<span class="header-chip">🧾 ' + (l.nombre_paiements || 0) + ' paiement(s)</span>';
     if (l.type_client) html += '<span class="header-chip">🏷️ ' + esc(typeLabels[l.type_client] || l.type_client) + '</span>';
+    if (l.type_client === 'AA') {
+      if (l.interet_laboratoire == 1) html += '<span class="header-chip" style="background:#F2EEE4;border-color:#8A6D1F">🧪 Laboratoire</span>';
+      if (l.interet_show == 1) html += '<span class="header-chip" style="background:#F2EEE4;border-color:#8A6D1F">🎬 Show</span>';
+      if (l.interet_academie == 1) html += '<span class="header-chip" style="background:#F2EEE4;border-color:#8A6D1F">🎓 Académie</span>';
+    }
     if (l.roqya_status && l.roqya_status !== 'none') html += '<span class="header-chip">🕌 Roqya : ' + esc(l.roqya_status === 'in_progress' ? 'en cours' : 'terminée') + '</span>';
     const tallyTypeEffectif = l.tally_type || (l.type_client === 'DD' ? 'DTAP' : 'DTFF');
     if (l.type_client !== 'AA') {
