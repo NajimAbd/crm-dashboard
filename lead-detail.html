@@ -838,48 +838,21 @@
     html += '<div class="lead-header">';
     html += '<div>';
     const isShowType = ['SW','SC','SB'].includes(l.type_client);
+    const isAA = l.type_client === 'AA';
+    let interetBullets = '';
+    if (isAA) {
+      const interets = [];
+      if (l.interet_laboratoire == 1) interets.push('Laboratoire');
+      if (l.interet_show == 1) interets.push('Show');
+      if (l.interet_academie == 1) interets.push('Académie');
+      interetBullets = interets.map(x => ' <span style="color:#6E4A8E;font-size:16px;font-weight:600">• ' + x + '</span>').join('');
+    }
     html += '<h1 class="lead-name">' + esc(fullName)
       + (l.type_client ? ' <span class="type-badge" title="' + (typeLabels[l.type_client] || '') + '">' + esc(l.type_client) + '</span>' : '')
       + ((isShowType && (l.is_vip == 1 || l.is_vip === true)) ? ' <span title="Ticket VIP" style="font-size:20px">👑</span>' : '')
       + (tempIcons[l.statut_suivi] ? ' <span title="' + esc(l.statut_suivi) + '" style="font-size:18px">' + tempIcons[l.statut_suivi] + '</span>' : '')
+      + interetBullets
       + '</h1>';
-    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 6px">';
-    html += '<span class="header-chip" style="background:#F2EEE4;border-color:#B8965A"><b>💰 Total payé : ' + (parseFloat(l.montant_total_paye || 0)).toFixed(2) + ' CHF</b></span>';
-    html += '<span class="header-chip">🧾 ' + (l.nombre_paiements || 0) + ' paiement(s)</span>';
-    if (l.type_client) html += '<span class="header-chip">🏷️ ' + esc(typeLabels[l.type_client] || l.type_client) + '</span>';
-    if (l.type_client === 'AA') {
-      if (l.interet_laboratoire == 1) html += '<span class="header-chip" style="background:#F2EEE4;border-color:#8A6D1F">🧪 Laboratoire</span>';
-      if (l.interet_show == 1) html += '<span class="header-chip" style="background:#F2EEE4;border-color:#8A6D1F">🎬 Show</span>';
-      if (l.interet_academie == 1) html += '<span class="header-chip" style="background:#F2EEE4;border-color:#8A6D1F">🎓 Académie</span>';
-    }
-    if (l.roqya_status && l.roqya_status !== 'none') html += '<span class="header-chip">🕌 Roqya : ' + esc(l.roqya_status === 'in_progress' ? 'en cours' : 'terminée') + '</span>';
-    const tallyTypeEffectif = l.tally_type || (l.type_client === 'DD' ? 'DTAP' : 'DTFF');
-    if (l.type_client !== 'AA') {
-      html += '<select id="tallyTypeSelect" onchange="setTallyType(' + l.id + ', this.value)" title="Type de diagnostic Tally" style="padding:5px 10px;border-radius:6px;border:1px solid ' + (tallyTypeEffectif === 'DTAP' ? '#B8965A' : '#5A8C5A') + ';font-weight:700;font-size:12.5px;cursor:pointer;background:' + (tallyTypeEffectif === 'DTAP' ? '#FCF3DC' : '#E8F3E8') + ';color:' + (tallyTypeEffectif === 'DTAP' ? '#8A6D1F' : '#3E6B3E') + '">';
-      html += '<option value="DTFF" ' + (tallyTypeEffectif === 'DTFF' ? 'selected' : '') + '>📋 DTFF — Diagnostic gratuit</option>';
-      html += '<option value="DTAP" ' + (tallyTypeEffectif === 'DTAP' ? 'selected' : '') + '>📋 DTAP — Diagnostic payant</option>';
-      html += '</select>';
-    }
-    html += '</div>';
-
-    // ==== Transformation en compte entrepreneur ====
-    if (l.converted_account_id) {
-      html += '<div style="margin:8px 0;padding:10px 16px;border-radius:10px;background:#EDF4ED;border:1px solid #5A8C5A;color:#3E6B3E;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">✅ Entrepreneur — compte #' + l.converted_account_id + '</div>';
-    } else {
-      html += '<div style="margin:8px 0">';
-      html += '<button onclick="convertToEntrepreneur(' + l.id + ')" id="convertEntrepreneurBtn" class="btn-tip" data-tip="Cr\\u00e9e un compte entrepreneur Nexa pour ce lead (dossier VPS + identifiants)" style="padding:8px 16px;border:none;border-radius:6px;background:#8A6D1F;color:#fff;font-weight:700;font-size:13px;cursor:pointer">🚀 Transformer en entrepreneur</button>';
-      html += '</div>';
-    }
-
-    // ==== Bannière obligation Diagnostic Tally (RP / RM) ====
-    const tallyObligatoire = ['RP','RM'].includes(l.type_client) || l.tally_exige == 1;
-    if (tallyObligatoire) {
-      if (l.a_rempli_diagnostic == 1) {
-        html += '<div style="margin:8px 0;padding:11px 16px;border-radius:10px;background:#EDF4ED;border:1px solid #5A8C5A;color:#3E6B3E;font-size:13px;font-weight:600">✅ Diagnostic Tally obligatoire — REMPLI' + (l.date_diagnostic ? ' le ' + fmtDate(l.date_diagnostic) : '') + '</div>';
-      } else {
-        html += '<div style="margin:8px 0;padding:11px 16px;border-radius:10px;background:#FBEFEB;border:1px solid #C4604E;color:#A33F2E;font-size:13px;font-weight:700">⚠️ DIAGNOSTIC TALLY OBLIGATOIRE pour ce client (Roqya) — pas encore rempli. Envoie-lui le lien ci-dessous. 👇</div>';
-      }
-    }
     html += '<div class="lead-contact">';
     if (l.email) html += '<span>✉️ ' + esc(l.email) + '</span>';
     if (l.whatsapp) html += '<span>📱 ' + esc(l.whatsapp) + '</span>';
@@ -891,6 +864,46 @@
     if (l.campagne) html += '<span class="tag">Campagne : ' + esc(l.campagne) + '</span>';
     if (l.statut_webinaire) html += '<span class="tag">Webinaire : ' + esc(l.statut_webinaire) + '</span>';
     html += '</div>';
+    if (isAA) {
+      html += '<div style="display:flex;flex-direction:column;gap:10px;margin:16px 0 6px;align-items:flex-start">';
+      html += '<span class="header-chip" style="background:#F2EEE4;border-color:#B8965A"><b>💰 Total payé : ' + (parseFloat(l.montant_total_paye || 0)).toFixed(2) + ' CHF</b></span>';
+      html += '<span class="header-chip">🧾 ' + (l.nombre_paiements || 0) + ' paiement(s)</span>';
+      html += '</div>';
+    } else {
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 6px">';
+      html += '<span class="header-chip" style="background:#F2EEE4;border-color:#B8965A"><b>💰 Total payé : ' + (parseFloat(l.montant_total_paye || 0)).toFixed(2) + ' CHF</b></span>';
+      html += '<span class="header-chip">🧾 ' + (l.nombre_paiements || 0) + ' paiement(s)</span>';
+      if (l.type_client) html += '<span class="header-chip">🏷️ ' + esc(typeLabels[l.type_client] || l.type_client) + '</span>';
+      if (l.roqya_status && l.roqya_status !== 'none') html += '<span class="header-chip">🕌 Roqya : ' + esc(l.roqya_status === 'in_progress' ? 'en cours' : 'terminée') + '</span>';
+      const tallyTypeEffectif = l.tally_type || (l.type_client === 'DD' ? 'DTAP' : 'DTFF');
+      html += '<select id="tallyTypeSelect" onchange="setTallyType(' + l.id + ', this.value)" title="Type de diagnostic Tally" style="padding:5px 10px;border-radius:6px;border:1px solid ' + (tallyTypeEffectif === 'DTAP' ? '#B8965A' : '#5A8C5A') + ';font-weight:700;font-size:12.5px;cursor:pointer;background:' + (tallyTypeEffectif === 'DTAP' ? '#FCF3DC' : '#E8F3E8') + ';color:' + (tallyTypeEffectif === 'DTAP' ? '#8A6D1F' : '#3E6B3E') + '">';
+      html += '<option value="DTFF" ' + (tallyTypeEffectif === 'DTFF' ? 'selected' : '') + '>📋 DTFF — Diagnostic gratuit</option>';
+      html += '<option value="DTAP" ' + (tallyTypeEffectif === 'DTAP' ? 'selected' : '') + '>📋 DTAP — Diagnostic payant</option>';
+      html += '</select>';
+      html += '</div>';
+    }
+
+    // ==== Transformation en compte entrepreneur ====
+    if (!isAA) {
+      if (l.converted_account_id) {
+        html += '<div style="margin:8px 0;padding:10px 16px;border-radius:10px;background:#EDF4ED;border:1px solid #5A8C5A;color:#3E6B3E;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">✅ Entrepreneur — compte #' + l.converted_account_id + '</div>';
+      } else {
+        html += '<div style="margin:8px 0">';
+        html += '<button onclick="convertToEntrepreneur(' + l.id + ')" id="convertEntrepreneurBtn" class="btn-tip" data-tip="Cr\\u00e9e un compte entrepreneur Nexa pour ce lead (dossier VPS + identifiants)" style="padding:8px 16px;border:none;border-radius:6px;background:#8A6D1F;color:#fff;font-weight:700;font-size:13px;cursor:pointer">🚀 Transformer en entrepreneur</button>';
+        html += '</div>';
+      }
+    }
+
+    // ==== Bannière obligation Diagnostic Tally (RP / RM) ====
+    const tallyObligatoire = ['RP','RM'].includes(l.type_client) || l.tally_exige == 1;
+    if (tallyObligatoire) {
+      if (l.a_rempli_diagnostic == 1) {
+        html += '<div style="margin:8px 0;padding:11px 16px;border-radius:10px;background:#EDF4ED;border:1px solid #5A8C5A;color:#3E6B3E;font-size:13px;font-weight:600">✅ Diagnostic Tally obligatoire — REMPLI' + (l.date_diagnostic ? ' le ' + fmtDate(l.date_diagnostic) : '') + '</div>';
+      } else {
+        html += '<div style="margin:8px 0;padding:11px 16px;border-radius:10px;background:#FBEFEB;border:1px solid #C4604E;color:#A33F2E;font-size:13px;font-weight:700">⚠️ DIAGNOSTIC TALLY OBLIGATOIRE pour ce client (Roqya) — pas encore rempli. Envoie-lui le lien ci-dessous. 👇</div>';
+      }
+    }
+    html += '<div class="lead-contact-diag-anchor"></div>';
     // Diagnostic le plus récent : sert à savoir si l'analyse Ayrika est réellement terminée
     const latestDiag = data.diagnostics.slice().sort((x, y) => (y.id || 0) - (x.id || 0))[0];
     const analyseTerminee = !!(latestDiag && latestDiag.ayrika_analysis);
@@ -960,6 +973,13 @@
     html += buyerChip;
     html += '<button onclick="refreshLead()" id="refreshLeadBtn" title="V\u00e9rifier si le formulaire est arriv\u00e9" class="btn-refresh-3d" style="width:150px;text-align:center;margin-right:0">\ud83d\udd04 Actualiser</button>';
     html += '<button onclick="window.print()" style="width:150px;text-align:center;padding:8px 18px;border:none;border-radius:6px;background:var(--gold);color:var(--green-deep);font-weight:700;font-size:13px;cursor:pointer">🖨️ Imprimer</button>';
+    if (isAA) {
+      if (l.converted_account_id) {
+        html += '<div style="width:150px;text-align:center;padding:8px 10px;border-radius:6px;background:#EDF4ED;border:1px solid #5A8C5A;color:#3E6B3E;font-size:12px;font-weight:600">✅ Entrepreneur #' + l.converted_account_id + '</div>';
+      } else {
+        html += '<button onclick="convertToEntrepreneur(' + l.id + ')" id="convertEntrepreneurBtn" class="btn-tip" data-tip="Cr\\u00e9e un compte entrepreneur Nexa pour ce lead (dossier VPS + identifiants)" style="width:150px;text-align:center;padding:8px 10px;border:none;border-radius:6px;background:#8A6D1F;color:#fff;font-weight:700;font-size:13px;cursor:pointer">🚀 Transformer</button>';
+      }
+    }
     html += '</div>';
     html += '</div>';
 
