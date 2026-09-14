@@ -163,6 +163,7 @@
 
     catchUpChat(data.position_secondes);
     setInterval(() => checkChat(video.currentTime), 1000);
+    startViewerCountSimulation();
 
     reportInterval = setInterval(() => {
       if (!video.paused) {
@@ -197,6 +198,58 @@
     div.innerHTML = '<span class="author">' + escHtml(msg.author) + '</span><span class="text">' + escHtml(msg.text) + '</span>';
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
+  }
+
+  function startViewerCountSimulation() {
+    const el = document.getElementById('viewerCount');
+    if (!el) return;
+    const startTime = Date.now();
+    let count = 400 + Math.floor(Math.random() * 16);
+    const peak = 488 + Math.floor(Math.random() * 8);
+
+    function updateDisplay() {
+      el.textContent = count + ' spectateurs';
+    }
+    updateDisplay();
+
+    function scheduleNext() {
+      const elapsedMin = (Date.now() - startTime) / 60000;
+      let delayMs;
+
+      if (elapsedMin < 3) {
+        delayMs = 4000 + Math.random() * 6000;
+      } else if (elapsedMin < 15) {
+        delayMs = 10000 + Math.random() * 20000;
+      } else {
+        const roll = Math.random();
+        if (roll < 0.15) {
+          delayMs = (20 + Math.random() * 15) * 60000;
+        } else {
+          delayMs = 60000 + Math.random() * 180000;
+        }
+      }
+
+      setTimeout(() => {
+        if (elapsedMin < 3) {
+          const delta = Math.floor(Math.random() * 9) - 2;
+          count = Math.max(370, Math.min(peak + 4, count + delta));
+        } else if (elapsedMin < 15) {
+          const bias = count < peak ? 1 : 0;
+          const delta = Math.floor(Math.random() * 5) - 1 + bias;
+          count = Math.max(390, Math.min(peak + 3, count + delta));
+        } else {
+          const leaveRoll = Math.random();
+          if (leaveRoll < 0.35) {
+            count = Math.max(380, count - (1 + Math.floor(Math.random() * 4)));
+          } else if (leaveRoll < 0.6) {
+            count = Math.min(peak + 3, count + (1 + Math.floor(Math.random() * 3)));
+          }
+        }
+        updateDisplay();
+        scheduleNext();
+      }, delayMs);
+    }
+    scheduleNext();
   }
 
   function escHtml(s) { return String(s||'').replace(/</g,'&lt;'); }
