@@ -843,22 +843,29 @@
       + ((isShowType && (l.is_vip == 1 || l.is_vip === true)) ? ' <span title="Ticket VIP" style="font-size:20px">👑</span>' : '')
       + (tempIcons[l.statut_suivi] ? ' <span title="' + esc(l.statut_suivi) + '" style="font-size:18px">' + tempIcons[l.statut_suivi] + '</span>' : '')
       + '</h1>';
-    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 6px">';
+    html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin:14px 0 4px;align-items:center">';
     html += '<span class="header-chip" style="background:#F2EEE4;border-color:#B8965A"><b>💰 Total payé : ' + (parseFloat(l.montant_total_paye || 0)).toFixed(2) + ' CHF</b></span>';
     html += '<span class="header-chip">🧾 ' + (l.nombre_paiements || 0) + ' paiement(s)</span>';
     if (l.type_client) html += '<span class="header-chip">🏷️ ' + esc(typeLabels[l.type_client] || l.type_client) + '</span>';
-    if (l.type_client === 'AA') {
+    if (l.roqya_status && l.roqya_status !== 'none') html += '<span class="header-chip">🕌 Roqya : ' + esc(l.roqya_status === 'in_progress' ? 'en cours' : 'terminée') + '</span>';
+    html += '</div>';
+    if (l.type_client === 'AA' && (l.interet_laboratoire == 1 || l.interet_show == 1 || l.interet_academie == 1)) {
+      html += '<div style="margin:12px 0 4px;padding-left:12px;border-left:2px solid #B8965A">';
+      html += '<div style="font-family:\'Cormorant Garamond\',serif;font-style:italic;color:#8A8577;font-size:14px;margin-bottom:6px">Intéressé par</div>';
+      html += '<div style="display:flex;gap:8px;flex-wrap:wrap">';
       if (l.interet_laboratoire == 1) html += '<span class="header-chip" style="background:#F2EEE4;border-color:#8A6D1F">🧪 Laboratoire</span>';
       if (l.interet_show == 1) html += '<span class="header-chip" style="background:#F2EEE4;border-color:#8A6D1F">🎬 Show</span>';
       if (l.interet_academie == 1) html += '<span class="header-chip" style="background:#F2EEE4;border-color:#8A6D1F">🎓 Académie</span>';
+      html += '</div></div>';
     }
-    if (l.roqya_status && l.roqya_status !== 'none') html += '<span class="header-chip">🕌 Roqya : ' + esc(l.roqya_status === 'in_progress' ? 'en cours' : 'terminée') + '</span>';
     const tallyTypeEffectif = l.tally_type || (l.type_client === 'DD' ? 'DTAP' : 'DTFF');
     if (l.type_client !== 'AA') {
+      html += '<div style="margin-top:8px">';
       html += '<select id="tallyTypeSelect" onchange="setTallyType(' + l.id + ', this.value)" title="Type de diagnostic Tally" style="padding:5px 10px;border-radius:6px;border:1px solid ' + (tallyTypeEffectif === 'DTAP' ? '#B8965A' : '#5A8C5A') + ';font-weight:700;font-size:12.5px;cursor:pointer;background:' + (tallyTypeEffectif === 'DTAP' ? '#FCF3DC' : '#E8F3E8') + ';color:' + (tallyTypeEffectif === 'DTAP' ? '#8A6D1F' : '#3E6B3E') + '">';
       html += '<option value="DTFF" ' + (tallyTypeEffectif === 'DTFF' ? 'selected' : '') + '>📋 DTFF — Diagnostic gratuit</option>';
       html += '<option value="DTAP" ' + (tallyTypeEffectif === 'DTAP' ? 'selected' : '') + '>📋 DTAP — Diagnostic payant</option>';
       html += '</select>';
+      html += '</div>';
     }
     html += '</div>';
 
