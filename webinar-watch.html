@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Webinaire en direct</title>
+<style>
+  :root { --green-deep:#0D1A12; --gold:#B8965A; --cream:#FAF7F1; }
+  * { box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; background:var(--green-deep); margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .wrap { max-width:900px; width:100%; }
+  .live-badge { display:inline-flex; align-items:center; gap:6px; background:#c0392b; color:#fff; font-size:12px; font-weight:700; padding:5px 12px; border-radius:20px; margin-bottom:14px; }
+  .live-dot { width:8px; height:8px; background:#fff; border-radius:50%; animation:pulse 1.4s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
+  h1 { color:var(--cream); font-size:22px; margin:0 0 16px; }
+  video { width:100%; border-radius:12px; background:#000; }
+  .waiting, .ended { background:var(--cream); border-radius:12px; padding:60px 30px; text-align:center; }
+  .waiting h2, .ended h2 { color:var(--green-deep); margin:0 0 10px; }
+  .countdown { font-size:36px; font-weight:700; color:var(--gold); margin:16px 0; }
+  .loading { color:var(--cream); text-align:center; padding:60px 0; }
+</style>
+</head>
+<body>
+<div class="wrap" id="wrap">
+  <div class="loading">Connexion au webinaire…</div>
+</div>
+
+<script>
+  const CRM_WATCH_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-webinar-watch';
+  const params = new URLSearchParams(window.location.search);
+  const inscriptionId = params.get('id');
+  let reportInterval = null;
+
+  if (!inscriptionId) {
+    document.getElementById('wrap').innerHTML = '<div class="ended"><h2>Lien invalide.</h2></div>';
+  } else {
+    loadInfo();
+  }
+
+  async function loadInfo() {
+    try {
+      const resp = await fetch(CRM_WATCH_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'info', inscription_id: inscriptionId })
+      });
+      const data = await resp.json();
+      if (!data.success) {
+        document.getElementById('wrap').innerHTML = '<div class="ended"><h2>' + (data.message || 'Webinaire introuvable.') + '</h2></div>';
+        return;
+      }
+      render(data);
+    } catch (err) {
+      document.getElementById('wrap').innerHTML = '<div class="ended"><h2>Erreur de connexion.</h2></div>';
+    }
+  }
+
+  function render(data) {
+    if (data.statut === 'en_attente') {
+      renderWaiting(data);
+    } else if (data.statut === 'termine') {
+      renderEnded(data);
+    } else {
+      renderPlayer(data);
+    }
+  }
+
+  function renderWaiting(data) {
+    const wrap = document.getElementById('wrap');
+    wrap.innerHTML = '<div class="waiting"><h2>Le webinaire va bientôt commencer</h2><div class="countdown" id="cd"></div><div>Reste sur cette page, la lecture démarrera automatiquement.</div></div>';
+    let secs = data.secondes_avant_debut;
+    const cdEl = document.getElementById('cd');
+    function tick() {
+      if (secs <= 0) { loadInfo(); return; }
+      const m = Math.floor(secs/60), s = secs%60;
+      cdEl.textContent = m + ':' + String(s).padStart(2,'0');
+      secs--;
+      setTimeout(tick, 1000);
+    }
+    tick();
+  }
+
+  function renderEnded(data) {
+    document.getElementById('wrap').innerHTML = '<div class="ended"><h2>Ce webinaire est terminé</h2><div>Une nouvelle session commence bientôt — reviens vérifier plus tard.</div></div>';
+  }
+
+  function renderPlayer(data) {
+    const wrap = document.getElementById('wrap');
+    wrap.innerHTML =
+      '<div class="live-badge"><span class="live-dot"></span> EN DIRECT</div>' +
+      '<h1>' + escHtml(data.titre) + '</h1>' +
+      '<video id="videoPlayer" controls autoplay playsinline></video>';
+
+    const video = document.getElementById('videoPlayer');
+    video.src = data.video_url;
+    video.addEventListener('loadedmetadata', () => {
+      video.currentTime = data.position_secondes;
+      video.play().catch(() => {});
+    });
+
+    reportInterval = setInterval(() => {
+      if (!video.paused) {
+        fetch(CRM_WATCH_API, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'progress', inscription_id: inscriptionId, position_secondes: Math.floor(video.currentTime) })
+        }).catch(() => {});
+      }
+    }, 15000);
+  }
+
+  function escHtml(s) { return String(s||'').replace(/</g,'&lt;'); }
+</script>
+</body>
+</html>
