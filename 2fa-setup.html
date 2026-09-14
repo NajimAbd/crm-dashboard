@@ -264,6 +264,8 @@
       });
       const data = await resp.json();
       if (data.success) {
+        session.totp_enabled = true;
+        localStorage.setItem(SESSION_KEY, JSON.stringify(session));
         showStep('stepDone');
       } else {
         qrMsg.textContent = data.message || 'Code incorrect.';
