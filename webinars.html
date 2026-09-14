@@ -207,6 +207,32 @@
     <h1>Webinaires & Challenges</h1>
     <div class="subtitle" id="subtitleCount">Chargement…</div>
     <button onclick="window.location.href='upload-video.html'" style="margin-top:16px;padding:10px 20px;border:none;border-radius:8px;background:var(--gold, #B8965A);color:var(--green-deep, #0D1A12);font-weight:700;font-size:13px;cursor:pointer">📹 Envoyer mes vidéos</button>
+    <button onclick="openCreateShowModal()" style="margin-top:16px;margin-left:10px;padding:10px 20px;border:2px solid var(--gold, #B8965A);border-radius:8px;background:transparent;color:var(--gold, #B8965A);font-weight:700;font-size:13px;cursor:pointer">+ Créer un Show</button>
+  </div>
+
+  <div id="createShowOverlay" style="display:none;position:fixed;inset:0;background:rgba(13,26,18,0.6);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:14px;padding:28px;max-width:460px;width:90%;max-height:85vh;overflow-y:auto">
+      <h2 style="margin:0 0 18px;font-size:20px">Créer un Show</h2>
+
+      <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Titre du webinaire</label>
+      <input type="text" id="showTitre" placeholder="Ex: Comment guérir avec la Roqya" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:16px;box-sizing:border-box">
+
+      <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Vidéo à diffuser</label>
+      <select id="showVideoSelect" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:6px;box-sizing:border-box">
+        <option value="">Chargement des vidéos…</option>
+      </select>
+      <div style="font-size:12px;color:#999;margin-bottom:16px">Seules les vidéos envoyées dans "Webinaire" apparaissent ici.</div>
+
+      <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Horaires proposés (heure suisse, séparés par une virgule)</label>
+      <input type="text" id="showHoraires" placeholder="Ex: 10:00,14:00,20:00" value="10:00,14:00,20:00" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:20px;box-sizing:border-box">
+
+      <div id="createShowError" style="display:none;color:#c0392b;font-size:13px;margin-bottom:14px"></div>
+
+      <div style="display:flex;gap:10px">
+        <button onclick="closeCreateShowModal()" style="flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer">Annuler</button>
+        <button id="createShowSubmitBtn" onclick="submitCreateShow()" style="flex:1;padding:12px;border:none;border-radius:8px;background:var(--gold, #B8965A);color:var(--green-deep, #0D1A12);font-weight:700;cursor:pointer">Créer</button>
+      </div>
+    </div>
   </div>
 
   <div id="sitesContainer">
@@ -413,6 +439,79 @@
   }
 
   loadSites();
+
+  const CRM_UPLOAD_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-upload-video';
+  const CRM_CREATE_SHOW_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-create-site-webinar';
+
+  function openCreateShowModal() {
+    document.getElementById('createShowOverlay').style.display = 'flex';
+    document.getElementById('showTitre').value = '';
+    document.getElementById('showHoraires').value = '10:00,14:00,20:00';
+    document.getElementById('createShowError').style.display = 'none';
+    loadVideosForSelect();
+  }
+
+  function closeCreateShowModal() {
+    document.getElementById('createShowOverlay').style.display = 'none';
+  }
+
+  async function loadVideosForSelect() {
+    const select = document.getElementById('showVideoSelect');
+    select.innerHTML = '<option value="">Chargement des vidéos…</option>';
+    try {
+      const resp = await fetch(CRM_UPLOAD_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'list', account_id: session.account_id })
+      });
+      const data = await resp.json();
+      const videos = data.webinaire || [];
+      if (videos.length === 0) {
+        select.innerHTML = '<option value="">Aucune vidéo envoyée — envoie-en une d\'abord</option>';
+        return;
+      }
+      select.innerHTML = videos.map(v => '<option value="' + esc(v.url) + '">' + esc(v.display_name) + ' (' + v.size_mo + ' Mo)</option>').join('');
+    } catch (err) {
+      select.innerHTML = '<option value="">Erreur de chargement des vidéos</option>';
+    }
+  }
+
+  async function submitCreateShow() {
+    const titre = document.getElementById('showTitre').value.trim();
+    const videoUrl = document.getElementById('showVideoSelect').value;
+    const horaires = document.getElementById('showHoraires').value.trim();
+    const errorDiv = document.getElementById('createShowError');
+    errorDiv.style.display = 'none';
+
+    if (!titre) { errorDiv.textContent = 'Merci de donner un titre.'; errorDiv.style.display = 'block'; return; }
+    if (!videoUrl) { errorDiv.textContent = 'Merci de choisir une vidéo.'; errorDiv.style.display = 'block'; return; }
+    if (!horaires) { errorDiv.textContent = 'Merci d\'indiquer au moins un horaire.'; errorDiv.style.display = 'block'; return; }
+
+    const btn = document.getElementById('createShowSubmitBtn');
+    btn.disabled = true;
+    btn.textContent = 'Création…';
+
+    try {
+      const resp = await fetch(CRM_CREATE_SHOW_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: session.account_id, titre, video_url: videoUrl, horaires })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        closeCreateShowModal();
+        loadSites();
+      } else {
+        errorDiv.textContent = 'Une erreur est survenue. Réessaie.';
+        errorDiv.style.display = 'block';
+      }
+    } catch (err) {
+      errorDiv.textContent = 'Erreur de connexion. Réessaie.';
+      errorDiv.style.display = 'block';
+    }
+    btn.disabled = false;
+    btn.textContent = 'Créer';
+  }
 </script>
 
 </body>
