@@ -22,10 +22,14 @@
   .chat-col { width:340px; background:#161f19; border-left:1px solid #2a352d; display:flex; flex-direction:column; }
   .chat-header { padding:14px 16px; color:var(--cream); font-weight:700; font-size:14px; border-bottom:1px solid #2a352d; }
   .chat-messages { flex:1; overflow-y:auto; padding:10px 14px; }
-  .chat-msg { margin-bottom:12px; font-size:13px; line-height:1.4; animation:fadein 0.4s; }
+  .chat-msg { margin-bottom:14px; font-size:13px; line-height:1.4; animation:fadein 0.4s; display:flex; gap:8px; }
   @keyframes fadein { from{opacity:0; transform:translateY(6px)} to{opacity:1; transform:translateY(0)} }
-  .chat-msg .author { color:var(--gold); font-weight:700; margin-right:5px; }
-  .chat-msg .text { color:var(--cream); }
+  .chat-avatar { width:28px; height:28px; min-width:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; color:#fff; font-weight:700; font-size:12px; }
+  .chat-body { flex:1; min-width:0; }
+  .chat-line1 { display:flex; align-items:baseline; gap:6px; margin-bottom:2px; }
+  .chat-msg .author { color:var(--gold); font-weight:700; }
+  .chat-time { color:#6b756e; font-size:10px; }
+  .chat-msg .text { color:var(--cream); word-break:break-word; }
   .unmute-btn { position:absolute; bottom:70px; left:50%; transform:translateX(-50%); padding:10px 20px; border:none; border-radius:24px; background:var(--gold); color:var(--green-deep); font-weight:700; font-size:14px; cursor:pointer; box-shadow:0 4px 14px rgba(0,0,0,0.3); z-index:5; }
   .sound-control { position:absolute; bottom:20px; left:20px; display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.55); padding:8px 14px; border-radius:24px; z-index:5; }
   .mute-toggle-btn { background:none; border:none; font-size:18px; cursor:pointer; padding:0; line-height:1; }
@@ -49,22 +53,49 @@
   let reportInterval = null;
 
   const CHAT_SCRIPT = [
-    { at: 20, author: 'Sami', text: 'Bonsoir tout le monde ! 👋' },
-    { at: 45, author: 'Nadia', text: "J'ai hâte d'apprendre tout ça" },
-    { at: 90, author: 'Karim', text: 'Enfin quelqu\'un qui explique clairement' },
-    { at: 180, author: 'Malika', text: '🔥🔥🔥' },
-    { at: 320, author: 'Yassine', text: "C'est exactement ce que je cherchais" },
-    { at: 480, author: 'Amal', text: 'Merci pour ce partage !' },
-    { at: 650, author: 'Rachid', text: 'Je note tout ça 📝' },
-    { at: 820, author: 'Imane', text: "Wow je n'y avais jamais pensé comme ça" },
-    { at: 1000, author: 'Omar', text: '👏👏👏' },
-    { at: 1250, author: 'Sara', text: 'Ça confirme ce que je vivais' },
-    { at: 1500, author: 'Adil', text: 'On peut avoir le lien du bonus ?' },
-    { at: 1800, author: 'Hind', text: 'Incroyable, merci !' },
-    { at: 2200, author: 'Bilal', text: 'Est-ce que ça marche aussi pour mon cas ?' },
-    { at: 2600, author: 'Fatima', text: "J'ai déjà commencé à appliquer ça" },
-    { at: 3000, author: 'Hassan', text: 'Génial cette masterclass 🙏' }
+    { at: 15, author: '@sarah.b', text: 'Bonsoir tout le monde 👋' },
+    { at: 35, author: 'karim_m92', text: "j'ai hâte d'apprendre tout ça" },
+    { at: 60, author: 'NadiaT', text: 'coucou de Genève 🇨🇭' },
+    { at: 90, author: 'yassine.k7', text: 'Enfin quelqu\'un qui explique clairement 🔥' },
+    { at: 130, author: '@malika_88', text: '🔥🔥🔥' },
+    { at: 175, author: 'omarbenali', text: "C'est exactement ce que je cherchais" },
+    { at: 230, author: 'amalfr23', text: 'Merci pour ce partage ❤️' },
+    { at: 290, author: '@rachid.dz', text: 'Je note tout ça 📝' },
+    { at: 340, author: 'imane_1990', text: "Wow je n'y avais jamais pensé comme ça" },
+    { at: 400, author: 'sofianeK', text: '👏👏👏' },
+    { at: 460, author: '@sara.belhaj', text: 'Ça confirme ce que je vivais depuis des années' },
+    { at: 530, author: 'adil.tanger', text: 'On peut avoir le lien du bonus ? 🙏' },
+    { at: 600, author: 'HindOu', text: 'Incroyable, merci beaucoup !' },
+    { at: 670, author: '@bilal_2024', text: 'Est-ce que ça marche aussi pour mon cas ?' },
+    { at: 740, author: 'fatima.zh', text: "J'ai déjà commencé à appliquer ça 🔥" },
+    { at: 810, author: 'hassan99', text: 'Génial cette masterclass 🙏🙏' },
+    { at: 880, author: '@leila_c', text: 'Je partage à ma sœur tout de suite' },
+    { at: 950, author: 'youssef.b', text: '💯💯💯' },
+    { at: 1020, author: 'NoraLyon', text: 'ça change tout ce que je pensais' },
+    { at: 1100, author: '@karim.essaidi', text: 'Merci infiniment 🙏' },
+    { at: 1200, author: 'siham_92', text: 'trop bien expliqué' },
+    { at: 1300, author: 'medaminee', text: '🔥🔥🔥🔥' },
+    { at: 1400, author: '@nawal.b', text: 'je suis scotchée' },
+    { at: 1500, author: 'othmane77', text: "Enfin une vraie méthode qui marche" },
+    { at: 1650, author: 'aicha_k', text: '👍👍' },
+    { at: 1800, author: '@driss.ma', text: 'ça vaut vraiment le detour ce live' },
+    { at: 1950, author: 'salma2000', text: 'j\'attends la suite avec impatience' },
+    { at: 2100, author: 'ilyas_official', text: '🙌🙌' },
+    { at: 2300, author: '@houda.b', text: 'top niveau franchement' },
+    { at: 2500, author: 'reda_ma', text: 'On sent l\'expérience derrière' },
+    { at: 2700, author: 'yasmina77', text: '🔥' },
+    { at: 2900, author: '@anass.k', text: 'exactement mon problème depuis 2 ans' },
+    { at: 3100, author: 'chaimaa_m', text: 'merci du fond du coeur ❤️' },
+    { at: 3300, author: 'hamza.rt', text: '💪💪' },
+    { at: 3500, author: '@meriem_z', text: 'trop hâte de commencer' },
+    { at: 3800, author: 'soufiane99', text: 'clair et net, merci' }
   ];
+  const AVATAR_COLORS = ['#B8965A','#5A8C5A','#8C5A5A','#5A7A8C','#8C7A5A','#6E5A8C','#5A8C7A','#8C5A7A'];
+  function avatarColorFor(name) {
+    let hash = 0;
+    for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+    return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
+  }
   let shownCount = 0;
 
   if (!inscriptionId) {
@@ -195,7 +226,16 @@
     if (!container) return;
     const div = document.createElement('div');
     div.className = 'chat-msg';
-    div.innerHTML = '<span class="author">' + escHtml(msg.author) + '</span><span class="text">' + escHtml(msg.text) + '</span>';
+    const letter = msg.author.replace('@','').charAt(0).toUpperCase();
+    const color = avatarColorFor(msg.author);
+    const now = new Date();
+    const timeStr = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+    div.innerHTML =
+      '<div class="chat-avatar" style="background:' + color + '">' + escHtml(letter) + '</div>' +
+      '<div class="chat-body">' +
+        '<div class="chat-line1"><span class="author">' + escHtml(msg.author) + '</span><span class="chat-time">' + timeStr + '</span></div>' +
+        '<span class="text">' + escHtml(msg.text) + '</span>' +
+      '</div>';
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
   }
