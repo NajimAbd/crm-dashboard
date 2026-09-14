@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Inscription au webinaire</title>
+<style>
+  :root { --green-deep:#0D1A12; --gold:#B8965A; --cream:#FAF7F1; }
+  * { box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; background:var(--cream); margin:0; min-height:100vh; display:flex; align-items:center; justify-content:center; padding:20px; }
+  .card { background:#fff; border-radius:16px; padding:36px; max-width:440px; width:100%; box-shadow:0 10px 40px rgba(0,0,0,0.08); }
+  h1 { font-size:22px; margin:0 0 8px; color:var(--green-deep); }
+  .subtitle { color:#777; font-size:14px; margin-bottom:24px; }
+  label { display:block; font-size:13px; color:#666; margin-bottom:6px; margin-top:16px; }
+  input { width:100%; padding:12px; border:1px solid #ddd; border-radius:8px; font-size:14px; }
+  button { width:100%; margin-top:24px; padding:14px; border:none; border-radius:8px; background:var(--gold); color:var(--green-deep); font-weight:700; font-size:15px; cursor:pointer; }
+  button:disabled { opacity:0.6; cursor:default; }
+  .error-msg { display:none; color:#c0392b; font-size:13px; margin-top:14px; }
+  .loading, .not-found { text-align:center; color:#888; padding:40px 0; }
+</style>
+</head>
+<body>
+<div class="card" id="card">
+  <div class="loading" id="loadingState">Chargement du webinaire…</div>
+</div>
+
+<script>
+  const CRM_REGISTER_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-webinar-register';
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('slug');
+
+  function esc(s) { return String(s||'').replace(/</g,'&lt;'); }
+
+  if (!slug) {
+    document.getElementById('card').innerHTML = '<div class="not-found">Lien de webinaire invalide.</div>';
+  } else {
+    renderForm();
+  }
+
+  function renderForm() {
+    document.getElementById('card').innerHTML = `
+      <h1>Rejoindre le webinaire</h1>
+      <div class="subtitle">Inscris-toi pour recevoir ton accès.</div>
+      <form id="registerForm">
+        <label for="nom">Ton prénom et nom</label>
+        <input type="text" id="nom" required>
+        <label for="email">Ton email</label>
+        <input type="email" id="email" required>
+        <button type="submit" id="submitBtn">Je m'inscris</button>
+        <div class="error-msg" id="errorMsg"></div>
+      </form>
+    `;
+    document.getElementById('registerForm').addEventListener('submit', submitRegister);
+  }
+
+  async function submitRegister(e) {
+    e.preventDefault();
+    const nom = document.getElementById('nom').value.trim();
+    const email = document.getElementById('email').value.trim();
+    const btn = document.getElementById('submitBtn');
+    const errorMsg = document.getElementById('errorMsg');
+    errorMsg.style.display = 'none';
+    btn.disabled = true;
+    btn.textContent = 'Inscription…';
+
+    try {
+      const resp = await fetch(CRM_REGISTER_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ slug, nom, email })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        window.location.href = 'webinar-watch.html?id=' + data.inscription_id;
+      } else {
+        errorMsg.textContent = data.message || 'Une erreur est survenue.';
+        errorMsg.style.display = 'block';
+        btn.disabled = false;
+        btn.textContent = "Je m'inscris";
+      }
+    } catch (err) {
+      errorMsg.textContent = 'Erreur de connexion. Réessaie.';
+      errorMsg.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = "Je m'inscris";
+    }
+  }
+</script>
+</body>
+</html>
