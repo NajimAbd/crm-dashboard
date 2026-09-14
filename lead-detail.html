@@ -842,9 +842,15 @@
     let interetBullets = '';
     if (isAA) {
       const interets = [];
-      if (l.interet_laboratoire == 1) interets.push('Laboratoire');
-      if (l.interet_show == 1) interets.push('Show');
-      if (l.interet_academie == 1) interets.push('Académie');
+      if (l.converted_account_id) {
+        if (l.acces_reel_laboratoire === 'oui') interets.push('Laboratoire');
+        if (l.acces_reel_webinaire === 'oui') interets.push('Show');
+        if (l.acces_reel_academie === 'oui') interets.push('Académie');
+      } else {
+        if (l.interet_laboratoire == 1) interets.push('Laboratoire');
+        if (l.interet_show == 1) interets.push('Show');
+        if (l.interet_academie == 1) interets.push('Académie');
+      }
       interetBullets = interets.map(x => ' <span style="color:#6E4A8E;font-size:16px;font-weight:600">• ' + x + '</span>').join('');
     }
     html += '<h1 class="lead-name">' + esc(fullName)
