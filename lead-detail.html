@@ -891,7 +891,9 @@
     const analyseTerminee = !!(latestDiag && latestDiag.ayrika_analysis);
 
     html += '<div class="diagnostic-action" style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
-    if (l.a_rempli_diagnostic == 1) {
+    if (l.type_client === 'AA') {
+      // Pas de diagnostic pour les prospects Application (AA)
+    } else if (l.a_rempli_diagnostic == 1) {
       // Diagnostic déjà rempli : on propose d'envoyer le RÉSULTAT + RDV, plus jamais le lien Tally
       const resultatEnvoye = (l.statut_global === 'resultat_envoye');
       if (resultatEnvoye) {
