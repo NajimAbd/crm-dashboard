@@ -412,6 +412,7 @@
       html += '</div>';
       html += '<div class="lead-count-badge"><b>' + site.lead_count + '</b> lead(s)</div>';
       html += '</div>';
+      html += '<button onclick="copyRegisterLink(\'' + esc(site.url_slug || '') + '\', this)" style="margin-top:10px;padding:8px 16px;border:1px solid var(--gold, #B8965A);border-radius:8px;background:transparent;color:var(--gold, #B8965A);font-weight:700;font-size:12px;cursor:pointer">📋 Copier le lien d\'inscription</button>';
 
       html += '<div class="site-body"><div class="content-row">';
 
@@ -450,6 +451,15 @@
     });
 
     container.innerHTML = html;
+  }
+
+  function copyRegisterLink(slug, btn) {
+    const url = 'https://entrepreneur.contentviral.ch/webinar-register.html?slug=' + slug;
+    navigator.clipboard.writeText(url).then(() => {
+      const original = btn.textContent;
+      btn.textContent = '✅ Lien copié !';
+      setTimeout(() => { btn.textContent = original; }, 2000);
+    });
   }
 
   loadSites();
