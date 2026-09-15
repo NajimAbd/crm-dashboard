@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Outil de test — Show</title>
+<style>
+  :root { --green-deep:#0D1A12; --gold:#B8965A; --cream:#FAF7F1; }
+  * { box-sizing:border-box; }
+  body { font-family: Arial, sans-serif; background:var(--cream); margin:0; padding:30px; }
+  .card { background:#fff; border-radius:14px; padding:28px; max-width:520px; margin:0 auto; box-shadow:0 6px 24px rgba(0,0,0,0.06); }
+  h1 { font-size:20px; color:var(--green-deep); margin:0 0 20px; }
+  label { display:block; font-size:13px; color:#666; margin-bottom:6px; }
+  input { width:100%; padding:10px; border:1px solid #ddd; border-radius:8px; margin-bottom:18px; font-size:14px; }
+  .scenarios { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px; }
+  .scenario-btn { padding:14px 10px; border:2px solid var(--gold); border-radius:10px; background:transparent; color:var(--gold); font-weight:700; font-size:13px; cursor:pointer; }
+  .scenario-btn:active { background:var(--gold); color:#fff; }
+  .open-link { display:block; text-align:center; margin-top:10px; padding:12px; border-radius:8px; background:var(--green-deep); color:var(--gold); text-decoration:none; font-weight:700; }
+  .status { font-size:13px; color:#888; text-align:center; margin-top:14px; min-height:18px; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>🧪 Outil de test — timing webinaire</h1>
+  <label for="inscId">Numéro d'inscription (id)</label>
+  <input type="number" id="inscId" placeholder="Ex: 54">
+
+  <div class="scenarios">
+    <button class="scenario-btn" onclick="applyScenario('loin')">📅 Dans 2 jours</button>
+    <button class="scenario-btn" onclick="applyScenario('aujourdhui')">🕒 Aujourd'hui (+3h)</button>
+    <button class="scenario-btn" onclick="applyScenario('5min')">⏳ Dans 5 minutes</button>
+    <button class="scenario-btn" onclick="applyScenario('40s')">🚀 Dans 40 secondes</button>
+  </div>
+
+  <a href="#" id="openLink" class="open-link" target="_blank">Ouvrir la page du visiteur →</a>
+  <div class="status" id="status"></div>
+</div>
+
+<script>
+  const API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-webinar-test-time';
+
+  document.getElementById('inscId').addEventListener('input', updateLink);
+  function updateLink() {
+    const id = document.getElementById('inscId').value;
+    document.getElementById('openLink').href = 'webinar-watch.html?id=' + id;
+  }
+
+  async function applyScenario(scenario) {
+    const id = document.getElementById('inscId').value;
+    const statusEl = document.getElementById('status');
+    if (!id) { statusEl.textContent = 'Indique d\'abord le numéro d\'inscription.'; return; }
+    statusEl.textContent = 'Application en cours…';
+    try {
+      const resp = await fetch(API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inscription_id: id, scenario })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        statusEl.textContent = '✅ Fait ! Ouvre le lien ci-dessus (ou recharge-le).';
+        updateLink();
+      } else {
+        statusEl.textContent = 'Erreur.';
+      }
+    } catch (e) {
+      statusEl.textContent = 'Erreur de connexion.';
+    }
+  }
+</script>
+</body>
+</html>
