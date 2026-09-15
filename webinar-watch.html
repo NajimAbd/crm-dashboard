@@ -101,7 +101,19 @@
     'ça vaut vraiment le detour ce live','j\'attends la suite avec impatience','🙌🙌','top niveau franchement',
     'On sent l\'expérience derrière','exactement mon problème depuis 2 ans','💪💪','clair et net, merci',
     'ça va être top','on est prêts 💪','connectée depuis le Maroc 🇲🇦','la dernière fois c\'était énorme',
-    'trop hâte !','de Genève aussi, salut tout le monde 🇨🇭','presque prêt 👀','coucou de Paris 👋'
+    'trop hâte !','de Genève aussi, salut tout le monde 🇨🇭','presque prêt 👀','coucou de Paris 👋',
+    'salut tout le monde 🙌','hello depuis Lyon 👋','coucou de Bruxelles 🇧🇪','bonsoir à tous !',
+    'salut la team 🔥','hey tout le monde !','coucou de Montréal 🇨🇦','hello depuis Casablanca',
+    '🔥🔥','🔥🔥🔥🔥🔥','😍😍','❤️❤️❤️','on est chaud !','ça va être énorme ce soir 🔥',
+    'quelle énergie !','j\'en reviens pas','ouiii enfin','let\'s gooo 🔥','on est motivés à fond',
+    'je kiffe déjà','ça promet !','le feu 🔥🔥','trop bien !','magnifique','superbe présentation',
+    'j\'adore l\'énergie','je suis fan','continuez comme ça 👏','impressionnant','wahou',
+    'quel talent','ça décoiffe 🔥','du lourd !','énorme','franchement bravo','chapeau 👏',
+    'je recommande à tout le monde','je vais tout retenir','ça vaut de l\'or ce genre de contenu',
+    'merci pour votre temps','quelle générosité de partager tout ça','on en veut encore',
+    'j\'espère une partie 2','vivement la suite','ça monte en intensité','ça devient sérieux',
+    'je transpire d\'excitation 😄','pincez-moi','je capte tout','ça matche avec ma situation',
+    'exactement ce qu\'il me fallait','les planètes sont alignées 😄','timing parfait pour moi'
   ];
 
   const CHAT_QUESTIONS = [
@@ -112,13 +124,24 @@
     'ça dure combien de temps en tout ?',
     'y a un support après si on a des questions ?',
     'c\'est adapté aux débutants aussi ?',
-    'est-ce qu\'il y aura un Q&A à la fin ?'
+    'est-ce qu\'il y aura un Q&A à la fin ?',
+    'c\'est bien enregistré pour ceux qui arrivent en retard ?',
+    'on peut poser des questions dans le chat ?',
+    'y a un groupe pour continuer après le live ?',
+    'ça marche même si on est à l\'étranger ?',
+    'quelqu\'un a testé ça avant ?',
+    'combien de personnes sont connectées là ?',
+    'c\'est la première fois que vous faites ce live ?',
+    'y a une garantie satisfait ou remboursé ?'
   ];
 
   const CHAT_ANSWERS = [
     'oui je crois','normalement oui !','je pense que oui','regarde plus haut dans le chat 👆',
     'oui exactement, ça marche pour tous les cas','je me demandais la même chose',
-    'à confirmer mais je crois que oui','bonne question, hâte de savoir aussi'
+    'à confirmer mais je crois que oui','bonne question, hâte de savoir aussi',
+    'je crois que oui aussi','ça a l\'air d\'être le cas','logique que ce soit ça',
+    'j\'ai eu la même question la dernière fois et oui','normalement ils le disent en fin de live',
+    'à mon avis oui, aucun souci','ça devrait aller pour toi aussi'
   ];
 
   const AVATAR_COLORS = ['#B8965A','#5A8C5A','#8C5A5A','#5A7A8C','#8C7A5A','#6E5A8C','#5A8C7A','#8C5A7A'];
@@ -147,9 +170,16 @@
       }
 
       appendChatMsg({ author, text });
-      setTimeout(tick, 1200 + Math.random() * 2800);
+
+      if (Math.random() < 0.3) {
+        setTimeout(() => {
+          appendChatMsg({ author: pick(CHAT_PERSONS), text: pick(CHAT_GENERAL) });
+        }, 400 + Math.random() * 600);
+      }
+
+      setTimeout(tick, 700 + Math.random() * 1600);
     }
-    setTimeout(tick, 500 + Math.random() * 800);
+    setTimeout(tick, 300 + Math.random() * 500);
   }
   function avatarColorFor(name) {
     let hash = 0;
