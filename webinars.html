@@ -87,6 +87,8 @@
   .mini-test-tool button { padding:4px 10px; border:1px solid var(--gold, #B8965A); border-radius:14px; background:transparent; color:var(--gold, #B8965A); font-size:11px; font-weight:600; cursor:pointer; }
   .mini-test-result { font-size:11px; color:#4a8c5a; margin-top:6px; }
   .mini-test-result a { color:var(--gold, #B8965A); font-weight:700; }
+  .mini-stats { font-size:12px; color:#555; margin-top:10px; padding-top:10px; border-top:1px solid #eee; }
+  .mini-stats b { color:var(--green-deep, #0D1A12); }
   .item-meta { font-size: 11px; color: var(--text-soft); margin-top: 1px; }
 
   .empty-mini { font-size: 12px; color: var(--text-soft); font-style: italic; padding: 6px 0; }
@@ -438,6 +440,7 @@
               '<button onclick="testShowScenario(' + w.id + ', \'10s\', this)">🚀 +10s</button>' +
             '</div>' +
             '<div class="mini-test-result" id="testResult-' + w.id + '"></div>' +
+            '<div class="mini-stats" id="stats-' + w.id + '">Chargement des statistiques…</div>' +
             '</div>' +
           '</div>';
         });
@@ -464,6 +467,10 @@
     });
 
     container.innerHTML = html;
+
+    sites.forEach(site => {
+      site.webinars.forEach(w => loadWebinarStats(w.id));
+    });
   }
 
   function getVideoDuration(url) {
@@ -505,6 +512,26 @@
       }
     } catch (err) {
       alert('Erreur de connexion.');
+    }
+  }
+
+  async function loadWebinarStats(webinarId) {
+    const el = document.getElementById('stats-' + webinarId);
+    if (!el) return;
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-webinar-stats', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ webinar_id: webinarId })
+      });
+      const data = await resp.json();
+      if (!data.success) { el.textContent = 'Statistiques indisponibles.'; return; }
+      el.innerHTML =
+        '<span><b>' + data.total_inscrits + '</b> inscrit(s)</span> · ' +
+        '<span><b>' + data.total_vus + '</b> ont regardé</span> · ' +
+        '<span><b>' + data.pourcentage_moyen + '%</b> vu en moyenne</span>';
+    } catch (err) {
+      el.textContent = 'Statistiques indisponibles.';
     }
   }
 
