@@ -34,9 +34,11 @@
   .sound-control { position:absolute; bottom:20px; left:20px; display:flex; align-items:center; gap:10px; background:rgba(0,0,0,0.55); padding:8px 14px; border-radius:24px; z-index:5; }
   .mute-toggle-btn { background:none; border:none; font-size:18px; cursor:pointer; padding:0; line-height:1; }
   .volume-slider { width:90px; cursor:pointer; accent-color:var(--gold); }
-  .waiting, .ended { background:var(--cream); border-radius:12px; padding:60px 30px; text-align:center; margin:auto; max-width:500px; }
-  .waiting h2, .ended h2 { color:var(--green-deep); margin:0 0 10px; }
-  .countdown { font-size:36px; font-weight:700; color:var(--gold); margin:16px 0; }
+  .waiting, .ended { background:var(--cream); border-radius:12px; padding:60px 30px; text-align:center; margin:auto; max-width:520px; }
+  .waiting h2, .ended h2 { color:var(--green-deep); margin:0 0 18px; font-size:24px; }
+  .subtitle-waiting { color:#666; font-size:14px; margin:6px 0; }
+  .start-date { color:var(--green-deep); font-size:19px; font-weight:700; margin:8px 0 20px; text-transform:capitalize; }
+  .countdown { font-size:32px; font-weight:700; color:var(--gold); margin:8px 0 20px; }
   .loading { color:var(--cream); text-align:center; margin:auto; }
   @media (max-width:800px) { .layout { flex-direction:column; } .chat-col { width:100%; height:220px; } }
 </style>
@@ -133,17 +135,39 @@
   }
 
   function renderWaiting(data) {
-    document.getElementById('layout').innerHTML = '<div class="waiting"><h2>Le webinaire va bientôt commencer</h2><div class="countdown" id="cd"></div><div>Reste sur cette page, la lecture démarrera automatiquement.</div></div>';
+    document.getElementById('layout').innerHTML =
+      '<div class="waiting">' +
+        '<h2>Bienvenue' + (data.nom ? ', ' + escHtml(data.nom.split(' ')[0]) : '') + ' 👋</h2>' +
+        '<div class="subtitle-waiting">Ton webinaire "' + escHtml(data.titre) + '" commence le :</div>' +
+        '<div class="start-date">' + formatStartDate(data.heure_debut) + '</div>' +
+        '<div class="countdown" id="cd"></div>' +
+        '<div class="subtitle-waiting">Reste sur cette page, la lecture démarrera automatiquement.</div>' +
+      '</div>';
     let secs = data.secondes_avant_debut;
     const cdEl = document.getElementById('cd');
     function tick() {
       if (secs <= 0) { loadInfo(); return; }
-      const m = Math.floor(secs/60), s = secs%60;
-      cdEl.textContent = m + ':' + String(s).padStart(2,'0');
+      const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60), s = secs%60;
+      let txt = '';
+      if (h > 0) txt += h + 'h ';
+      txt += String(m).padStart(2,'0') + 'min ' + String(s).padStart(2,'0') + 's';
+      cdEl.textContent = txt;
       secs--;
       setTimeout(tick, 1000);
     }
     tick();
+  }
+
+  function formatStartDate(heureDebutStr) {
+    const d = new Date(heureDebutStr.replace(' ', 'T') + 'Z');
+    const jours = ['dimanche','lundi','mardi','mercredi','jeudi','vendredi','samedi'];
+    const mois = ['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
+    const jourNom = jours[d.getUTCDay()];
+    const jourNum = d.getUTCDate();
+    const moisNom = mois[d.getUTCMonth()];
+    const heures = String(d.getUTCHours()).padStart(2,'0');
+    const minutes = String(d.getUTCMinutes()).padStart(2,'0');
+    return jourNom + ' ' + jourNum + ' ' + moisNom + ' à ' + heures + 'h' + minutes;
   }
 
   function renderEnded(data) {
