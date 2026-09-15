@@ -274,6 +274,20 @@
 
   const session = getSession();
 
+  if (session && session.role !== 'super_admin') {
+    (async function checkWebinaireAccessGate() {
+      try {
+        const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-webinaire-access', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: session.login })
+        });
+        const data = await resp.json();
+        if (!data.webinaire) {
+          document.querySelector('.page').innerHTML = '<div style="text-align:center;padding:80px 20px"><h2>Accès non disponible</h2><p style="color:#888">Ce module "Show" ne fait pas partie de ton offre actuelle. Contacte-nous pour l\'ajouter.</p></div>';
+        }
+      } catch (e) {}
+    })();
+  }
+
   const CRM_CREATE_SSO = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-create-sso-token';
 
 
