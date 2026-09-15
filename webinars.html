@@ -520,7 +520,7 @@
       const data = await resp.json();
       if (data.success) {
         const link = 'webinar-watch.html?id=' + data.inscription_id;
-        resultEl.innerHTML = '✅ Prêt — <a href="' + link + '" target="_blank">Ouvrir la page test →</a>';
+        resultEl.innerHTML = '✅ Prêt — <a href="' + link + '" target="_blank">Ouvrir la page test →</a> &nbsp;|&nbsp; <a href="' + link + '&presenter=najim2026" target="_blank" style="color:#c0392b">Ouvrir en mode présentateur →</a>';
       } else {
         resultEl.textContent = 'Erreur.';
       }
