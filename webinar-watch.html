@@ -217,17 +217,21 @@
       '</div>';
 
     restoreChatHistory();
-    startChatEngine();
-    startViewerCountSimulation();
 
     let remaining = data.secondes_avant_debut;
     const cdEl = document.getElementById('lobbyCd');
     const lobbyMsgEl = document.getElementById('lobbyMsg');
+    let activated = false;
 
     function tick() {
       if (remaining <= 0) { loadInfo(); return; }
 
       if (remaining <= 10) {
+        if (!activated) {
+          activated = true;
+          startChatEngine();
+          startViewerCountSimulation();
+        }
         lobbyMsgEl.innerHTML = '<div class="final-number">' + remaining + '</div>';
       } else {
         const m = Math.floor(remaining/60), s = remaining%60;
