@@ -45,6 +45,8 @@
   .lobby-cd { font-size:40px; font-weight:700; color:var(--gold); }
   .lobby-spinner { width:36px; height:36px; border:4px solid rgba(184,150,90,0.25); border-top-color:var(--gold); border-radius:50%; margin:0 auto; animation:spin 1s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
+  .final-number { font-size:140px; font-weight:900; color:var(--gold); animation:popnum 1s ease; line-height:1; }
+  @keyframes popnum { 0%{transform:scale(0.4); opacity:0} 50%{transform:scale(1.15); opacity:1} 100%{transform:scale(1)} }
   .loading { color:var(--cream); text-align:center; margin:auto; }
   @media (max-width:800px) { .layout { flex-direction:column; } .chat-col { width:100%; height:220px; } }
 </style>
@@ -130,9 +132,11 @@
     }
   }
 
+  const LOBBY_WINDOW = 300;
+
   function render(data) {
     if (data.statut === 'en_attente') {
-      if (data.secondes_avant_debut <= 60) {
+      if (data.secondes_avant_debut <= LOBBY_WINDOW) {
         renderLobby(data);
       } else {
         renderWaiting(data);
@@ -145,17 +149,40 @@
   }
 
   const LOBBY_CHAT = [
-    { at: 2, author: '@nadia.b', text: 'coucou tout le monde 👋' },
-    { at: 6, author: 'karim_lyon', text: 'ça va bientôt commencer !' },
-    { at: 11, author: '@sofia.m', text: 'toujours au rendez-vous 🔥' },
-    { at: 16, author: 'yanis77', text: 'hâte de voir ça' },
-    { at: 22, author: '@rania_k', text: 'quelqu\'un sait si le replay sera dispo ?' },
-    { at: 28, author: 'thomas.p', text: 'oui je crois' },
-    { at: 34, author: '@leila.tanger', text: 'super hâte 🙏' },
-    { at: 40, author: 'medaminee', text: 'ça va être top' },
-    { at: 46, author: '@anass_04', text: '3 minutes !' },
-    { at: 52, author: 'sarah_23', text: 'on est prêts 💪' },
-    { at: 57, author: '@bilal.k', text: 'ça commence !!' }
+    { at: 3, author: '@nadia.b', text: 'coucou tout le monde 👋' },
+    { at: 8, author: 'karim_lyon', text: 'ça va bientôt commencer !' },
+    { at: 14, author: '@sofia.m', text: 'toujours au rendez-vous 🔥' },
+    { at: 19, author: 'yanis77', text: 'hâte de voir ça' },
+    { at: 25, author: '@rania_k', text: 'quelqu\'un sait si le replay sera dispo ?' },
+    { at: 30, author: 'thomas.p', text: 'oui je crois' },
+    { at: 36, author: '@leila.tanger', text: 'super hâte 🙏' },
+    { at: 42, author: 'medaminee', text: 'ça va être top' },
+    { at: 48, author: '@anass_04', text: '👋👋' },
+    { at: 55, author: 'sarah_23', text: 'on est prêts 💪' },
+    { at: 63, author: '@karim.tz', text: 'connectée depuis le Maroc 🇲🇦' },
+    { at: 70, author: 'aicha_92', text: 'je note tout dans un carnet, prête !' },
+    { at: 78, author: '@omar_lille', text: 'la dernière fois c\'était énorme' },
+    { at: 86, author: 'nesrine.k', text: '🔥🔥🔥' },
+    { at: 95, author: '@fahd.b', text: 'quelqu\'un a le lien du groupe whatsapp ?' },
+    { at: 104, author: 'salima77', text: 'hâte hâte hâte' },
+    { at: 113, author: '@yacine.m', text: 'ça commence dans pas longtemps' },
+    { at: 123, author: 'imane_23', text: '👏👏' },
+    { at: 133, author: '@driss.tanger', text: 'toujours motivé à cette heure-ci 😄' },
+    { at: 144, author: 'lina.b', text: 'trop hâte !' },
+    { at: 156, author: '@amine_geneve', text: 'de Genève aussi, salut tout le monde 🇨🇭' },
+    { at: 168, author: 'khadija99', text: '💪💪💪' },
+    { at: 181, author: '@said.k', text: 'ça va être une masterclass' },
+    { at: 195, author: 'houda_paris', text: 'coucou de Paris 👋' },
+    { at: 210, author: '@brahim.z', text: 'presque prêt' },
+    { at: 225, author: 'nawel23', text: '🔥' },
+    { at: 240, author: '@toufik.b', text: 'plus que 1 minute normalement' },
+    { at: 250, author: 'sabrina_m', text: 'ça y est presque !' },
+    { at: 260, author: '@walid.k', text: 'on y est !' },
+    { at: 268, author: 'meryem77', text: '👀👀' },
+    { at: 275, author: '@yassmine.b', text: 'allez allez !' },
+    { at: 283, author: 'hicham_23', text: '🙌' },
+    { at: 289, author: '@rim.tanger', text: 'ça commence !!' },
+    { at: 293, author: 'anouar99', text: '🔥🔥🔥🔥' }
   ];
 
   function renderLobby(data) {
@@ -163,7 +190,7 @@
     layout.innerHTML =
       '<div class="main-col">' +
         '<div class="video-area">' +
-          '<div class="lobby-msg">' +
+          '<div class="lobby-msg" id="lobbyMsg">' +
             '<div class="lobby-spinner"></div>' +
             '<h2>On y est presque…</h2>' +
             '<div class="lobby-cd" id="lobbyCd"></div>' +
@@ -178,8 +205,9 @@
 
     let remaining = data.secondes_avant_debut;
     const cdEl = document.getElementById('lobbyCd');
+    const lobbyMsgEl = document.getElementById('lobbyMsg');
     let shown = 0;
-    const elapsedFromStart = 60 - remaining;
+    const elapsedFromStart = LOBBY_WINDOW - remaining;
     while (shown < LOBBY_CHAT.length && LOBBY_CHAT[shown].at <= elapsedFromStart) {
       appendChatMsg(LOBBY_CHAT[shown]);
       shown++;
@@ -187,8 +215,15 @@
 
     function tick() {
       if (remaining <= 0) { loadInfo(); return; }
-      cdEl.textContent = remaining + 's';
-      const nowElapsed = 60 - remaining;
+
+      if (remaining <= 5) {
+        lobbyMsgEl.innerHTML = '<div class="final-number">' + remaining + '</div>';
+      } else {
+        const m = Math.floor(remaining/60), s = remaining%60;
+        cdEl.textContent = (m > 0 ? m + 'min ' : '') + String(s).padStart(2,'0') + 's';
+      }
+
+      const nowElapsed = LOBBY_WINDOW - remaining;
       if (shown < LOBBY_CHAT.length && LOBBY_CHAT[shown].at <= nowElapsed) {
         appendChatMsg(LOBBY_CHAT[shown]);
         shown++;
@@ -220,7 +255,7 @@
               '<div class="subtitle-waiting">Reste sur cette page, la lecture démarrera automatiquement.</div>';
     } else if (tier === 'today') {
       html += '<div class="tier-badge">📅 Aujourd\'hui, c\'est le grand jour !</div>' +
-              '<div class="subtitle-waiting">Laisse cette page ouverte — on démarre à ' + formatTimeOnly(data.heure_debut) + ' pile, tu n\'auras rien à faire.</div>';
+              '<div class="subtitle-waiting">Reviens sur ce lien à ' + formatTimeOnly(data.heure_debut) + ' pile pour rejoindre le direct.</div>';
     } else {
       html += '<div class="tier-badge">🎉 Ton accès est confirmé</div>' +
               '<div class="subtitle-waiting">Garde bien cette date de côté — on t\'attend ici avec plaisir !</div>';
