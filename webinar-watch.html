@@ -155,10 +155,11 @@
       html += '<div class="countdown" id="cd"></div>' +
               '<div class="subtitle-waiting">Reste sur cette page, la lecture démarrera automatiquement.</div>';
     } else if (tier === 'today') {
-      html += '<div class="tier-badge">📅 C\'est aujourd\'hui !</div>' +
-              '<div class="subtitle-waiting">Reviens sur ce lien à l\'heure indiquée pour rejoindre le direct.</div>';
+      html += '<div class="tier-badge">📅 Aujourd\'hui, c\'est le grand jour !</div>' +
+              '<div class="subtitle-waiting">On se retrouve ici, pile à l\'heure — tu ne veux pas manquer le début 😉</div>';
     } else {
-      html += '<div class="subtitle-waiting">Note bien la date — reviens sur ce lien à l\'heure indiquée pour rejoindre le direct.</div>';
+      html += '<div class="tier-badge">🎉 Ton accès est confirmé</div>' +
+              '<div class="subtitle-waiting">Garde bien cette date de côté — on t\'attend ici avec plaisir !</div>';
     }
     html += '</div>';
     document.getElementById('layout').innerHTML = html;
