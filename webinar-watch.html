@@ -45,7 +45,7 @@
   .lobby-cd { font-size:40px; font-weight:700; color:var(--gold); }
   .lobby-spinner { width:36px; height:36px; border:4px solid rgba(184,150,90,0.25); border-top-color:var(--gold); border-radius:50%; margin:0 auto; animation:spin 1s linear infinite; }
   @keyframes spin { to { transform:rotate(360deg); } }
-  #presenterPanel { position:fixed; bottom:20px; right:20px; width:280px; background:var(--green-deep); border:1px solid var(--gold); border-radius:12px; z-index:9999; box-shadow:0 8px 30px rgba(0,0,0,0.4); font-size:13px; }
+  #presenterPanel { position:fixed; bottom:20px; right:20px; width:300px; max-height:85vh; overflow-y:auto; background:var(--green-deep); border:1px solid var(--gold); border-radius:12px; z-index:9999; box-shadow:0 8px 30px rgba(0,0,0,0.4); font-size:13px; }
   .pp-header { display:flex; justify-content:space-between; align-items:center; padding:10px 14px; color:var(--gold); font-weight:700; font-size:12px; border-bottom:1px solid rgba(184,150,90,0.3); }
   .pp-header button { background:none; border:1px solid var(--gold); color:var(--gold); border-radius:6px; width:22px; height:22px; cursor:pointer; }
   .pp-body { padding:14px; }
@@ -62,6 +62,14 @@
   .pp-del-btn { background:none; border:none; color:#c0392b; cursor:pointer; font-size:13px; padding:0 2px; }
   .pp-add-btn { width:100%; margin-top:8px; padding:8px; border:1px dashed var(--gold); background:transparent; color:var(--gold); border-radius:6px; font-size:12px; cursor:pointer; }
   .pp-chat-btn { width:100%; margin-top:8px; padding:8px; border:1px solid #c0392b; background:transparent; color:#c0392b; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; }
+  .pp-section-label { color:#889; font-size:10px; text-transform:uppercase; letter-spacing:0.5px; margin-top:12px; margin-bottom:6px; }
+  .pp-row3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; }
+  .pp-speed-btn { padding:6px 2px; border:1px solid rgba(184,150,90,0.35); background:transparent; color:var(--cream); border-radius:6px; font-size:10px; cursor:pointer; }
+  .pp-speed-btn.pp-active { background:var(--gold); color:var(--green-deep); font-weight:700; }
+  .pp-row-wrap { display:flex; flex-wrap:wrap; gap:5px; }
+  .pp-msg-btn { padding:5px 9px; border:1px solid rgba(184,150,90,0.35); background:transparent; color:var(--cream); border-radius:14px; font-size:10px; cursor:pointer; }
+  .pp-msg-btn:active { background:var(--gold); color:var(--green-deep); }
+  .pp-pause-btn { width:100%; margin-top:10px; padding:8px; border:1px solid var(--gold); background:transparent; color:var(--gold); border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; }
   .final-number { font-size:140px; font-weight:900; color:var(--gold); animation:popnum 1s ease; line-height:1; }
   @keyframes popnum { 0%{transform:scale(0.4); opacity:0} 50%{transform:scale(1.15); opacity:1} 100%{transform:scale(1)} }
   .loading { color:var(--cream); text-align:center; margin:auto; }
@@ -144,9 +152,35 @@
     'à mon avis oui, aucun souci','ça devrait aller pour toi aussi'
   ];
 
+  const CHAT_FLAME = ['🔥','🔥🔥','🔥🔥🔥','🔥🔥🔥🔥','🔥🔥🔥🔥🔥'];
+  const CHAT_FLAME_EMOJI = [
+    '🔥🔥 c\'est du lourd !','trop chaud 🔥','🔥 j\'adore','au top 🔥🙌','🔥❤️❤️',
+    'incroyable 🔥🔥','ça brûle ce live 🔥','🔥👏👏','énorme 🔥💯','🔥🔥 continue comme ça'
+  ];
+  const CHAT_GREETING = [
+    'Bonsoir tout le monde 👋','coucou de Genève 🇨🇭','salut tout le monde 🙌','hello depuis Lyon 👋',
+    'coucou de Bruxelles 🇧🇪','bonsoir à tous !','salut la team 🔥','hey tout le monde !',
+    'coucou de Montréal 🇨🇦','hello depuis Casablanca','de Genève aussi, salut tout le monde 🇨🇭',
+    'coucou de Paris 👋','présent(e) !','me voilà 👋','arrivé(e) à l\'heure 😄'
+  ];
+  const CHAT_ACCEPT = [
+    'oui exactement, je suis d\'accord','totalement d\'accord avec ça','ça résonne fort en moi',
+    'oui oui oui','c\'est tellement vrai','je confirme à 100%','exactement ma pensée',
+    'ça me parle direct','oui je vis ça aussi','ça sonne juste','je valide à fond',
+    'clairement d\'accord','tout à fait','je plussoie 👍','ça me touche, c\'est vrai'
+  ];
+
   const AVATAR_COLORS = ['#B8965A','#5A8C5A','#8C5A5A','#5A7A8C','#8C7A5A','#6E5A8C','#5A8C7A','#8C5A7A'];
   let chatEngineStarted = false;
   let pendingQuestion = false;
+  let chatSpeedFactor = 1;
+  let chatPaused = false;
+
+  function presenterPostMessage(category) {
+    const pools = { flame: CHAT_FLAME, flameEmoji: CHAT_FLAME_EMOJI, greeting: CHAT_GREETING, varie: CHAT_GENERAL, accept: CHAT_ACCEPT };
+    const pool = pools[category] || CHAT_GENERAL;
+    appendChatMsg({ author: pick(CHAT_PERSONS), text: pick(pool) });
+  }
 
   function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 
@@ -156,6 +190,8 @@
     const chatStartTime = Date.now();
 
     function tick() {
+      if (chatPaused) { setTimeout(tick, 500); return; }
+
       const roll = Math.random();
       let author = pick(CHAT_PERSONS);
       let text;
@@ -177,11 +213,11 @@
 
       if (Math.random() < burstChance) {
         setTimeout(() => {
-          appendChatMsg({ author: pick(CHAT_PERSONS), text: pick(CHAT_GENERAL) });
-        }, 150 + Math.random() * 300);
+          if (!chatPaused) appendChatMsg({ author: pick(CHAT_PERSONS), text: pick(CHAT_GENERAL) });
+        }, (150 + Math.random() * 300) * chatSpeedFactor);
       }
 
-      const nextDelay = isEarly ? (300 + Math.random() * 700) : (700 + Math.random() * 1600);
+      const nextDelay = (isEarly ? (300 + Math.random() * 700) : (700 + Math.random() * 1600)) * chatSpeedFactor;
       setTimeout(tick, nextDelay);
     }
     setTimeout(tick, 300 + Math.random() * 500);
@@ -414,6 +450,21 @@
         '<div class="pp-list" id="ppList"></div>' +
         '<button id="ppAdd" class="pp-add-btn">+ Ajouter un bloc</button>' +
         '<button id="ppChatToggle" class="pp-chat-btn">💬 Fermer le chat</button>' +
+        '<div class="pp-section-label">Vitesse du chat</div>' +
+        '<div class="pp-row3">' +
+          '<button class="pp-speed-btn" data-speed="2.5">🐢 Lent</button>' +
+          '<button class="pp-speed-btn pp-active" data-speed="1">🚶 Normal</button>' +
+          '<button class="pp-speed-btn" data-speed="0.3">🐇 Rapide</button>' +
+        '</div>' +
+        '<div class="pp-section-label">Envoyer un message</div>' +
+        '<div class="pp-row-wrap">' +
+          '<button class="pp-msg-btn" data-cat="flame">🔥 Flamme</button>' +
+          '<button class="pp-msg-btn" data-cat="flameEmoji">🔥✨ Flamme+émoji</button>' +
+          '<button class="pp-msg-btn" data-cat="greeting">👋 Salut</button>' +
+          '<button class="pp-msg-btn" data-cat="varie">💬 Varié</button>' +
+          '<button class="pp-msg-btn" data-cat="accept">✅ Acceptation</button>' +
+        '</div>' +
+        '<button id="ppPauseChat" class="pp-pause-btn">⏸️ Pause auto-messages</button>' +
       '</div>';
     document.body.appendChild(panel);
 
@@ -456,6 +507,26 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'toggle_chat', webinar_id: webinarId, actif: chatIsOn ? 1 : 0 })
       }).catch(() => {});
+    });
+
+    panel.querySelectorAll('.pp-speed-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        chatSpeedFactor = parseFloat(this.dataset.speed);
+        panel.querySelectorAll('.pp-speed-btn').forEach(b => b.classList.remove('pp-active'));
+        this.classList.add('pp-active');
+      });
+    });
+
+    panel.querySelectorAll('.pp-msg-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        presenterPostMessage(this.dataset.cat);
+      });
+    });
+
+    const pauseBtn = document.getElementById('ppPauseChat');
+    pauseBtn.addEventListener('click', function() {
+      chatPaused = !chatPaused;
+      this.textContent = chatPaused ? '▶️ Reprendre auto-messages' : '⏸️ Pause auto-messages';
     });
 
     function totalBefore(idx) { let t = 0; for (let i=0;i<idx;i++) t += blocks[i].dur*60; return t; }
