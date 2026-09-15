@@ -164,7 +164,10 @@
     html += '</div>';
     document.getElementById('layout').innerHTML = html;
 
-    if (tier !== 'urgent') return;
+    if (tier !== 'urgent') {
+      setTimeout(loadInfo, 60000);
+      return;
+    }
 
     let remaining = secs;
     const cdEl = document.getElementById('cd');
