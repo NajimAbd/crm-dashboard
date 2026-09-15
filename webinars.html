@@ -413,6 +413,7 @@
       html += '<div class="lead-count-badge"><b>' + site.lead_count + '</b> lead(s)</div>';
       html += '</div>';
       html += '<button onclick="copyRegisterLink(\'' + esc(site.url_slug || '') + '\', this)" style="margin-top:10px;padding:8px 16px;border:1px solid var(--gold, #B8965A);border-radius:8px;background:transparent;color:var(--gold, #B8965A);font-weight:700;font-size:12px;cursor:pointer">📋 Copier le lien d\'inscription</button>';
+      html += '<button onclick="deleteShow(' + site.id + ', \'' + esc(site.nom_site).replace(/'/g,"\\'") + '\')" style="margin-top:10px;margin-left:8px;padding:8px 16px;border:1px solid #c0392b;border-radius:8px;background:transparent;color:#c0392b;font-weight:700;font-size:12px;cursor:pointer">🗑️ Supprimer</button>';
 
       html += '<div class="site-body"><div class="content-row">';
 
@@ -460,6 +461,25 @@
       btn.textContent = '✅ Lien copié !';
       setTimeout(() => { btn.textContent = original; }, 2000);
     });
+  }
+
+  async function deleteShow(siteId, nomSite) {
+    if (!confirm('Supprimer définitivement "' + nomSite + '" ? Cette action est irréversible et supprimera aussi toutes les inscriptions liées.')) return;
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-delete-site-webinar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ site_id: siteId, account_id: session.account_id })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        loadSites();
+      } else {
+        alert('Une erreur est survenue.');
+      }
+    } catch (err) {
+      alert('Erreur de connexion.');
+    }
   }
 
   loadSites();
