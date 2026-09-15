@@ -454,6 +454,20 @@
     container.innerHTML = html;
   }
 
+  function getVideoDuration(url) {
+    return new Promise((resolve, reject) => {
+      const v = document.createElement('video');
+      v.preload = 'metadata';
+      v.onloadedmetadata = () => {
+        const d = Math.round(v.duration);
+        v.remove();
+        resolve(isFinite(d) && d > 0 ? d : null);
+      };
+      v.onerror = () => { v.remove(); reject(new Error('Impossible de lire la vidéo')); };
+      v.src = url;
+    });
+  }
+
   function copyRegisterLink(slug, btn) {
     const url = 'https://entrepreneur.contentviral.ch/webinar-register.html?slug=' + slug;
     navigator.clipboard.writeText(url).then(() => {
@@ -533,13 +547,20 @@
 
     const btn = document.getElementById('createShowSubmitBtn');
     btn.disabled = true;
+    btn.textContent = 'Analyse de la vidéo…';
+
+    let dureeSecondes = null;
+    try {
+      dureeSecondes = await getVideoDuration(videoUrl);
+    } catch (e) {}
+
     btn.textContent = 'Création…';
 
     try {
       const resp = await fetch(CRM_CREATE_SHOW_API, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ account_id: session.account_id, titre, video_url: videoUrl, horaires })
+        body: JSON.stringify({ account_id: session.account_id, titre, video_url: videoUrl, horaires, duree_secondes: dureeSecondes })
       });
       const data = await resp.json();
       if (data.success) {
