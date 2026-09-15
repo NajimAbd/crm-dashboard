@@ -408,17 +408,15 @@
     if (isPresenterMode) initPresenterPanel(data.webinar_id);
 
     reportInterval = setInterval(() => {
-      if (!video.paused) {
-        fetch(CRM_WATCH_API, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'progress', inscription_id: inscriptionId, webinar_id: data.webinar_id, position_secondes: Math.floor(video.currentTime) })
-        }).then(r => r.json()).then(resp => {
-          const chatCol = document.querySelector('.chat-col');
-          if (chatCol) chatCol.style.display = resp.chat_actif ? 'flex' : 'none';
-        }).catch(() => {});
-      }
-    }, 15000);
+      fetch(CRM_WATCH_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'progress', inscription_id: inscriptionId, webinar_id: data.webinar_id, position_secondes: Math.floor(video.currentTime) })
+      }).then(r => r.json()).then(resp => {
+        const chatCol = document.querySelector('.chat-col');
+        if (chatCol) chatCol.style.display = resp.chat_actif ? 'flex' : 'none';
+      }).catch(() => {});
+    }, 2000);
   }
 
   function initPresenterPanel(webinarId) {
