@@ -153,6 +153,7 @@
   function startChatEngine() {
     if (chatEngineStarted) return;
     chatEngineStarted = true;
+    const chatStartTime = Date.now();
 
     function tick() {
       const roll = Math.random();
@@ -171,13 +172,17 @@
 
       appendChatMsg({ author, text });
 
-      if (Math.random() < 0.3) {
+      const isEarly = (Date.now() - chatStartTime) < 120000;
+      const burstChance = isEarly ? 0.55 : 0.3;
+
+      if (Math.random() < burstChance) {
         setTimeout(() => {
           appendChatMsg({ author: pick(CHAT_PERSONS), text: pick(CHAT_GENERAL) });
-        }, 400 + Math.random() * 600);
+        }, 150 + Math.random() * 300);
       }
 
-      setTimeout(tick, 700 + Math.random() * 1600);
+      const nextDelay = isEarly ? (300 + Math.random() * 700) : (700 + Math.random() * 1600);
+      setTimeout(tick, nextDelay);
     }
     setTimeout(tick, 300 + Math.random() * 500);
   }
