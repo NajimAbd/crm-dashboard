@@ -180,7 +180,7 @@
     }
   }
 
-  const LOBBY_WINDOW = 300;
+  const LOBBY_WINDOW = 40;
 
   function render(data) {
     if (data.statut === 'en_attente') {
@@ -215,16 +215,17 @@
       '</div>';
 
     restoreChatHistory();
-    startChatEngine();
 
     let remaining = data.secondes_avant_debut;
     const cdEl = document.getElementById('lobbyCd');
     const lobbyMsgEl = document.getElementById('lobbyMsg');
+    let chatStarted = false;
 
     function tick() {
       if (remaining <= 0) { loadInfo(); return; }
 
       if (remaining <= 10) {
+        if (!chatStarted) { chatStarted = true; startChatEngine(); }
         lobbyMsgEl.innerHTML = '<div class="final-number">' + remaining + '</div>';
       } else {
         const m = Math.floor(remaining/60), s = remaining%60;
@@ -242,20 +243,14 @@
     const now = new Date();
     const isSameDay = startDate.getUTCFullYear() === now.getUTCFullYear() && startDate.getUTCMonth() === now.getUTCMonth() && startDate.getUTCDate() === now.getUTCDate();
 
-    let tier;
-    if (secs <= 2400) tier = 'urgent';
-    else if (isSameDay) tier = 'today';
-    else tier = 'far';
+    let tier = isSameDay ? 'today' : 'far';
 
     let html = '<div class="waiting">' +
       '<h2>Bienvenue' + (data.nom ? ', ' + escHtml(data.nom.split(' ')[0]) : '') + ' 👋</h2>' +
       '<div class="subtitle-waiting">Ton webinaire "' + escHtml(data.titre) + '" commence le :</div>' +
       '<div class="start-date">' + formatStartDate(data.heure_debut) + '</div>';
 
-    if (tier === 'urgent') {
-      html += '<div class="countdown" id="cd"></div>' +
-              '<div class="subtitle-waiting">Reste sur cette page, la lecture démarrera automatiquement.</div>';
-    } else if (tier === 'today') {
+    if (tier === 'today') {
       html += '<div class="tier-badge">📅 Aujourd\'hui, c\'est le grand jour !</div>' +
               '<div class="subtitle-waiting">Reviens sur ce lien à ' + formatTimeOnly(data.heure_debut) + ' pile pour rejoindre le direct.</div>';
     } else {
@@ -264,25 +259,7 @@
     }
     html += '</div>';
     document.getElementById('layout').innerHTML = html;
-
-    if (tier !== 'urgent') {
-      setTimeout(loadInfo, 60000);
-      return;
-    }
-
-    let remaining = secs;
-    const cdEl = document.getElementById('cd');
-    function tick() {
-      if (remaining <= 0) { loadInfo(); return; }
-      const h = Math.floor(remaining/3600), m = Math.floor((remaining%3600)/60), s = remaining%60;
-      let txt = '';
-      if (h > 0) txt += h + 'h ';
-      txt += String(m).padStart(2,'0') + 'min ' + String(s).padStart(2,'0') + 's';
-      cdEl.textContent = txt;
-      remaining--;
-      setTimeout(tick, 1000);
-    }
-    tick();
+    setTimeout(loadInfo, 60000);
   }
 
   function formatTimeOnly(heureDebutStr) {
@@ -313,9 +290,9 @@
         '<div class="video-area">' +
           '<div class="live-badge"><span class="live-dot"></span> EN DIRECT</div>' +
           '<div class="viewer-count" id="viewerCount">' + (data.spectateurs_actuels || 1) + ' spectateurs</div>' +
-          '<video id="videoPlayer" autoplay muted playsinline oncontextmenu="return false" controlsList="nodownload noremoteplayback nofullscreen"></video>' +
+          '<video id="videoPlayer" autoplay playsinline oncontextmenu="return false" controlsList="nodownload noremoteplayback nofullscreen"></video>' +
           '<div class="sound-control" id="soundControl">' +
-            '<button id="muteToggle" class="mute-toggle-btn">🔇</button>' +
+            '<button id="muteToggle" class="mute-toggle-btn">🔊</button>' +
             '<input type="range" id="volumeSlider" min="0" max="100" value="80" class="volume-slider">' +
           '</div>' +
         '</div>' +
@@ -330,7 +307,13 @@
     video.src = data.video_url;
     video.addEventListener('loadedmetadata', () => {
       video.currentTime = data.position_secondes;
-      video.play().catch(() => {});
+      video.muted = false;
+      video.play().catch(() => {
+        video.muted = true;
+        video.play().catch(() => {});
+        const mt = document.getElementById('muteToggle');
+        if (mt) mt.textContent = '🔇';
+      });
     });
 
     const muteToggle = document.getElementById('muteToggle');
