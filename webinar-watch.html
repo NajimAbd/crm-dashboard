@@ -228,7 +228,7 @@
     function tick() {
       if (remaining <= 0) { loadInfo(); return; }
 
-      if (remaining <= 5) {
+      if (remaining <= 10) {
         lobbyMsgEl.innerHTML = '<div class="final-number">' + remaining + '</div>';
       } else {
         const m = Math.floor(remaining/60), s = remaining%60;
