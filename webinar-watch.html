@@ -241,7 +241,7 @@
     const isSameDay = startDate.getUTCFullYear() === now.getUTCFullYear() && startDate.getUTCMonth() === now.getUTCMonth() && startDate.getUTCDate() === now.getUTCDate();
 
     let tier;
-    if (secs <= 3600) tier = 'urgent';
+    if (secs <= 2400) tier = 'urgent';
     else if (isSameDay) tier = 'today';
     else tier = 'far';
 
