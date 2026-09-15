@@ -61,6 +61,7 @@
   .pp-dur-label { color:#889; font-size:10px; }
   .pp-del-btn { background:none; border:none; color:#c0392b; cursor:pointer; font-size:13px; padding:0 2px; }
   .pp-add-btn { width:100%; margin-top:8px; padding:8px; border:1px dashed var(--gold); background:transparent; color:var(--gold); border-radius:6px; font-size:12px; cursor:pointer; }
+  .pp-chat-btn { width:100%; margin-top:8px; padding:8px; border:1px solid #c0392b; background:transparent; color:#c0392b; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer; }
   .final-number { font-size:140px; font-weight:900; color:var(--gold); animation:popnum 1s ease; line-height:1; }
   @keyframes popnum { 0%{transform:scale(0.4); opacity:0} 50%{transform:scale(1.15); opacity:1} 100%{transform:scale(1)} }
   .loading { color:var(--cream); text-align:center; margin:auto; }
@@ -336,20 +337,23 @@
     startChatEngine();
     startViewerCountSimulation();
 
-    if (isPresenterMode) initPresenterPanel();
+    if (isPresenterMode) initPresenterPanel(data.webinar_id);
 
     reportInterval = setInterval(() => {
       if (!video.paused) {
         fetch(CRM_WATCH_API, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'progress', inscription_id: inscriptionId, position_secondes: Math.floor(video.currentTime) })
+          body: JSON.stringify({ action: 'progress', inscription_id: inscriptionId, webinar_id: data.webinar_id, position_secondes: Math.floor(video.currentTime) })
+        }).then(r => r.json()).then(resp => {
+          const chatCol = document.querySelector('.chat-col');
+          if (chatCol) chatCol.style.display = resp.chat_actif ? 'flex' : 'none';
         }).catch(() => {});
       }
     }, 15000);
   }
 
-  function initPresenterPanel() {
+  function initPresenterPanel(webinarId) {
     const saved = localStorage.getItem('presenterBlocks');
     let blocks = saved ? JSON.parse(saved) : [
       { name: 'Introduction', dur: 10 },
@@ -361,6 +365,7 @@
       { name: 'Questions', dur: 15 },
       { name: 'Conclusion', dur: 5 }
     ];
+    let chatIsOn = true;
 
     const panel = document.createElement('div');
     panel.id = 'presenterPanel';
@@ -376,6 +381,7 @@
         '</div>' +
         '<div class="pp-list" id="ppList"></div>' +
         '<button id="ppAdd" class="pp-add-btn">+ Ajouter un bloc</button>' +
+        '<button id="ppChatToggle" class="pp-chat-btn">💬 Fermer le chat</button>' +
       '</div>';
     document.body.appendChild(panel);
 
@@ -408,6 +414,16 @@
     document.getElementById('ppAdd').addEventListener('click', function() {
       blocks.push({ name: 'Nouveau bloc', dur: 10 });
       save(); renderList(); update();
+    });
+
+    document.getElementById('ppChatToggle').addEventListener('click', function() {
+      chatIsOn = !chatIsOn;
+      this.textContent = chatIsOn ? '💬 Fermer le chat' : '💬 Rouvrir le chat';
+      fetch(CRM_WATCH_API, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'toggle_chat', webinar_id: webinarId, actif: chatIsOn ? 1 : 0 })
+      }).catch(() => {});
     });
 
     function totalBefore(idx) { let t = 0; for (let i=0;i<idx;i++) t += blocks[i].dur*60; return t; }
