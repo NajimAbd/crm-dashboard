@@ -40,6 +40,11 @@
   .start-date { color:var(--green-deep); font-size:19px; font-weight:700; margin:8px 0 20px; text-transform:capitalize; }
   .countdown { font-size:32px; font-weight:700; color:var(--gold); margin:8px 0 20px; }
   .tier-badge { display:inline-block; background:rgba(184,150,90,0.15); color:var(--gold); font-weight:700; font-size:14px; padding:8px 18px; border-radius:20px; margin:10px 0 16px; }
+  .lobby-msg { text-align:center; color:var(--green-deep); }
+  .lobby-msg h2 { font-size:22px; margin:16px 0 8px; }
+  .lobby-cd { font-size:40px; font-weight:700; color:var(--gold); }
+  .lobby-spinner { width:36px; height:36px; border:4px solid rgba(184,150,90,0.25); border-top-color:var(--gold); border-radius:50%; margin:0 auto; animation:spin 1s linear infinite; }
+  @keyframes spin { to { transform:rotate(360deg); } }
   .loading { color:var(--cream); text-align:center; margin:auto; }
   @media (max-width:800px) { .layout { flex-direction:column; } .chat-col { width:100%; height:220px; } }
 </style>
@@ -127,12 +132,71 @@
 
   function render(data) {
     if (data.statut === 'en_attente') {
-      renderWaiting(data);
+      if (data.secondes_avant_debut <= 60) {
+        renderLobby(data);
+      } else {
+        renderWaiting(data);
+      }
     } else if (data.statut === 'termine') {
       renderEnded(data);
     } else {
       renderPlayer(data);
     }
+  }
+
+  const LOBBY_CHAT = [
+    { at: 2, author: '@nadia.b', text: 'coucou tout le monde 👋' },
+    { at: 6, author: 'karim_lyon', text: 'ça va bientôt commencer !' },
+    { at: 11, author: '@sofia.m', text: 'toujours au rendez-vous 🔥' },
+    { at: 16, author: 'yanis77', text: 'hâte de voir ça' },
+    { at: 22, author: '@rania_k', text: 'quelqu\'un sait si le replay sera dispo ?' },
+    { at: 28, author: 'thomas.p', text: 'oui je crois' },
+    { at: 34, author: '@leila.tanger', text: 'super hâte 🙏' },
+    { at: 40, author: 'medaminee', text: 'ça va être top' },
+    { at: 46, author: '@anass_04', text: '3 minutes !' },
+    { at: 52, author: 'sarah_23', text: 'on est prêts 💪' },
+    { at: 57, author: '@bilal.k', text: 'ça commence !!' }
+  ];
+
+  function renderLobby(data) {
+    const layout = document.getElementById('layout');
+    layout.innerHTML =
+      '<div class="main-col">' +
+        '<div class="video-area">' +
+          '<div class="lobby-msg">' +
+            '<div class="lobby-spinner"></div>' +
+            '<h2>On y est presque…</h2>' +
+            '<div class="lobby-cd" id="lobbyCd"></div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="title-bar"><h1>' + escHtml(data.titre) + '</h1></div>' +
+      '</div>' +
+      '<div class="chat-col">' +
+        '<div class="chat-header">💬 Discussion en direct</div>' +
+        '<div class="chat-messages" id="chatMessages"></div>' +
+      '</div>';
+
+    let remaining = data.secondes_avant_debut;
+    const cdEl = document.getElementById('lobbyCd');
+    let shown = 0;
+    const elapsedFromStart = 60 - remaining;
+    while (shown < LOBBY_CHAT.length && LOBBY_CHAT[shown].at <= elapsedFromStart) {
+      appendChatMsg(LOBBY_CHAT[shown]);
+      shown++;
+    }
+
+    function tick() {
+      if (remaining <= 0) { loadInfo(); return; }
+      cdEl.textContent = remaining + 's';
+      const nowElapsed = 60 - remaining;
+      if (shown < LOBBY_CHAT.length && LOBBY_CHAT[shown].at <= nowElapsed) {
+        appendChatMsg(LOBBY_CHAT[shown]);
+        shown++;
+      }
+      remaining--;
+      setTimeout(tick, 1000);
+    }
+    tick();
   }
 
   function renderWaiting(data) {
