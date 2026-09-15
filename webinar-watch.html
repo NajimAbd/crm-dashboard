@@ -135,14 +135,22 @@
   }
 
   function renderWaiting(data) {
+    const isSoon = data.secondes_avant_debut <= 300;
+    const bottomMsg = isSoon
+      ? 'Reste sur cette page, la lecture démarrera automatiquement.'
+      : 'Reviens sur ce lien à l\'heure indiquée pour rejoindre le direct — pas besoin de rester sur cette page en attendant.';
+
     document.getElementById('layout').innerHTML =
       '<div class="waiting">' +
         '<h2>Bienvenue' + (data.nom ? ', ' + escHtml(data.nom.split(' ')[0]) : '') + ' 👋</h2>' +
         '<div class="subtitle-waiting">Ton webinaire "' + escHtml(data.titre) + '" commence le :</div>' +
         '<div class="start-date">' + formatStartDate(data.heure_debut) + '</div>' +
-        '<div class="countdown" id="cd"></div>' +
-        '<div class="subtitle-waiting">Reste sur cette page, la lecture démarrera automatiquement.</div>' +
+        (isSoon ? '<div class="countdown" id="cd"></div>' : '') +
+        '<div class="subtitle-waiting">' + bottomMsg + '</div>' +
       '</div>';
+
+    if (!isSoon) return;
+
     let secs = data.secondes_avant_debut;
     const cdEl = document.getElementById('cd');
     function tick() {
