@@ -83,6 +83,10 @@
   .item-icon.webinar { background: rgba(74, 123, 166, 0.15); color: var(--blue-soft); }
   .item-icon.challenge { background: rgba(139, 111, 176, 0.15); color: var(--purple-soft); }
   .item-title { font-size: 13px; font-weight: 600; color: var(--text-main); }
+  .mini-test-tool { display:flex; gap:6px; margin-top:8px; flex-wrap:wrap; }
+  .mini-test-tool button { padding:4px 10px; border:1px solid var(--gold, #B8965A); border-radius:14px; background:transparent; color:var(--gold, #B8965A); font-size:11px; font-weight:600; cursor:pointer; }
+  .mini-test-result { font-size:11px; color:#4a8c5a; margin-top:6px; }
+  .mini-test-result a { color:var(--gold, #B8965A); font-weight:700; }
   .item-meta { font-size: 11px; color: var(--text-soft); margin-top: 1px; }
 
   .empty-mini { font-size: 12px; color: var(--text-soft); font-style: italic; padding: 6px 0; }
@@ -426,7 +430,15 @@
         site.webinars.forEach(w => {
           html += '<div class="item-card">' +
             '<div class="item-icon webinar">🎥</div>' +
-            '<div><div class="item-title">' + esc(w.titre) + '</div><div class="item-meta">' + fmtDate(w.date_webinar) + '</div></div>' +
+            '<div style="flex:1"><div class="item-title">' + esc(w.titre) + ' <span style="color:#999;font-weight:400;font-size:11px">(ID: ' + w.id + ')</span></div><div class="item-meta">' + fmtDate(w.date_webinar) + '</div>' +
+            '<div class="mini-test-tool">' +
+              '<button onclick="testShowScenario(' + w.id + ', \'loin\', this)">📅 +1j</button>' +
+              '<button onclick="testShowScenario(' + w.id + ', \'aujourdhui\', this)">🌤️ +2h</button>' +
+              '<button onclick="testShowScenario(' + w.id + ', \'40min\', this)">⏳ +40min</button>' +
+              '<button onclick="testShowScenario(' + w.id + ', \'10s\', this)">🚀 +10s</button>' +
+            '</div>' +
+            '<div class="mini-test-result" id="testResult-' + w.id + '"></div>' +
+            '</div>' +
           '</div>';
         });
       }
@@ -493,6 +505,27 @@
       }
     } catch (err) {
       alert('Erreur de connexion.');
+    }
+  }
+
+  async function testShowScenario(webinarId, scenario, btn) {
+    const resultEl = document.getElementById('testResult-' + webinarId);
+    resultEl.textContent = 'Application en cours…';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-webinar-test-time', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ webinar_id: webinarId, scenario })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        const link = 'webinar-watch.html?id=' + data.inscription_id;
+        resultEl.innerHTML = '✅ Prêt — <a href="' + link + '" target="_blank">Ouvrir la page test →</a>';
+      } else {
+        resultEl.textContent = 'Erreur.';
+      }
+    } catch (err) {
+      resultEl.textContent = 'Erreur de connexion.';
     }
   }
 
