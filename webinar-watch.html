@@ -468,6 +468,41 @@
       '</div>';
     document.body.appendChild(panel);
 
+    (function makeDraggable() {
+      const header = panel.querySelector('.pp-header');
+      header.style.cursor = 'move';
+      let dragging = false, offsetX = 0, offsetY = 0;
+
+      function startDrag(clientX, clientY) {
+        dragging = true;
+        const rect = panel.getBoundingClientRect();
+        offsetX = clientX - rect.left;
+        offsetY = clientY - rect.top;
+        panel.style.left = rect.left + 'px';
+        panel.style.top = rect.top + 'px';
+        panel.style.right = 'auto';
+        panel.style.bottom = 'auto';
+      }
+      function moveDrag(clientX, clientY) {
+        if (!dragging) return;
+        let newLeft = clientX - offsetX;
+        let newTop = clientY - offsetY;
+        newLeft = Math.max(0, Math.min(window.innerWidth - panel.offsetWidth, newLeft));
+        newTop = Math.max(0, Math.min(window.innerHeight - 40, newTop));
+        panel.style.left = newLeft + 'px';
+        panel.style.top = newTop + 'px';
+      }
+      function endDrag() { dragging = false; }
+
+      header.addEventListener('mousedown', e => { startDrag(e.clientX, e.clientY); e.preventDefault(); });
+      document.addEventListener('mousemove', e => moveDrag(e.clientX, e.clientY));
+      document.addEventListener('mouseup', endDrag);
+
+      header.addEventListener('touchstart', e => { const t = e.touches[0]; startDrag(t.clientX, t.clientY); }, { passive: true });
+      document.addEventListener('touchmove', e => { const t = e.touches[0]; moveDrag(t.clientX, t.clientY); }, { passive: true });
+      document.addEventListener('touchend', endDrag);
+    })();
+
     let elapsed = 0, running = false, currentIdx = 0, interval = null;
 
     function save() { localStorage.setItem('presenterBlocks', JSON.stringify(blocks)); }
