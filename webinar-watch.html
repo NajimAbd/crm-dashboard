@@ -202,12 +202,8 @@
     layout.innerHTML =
       '<div class="main-col">' +
         '<div class="video-area">' +
-          '<div class="viewer-count" id="viewerCount">1 spectateurs</div>' +
-          '<div class="lobby-msg" id="lobbyMsg">' +
-            '<div class="lobby-spinner"></div>' +
-            '<h2>On y est presque…</h2>' +
-            '<div class="lobby-cd" id="lobbyCd"></div>' +
-          '</div>' +
+          '<div class="viewer-count" id="viewerCount" style="display:none">1 spectateurs</div>' +
+          '<div class="lobby-msg" id="lobbyMsg"></div>' +
         '</div>' +
         '<div class="title-bar"><h1>' + escHtml(data.titre) + '</h1></div>' +
       '</div>' +
@@ -217,25 +213,22 @@
       '</div>';
 
     restoreChatHistory();
+    startChatEngine();
 
     let remaining = data.secondes_avant_debut;
-    const cdEl = document.getElementById('lobbyCd');
     const lobbyMsgEl = document.getElementById('lobbyMsg');
-    let activated = false;
+    let countdownStarted = false;
 
     function tick() {
       if (remaining <= 0) { loadInfo(); return; }
 
       if (remaining <= 10) {
-        if (!activated) {
-          activated = true;
-          startChatEngine();
+        if (!countdownStarted) {
+          countdownStarted = true;
           startViewerCountSimulation();
+          document.getElementById('viewerCount').style.display = 'block';
         }
         lobbyMsgEl.innerHTML = '<div class="final-number">' + remaining + '</div>';
-      } else {
-        const m = Math.floor(remaining/60), s = remaining%60;
-        cdEl.textContent = (m > 0 ? m + 'min ' : '') + String(s).padStart(2,'0') + 's';
       }
       remaining--;
       setTimeout(tick, 1000);
