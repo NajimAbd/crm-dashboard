@@ -79,51 +79,82 @@
   const isPresenterMode = params.get('presenter') === 'najim2026';
   let reportInterval = null;
 
-  const CHAT_SCRIPT = [
-    { at: 15, author: '@sarah.b', text: 'Bonsoir tout le monde 👋' },
-    { at: 35, author: 'karim_m92', text: "j'ai hâte d'apprendre tout ça" },
-    { at: 60, author: 'NadiaT', text: 'coucou de Genève 🇨🇭' },
-    { at: 90, author: 'yassine.k7', text: 'Enfin quelqu\'un qui explique clairement 🔥' },
-    { at: 130, author: '@malika_88', text: '🔥🔥🔥' },
-    { at: 175, author: 'omarbenali', text: "C'est exactement ce que je cherchais" },
-    { at: 230, author: 'amalfr23', text: 'Merci pour ce partage ❤️' },
-    { at: 290, author: '@rachid.dz', text: 'Je note tout ça 📝' },
-    { at: 340, author: 'imane_1990', text: "Wow je n'y avais jamais pensé comme ça" },
-    { at: 400, author: 'sofianeK', text: '👏👏👏' },
-    { at: 460, author: '@sara.belhaj', text: 'Ça confirme ce que je vivais depuis des années' },
-    { at: 530, author: 'adil.tanger', text: 'On peut avoir le lien du bonus ? 🙏' },
-    { at: 600, author: 'HindOu', text: 'Incroyable, merci beaucoup !' },
-    { at: 670, author: '@bilal_2024', text: 'Est-ce que ça marche aussi pour mon cas ?' },
-    { at: 740, author: 'fatima.zh', text: "J'ai déjà commencé à appliquer ça 🔥" },
-    { at: 810, author: 'hassan99', text: 'Génial cette masterclass 🙏🙏' },
-    { at: 880, author: '@leila_c', text: 'Je partage à ma sœur tout de suite' },
-    { at: 950, author: 'youssef.b', text: '💯💯💯' },
-    { at: 1020, author: 'NoraLyon', text: 'ça change tout ce que je pensais' },
-    { at: 1100, author: '@karim.essaidi', text: 'Merci infiniment 🙏' },
-    { at: 1200, author: 'siham_92', text: 'trop bien expliqué' },
-    { at: 1300, author: 'medaminee', text: '🔥🔥🔥🔥' },
-    { at: 1400, author: '@nawal.b', text: 'je suis scotchée' },
-    { at: 1500, author: 'othmane77', text: "Enfin une vraie méthode qui marche" },
-    { at: 1650, author: 'aicha_k', text: '👍👍' },
-    { at: 1800, author: '@driss.ma', text: 'ça vaut vraiment le detour ce live' },
-    { at: 1950, author: 'salma2000', text: 'j\'attends la suite avec impatience' },
-    { at: 2100, author: 'ilyas_official', text: '🙌🙌' },
-    { at: 2300, author: '@houda.b', text: 'top niveau franchement' },
-    { at: 2500, author: 'reda_ma', text: 'On sent l\'expérience derrière' },
-    { at: 2700, author: 'yasmina77', text: '🔥' },
-    { at: 2900, author: '@anass.k', text: 'exactement mon problème depuis 2 ans' },
-    { at: 3100, author: 'chaimaa_m', text: 'merci du fond du coeur ❤️' },
-    { at: 3300, author: 'hamza.rt', text: '💪💪' },
-    { at: 3500, author: '@meriem_z', text: 'trop hâte de commencer' },
-    { at: 3800, author: 'soufiane99', text: 'clair et net, merci' }
+  const CHAT_PERSONS = [
+    '@sarah.b','karim_m92','NadiaT','yassine.k7','@malika_88','omarbenali','amalfr23','@rachid.dz',
+    'imane_1990','sofianeK','@sara.belhaj','adil.tanger','HindOu','@bilal_2024','fatima.zh','hassan99',
+    '@leila_c','youssef.b','NoraLyon','@karim.essaidi','siham_92','medaminee','@nawal.b','othmane77',
+    'aicha_k','@driss.ma','salma2000','ilyas_official','@houda.b','reda_ma','yasmina77','@anass.k',
+    'chaimaa_m','hamza.rt','@meriem_z','soufiane99','@nadia.b','karim_lyon','@sofia.m','yanis77',
+    '@rania_k','thomas.p','@leila.tanger','@anass_04','sarah_23','@karim.tz','aicha_92','@omar_lille',
+    'nesrine.k','@fahd.b','salima77','@yacine.m','imane_23','@driss.tanger','lina.b','@amine_geneve',
+    'khadija99','@said.k','houda_paris','@brahim.z','nawel23','@toufik.b','sabrina_m','@walid.k'
   ];
+
+  const CHAT_GENERAL = [
+    'Bonsoir tout le monde 👋','coucou de Genève 🇨🇭','Enfin quelqu\'un qui explique clairement 🔥',
+    '🔥🔥🔥','C\'est exactement ce que je cherchais','Merci pour ce partage ❤️','Je note tout ça 📝',
+    'Wow je n\'y avais jamais pensé comme ça','👏👏👏','Ça confirme ce que je vivais depuis des années',
+    'Incroyable, merci beaucoup !','J\'ai déjà commencé à appliquer ça 🔥','Génial cette masterclass 🙏🙏',
+    'Je partage à ma sœur tout de suite','💯💯💯','ça change tout ce que je pensais','Merci infiniment 🙏',
+    'trop bien expliqué','🔥🔥🔥🔥','je suis scotchée','Enfin une vraie méthode qui marche','👍👍',
+    'ça vaut vraiment le detour ce live','j\'attends la suite avec impatience','🙌🙌','top niveau franchement',
+    'On sent l\'expérience derrière','exactement mon problème depuis 2 ans','💪💪','clair et net, merci',
+    'ça va être top','on est prêts 💪','connectée depuis le Maroc 🇲🇦','la dernière fois c\'était énorme',
+    'trop hâte !','de Genève aussi, salut tout le monde 🇨🇭','presque prêt 👀','coucou de Paris 👋'
+  ];
+
+  const CHAT_QUESTIONS = [
+    'quelqu\'un sait si le replay sera dispo ?',
+    'Est-ce que ça marche aussi pour mon cas ?',
+    'On peut avoir le lien du bonus ? 🙏',
+    'quelqu\'un a le lien du groupe whatsapp ?',
+    'ça dure combien de temps en tout ?',
+    'y a un support après si on a des questions ?',
+    'c\'est adapté aux débutants aussi ?',
+    'est-ce qu\'il y aura un Q&A à la fin ?'
+  ];
+
+  const CHAT_ANSWERS = [
+    'oui je crois','normalement oui !','je pense que oui','regarde plus haut dans le chat 👆',
+    'oui exactement, ça marche pour tous les cas','je me demandais la même chose',
+    'à confirmer mais je crois que oui','bonne question, hâte de savoir aussi'
+  ];
+
   const AVATAR_COLORS = ['#B8965A','#5A8C5A','#8C5A5A','#5A7A8C','#8C7A5A','#6E5A8C','#5A8C7A','#8C5A7A'];
+  let chatEngineStarted = false;
+  let pendingQuestion = false;
+
+  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+  function startChatEngine() {
+    if (chatEngineStarted) return;
+    chatEngineStarted = true;
+
+    function tick() {
+      const roll = Math.random();
+      let author = pick(CHAT_PERSONS);
+      let text;
+
+      if (pendingQuestion && roll < 0.45) {
+        text = pick(CHAT_ANSWERS);
+        pendingQuestion = false;
+      } else if (roll < 0.15) {
+        text = pick(CHAT_QUESTIONS);
+        pendingQuestion = true;
+      } else {
+        text = pick(CHAT_GENERAL);
+      }
+
+      appendChatMsg({ author, text });
+      setTimeout(tick, 3000 + Math.random() * 9000);
+    }
+    setTimeout(tick, 2000 + Math.random() * 3000);
+  }
   function avatarColorFor(name) {
     let hash = 0;
     for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
     return AVATAR_COLORS[Math.abs(hash) % AVATAR_COLORS.length];
   }
-  let shownCount = 0;
 
   if (!inscriptionId) {
     document.getElementById('layout').innerHTML = '<div class="ended"><h2>Lien invalide.</h2></div>';
@@ -165,43 +196,6 @@
     }
   }
 
-  const LOBBY_CHAT = [
-    { at: 3, author: '@nadia.b', text: 'coucou tout le monde 👋' },
-    { at: 8, author: 'karim_lyon', text: 'ça va bientôt commencer !' },
-    { at: 14, author: '@sofia.m', text: 'toujours au rendez-vous 🔥' },
-    { at: 19, author: 'yanis77', text: 'hâte de voir ça' },
-    { at: 25, author: '@rania_k', text: 'quelqu\'un sait si le replay sera dispo ?' },
-    { at: 30, author: 'thomas.p', text: 'oui je crois' },
-    { at: 36, author: '@leila.tanger', text: 'super hâte 🙏' },
-    { at: 42, author: 'medaminee', text: 'ça va être top' },
-    { at: 48, author: '@anass_04', text: '👋👋' },
-    { at: 55, author: 'sarah_23', text: 'on est prêts 💪' },
-    { at: 63, author: '@karim.tz', text: 'connectée depuis le Maroc 🇲🇦' },
-    { at: 70, author: 'aicha_92', text: 'je note tout dans un carnet, prête !' },
-    { at: 78, author: '@omar_lille', text: 'la dernière fois c\'était énorme' },
-    { at: 86, author: 'nesrine.k', text: '🔥🔥🔥' },
-    { at: 95, author: '@fahd.b', text: 'quelqu\'un a le lien du groupe whatsapp ?' },
-    { at: 104, author: 'salima77', text: 'hâte hâte hâte' },
-    { at: 113, author: '@yacine.m', text: 'ça commence dans pas longtemps' },
-    { at: 123, author: 'imane_23', text: '👏👏' },
-    { at: 133, author: '@driss.tanger', text: 'toujours motivé à cette heure-ci 😄' },
-    { at: 144, author: 'lina.b', text: 'trop hâte !' },
-    { at: 156, author: '@amine_geneve', text: 'de Genève aussi, salut tout le monde 🇨🇭' },
-    { at: 168, author: 'khadija99', text: '💪💪💪' },
-    { at: 181, author: '@said.k', text: 'ça va être une masterclass' },
-    { at: 195, author: 'houda_paris', text: 'coucou de Paris 👋' },
-    { at: 210, author: '@brahim.z', text: 'presque prêt' },
-    { at: 225, author: 'nawel23', text: '🔥' },
-    { at: 240, author: '@toufik.b', text: 'plus que 1 minute normalement' },
-    { at: 250, author: 'sabrina_m', text: 'ça y est presque !' },
-    { at: 260, author: '@walid.k', text: 'on y est !' },
-    { at: 268, author: 'meryem77', text: '👀👀' },
-    { at: 275, author: '@yassmine.b', text: 'allez allez !' },
-    { at: 283, author: 'hicham_23', text: '🙌' },
-    { at: 289, author: '@rim.tanger', text: 'ça commence !!' },
-    { at: 293, author: 'anouar99', text: '🔥🔥🔥🔥' }
-  ];
-
   function renderLobby(data) {
     const layout = document.getElementById('layout');
     layout.innerHTML =
@@ -220,15 +214,12 @@
         '<div class="chat-messages" id="chatMessages"></div>' +
       '</div>';
 
+    restoreChatHistory();
+    startChatEngine();
+
     let remaining = data.secondes_avant_debut;
     const cdEl = document.getElementById('lobbyCd');
     const lobbyMsgEl = document.getElementById('lobbyMsg');
-    let shown = 0;
-    const elapsedFromStart = LOBBY_WINDOW - remaining;
-    while (shown < LOBBY_CHAT.length && LOBBY_CHAT[shown].at <= elapsedFromStart) {
-      appendChatMsg(LOBBY_CHAT[shown]);
-      shown++;
-    }
 
     function tick() {
       if (remaining <= 0) { loadInfo(); return; }
@@ -238,12 +229,6 @@
       } else {
         const m = Math.floor(remaining/60), s = remaining%60;
         cdEl.textContent = (m > 0 ? m + 'min ' : '') + String(s).padStart(2,'0') + 's';
-      }
-
-      const nowElapsed = LOBBY_WINDOW - remaining;
-      if (shown < LOBBY_CHAT.length && LOBBY_CHAT[shown].at <= nowElapsed) {
-        appendChatMsg(LOBBY_CHAT[shown]);
-        shown++;
       }
       remaining--;
       setTimeout(tick, 1000);
@@ -364,8 +349,7 @@
     });
 
     restoreChatHistory();
-    catchUpChat(data.position_secondes);
-    setInterval(() => checkChat(video.currentTime), 1000);
+    startChatEngine();
     startViewerCountSimulation();
 
     if (isPresenterMode) initPresenterPanel();
@@ -489,20 +473,6 @@
 
     renderList();
     update();
-  }
-
-  function catchUpChat(currentPos) {
-    while (shownCount < CHAT_SCRIPT.length && CHAT_SCRIPT[shownCount].at <= currentPos) {
-      appendChatMsg(CHAT_SCRIPT[shownCount]);
-      shownCount++;
-    }
-  }
-
-  function checkChat(currentPos) {
-    if (shownCount < CHAT_SCRIPT.length && CHAT_SCRIPT[shownCount].at <= currentPos) {
-      appendChatMsg(CHAT_SCRIPT[shownCount]);
-      shownCount++;
-    }
   }
 
   let chatHistory = [];
