@@ -104,6 +104,46 @@
   .deroulement-body li { margin-bottom: 4px; }
   .deroulement-body b { color: var(--green-deep); }
 
+  /* ---- Déroulement : timeline visuelle (fixe + mini-calendriers) ---- */
+  .dv-fixed-row { display: flex; gap: 12px; flex-wrap: wrap; margin: 4px 0 22px; }
+  .dv-fixed-card {
+    flex: 1; min-width: 170px; background: #fff; border: 1px solid var(--border-soft, #E5DECF);
+    border-radius: 10px; padding: 12px 14px; border-top: 3px solid var(--dv-color, var(--gold, #B8965A));
+  }
+  .dv-fixed-card.durant { --dv-color: #4A7BA6; }
+  .dv-fixed-card.apres { --dv-color: var(--gold, #B8965A); }
+  .dv-fixed-card.suivi { --dv-color: #8B6FB0; }
+  .dv-fixed-label {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.07em; text-transform: uppercase;
+    color: var(--dv-color, var(--gold, #B8965A)); margin-bottom: 6px;
+  }
+  .dv-fixed-card ul { margin: 0; padding-left: 15px; font-size: 12px; line-height: 1.55; }
+  .dv-fixed-card li { margin-bottom: 4px; }
+  .dv-fixed-card li:last-child { margin-bottom: 0; }
+
+  .dv-cal-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 6px; }
+  @media (max-width: 560px) { .dv-cal-grid { grid-template-columns: 1fr; } }
+  .dv-cal-card { background: #fff; border: 1px solid var(--border-soft, #E5DECF); border-radius: 10px; padding: 10px 12px 12px; }
+  .dv-cal-title { font-size: 12px; font-weight: 700; color: var(--green-deep); margin-bottom: 8px; }
+  .dv-cal-scroll { overflow-x: auto; }
+  .dv-cal-row { display: grid; grid-template-columns: repeat(7, minmax(28px, 1fr)); gap: 4px; min-width: 230px; }
+  .dv-cal-cell {
+    aspect-ratio: 1 / 0.85; border-radius: 6px; background: var(--bg-soft, #FAF7F1); border: 1px solid var(--border-soft, #E5DECF);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; text-align: center;
+  }
+  .dv-cal-daynum { font-size: 10px; font-weight: 700; color: var(--text-soft); }
+  .dv-cal-tag { font-size: 6.5px; font-weight: 700; letter-spacing: 0.02em; text-transform: uppercase; line-height: 1.05; padding: 0 2px; }
+  .dv-cal-cell.c-confirm { background: #E7F1E9; border-color: #4A8C5A; }
+  .dv-cal-cell.c-confirm .dv-cal-daynum, .dv-cal-cell.c-confirm .dv-cal-tag { color: #4A8C5A; }
+  .dv-cal-cell.c-valeur { background: #F7EFD9; border-color: var(--gold, #B8965A); }
+  .dv-cal-cell.c-valeur .dv-cal-daynum, .dv-cal-cell.c-valeur .dv-cal-tag { color: #8B6E3A; }
+  .dv-cal-cell.c-relance { background: #FBEAE7; border-color: #C0392B; }
+  .dv-cal-cell.c-relance .dv-cal-daynum, .dv-cal-cell.c-relance .dv-cal-tag { color: #C0392B; }
+  .dv-cal-cell.c-none .dv-cal-tag { color: var(--text-soft); font-style: italic; font-weight: 500; }
+  .dv-cal-note { font-size: 10.5px; color: var(--text-soft); margin-top: 8px; font-style: italic; }
+  .dv-legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 14px 0 4px; font-size: 11.5px; color: var(--text-main); }
+  .dv-legend span.dv-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
   .groupe-chip {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     padding: 8px 12px; border-radius: 8px; background: #FBF9F4; border: 1px solid var(--border-soft);
@@ -358,7 +398,7 @@
   </div>
 
   <div id="deroulementOverlay" style="display:none;position:fixed;inset:0;background:rgba(13,26,18,0.6);z-index:1000;align-items:center;justify-content:center">
-    <div style="background:#fff;border-radius:14px;padding:28px;max-width:640px;width:92%;max-height:85vh;overflow-y:auto">
+    <div style="background:#fff;border-radius:14px;padding:28px;max-width:800px;width:94%;max-height:85vh;overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
         <h2 id="deroulementTitle" style="margin:0;font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--green-deep)"></h2>
         <button onclick="closeDeroulement()" style="border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--text-soft)">✕</button>
@@ -648,32 +688,130 @@
   const DEROULEMENT_3J = {
     title: '🏆 Déroulement — Challenge 3 jours',
     html: `
-      <p>Démarre le jour de l'inscription globale. Rencontre finale au <b>jour 7</b>. 4 phases : Avant, Durant, Après, Suivi.</p>
-      <h3>1. Avant l'inscription</h3>
-      <p>Email de confirmation le jour même, puis selon le jour d'inscription :</p>
-      <table>
-        <tr><th>Jour d'inscription</th><th>Emails supplémentaires</th></tr>
-        <tr><td>Jour 1</td><td>Valeur au J4, relance (J-2) au J6</td></tr>
-        <tr><td>Jour 2</td><td>Valeur au J4, relance (J-1) au J7</td></tr>
-        <tr><td>Jour 3</td><td>Relance (J-2) au J6</td></tr>
-        <tr><td>Jour 4</td><td>Relance (J-2) au J6</td></tr>
-        <tr><td>Jour 5</td><td>Relance (J-1) au J7</td></tr>
-        <tr><td>Jour 6 ou 7</td><td>Confirmation uniquement</td></tr>
-      </table>
-      <h3>2. Durant (J1, J2, J3)</h3>
-      <ul>
-        <li>Email du matin à 10h (J1M, J2M, J3M)</li>
-        <li>Email du soir, 2h avant le show (J1S, J2S, J3S)</li>
-        <li>3 rappels WhatsApp aux non-inscrits chaque jour : -5min, +5min, +10min</li>
-      </ul>
-      <h3>3. Après (J4, J5, J6)</h3>
-      <ul>
-        <li><b>J4 — Replay</b> : email vers 15h</li>
-        <li><b>J5 — Questions & réponses</b> : email à 10h + show le soir (email 2h avant + 3 WhatsApp)</li>
-        <li><b>J6 — Clôture</b> : email à 10h uniquement</li>
-      </ul>
-      <h3>4. Suivi</h3>
-      <p>Pour les non-acheteurs, groupés après la clôture : email à <b>J+20</b>, puis <b>J+40</b>.</p>
+      <p>Les phases <b>Durant</b>, <b>Après</b> et <b>Suivi</b> sont identiques pour tout le monde. Seule la phase <b>Avant</b> change selon le jour d'inscription — toujours vers les mêmes jours cibles, J4 et J6/J7.</p>
+
+      <h3>Durant · Après · Suivi</h3>
+      <div class="dv-fixed-row">
+        <div class="dv-fixed-card durant">
+          <div class="dv-fixed-label">Durant — J1, J2, J3</div>
+          <ul>
+            <li>Email du matin à <b>10h</b> chaque jour (J1M, J2M, J3M).</li>
+            <li>Email du soir, <b>2h avant</b> le début (J1S, J2S, J3S).</li>
+            <li>3 WhatsApp aux non-inscrits chaque jour : -5 min, +5 min, +10 min.</li>
+          </ul>
+        </div>
+        <div class="dv-fixed-card apres">
+          <div class="dv-fixed-label">Après — J4, J5, J6</div>
+          <ul>
+            <li><b>J4 — Replay</b> : email vers 15h.</li>
+            <li><b>J5 — Q&R</b> : email 10h + show le soir (-2h + 3 WhatsApp).</li>
+            <li><b>J6 — Clôture</b> : email 10h uniquement.</li>
+          </ul>
+        </div>
+        <div class="dv-fixed-card suivi">
+          <div class="dv-fixed-label">Suivi — non-acheteurs</div>
+          <ul>
+            <li>Groupés ensemble après la clôture.</li>
+            <li>1er email : <b>J+20</b> après la clôture.</li>
+            <li>2e email : <b>J+40</b> (soit +20 après le 1er).</li>
+          </ul>
+        </div>
+      </div>
+
+      <h3>Avant — selon le jour d'inscription</h3>
+      <p>La case verte marque le jour d'inscription (confirmation), l'or l'email de valeur, le rouge la relance.</p>
+
+      <div class="dv-cal-grid">
+        <div class="dv-cal-card">
+          <div class="dv-cal-title">Inscription — Jour 1</div>
+          <div class="dv-cal-scroll"><div class="dv-cal-row">
+            <div class="dv-cal-cell c-confirm"><span class="dv-cal-daynum">J1</span><span class="dv-cal-tag">Confirm.</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J2</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J3</span></div>
+            <div class="dv-cal-cell c-valeur"><span class="dv-cal-daynum">J4</span><span class="dv-cal-tag">Valeur</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J5</span></div>
+            <div class="dv-cal-cell c-relance"><span class="dv-cal-daynum">J6</span><span class="dv-cal-tag">Relance</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J7</span></div>
+          </div></div>
+          <div class="dv-cal-note">Relance à J-2 avant J6.</div>
+        </div>
+
+        <div class="dv-cal-card">
+          <div class="dv-cal-title">Inscription — Jour 2</div>
+          <div class="dv-cal-scroll"><div class="dv-cal-row">
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J1</span></div>
+            <div class="dv-cal-cell c-confirm"><span class="dv-cal-daynum">J2</span><span class="dv-cal-tag">Confirm.</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J3</span></div>
+            <div class="dv-cal-cell c-valeur"><span class="dv-cal-daynum">J4</span><span class="dv-cal-tag">Valeur</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J5</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J6</span></div>
+            <div class="dv-cal-cell c-relance"><span class="dv-cal-daynum">J7</span><span class="dv-cal-tag">Relance</span></div>
+          </div></div>
+          <div class="dv-cal-note">Relance à J-1 avant J7.</div>
+        </div>
+
+        <div class="dv-cal-card">
+          <div class="dv-cal-title">Inscription — Jour 3</div>
+          <div class="dv-cal-scroll"><div class="dv-cal-row">
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J1</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J2</span></div>
+            <div class="dv-cal-cell c-confirm"><span class="dv-cal-daynum">J3</span><span class="dv-cal-tag">Confirm.</span></div>
+            <div class="dv-cal-cell c-none"><span class="dv-cal-daynum">J4</span><span class="dv-cal-tag">—</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J5</span></div>
+            <div class="dv-cal-cell c-relance"><span class="dv-cal-daynum">J6</span><span class="dv-cal-tag">Relance</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J7</span></div>
+          </div></div>
+          <div class="dv-cal-note">Pas d'email de valeur cette fois.</div>
+        </div>
+
+        <div class="dv-cal-card">
+          <div class="dv-cal-title">Inscription — Jour 4</div>
+          <div class="dv-cal-scroll"><div class="dv-cal-row">
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J1</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J2</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J3</span></div>
+            <div class="dv-cal-cell c-confirm"><span class="dv-cal-daynum">J4</span><span class="dv-cal-tag">Confirm.</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J5</span></div>
+            <div class="dv-cal-cell c-relance"><span class="dv-cal-daynum">J6</span><span class="dv-cal-tag">Relance</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J7</span></div>
+          </div></div>
+          <div class="dv-cal-note">Relance à J-2 avant J6.</div>
+        </div>
+
+        <div class="dv-cal-card">
+          <div class="dv-cal-title">Inscription — Jour 5</div>
+          <div class="dv-cal-scroll"><div class="dv-cal-row">
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J1</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J2</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J3</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J4</span></div>
+            <div class="dv-cal-cell c-confirm"><span class="dv-cal-daynum">J5</span><span class="dv-cal-tag">Confirm.</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J6</span></div>
+            <div class="dv-cal-cell c-relance"><span class="dv-cal-daynum">J7</span><span class="dv-cal-tag">Relance</span></div>
+          </div></div>
+          <div class="dv-cal-note">Relance à J-1 avant J7.</div>
+        </div>
+
+        <div class="dv-cal-card">
+          <div class="dv-cal-title">Inscription — Jour 6 ou 7</div>
+          <div class="dv-cal-scroll"><div class="dv-cal-row">
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J1</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J2</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J3</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J4</span></div>
+            <div class="dv-cal-cell"><span class="dv-cal-daynum">J5</span></div>
+            <div class="dv-cal-cell c-confirm"><span class="dv-cal-daynum">J6</span><span class="dv-cal-tag">Confirm.</span></div>
+            <div class="dv-cal-cell c-confirm"><span class="dv-cal-daynum">J7</span><span class="dv-cal-tag">Confirm.</span></div>
+          </div></div>
+          <div class="dv-cal-note">Confirmation uniquement, selon le jour choisi.</div>
+        </div>
+      </div>
+
+      <div class="dv-legend">
+        <span><span class="dv-dot" style="background:#4A8C5A"></span>Confirmation</span>
+        <span><span class="dv-dot" style="background:var(--gold, #B8965A)"></span>Valeur</span>
+        <span><span class="dv-dot" style="background:#C0392B"></span>Relance</span>
+      </div>
     `
   };
 
