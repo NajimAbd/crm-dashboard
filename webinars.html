@@ -270,11 +270,11 @@
         <button class="show-type-btn" onclick="showComingSoon('Webinaire en direct')">🎥 Webinaire</button>
       </div>
       <div class="show-type-col">
-        <button class="show-type-btn" onclick="showComingSoon('Challenge 3 jours en direct')">🏆 Challenge 3 jours</button>
+        <button class="show-type-btn" onclick="openChallengeForm('3j')">🏆 Challenge 3 jours</button>
         <a class="deroulement-link" onclick="openDeroulement('3j')">📄 Voir le déroulement</a>
       </div>
       <div class="show-type-col">
-        <button class="show-type-btn" onclick="showComingSoon('Challenge 5 jours en direct')">🏆 Challenge 5 jours</button>
+        <button class="show-type-btn" onclick="openChallengeForm('5j')">🏆 Challenge 5 jours</button>
         <a class="deroulement-link" onclick="openDeroulement('5j')">📄 Voir le déroulement</a>
       </div>
     </div>
@@ -288,6 +288,52 @@
   </div>
 
   <div id="comingSoonToast" class="toast"></div>
+
+  <div id="challengeFormOverlay" style="display:none;position:fixed;inset:0;background:rgba(13,26,18,0.6);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:14px;padding:28px;max-width:480px;width:92%;max-height:88vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h2 id="challengeFormTitle" style="margin:0;font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--green-deep)"></h2>
+        <button onclick="closeChallengeForm()" style="border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--text-soft)">✕</button>
+      </div>
+      <div style="font-size:12px;color:var(--text-soft);margin-bottom:18px">Squelette de création — visuel uniquement pour l'instant. Rien n'est encore enregistré ni connecté.</div>
+
+      <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Nom du show</label>
+      <input type="text" id="challengeNom" placeholder="Ex: Challenge Guérison Roqya" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:16px;box-sizing:border-box">
+
+      <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Langue</label>
+      <select id="challengeLangue" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:16px;box-sizing:border-box">
+        <option value="FR">Français</option>
+        <option value="AR">Arabe</option>
+        <option value="DE">Allemand</option>
+        <option value="AL">Albanais</option>
+      </select>
+
+      <div style="display:flex;gap:12px;margin-bottom:16px">
+        <div style="flex:1">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Date de début</label>
+          <input type="date" id="challengeDateDebut" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
+        </div>
+        <div style="flex:1">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Date de fin</label>
+          <input type="date" id="challengeDateFin" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
+        </div>
+      </div>
+
+      <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Groupes ciblés</label>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px">
+        <input type="text" class="challenge-groupe" placeholder="Groupe 1 — ex: Prospects chauds" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:13px">
+        <input type="text" class="challenge-groupe" placeholder="Groupe 2 — ex: Anciens clients" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:13px">
+        <input type="text" class="challenge-groupe" placeholder="Groupe 3 — ex: Liste email existante" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:13px">
+        <input type="text" class="challenge-groupe" placeholder="Groupe 4 — ex: Publicité / Ads" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:13px">
+      </div>
+      <div style="font-size:11.5px;color:var(--text-soft);margin-bottom:20px">Les statistiques (présence, suivi Zoom/webinaire) seront ajoutées dans une prochaine étape.</div>
+
+      <div style="display:flex;gap:10px">
+        <button onclick="closeChallengeForm()" style="flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer">Annuler</button>
+        <button onclick="submitChallengeSkeleton()" style="flex:1;padding:12px;border:none;border-radius:8px;background:var(--gold, #B8965A);color:var(--green-deep, #0D1A12);font-weight:700;cursor:pointer">Enregistrer (brouillon)</button>
+      </div>
+    </div>
+  </div>
 
   <div id="deroulementOverlay" style="display:none;position:fixed;inset:0;background:rgba(13,26,18,0.6);z-index:1000;align-items:center;justify-content:center">
     <div style="background:#fff;border-radius:14px;padding:28px;max-width:640px;width:92%;max-height:85vh;overflow-y:auto">
@@ -646,6 +692,28 @@
       <p>Même logique que le challenge 3 jours : email à <b>J+20</b>, puis <b>J+40</b> pour les non-acheteurs.</p>
     `
   };
+
+  let currentChallengeType = null;
+
+  function openChallengeForm(type) {
+    currentChallengeType = type;
+    const label = type === '5j' ? 'Challenge 5 jours' : 'Challenge 3 jours';
+    document.getElementById('challengeFormTitle').textContent = '🏆 Créer un ' + label;
+    document.getElementById('challengeNom').value = '';
+    document.getElementById('challengeLangue').value = 'FR';
+    document.getElementById('challengeDateDebut').value = '';
+    document.getElementById('challengeDateFin').value = '';
+    document.querySelectorAll('.challenge-groupe').forEach(el => el.value = '');
+    document.getElementById('challengeFormOverlay').style.display = 'flex';
+  }
+  function closeChallengeForm() {
+    document.getElementById('challengeFormOverlay').style.display = 'none';
+  }
+  function submitChallengeSkeleton() {
+    closeChallengeForm();
+    const label = currentChallengeType === '5j' ? 'Challenge 5 jours' : 'Challenge 3 jours';
+    showComingSoon(label + ' — brouillon noté, création réelle bientôt disponible');
+  }
 
   function openDeroulement(type) {
     const data = type === '5j' ? DEROULEMENT_5J : DEROULEMENT_3J;
