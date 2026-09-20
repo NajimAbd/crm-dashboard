@@ -311,11 +311,12 @@
       <div style="display:flex;gap:12px;margin-bottom:16px">
         <div style="flex:1">
           <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Date de début</label>
-          <input type="date" id="challengeDateDebut" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
+          <input type="date" id="challengeDateDebut" onchange="updateChallengeDateFin()" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
         </div>
         <div style="flex:1">
           <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Date de fin</label>
-          <input type="date" id="challengeDateFin" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
+          <input type="date" id="challengeDateFin" readonly style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;background:#F4EFE3;color:#555">
+          <div style="font-size:11px;color:var(--text-soft);margin-top:4px">Calculée automatiquement</div>
         </div>
       </div>
 
@@ -708,6 +709,15 @@
   }
   function closeChallengeForm() {
     document.getElementById('challengeFormOverlay').style.display = 'none';
+  }
+  function updateChallengeDateFin() {
+    const debutVal = document.getElementById('challengeDateDebut').value;
+    const finEl = document.getElementById('challengeDateFin');
+    if (!debutVal) { finEl.value = ''; return; }
+    const dureeJours = currentChallengeType === '5j' ? 12 : 6; // jour 1 -> rencontre finale (jour 7 pour 3j, jour 13 pour 5j)
+    const d = new Date(debutVal + 'T00:00:00');
+    d.setDate(d.getDate() + dureeJours);
+    finEl.value = d.toISOString().slice(0, 10);
   }
   function submitChallengeSkeleton() {
     closeChallengeForm();
