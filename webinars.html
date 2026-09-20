@@ -104,6 +104,14 @@
   .deroulement-body li { margin-bottom: 4px; }
   .deroulement-body b { color: var(--green-deep); }
 
+  .groupe-chip {
+    display: flex; align-items: center; justify-content: space-between; gap: 10px;
+    padding: 8px 12px; border-radius: 8px; background: #FBF9F4; border: 1px solid var(--border-soft);
+    font-size: 12.5px;
+  }
+  .groupe-chip .groupe-nom { font-weight: 700; color: var(--green-deep); }
+  .groupe-chip .groupe-critere { color: var(--text-soft); text-align: right; flex: 1; margin-left: 10px; }
+
   .toast {
     position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
     background: var(--green-deep); color: var(--cream); padding: 12px 22px;
@@ -320,14 +328,9 @@
         </div>
       </div>
 
-      <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Groupes ciblés</label>
-      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:8px">
-        <input type="text" class="challenge-groupe" placeholder="Groupe 1 — ex: Prospects chauds" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:13px">
-        <input type="text" class="challenge-groupe" placeholder="Groupe 2 — ex: Anciens clients" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:13px">
-        <input type="text" class="challenge-groupe" placeholder="Groupe 3 — ex: Liste email existante" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:13px">
-        <input type="text" class="challenge-groupe" placeholder="Groupe 4 — ex: Publicité / Ads" style="width:100%;padding:9px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;font-size:13px">
-      </div>
-      <div style="font-size:11.5px;color:var(--text-soft);margin-bottom:20px">Les statistiques (présence, suivi Zoom/webinaire) seront ajoutées dans une prochaine étape.</div>
+      <label style="display:block;font-size:13px;color:#666;margin-bottom:8px">Groupes (attribués automatiquement selon présence)</label>
+      <div id="challengeGroupesInfo" style="display:flex;flex-direction:column;gap:6px;margin-bottom:8px"></div>
+      <div style="font-size:11.5px;color:var(--text-soft);margin-bottom:20px">Le suivi réel de présence (Zoom/webinaire) et le calcul des points seront branchés dans une prochaine étape — ces groupes sont pour l'instant affichés à titre de référence.</div>
 
       <div style="display:flex;gap:10px">
         <button onclick="closeChallengeForm()" style="flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer">Annuler</button>
@@ -696,6 +699,21 @@
 
   let currentChallengeType = null;
 
+  const CHALLENGE_GROUPES = {
+    '3j': [
+      { nom: '🏆 VIP', critere: 'A acheté' },
+      { nom: '☀️ Midi', critere: '15 pts (max) OU a réservé un call' },
+      { nom: '🌤️ 10h', critere: '1 à 14 pts (direct ou replay, sans call)' },
+      { nom: '🌙 5h', critere: '0 pt — aucune présence' }
+    ],
+    '5j': [
+      { nom: '🏆 VIP', critere: 'A acheté' },
+      { nom: '☀️ Midi', critere: '25 pts (max) OU a réservé un call *' },
+      { nom: '🌤️ 10h', critere: '1 à 24 pts (direct ou replay, sans call) *' },
+      { nom: '🌙 5h', critere: '0 pt — aucune présence' }
+    ]
+  };
+
   function openChallengeForm(type) {
     currentChallengeType = type;
     const label = type === '5j' ? 'Challenge 5 jours' : 'Challenge 3 jours';
@@ -704,7 +722,12 @@
     document.getElementById('challengeLangue').value = 'FR';
     document.getElementById('challengeDateDebut').value = '';
     document.getElementById('challengeDateFin').value = '';
-    document.querySelectorAll('.challenge-groupe').forEach(el => el.value = '');
+
+    const groupesInfo = document.getElementById('challengeGroupesInfo');
+    groupesInfo.innerHTML = CHALLENGE_GROUPES[type].map(g =>
+      '<div class="groupe-chip"><span class="groupe-nom">' + g.nom + '</span><span class="groupe-critere">' + g.critere + '</span></div>'
+    ).join('') + (type === '5j' ? '<div style="font-size:10.5px;color:var(--text-soft);font-style:italic">* barème 5 jours estimé par mise à l\'échelle du barème 3 jours — à confirmer avec Najim</div>' : '');
+
     document.getElementById('challengeFormOverlay').style.display = 'flex';
   }
   function closeChallengeForm() {
