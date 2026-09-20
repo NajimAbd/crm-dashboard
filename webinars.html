@@ -87,6 +87,22 @@
     cursor: pointer; font-family: 'Inter', sans-serif;
   }
   .show-type-btn:hover { background: rgba(184,150,90,0.1); }
+  .show-type-col { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .deroulement-link {
+    font-size: 11.5px; color: var(--text-soft); text-decoration: underline; cursor: pointer;
+    padding-left: 2px;
+  }
+  .deroulement-link:hover { color: var(--gold, #B8965A); }
+
+  .deroulement-body h3 { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--green-deep); margin: 18px 0 8px; }
+  .deroulement-body h3:first-child { margin-top: 0; }
+  .deroulement-body p { font-size: 13px; color: var(--text-soft); margin: 0 0 8px; }
+  .deroulement-body table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 6px; }
+  .deroulement-body th, .deroulement-body td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border-soft); }
+  .deroulement-body th { color: var(--text-soft); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; }
+  .deroulement-body ul { margin: 0 0 8px; padding-left: 18px; font-size: 13px; }
+  .deroulement-body li { margin-bottom: 4px; }
+  .deroulement-body b { color: var(--green-deep); }
 
   .toast {
     position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
@@ -250,9 +266,17 @@
     <h2 class="show-section-title">🔴 Show en direct</h2>
     <div class="show-section-sub">Bientôt disponible — sessions réellement en direct.</div>
     <div class="show-type-buttons">
-      <button class="show-type-btn" onclick="showComingSoon('Webinaire en direct')">🎥 Webinaire</button>
-      <button class="show-type-btn" onclick="showComingSoon('Challenge 3 jours en direct')">🏆 Challenge 3 jours</button>
-      <button class="show-type-btn" onclick="showComingSoon('Challenge 5 jours en direct')">🏆 Challenge 5 jours</button>
+      <div class="show-type-col">
+        <button class="show-type-btn" onclick="showComingSoon('Webinaire en direct')">🎥 Webinaire</button>
+      </div>
+      <div class="show-type-col">
+        <button class="show-type-btn" onclick="showComingSoon('Challenge 3 jours en direct')">🏆 Challenge 3 jours</button>
+        <a class="deroulement-link" onclick="openDeroulement('3j')">📄 Voir le déroulement</a>
+      </div>
+      <div class="show-type-col">
+        <button class="show-type-btn" onclick="showComingSoon('Challenge 5 jours en direct')">🏆 Challenge 5 jours</button>
+        <a class="deroulement-link" onclick="openDeroulement('5j')">📄 Voir le déroulement</a>
+      </div>
     </div>
   </div>
 
@@ -264,6 +288,16 @@
   </div>
 
   <div id="comingSoonToast" class="toast"></div>
+
+  <div id="deroulementOverlay" style="display:none;position:fixed;inset:0;background:rgba(13,26,18,0.6);z-index:1000;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:14px;padding:28px;max-width:640px;width:92%;max-height:85vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+        <h2 id="deroulementTitle" style="margin:0;font-family:'Cormorant Garamond',serif;font-size:24px;color:var(--green-deep)"></h2>
+        <button onclick="closeDeroulement()" style="border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--text-soft)">✕</button>
+      </div>
+      <div id="deroulementContent" class="deroulement-body"></div>
+    </div>
+  </div>
 
   <div id="createShowOverlay" style="display:none;position:fixed;inset:0;background:rgba(13,26,18,0.6);z-index:1000;align-items:center;justify-content:center">
     <div style="background:#fff;border-radius:14px;padding:28px;max-width:460px;width:90%;max-height:85vh;overflow-y:auto">
@@ -541,6 +575,86 @@
       v.onerror = () => { v.remove(); reject(new Error('Impossible de lire la vidéo')); };
       v.src = url;
     });
+  }
+
+  const DEROULEMENT_3J = {
+    title: '🏆 Déroulement — Challenge 3 jours',
+    html: `
+      <p>Démarre le jour de l'inscription globale. Rencontre finale au <b>jour 7</b>. 4 phases : Avant, Durant, Après, Suivi.</p>
+      <h3>1. Avant l'inscription</h3>
+      <p>Email de confirmation le jour même, puis selon le jour d'inscription :</p>
+      <table>
+        <tr><th>Jour d'inscription</th><th>Emails supplémentaires</th></tr>
+        <tr><td>Jour 1</td><td>Valeur au J4, relance (J-2) au J6</td></tr>
+        <tr><td>Jour 2</td><td>Valeur au J4, relance (J-1) au J7</td></tr>
+        <tr><td>Jour 3</td><td>Relance (J-2) au J6</td></tr>
+        <tr><td>Jour 4</td><td>Relance (J-2) au J6</td></tr>
+        <tr><td>Jour 5</td><td>Relance (J-1) au J7</td></tr>
+        <tr><td>Jour 6 ou 7</td><td>Confirmation uniquement</td></tr>
+      </table>
+      <h3>2. Durant (J1, J2, J3)</h3>
+      <ul>
+        <li>Email du matin à 10h (J1M, J2M, J3M)</li>
+        <li>Email du soir, 2h avant le show (J1S, J2S, J3S)</li>
+        <li>3 rappels WhatsApp aux non-inscrits chaque jour : -5min, +5min, +10min</li>
+      </ul>
+      <h3>3. Après (J4, J5, J6)</h3>
+      <ul>
+        <li><b>J4 — Replay</b> : email vers 15h</li>
+        <li><b>J5 — Questions & réponses</b> : email à 10h + show le soir (email 2h avant + 3 WhatsApp)</li>
+        <li><b>J6 — Clôture</b> : email à 10h uniquement</li>
+      </ul>
+      <h3>4. Suivi</h3>
+      <p>Pour les non-acheteurs, groupés après la clôture : email à <b>J+20</b>, puis <b>J+40</b>.</p>
+    `
+  };
+
+  const DEROULEMENT_5J = {
+    title: '🏆 Déroulement — Challenge 5 jours',
+    html: `
+      <p>Démarre au <b>jour 1</b>. Rencontre finale au <b>jour 13</b> (12 jours après le lancement). 4 phases : Avant, Durant, Après, Suivi.</p>
+      <h3>1. Avant l'inscription</h3>
+      <p>Email de confirmation le jour même, puis selon le jour d'inscription :</p>
+      <table>
+        <tr><th>Jour d'inscription</th><th>Emails supplémentaires</th></tr>
+        <tr><td>Jour 1</td><td>Valeur au J4, valeur au J8, relance (J-2) au J11</td></tr>
+        <tr><td>Jour 2</td><td>Valeur + témoignages au J5, valeur au J8, relance (J-2) au J11</td></tr>
+        <tr><td>Jour 3</td><td>Valeur + témoignages au J6, valeur au J8, relance (J-2) au J11</td></tr>
+        <tr><td>Jour 4</td><td>Valeur au J8, relance (J-2) au J11</td></tr>
+        <tr><td>Jour 5</td><td>Valeur au J8, relance (J-2) au J11</td></tr>
+        <tr><td>Jour 6</td><td>Valeur au J9, relance (J-2) au J11</td></tr>
+        <tr><td>Jour 7</td><td>Relance (J-2) au J11</td></tr>
+        <tr><td>Jour 8</td><td>Relance (J-2) au J11</td></tr>
+        <tr><td>Jour 9</td><td>Relance (J-1) au J12</td></tr>
+        <tr><td>Jour 10</td><td>Relance (J-1) au J12</td></tr>
+        <tr><td>Jour 11 ou 12</td><td>Confirmation uniquement</td></tr>
+      </table>
+      <h3>2. Durant (J1 à J5)</h3>
+      <ul>
+        <li>Email du matin à 10h (J1M à J5M)</li>
+        <li>Email du soir, 2h avant le show (J1S à J5S)</li>
+        <li>3 rappels WhatsApp aux non-inscrits chaque jour : -5min, +5min, +10min</li>
+      </ul>
+      <h3>3. Après</h3>
+      <ul>
+        <li><b>J4 — Replay</b></li>
+        <li><b>J5 — Questions & réponses</b></li>
+        <li><b>J6 — Clôture</b></li>
+      </ul>
+      <p style="font-style:italic">⚠️ Détail encore à préciser par Najim (contenu pas encore figé).</p>
+      <h3>4. Suivi</h3>
+      <p>Même logique que le challenge 3 jours : email à <b>J+20</b>, puis <b>J+40</b> pour les non-acheteurs.</p>
+    `
+  };
+
+  function openDeroulement(type) {
+    const data = type === '5j' ? DEROULEMENT_5J : DEROULEMENT_3J;
+    document.getElementById('deroulementTitle').textContent = data.title;
+    document.getElementById('deroulementContent').innerHTML = data.html;
+    document.getElementById('deroulementOverlay').style.display = 'flex';
+  }
+  function closeDeroulement() {
+    document.getElementById('deroulementOverlay').style.display = 'none';
   }
 
   function showComingSoon(label) {
