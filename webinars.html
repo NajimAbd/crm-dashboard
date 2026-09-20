@@ -64,6 +64,16 @@
   }
   .lead-count-badge b { color: var(--green-deep); font-size: 15px; }
 
+  .toggle-btn {
+    width: 30px; height: 30px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: 1.5px solid var(--green-deep); border-radius: 7px;
+    background: white; color: #c0392b; font-size: 15px; cursor: pointer;
+    transition: transform .2s ease;
+  }
+  .toggle-btn.open { transform: rotate(180deg); }
+  .site-actions { padding: 0 24px 18px; }
+
   .site-body { padding: 18px 24px; }
   .content-row { display: flex; gap: 24px; flex-wrap: wrap; }
   .content-col { flex: 1; min-width: 260px; }
@@ -417,9 +427,15 @@
       html += '<div class="site-meta"><span class="type-chip">' + esc(site.type || 'site') + '</span> &nbsp;/' + esc(site.url_slug || '') + '</div>';
       html += '</div>';
       html += '<div class="lead-count-badge"><b>' + site.lead_count + '</b> lead(s)</div>';
+      html += '<button class="toggle-btn" id="toggleBtn-' + site.id + '" onclick="toggleSiteBody(' + site.id + ')" title="Afficher / masquer les détails">▾</button>';
+      html += '</div>'; // site-header
+
+      html += '<div class="site-body-wrap" id="siteBodyWrap-' + site.id + '" style="display:none">';
+
+      html += '<div class="site-actions">';
+      html += '<button onclick="copyRegisterLink(\'' + esc(site.url_slug || '') + '\', this)" style="padding:8px 16px;border:1px solid var(--gold, #B8965A);border-radius:8px;background:transparent;color:var(--gold, #B8965A);font-weight:700;font-size:12px;cursor:pointer">📋 Copier le lien d\'inscription</button>';
+      html += '<button onclick="deleteShow(' + site.id + ', \'' + esc(site.nom_site).replace(/'/g,"\\'") + '\')" style="margin-left:8px;padding:8px 16px;border:1px solid #c0392b;border-radius:8px;background:transparent;color:#c0392b;font-weight:700;font-size:12px;cursor:pointer">🗑️ Supprimer</button>';
       html += '</div>';
-      html += '<button onclick="copyRegisterLink(\'' + esc(site.url_slug || '') + '\', this)" style="margin-top:10px;padding:8px 16px;border:1px solid var(--gold, #B8965A);border-radius:8px;background:transparent;color:var(--gold, #B8965A);font-weight:700;font-size:12px;cursor:pointer">📋 Copier le lien d\'inscription</button>';
-      html += '<button onclick="deleteShow(' + site.id + ', \'' + esc(site.nom_site).replace(/'/g,"\\'") + '\')" style="margin-top:10px;margin-left:8px;padding:8px 16px;border:1px solid #c0392b;border-radius:8px;background:transparent;color:#c0392b;font-weight:700;font-size:12px;cursor:pointer">🗑️ Supprimer</button>';
 
       html += '<div class="site-body"><div class="content-row">';
 
@@ -463,6 +479,7 @@
       html += '</div>';
 
       html += '</div></div>'; // content-row, site-body
+      html += '</div>'; // site-body-wrap
       html += '</div>'; // site-card
     });
 
@@ -485,6 +502,15 @@
       v.onerror = () => { v.remove(); reject(new Error('Impossible de lire la vidéo')); };
       v.src = url;
     });
+  }
+
+  function toggleSiteBody(siteId) {
+    const wrap = document.getElementById('siteBodyWrap-' + siteId);
+    const btn = document.getElementById('toggleBtn-' + siteId);
+    if (!wrap) return;
+    const willOpen = wrap.style.display === 'none';
+    wrap.style.display = willOpen ? 'block' : 'none';
+    if (btn) btn.classList.toggle('open', willOpen);
   }
 
   function copyRegisterLink(slug, btn) {
