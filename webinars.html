@@ -74,6 +74,28 @@
   .toggle-btn.open { transform: rotate(180deg); }
   .site-actions { padding: 0 24px 18px; }
 
+  .show-section { margin-bottom: 32px; }
+  .show-section-title {
+    font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px;
+    color: var(--green-deep); margin: 0 0 4px;
+  }
+  .show-section-sub { color: var(--text-soft); font-size: 13px; margin-bottom: 14px; }
+  .show-type-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+  .show-type-btn {
+    padding: 12px 22px; border: 2px solid var(--gold, #B8965A); border-radius: 8px;
+    background: transparent; color: var(--gold, #B8965A); font-weight: 700; font-size: 13px;
+    cursor: pointer; font-family: 'Inter', sans-serif;
+  }
+  .show-type-btn:hover { background: rgba(184,150,90,0.1); }
+
+  .toast {
+    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+    background: var(--green-deep); color: var(--cream); padding: 12px 22px;
+    border-radius: 30px; font-size: 13px; box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+    z-index: 2000; opacity: 0; pointer-events: none; transition: opacity .25s ease;
+  }
+  .toast.show { opacity: 1; }
+
   .site-body { padding: 18px 24px; }
   .content-row { display: flex; gap: 24px; flex-wrap: wrap; }
   .content-col { flex: 1; min-width: 260px; }
@@ -222,9 +244,26 @@
     <div class="eyebrow">Contenu & Acquisition</div>
     <h1>Webinaires & Challenges</h1>
     <div class="subtitle" id="subtitleCount">Chargement…</div>
-    <button onclick="window.location.href='upload-video.html'" style="margin-top:16px;padding:10px 20px;border:none;border-radius:8px;background:var(--gold, #B8965A);color:var(--green-deep, #0D1A12);font-weight:700;font-size:13px;cursor:pointer">📹 Envoyer mes vidéos</button>
-    <button onclick="openCreateShowModal()" style="margin-top:16px;margin-left:10px;padding:10px 20px;border:2px solid var(--gold, #B8965A);border-radius:8px;background:transparent;color:var(--gold, #B8965A);font-weight:700;font-size:13px;cursor:pointer">+ Créer un Show</button>
   </div>
+
+  <div class="show-section">
+    <h2 class="show-section-title">🔴 Show en direct</h2>
+    <div class="show-section-sub">Bientôt disponible — sessions réellement en direct.</div>
+    <div class="show-type-buttons">
+      <button class="show-type-btn" onclick="showComingSoon('Webinaire en direct')">🎥 Webinaire</button>
+      <button class="show-type-btn" onclick="showComingSoon('Challenge 3 jours en direct')">🏆 Challenge 3 jours</button>
+      <button class="show-type-btn" onclick="showComingSoon('Challenge 5 jours en direct')">🏆 Challenge 5 jours</button>
+    </div>
+  </div>
+
+  <div class="show-section">
+    <h2 class="show-section-title">🎬 Show en enregistré</h2>
+    <div class="show-section-sub">Webinaire uniquement — vidéo envoyée, diffusée automatiquement selon un horaire.</div>
+    <button onclick="window.location.href='upload-video.html'" style="padding:10px 20px;border:none;border-radius:8px;background:var(--gold, #B8965A);color:var(--green-deep, #0D1A12);font-weight:700;font-size:13px;cursor:pointer">📹 Envoyer mes vidéos</button>
+    <button onclick="openCreateShowModal()" style="margin-left:10px;padding:10px 20px;border:2px solid var(--gold, #B8965A);border-radius:8px;background:transparent;color:var(--gold, #B8965A);font-weight:700;font-size:13px;cursor:pointer">+ Créer un Show</button>
+  </div>
+
+  <div id="comingSoonToast" class="toast"></div>
 
   <div id="createShowOverlay" style="display:none;position:fixed;inset:0;background:rgba(13,26,18,0.6);z-index:1000;align-items:center;justify-content:center">
     <div style="background:#fff;border-radius:14px;padding:28px;max-width:460px;width:90%;max-height:85vh;overflow-y:auto">
@@ -502,6 +541,15 @@
       v.onerror = () => { v.remove(); reject(new Error('Impossible de lire la vidéo')); };
       v.src = url;
     });
+  }
+
+  function showComingSoon(label) {
+    const toast = document.getElementById('comingSoonToast');
+    if (!toast) return;
+    toast.textContent = '✨ ' + label + ' — bientôt disponible';
+    toast.classList.add('show');
+    clearTimeout(toast._hideTimer);
+    toast._hideTimer = setTimeout(() => toast.classList.remove('show'), 2500);
   }
 
   function toggleSiteBody(siteId) {
