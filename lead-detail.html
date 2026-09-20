@@ -829,7 +829,8 @@
     );
     const buyerChip = '<span class="status-chip ' + statutInfo.cls + '">' + statutInfo.label + '</span>';
 
-    const typeLabels = { SW:'Show Webinaire', SC:'Show Challenge', SB:'Show Bootcamp', RP:'Roqya Personne', RM:'Roqya Maison / Bureau', DD:'Diagnostic payant', Fr:'Formation Academy', AA:'Application', AP:'Produits' };
+    const typeLabels = { SW:'Webinaire', SC:'Challenge 3 jours', SB:'Challenge 5 jours', RP:'Roqya Personne', RM:'Roqya Maison / Bureau', DD:'Diagnostic payant', Fr:'Formation Academy', AA:'Application', AP:'Produits' };
+    const typeAbbrev = { SW:'webi', SC:'chal_3J', SB:'chal_5J' };
     const tempIcons = { Froid: '❄️', Tiede: '🌤️', Chaud: '🔥' };
 
     let html = '';
@@ -854,7 +855,7 @@
       interetBullets = interets.map(x => ' <span style="color:#6E4A8E;font-size:16px;font-weight:600">• ' + x + '</span>').join('');
     }
     html += '<h1 class="lead-name">' + esc(fullName)
-      + (l.type_client ? ' <span class="type-badge" title="' + (typeLabels[l.type_client] || '') + '">' + esc(l.type_client) + '</span>' : '')
+      + (l.type_client ? ' <span class="type-badge" title="' + (typeLabels[l.type_client] || '') + '">' + esc(typeAbbrev[l.type_client] || l.type_client) + '</span>' : '')
       + ((isShowType && (l.is_vip == 1 || l.is_vip === true)) ? ' <span title="Ticket VIP" style="font-size:20px">👑</span>' : '')
       + (tempIcons[l.statut_suivi] ? ' <span title="' + esc(l.statut_suivi) + '" style="font-size:18px">' + tempIcons[l.statut_suivi] + '</span>' : '')
       + interetBullets
