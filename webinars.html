@@ -127,6 +127,9 @@
   .dv-cal-title { font-size: 12px; font-weight: 700; color: var(--green-deep); margin-bottom: 8px; }
   .dv-cal-scroll { overflow-x: auto; }
   .dv-cal-row { display: grid; grid-template-columns: repeat(7, minmax(28px, 1fr)); gap: 4px; min-width: 230px; }
+  .dv-cal-row.dv-wide13 { grid-template-columns: repeat(13, minmax(24px, 1fr)); gap: 3px; min-width: 360px; }
+  .dv-cal-row.dv-wide13 .dv-cal-daynum { font-size: 9px; }
+  .dv-cal-row.dv-wide13 .dv-cal-tag { font-size: 5.5px; }
   .dv-cal-cell {
     aspect-ratio: 1 / 0.85; border-radius: 6px; background: var(--bg-soft, #FAF7F1); border: 1px solid var(--border-soft, #E5DECF);
     display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; text-align: center;
