@@ -147,6 +147,11 @@
   .dv-legend { display: flex; gap: 16px; flex-wrap: wrap; margin: 14px 0 4px; font-size: 11.5px; color: var(--text-main); }
   .dv-legend span.dv-dot { display: inline-block; width: 9px; height: 9px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
 
+  .dv-badge { display: inline-block; padding: 3px 9px; border-radius: 10px; font-size: 11px; font-weight: 700; white-space: nowrap; }
+  .dv-badge.dv-b-confirm { background: #E7F1E9; color: #4A8C5A; }
+  .dv-badge.dv-b-valeur { background: #F7EFD9; color: #8B6E3A; }
+  .dv-badge.dv-b-relance { background: #FBEAE7; color: #C0392B; }
+
   .groupe-chip {
     display: flex; align-items: center; justify-content: space-between; gap: 10px;
     padding: 8px 12px; border-radius: 8px; background: #FBF9F4; border: 1px solid var(--border-soft);
@@ -823,49 +828,57 @@
     html: `
       <p>Planning complet — 4 phases : <b>Avant</b> (12 jours), <b>Durant</b> (5 jours), <b>Après</b> (4 jours), <b>Suivi</b>.</p>
 
-      <h3>1. Avant (12 jours) — selon le jour d'inscription</h3>
+      <h3>📅 1. Avant (12 jours) — selon le jour d'inscription</h3>
+      <p>🟢 confirmation &nbsp; 🟡 email de valeur &nbsp; 🔴 relance &nbsp; — aucun email ce jour-là</p>
       <table>
-        <tr><th>Jour d'inscription</th><th>Email inscription</th><th>Valeur 1</th><th>Valeur 2</th><th>Annonce</th></tr>
-        <tr><td>A (J1)</td><td>Immédiat</td><td>J4</td><td>J7</td><td>R2 – J11</td></tr>
-        <tr><td>B (J2)</td><td>Immédiat</td><td>J5</td><td>J8</td><td>R2 – J11</td></tr>
-        <tr><td>C (J3)</td><td>Immédiat</td><td>J6</td><td>J9</td><td>R2 – J11</td></tr>
-        <tr><td>D (J4)</td><td>Immédiat</td><td>J7</td><td>J10</td><td>R1 – J12</td></tr>
-        <tr><td>E (J5)</td><td>Immédiat</td><td>J8</td><td>—</td><td>R2 – J11</td></tr>
-        <tr><td>F (J6)</td><td>Immédiat</td><td>J9</td><td>—</td><td>R1 – J12</td></tr>
-        <tr><td>G (J7)</td><td>Immédiat</td><td>J10</td><td>—</td><td>R1 – J12</td></tr>
-        <tr><td>H (J8)</td><td>Immédiat</td><td>—</td><td>—</td><td>R2 – J11</td></tr>
-        <tr><td>I (J9)</td><td>Immédiat</td><td>—</td><td>—</td><td>R1 – J12</td></tr>
-        <tr><td>J (J10)</td><td>Immédiat</td><td>—</td><td>—</td><td>R1 – J12</td></tr>
-        <tr><td>K (J11)</td><td>Immédiat</td><td>—</td><td>—</td><td>Confirmation seule</td></tr>
-        <tr><td>L (J12)</td><td>Immédiat</td><td>—</td><td>—</td><td>Confirmation seule</td></tr>
+        <tr><th>Jour d'inscription</th><th>✉️ Email inscription</th><th>🎁 Valeur 1</th><th>🎁 Valeur 2</th><th>📣 Annonce</th></tr>
+        <tr><td><b>A (J1)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td><span class="dv-badge dv-b-valeur">J4</span></td><td><span class="dv-badge dv-b-valeur">J7</span></td><td><span class="dv-badge dv-b-relance">R2 – J11</span></td></tr>
+        <tr><td><b>B (J2)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td><span class="dv-badge dv-b-valeur">J5</span></td><td><span class="dv-badge dv-b-valeur">J8</span></td><td><span class="dv-badge dv-b-relance">R2 – J11</span></td></tr>
+        <tr><td><b>C (J3)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td><span class="dv-badge dv-b-valeur">J6</span></td><td><span class="dv-badge dv-b-valeur">J9</span></td><td><span class="dv-badge dv-b-relance">R2 – J11</span></td></tr>
+        <tr><td><b>D (J4)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td><span class="dv-badge dv-b-valeur">J7</span></td><td><span class="dv-badge dv-b-valeur">J10</span></td><td><span class="dv-badge dv-b-relance">R1 – J12</span></td></tr>
+        <tr><td><b>E (J5)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td><span class="dv-badge dv-b-valeur">J8</span></td><td>—</td><td><span class="dv-badge dv-b-relance">R2 – J11</span></td></tr>
+        <tr><td><b>F (J6)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td><span class="dv-badge dv-b-valeur">J9</span></td><td>—</td><td><span class="dv-badge dv-b-relance">R1 – J12</span></td></tr>
+        <tr><td><b>G (J7)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td><span class="dv-badge dv-b-valeur">J10</span></td><td>—</td><td><span class="dv-badge dv-b-relance">R1 – J12</span></td></tr>
+        <tr><td><b>H (J8)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td>—</td><td>—</td><td><span class="dv-badge dv-b-relance">R2 – J11</span></td></tr>
+        <tr><td><b>I (J9)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td>—</td><td>—</td><td><span class="dv-badge dv-b-relance">R1 – J12</span></td></tr>
+        <tr><td><b>J (J10)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td>—</td><td>—</td><td><span class="dv-badge dv-b-relance">R1 – J12</span></td></tr>
+        <tr><td><b>K (J11)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td>—</td><td>—</td><td><span class="dv-badge dv-b-confirm">Confirmation seule</span></td></tr>
+        <tr><td><b>L (J12)</b></td><td><span class="dv-badge dv-b-confirm">Immédiat</span></td><td>—</td><td>—</td><td><span class="dv-badge dv-b-confirm">Confirmation seule</span></td></tr>
       </table>
 
-      <h3>2. Durant (5 jours)</h3>
-      <p>Même schéma répété chaque jour, de J1 à J5 :</p>
-      <table>
-        <tr><th>Moment</th><th>Action</th><th>Détail</th></tr>
-        <tr><td>Jour X — 10h</td><td>Email JXM</td><td>Envoyé à tout le monde</td></tr>
-        <tr><td>Jour X — 2h avant le show</td><td>Email JXS</td><td>Envoyé à tout le monde</td></tr>
-        <tr><td>Jour X — -5 / +5 / +10 min</td><td>Rappels WhatsApp</td><td>Uniquement aux personnes non connectées</td></tr>
-      </table>
+      <h3>🔵🟡🟣 2 · 3 · 4. Durant · Après · Suivi</h3>
+      <div class="dv-fixed-row">
+        <div class="dv-fixed-card durant">
+          <div class="dv-fixed-label">🎥 Durant — J1 à J5</div>
+          <ul>
+            <li>☀️ Email du matin à <b>10h</b> chaque jour (J1M à J5M), envoyé à tout le monde.</li>
+            <li>🌙 Email du soir, <b>2h avant</b> le show (J1S à J5S), envoyé à tout le monde.</li>
+            <li>📲 Rappels WhatsApp à -5 / +5 / +10 min, uniquement aux personnes non connectées.</li>
+          </ul>
+        </div>
+        <div class="dv-fixed-card apres">
+          <div class="dv-fixed-label">🎬 Après — 4 jours</div>
+          <ul>
+            <li>🎬 <b>Jour 1 — 15h</b> : replay de tous les jours.</li>
+            <li>💬 <b>Jour 2 — 10h</b> : questions-réponses, puis email le soir (-2h) + 📲 WhatsApp.</li>
+            <li>⭐ <b>Jour 3 — 15h</b> : demande d'inscription et témoignages.</li>
+            <li>🔒 <b>Jour 4 — 20h</b> : appel à l'inscription + annonce de fermeture.</li>
+          </ul>
+        </div>
+        <div class="dv-fixed-card suivi">
+          <div class="dv-fixed-label">🔁 Suivi</div>
+          <ul>
+            <li>🎁 <b>J+20 — 10h</b> : email valeur récupération 1.</li>
+            <li>🎁 <b>J+40 — 10h</b> : email valeur récupération 2.</li>
+          </ul>
+        </div>
+      </div>
 
-      <h3>3. Après (4 jours)</h3>
-      <table>
-        <tr><th>Moment</th><th>Action</th><th>Détail</th></tr>
-        <tr><td>Jour 1 — 15h</td><td>Email</td><td>Replay de tous les jours</td></tr>
-        <tr><td>Jour 2 — 10h</td><td>Email</td><td>Question-réponse</td></tr>
-        <tr><td>Jour 2 — soir, -2h avant le show</td><td>Email</td><td>Envoyé à tout le monde</td></tr>
-        <tr><td>Jour 2 — -5 / +5 / +10 min</td><td>Rappels WhatsApp</td><td>Uniquement aux personnes non connectées</td></tr>
-        <tr><td>Jour 3 — 15h</td><td>Email</td><td>Demande d'inscription et témoignage</td></tr>
-        <tr><td>Jour 4 — 20h</td><td>Email</td><td>Appel à l'inscription + annonce de fermeture</td></tr>
-      </table>
-
-      <h3>4. Suivi</h3>
-      <table>
-        <tr><th>Moment</th><th>Action</th><th>Détail</th></tr>
-        <tr><td>J+20 — 10h</td><td>Email</td><td>Valeur récupération 1</td></tr>
-        <tr><td>J+40 — 10h</td><td>Email</td><td>Valeur récupération 2</td></tr>
-      </table>
+      <div class="dv-legend">
+        <span><span class="dv-dot" style="background:#4A8C5A"></span>Confirmation</span>
+        <span><span class="dv-dot" style="background:var(--gold, #B8965A)"></span>Valeur</span>
+        <span><span class="dv-dot" style="background:#C0392B"></span>Relance</span>
+      </div>
     `
   };
 
