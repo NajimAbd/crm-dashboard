@@ -821,38 +821,51 @@
   const DEROULEMENT_5J = {
     title: '🏆 Déroulement — Challenge 5 jours',
     html: `
-      <p>Démarre au <b>jour 1</b>. Rencontre finale au <b>jour 13</b> (12 jours après le lancement). 4 phases : Avant, Durant, Après, Suivi.</p>
-      <h3>1. Avant l'inscription</h3>
-      <p>Email de confirmation le jour même, puis selon le jour d'inscription :</p>
+      <p>Planning complet — 4 phases : <b>Avant</b> (12 jours), <b>Durant</b> (5 jours), <b>Après</b> (4 jours), <b>Suivi</b>.</p>
+
+      <h3>1. Avant (12 jours) — selon le jour d'inscription</h3>
       <table>
-        <tr><th>Jour d'inscription</th><th>Emails supplémentaires</th></tr>
-        <tr><td>Jour 1</td><td>Valeur au J4, valeur au J8, relance (J-2) au J11</td></tr>
-        <tr><td>Jour 2</td><td>Valeur + témoignages au J5, valeur au J8, relance (J-2) au J11</td></tr>
-        <tr><td>Jour 3</td><td>Valeur + témoignages au J6, valeur au J8, relance (J-2) au J11</td></tr>
-        <tr><td>Jour 4</td><td>Valeur au J8, relance (J-2) au J11</td></tr>
-        <tr><td>Jour 5</td><td>Valeur au J8, relance (J-2) au J11</td></tr>
-        <tr><td>Jour 6</td><td>Valeur au J9, relance (J-2) au J11</td></tr>
-        <tr><td>Jour 7</td><td>Relance (J-2) au J11</td></tr>
-        <tr><td>Jour 8</td><td>Relance (J-2) au J11</td></tr>
-        <tr><td>Jour 9</td><td>Relance (J-1) au J12</td></tr>
-        <tr><td>Jour 10</td><td>Relance (J-1) au J12</td></tr>
-        <tr><td>Jour 11 ou 12</td><td>Confirmation uniquement</td></tr>
+        <tr><th>Jour d'inscription</th><th>Email inscription</th><th>Valeur 1</th><th>Valeur 2</th><th>Annonce</th></tr>
+        <tr><td>A (J1)</td><td>Immédiat</td><td>J4</td><td>J7</td><td>R2 – J11</td></tr>
+        <tr><td>B (J2)</td><td>Immédiat</td><td>J5</td><td>J8</td><td>R2 – J11</td></tr>
+        <tr><td>C (J3)</td><td>Immédiat</td><td>J6</td><td>J9</td><td>R2 – J11</td></tr>
+        <tr><td>D (J4)</td><td>Immédiat</td><td>J7</td><td>J10</td><td>R1 – J12</td></tr>
+        <tr><td>E (J5)</td><td>Immédiat</td><td>J8</td><td>—</td><td>R2 – J11</td></tr>
+        <tr><td>F (J6)</td><td>Immédiat</td><td>J9</td><td>—</td><td>R1 – J12</td></tr>
+        <tr><td>G (J7)</td><td>Immédiat</td><td>J10</td><td>—</td><td>R1 – J12</td></tr>
+        <tr><td>H (J8)</td><td>Immédiat</td><td>—</td><td>—</td><td>R2 – J11</td></tr>
+        <tr><td>I (J9)</td><td>Immédiat</td><td>—</td><td>—</td><td>R1 – J12</td></tr>
+        <tr><td>J (J10)</td><td>Immédiat</td><td>—</td><td>—</td><td>R1 – J12</td></tr>
+        <tr><td>K (J11)</td><td>Immédiat</td><td>—</td><td>—</td><td>Confirmation seule</td></tr>
+        <tr><td>L (J12)</td><td>Immédiat</td><td>—</td><td>—</td><td>Confirmation seule</td></tr>
       </table>
-      <h3>2. Durant (J1 à J5)</h3>
-      <ul>
-        <li>Email du matin à 10h (J1M à J5M)</li>
-        <li>Email du soir, 2h avant le show (J1S à J5S)</li>
-        <li>3 rappels WhatsApp aux non-inscrits chaque jour : -5min, +5min, +10min</li>
-      </ul>
-      <h3>3. Après</h3>
-      <ul>
-        <li><b>J4 — Replay</b></li>
-        <li><b>J5 — Questions & réponses</b></li>
-        <li><b>J6 — Clôture</b></li>
-      </ul>
-      <p style="font-style:italic">⚠️ Détail encore à préciser par Najim (contenu pas encore figé).</p>
+
+      <h3>2. Durant (5 jours)</h3>
+      <p>Même schéma répété chaque jour, de J1 à J5 :</p>
+      <table>
+        <tr><th>Moment</th><th>Action</th><th>Détail</th></tr>
+        <tr><td>Jour X — 10h</td><td>Email JXM</td><td>Envoyé à tout le monde</td></tr>
+        <tr><td>Jour X — 2h avant le show</td><td>Email JXS</td><td>Envoyé à tout le monde</td></tr>
+        <tr><td>Jour X — -5 / +5 / +10 min</td><td>Rappels WhatsApp</td><td>Uniquement aux personnes non connectées</td></tr>
+      </table>
+
+      <h3>3. Après (4 jours)</h3>
+      <table>
+        <tr><th>Moment</th><th>Action</th><th>Détail</th></tr>
+        <tr><td>Jour 1 — 15h</td><td>Email</td><td>Replay de tous les jours</td></tr>
+        <tr><td>Jour 2 — 10h</td><td>Email</td><td>Question-réponse</td></tr>
+        <tr><td>Jour 2 — soir, -2h avant le show</td><td>Email</td><td>Envoyé à tout le monde</td></tr>
+        <tr><td>Jour 2 — -5 / +5 / +10 min</td><td>Rappels WhatsApp</td><td>Uniquement aux personnes non connectées</td></tr>
+        <tr><td>Jour 3 — 15h</td><td>Email</td><td>Demande d'inscription et témoignage</td></tr>
+        <tr><td>Jour 4 — 20h</td><td>Email</td><td>Appel à l'inscription + annonce de fermeture</td></tr>
+      </table>
+
       <h3>4. Suivi</h3>
-      <p>Même logique que le challenge 3 jours : email à <b>J+20</b>, puis <b>J+40</b> pour les non-acheteurs.</p>
+      <table>
+        <tr><th>Moment</th><th>Action</th><th>Détail</th></tr>
+        <tr><td>J+20 — 10h</td><td>Email</td><td>Valeur récupération 1</td></tr>
+        <tr><td>J+40 — 10h</td><td>Email</td><td>Valeur récupération 2</td></tr>
+      </table>
     `
   };
 
