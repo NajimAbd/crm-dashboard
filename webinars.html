@@ -642,7 +642,7 @@
       html += '<div class="site-name">' + esc(site.nom_site) + '</div>';
       html += '<div class="site-meta">' + esc(getSiteDateRange(site)) + ' &nbsp;·&nbsp; /' + esc(site.url_slug || '') + '</div>';
       html += '</div>';
-      html += '<div class="lead-count-badge"><b>' + site.lead_count + '</b> lead(s)</div>';
+      html += '<button onclick="event.stopPropagation(); deleteShow(' + site.id + ', \'' + esc(site.nom_site).replace(/'/g,"\\'") + '\')" style="padding:10px 18px;border:2px solid #c0392b;border-radius:8px;background:#fdecea;color:#c0392b;font-weight:800;font-size:13px;cursor:pointer">🗑️ Supprimer</button>';
       html += '<button class="toggle-btn" id="toggleBtn-' + site.id + '" onclick="toggleSiteBody(' + site.id + ')" title="Afficher / masquer les détails">▾</button>';
       html += '</div>'; // site-header
 
@@ -651,7 +651,6 @@
       html += '<div class="site-actions">';
       html += '<button onclick="copyRegisterLink(\'' + esc(site.url_slug || '') + '\', this)" style="padding:8px 16px;border:1px solid var(--gold, #B8965A);border-radius:8px;background:transparent;color:var(--gold, #B8965A);font-weight:700;font-size:12px;cursor:pointer">📋 Copier le lien d\'inscription</button>';
       html += '<button onclick="window.open(\'challenge-inscrits.html?site_id=' + site.id + '\', \'_blank\')" style="margin-left:8px;padding:8px 16px;border:1px solid #8b6914;border-radius:8px;background:transparent;color:#8b6914;font-weight:700;font-size:12px;cursor:pointer">🧪 Page Test</button>';
-      html += '<button onclick="deleteShow(' + site.id + ', \'' + esc(site.nom_site).replace(/'/g,"\\'") + '\')" style="margin-left:8px;padding:8px 16px;border:1px solid #c0392b;border-radius:8px;background:transparent;color:#c0392b;font-weight:700;font-size:12px;cursor:pointer">🗑️ Supprimer</button>';
       html += '</div>';
 
       html += '<div class="site-body"><div class="content-row">';
