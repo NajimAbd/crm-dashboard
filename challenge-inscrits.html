@@ -33,7 +33,10 @@
   .stat {
     background: #fff; border: 1px solid var(--line); border-radius: 10px;
     padding: 14px 18px; min-width: 110px;
+    cursor: pointer; user-select: none; transition: border-color .15s, box-shadow .15s;
   }
+  .stat:hover { border-color: var(--gold); }
+  .stat.active { border-color: var(--gold); box-shadow: 0 0 0 2px rgba(139,105,20,0.25); }
   .stat .n { font-size: 1.5rem; font-weight: 700; }
   .stat .l { font-size: 0.78rem; color: #756a4c; text-transform: uppercase; letter-spacing: 0.03em; }
 
@@ -85,6 +88,66 @@
   const badgeClass = { "VIP": "badge-vip", "Midi": "badge-midi", "10h": "badge-10h", "5h": "badge-5h" };
   const badgeIcon = { "VIP": "🏆", "Midi": "☀️", "10h": "🌤️", "5h": "🌙" };
 
+  let allParticipants = [];
+  let allJours = [];
+  let activeFilter = null; // null = tous, sinon "VIP"/"Midi"/"10h"/"5h"
+
+  function renderStats(counts) {
+    document.getElementById("stats").innerHTML = Object.keys(counts).map(g => `
+      <div class="stat${activeFilter === g ? ' active' : ''}" onclick="toggleFilter('${g}')">
+        <div class="n">${counts[g]}</div>
+        <div class="l">${badgeIcon[g]} ${g}</div>
+      </div>
+    `).join("");
+  }
+
+  function renderTable(participants) {
+    const jourLabels = allJours.map((j, idx) => `Jour ${idx + 1}`);
+    const headerJours = jourLabels.map(l => `<th class="center">${l}</th>`).join("");
+
+    if (participants.length === 0) {
+      document.getElementById("content").innerHTML = `<div class="loading">Aucun inscrit dans ce groupe.</div>`;
+      return;
+    }
+
+    const rows = participants.map(p => {
+      const jourCells = p.jours.map(j => `
+        <td class="center jour-cell">
+          <span class="${j.a_regarde ? 'jour-oui' : 'jour-non'}">${j.a_regarde ? '✅' : '❌'}</span>
+          <span class="jour-pt">${j.points}pt</span>
+        </td>
+      `).join("");
+      return `
+        <tr>
+          <td>${p.nom}</td>
+          <td>${p.email}</td>
+          ${jourCells}
+          <td class="center total-pt">${p.total_points}</td>
+          <td><span class="badge ${badgeClass[p.groupe] || ''}">${badgeIcon[p.groupe] || ''} ${p.groupe}</span></td>
+        </tr>
+      `;
+    }).join("");
+
+    document.getElementById("content").innerHTML = `
+      <table>
+        <thead>
+          <tr><th>Nom</th><th>Email</th>${headerJours}<th class="center">Total</th><th>Groupe</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+
+  function toggleFilter(groupe) {
+    activeFilter = (activeFilter === groupe) ? null : groupe;
+    const counts = { VIP: 0, Midi: 0, "10h": 0, "5h": 0 };
+    allParticipants.forEach(p => { if (counts[p.groupe] !== undefined) counts[p.groupe]++; });
+    renderStats(counts);
+    const visibles = activeFilter ? allParticipants.filter(p => p.groupe === activeFilter) : allParticipants;
+    renderTable(visibles);
+  }
+  window.toggleFilter = toggleFilter;
+
   fetch(`${WEBHOOK_URL}?site_id=${encodeURIComponent(siteId)}`)
     .then(r => r.json())
     .then(data => {
@@ -92,50 +155,14 @@
         document.getElementById("content").innerHTML = `<div class="error">Erreur : ${data.message || "impossible de charger les inscrits"}</div>`;
         return;
       }
-      const jours = data.jours || [];
-      const participants = data.participants || [];
-      document.getElementById("subtitle").textContent = `${participants.length} inscrit(s) · ${jours.length} jour(s) de show`;
+      allJours = data.jours || [];
+      allParticipants = data.participants || [];
+      document.getElementById("subtitle").textContent = `${allParticipants.length} inscrit(s) · ${allJours.length} jour(s) de show`;
 
       const counts = { VIP: 0, Midi: 0, "10h": 0, "5h": 0 };
-      participants.forEach(p => { if (counts[p.groupe] !== undefined) counts[p.groupe]++; });
-
-      document.getElementById("stats").innerHTML = Object.keys(counts).map(g => `
-        <div class="stat">
-          <div class="n">${counts[g]}</div>
-          <div class="l">${badgeIcon[g]} ${g}</div>
-        </div>
-      `).join("");
-
-      const jourLabels = jours.map((j, idx) => `Jour ${idx + 1}`);
-
-      const headerJours = jourLabels.map(l => `<th class="center">${l}</th>`).join("");
-
-      const rows = participants.map(p => {
-        const jourCells = p.jours.map(j => `
-          <td class="center jour-cell">
-            <span class="${j.a_regarde ? 'jour-oui' : 'jour-non'}">${j.a_regarde ? '✅' : '❌'}</span>
-            <span class="jour-pt">${j.points}pt</span>
-          </td>
-        `).join("");
-        return `
-          <tr>
-            <td>${p.nom}</td>
-            <td>${p.email}</td>
-            ${jourCells}
-            <td class="center total-pt">${p.total_points}</td>
-            <td><span class="badge ${badgeClass[p.groupe] || ''}">${badgeIcon[p.groupe] || ''} ${p.groupe}</span></td>
-          </tr>
-        `;
-      }).join("");
-
-      document.getElementById("content").innerHTML = `
-        <table>
-          <thead>
-            <tr><th>Nom</th><th>Email</th>${headerJours}<th class="center">Total</th><th>Groupe</th></tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
-      `;
+      allParticipants.forEach(p => { if (counts[p.groupe] !== undefined) counts[p.groupe]++; });
+      renderStats(counts);
+      renderTable(allParticipants);
     })
     .catch(err => {
       document.getElementById("content").innerHTML = `<div class="error">Connexion impossible. Réessayez.</div>`;
