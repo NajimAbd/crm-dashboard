@@ -80,19 +80,23 @@
     color: var(--green-deep); margin: 0 0 4px;
   }
   .show-section-sub { color: var(--text-soft); font-size: 13px; margin-bottom: 14px; }
-  .show-type-buttons { display: flex; gap: 10px; flex-wrap: wrap; }
+  .show-type-buttons { display: flex; gap: 14px; flex-wrap: wrap; align-items: flex-start; }
   .show-type-btn {
-    padding: 12px 22px; border: 2px solid var(--gold, #B8965A); border-radius: 8px;
+    width: 230px; padding: 12px 20px; border: 2px solid var(--gold, #B8965A); border-radius: 8px;
     background: transparent; color: var(--gold, #B8965A); font-weight: 700; font-size: 13px;
-    cursor: pointer; font-family: 'Inter', sans-serif;
+    cursor: pointer; font-family: 'Inter', sans-serif; text-align: center; box-sizing: border-box;
   }
+  .show-type-btn.filled { background: var(--gold, #B8965A); color: var(--green-deep, #0D1A12); }
   .show-type-btn:hover { background: rgba(184,150,90,0.1); }
-  .show-type-col { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; }
+  .show-type-btn.filled:hover { background: var(--gold, #B8965A); opacity: 0.9; }
+  .show-type-col { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-height: 40px; }
   .deroulement-link {
     font-size: 11.5px; color: var(--text-soft); text-decoration: underline; cursor: pointer;
-    padding-left: 2px;
+    padding-left: 2px; visibility: visible;
   }
+  .deroulement-link.invisible { visibility: hidden; }
   .deroulement-link:hover { color: var(--gold, #B8965A); }
+  .section-divider { border: none; border-top: 2px solid var(--green-deep, #0D1A12); margin: 28px 0; opacity: 0.85; }
 
   .deroulement-body h3 { font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--green-deep); margin: 18px 0 8px; }
   .deroulement-body h3:first-child { margin-top: 0; }
@@ -328,24 +332,35 @@
     <div class="show-section-sub">Bientôt disponible — sessions réellement en direct.</div>
     <div class="show-type-buttons">
       <div class="show-type-col">
-        <button class="show-type-btn" onclick="showComingSoon('Webinaire en direct')">🎥 Webinaire</button>
+        <button class="show-type-btn" onclick="showComingSoon('Webinaire en direct')">+ Webinaire</button>
+        <a class="deroulement-link invisible">placeholder</a>
       </div>
       <div class="show-type-col">
-        <button class="show-type-btn" onclick="openChallengeForm('3j')">🏆 Challenge 3 jours</button>
+        <button class="show-type-btn" onclick="openChallengeForm('3j')">+ Challenge 3 jours</button>
         <a class="deroulement-link" onclick="openDeroulement('3j')">📄 Voir le déroulement</a>
       </div>
       <div class="show-type-col">
-        <button class="show-type-btn" onclick="openChallengeForm('5j')">🏆 Challenge 5 jours</button>
+        <button class="show-type-btn" onclick="openChallengeForm('5j')">+ Challenge 5 jours</button>
         <a class="deroulement-link" onclick="openDeroulement('5j')">📄 Voir le déroulement</a>
       </div>
     </div>
   </div>
 
+  <hr class="section-divider">
+
   <div class="show-section">
     <h2 class="show-section-title">🎬 Show en enregistré</h2>
     <div class="show-section-sub">Webinaire uniquement — vidéo envoyée, diffusée automatiquement selon un horaire.</div>
-    <button onclick="window.location.href='upload-video.html'" style="padding:10px 20px;border:none;border-radius:8px;background:var(--gold, #B8965A);color:var(--green-deep, #0D1A12);font-weight:700;font-size:13px;cursor:pointer">📹 Envoyer mes vidéos</button>
-    <button onclick="openCreateShowModal()" style="margin-left:10px;padding:10px 20px;border:2px solid var(--gold, #B8965A);border-radius:8px;background:transparent;color:var(--gold, #B8965A);font-weight:700;font-size:13px;cursor:pointer">+ Créer un Show</button>
+    <div class="show-type-buttons">
+      <div class="show-type-col">
+        <button class="show-type-btn" onclick="openCreateShowModal()">+ Webinaire</button>
+        <a class="deroulement-link invisible">placeholder</a>
+      </div>
+      <div class="show-type-col">
+        <button class="show-type-btn filled" onclick="window.location.href='upload-video.html'">📹 Envoyer mes vidéos</button>
+        <a class="deroulement-link invisible">placeholder</a>
+      </div>
+    </div>
   </div>
 
   <div id="comingSoonToast" class="toast"></div>
@@ -613,7 +628,8 @@
       html += '<div class="site-header">';
       html += '<div>';
       html += '<div class="site-name">' + esc(site.nom_site) + '</div>';
-      html += '<div class="site-meta"><span class="type-chip">' + esc(site.type || 'site') + '</span> &nbsp;/' + esc(site.url_slug || '') + '</div>';
+      const siteTypeLabels = { SW: 'Webinaire', SC: 'Challenge 3 jours', SB: 'Challenge 5 jours' };
+      html += '<div class="site-meta"><span class="type-chip">' + esc(siteTypeLabels[site.type] || site.type || 'Site') + '</span> &nbsp;/' + esc(site.url_slug || '') + '</div>';
       html += '</div>';
       html += '<div class="lead-count-badge"><b>' + site.lead_count + '</b> lead(s)</div>';
       html += '<button class="toggle-btn" id="toggleBtn-' + site.id + '" onclick="toggleSiteBody(' + site.id + ')" title="Afficher / masquer les détails">▾</button>';
