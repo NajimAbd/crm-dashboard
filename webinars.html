@@ -623,6 +623,7 @@
 
       html += '<div class="site-actions">';
       html += '<button onclick="copyRegisterLink(\'' + esc(site.url_slug || '') + '\', this)" style="padding:8px 16px;border:1px solid var(--gold, #B8965A);border-radius:8px;background:transparent;color:var(--gold, #B8965A);font-weight:700;font-size:12px;cursor:pointer">📋 Copier le lien d\'inscription</button>';
+      html += '<button onclick="window.open(\'challenge-inscrits.html?site_id=' + site.id + '\', \'_blank\')" style="margin-left:8px;padding:8px 16px;border:1px solid #8b6914;border-radius:8px;background:transparent;color:#8b6914;font-weight:700;font-size:12px;cursor:pointer">🧪 Page Test</button>';
       html += '<button onclick="deleteShow(' + site.id + ', \'' + esc(site.nom_site).replace(/'/g,"\\'") + '\')" style="margin-left:8px;padding:8px 16px;border:1px solid #c0392b;border-radius:8px;background:transparent;color:#c0392b;font-weight:700;font-size:12px;cursor:pointer">🗑️ Supprimer</button>';
       html += '</div>';
 
@@ -644,7 +645,6 @@
               '<button onclick="testShowScenario(' + w.id + ', \'40sec\', this)">⏳ +40s</button>' +
               '<button onclick="testShowScenario(' + w.id + ', \'10s\', this)">🚀 +10s</button>' +
             '</div>' +
-            '<button onclick="window.open(\'challenge-inscrits.html?webinar_id=' + w.id + '\', \'_blank\')" style="margin-top:6px;padding:6px 14px;border:1px solid #8b6914;border-radius:8px;background:transparent;color:#8b6914;font-weight:700;font-size:11px;cursor:pointer">🧪 Page Test</button>' +
             '<div class="mini-test-result" id="testResult-' + w.id + '"></div>' +
             '<div class="mini-stats" id="stats-' + w.id + '">Chargement des statistiques…</div>' +
             '</div>' +
