@@ -69,6 +69,8 @@
   .jour-oui { color: #2f7d4f; }
   .jour-non { color: #b04a3f; }
   .jour-cell { font-size: 0.85rem; }
+  .jour-emails { display: block; margin-top: 3px; font-size: 0.72rem; color: #9a8f6e; }
+  .jour-emails.complet { color: #2f7d4f; font-weight: 600; }
 
   .total-pt { font-weight: 700; font-size: 1.05rem; }
 
@@ -126,12 +128,16 @@
     }
 
     const rows = participants.map(p => {
-      const jourCells = p.jours.map(j => `
+      const jourCells = p.jours.map(j => {
+        const emailsOk = j.emails_recus >= j.emails_attendus && j.emails_attendus > 0;
+        return `
         <td class="center jour-cell">
           <span class="${j.a_regarde ? 'jour-oui' : 'jour-non'}">${j.a_regarde ? '✅' : '❌'}</span>
           <span class="jour-pt">${j.points}pt</span>
+          <span class="jour-emails${emailsOk ? ' complet' : ''}">✉️ ${j.emails_recus}/${j.emails_attendus}</span>
         </td>
-      `).join("");
+      `;
+      }).join("");
       return `
         <tr>
           <td>${p.nom}</td>
