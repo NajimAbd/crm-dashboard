@@ -860,24 +860,28 @@
   };
 
   let currentChallengeType = null;
+  let challengeLeadsInvites = [];
 
   const CHALLENGE_GROUPES = {
     '3j': [
-      { nom: '🏆 VIP', critere: 'A acheté' },
-      { nom: '☀️ Midi', critere: '15 pts (max) OU a réservé un call' },
-      { nom: '🌤️ 10h', critere: '1 à 14 pts (direct ou replay, sans call)' },
-      { nom: '🌙 5h', critere: '0 pt — aucune présence' }
+      { key: 'VIP', nom: '🏆 VIP', critere: 'A acheté' },
+      { key: 'Midi', nom: '☀️ Midi', critere: '15 pts (max) OU a réservé un call' },
+      { key: '10h', nom: '🌤️ 10h', critere: '1 à 14 pts (direct ou replay, sans call)' },
+      { key: '5h', nom: '🌙 5h', critere: '0 pt — aucune présence' }
     ],
     '5j': [
-      { nom: '🏆 VIP', critere: 'A acheté' },
-      { nom: '☀️ Midi', critere: '25 pts (max) OU a réservé un call *' },
-      { nom: '🌤️ 10h', critere: '1 à 24 pts (direct ou replay, sans call) *' },
-      { nom: '🌙 5h', critere: '0 pt — aucune présence' }
+      { key: 'VIP', nom: '🏆 VIP', critere: 'A acheté' },
+      { key: 'Midi', nom: '☀️ Midi', critere: '25 pts (max) OU a réservé un call *' },
+      { key: '10h', nom: '🌤️ 10h', critere: '1 à 24 pts (direct ou replay, sans call) *' },
+      { key: '5h', nom: '🌙 5h', critere: '0 pt — aucune présence' }
     ]
   };
 
+  const GROUPE_SOURCE_MAP = { VIP: 'recycle_vip', Midi: 'recycle_midi', '10h': 'recycle_10h', '5h': 'recycle_5h', Ads: 'ads_neuf' };
+
   function openChallengeForm(type) {
     currentChallengeType = type;
+    challengeLeadsInvites = [];
     const label = type === '5j' ? 'Challenge 5 jours' : 'Challenge 3 jours';
     document.getElementById('challengeFormTitle').textContent = '🏆 Créer un ' + label;
     document.getElementById('challengeNom').value = '';
@@ -886,18 +890,55 @@
     document.getElementById('challengeDateFin').value = '';
 
     const groupesInfo = document.getElementById('challengeGroupesInfo');
-    const groupRows = CHALLENGE_GROUPES[type].map(g =>
-      '<div class="groupe-chip"><span class="groupe-nom">' + g.nom + '</span>' +
-      '<span style="display:flex;gap:6px"><button type="button" class="groupe-add-btn">ADD</button><button type="button" class="groupe-remove-btn">Remove</button></span></div>'
-    ).join('');
-    const adsRow = '<div class="groupe-chip"><span class="groupe-nom">Ads</span>' +
-      '<span style="display:flex;gap:6px"><button type="button" class="groupe-add-btn">ADD</button></span></div>';
+    const chip = (key, nom) =>
+      '<div class="groupe-chip"><span class="groupe-nom">' + nom + ' <span id="groupe-count-' + key + '" style="color:var(--text-soft);font-weight:400"></span></span>' +
+      '<span style="display:flex;gap:6px">' +
+      '<button type="button" class="groupe-add-btn" onclick="addGroupeLeads(\'' + key + '\')">ADD</button>' +
+      '<button type="button" class="groupe-remove-btn" onclick="removeGroupeLeads(\'' + key + '\')">Remove</button>' +
+      '</span></div>';
+    const groupRows = CHALLENGE_GROUPES[type].map(g => chip(g.key, g.nom)).join('');
+    const adsRow = chip('Ads', 'Ads');
     groupesInfo.innerHTML = groupRows + adsRow;
 
     document.getElementById('challengeFormOverlay').style.display = 'flex';
   }
   function closeChallengeForm() {
     document.getElementById('challengeFormOverlay').style.display = 'none';
+  }
+  async function addGroupeLeads(groupe) {
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-get-recyclable-leads', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ account_id: session.account_id, groupe })
+      });
+      const data = await resp.json();
+      if (!data.success) { showComingSoon('Erreur lors de la récupération des leads'); return; }
+      const source = GROUPE_SOURCE_MAP[groupe] || 'ads_neuf';
+      const existingEmails = new Set(challengeLeadsInvites.map(l => l.email));
+      let added = 0;
+      (data.leads || []).forEach(l => {
+        if (!l.email || existingEmails.has(l.email)) return;
+        challengeLeadsInvites.push({ lead_id: l.id, nom: l.nom, email: l.email, source, show_origine_id: l.site_id || null });
+        existingEmails.add(l.email);
+        added++;
+      });
+      updateGroupeCount(groupe);
+      showComingSoon(added + ' lead(s) ajouté(s) au groupe ' + groupe);
+    } catch (err) {
+      showComingSoon('Connexion impossible au serveur');
+    }
+  }
+  function removeGroupeLeads(groupe) {
+    const source = GROUPE_SOURCE_MAP[groupe] || 'ads_neuf';
+    challengeLeadsInvites = challengeLeadsInvites.filter(l => l.source !== source);
+    updateGroupeCount(groupe);
+  }
+  function updateGroupeCount(groupe) {
+    const source = GROUPE_SOURCE_MAP[groupe] || 'ads_neuf';
+    const count = challengeLeadsInvites.filter(l => l.source === source).length;
+    const el = document.getElementById('groupe-count-' + groupe);
+    if (el) el.textContent = count > 0 ? '(' + count + ')' : '';
   }
   function updateChallengeDateFin() {
     const debutVal = document.getElementById('challengeDateDebut').value;
@@ -930,7 +971,7 @@
       date_fin: dateFin,
       account_id: session.account_id,
       declencheurs,
-      leads_invites: []
+      leads_invites: challengeLeadsInvites
     };
 
     try {
