@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inscrits — Challenge</title>
+<style>
+  :root {
+    --paper: #faf6ef;
+    --paper-2: #f1ebdd;
+    --ink: #2b2618;
+    --line: #e2d8c0;
+    --gold: #8b6914;
+
+    --vip-bg: #f5e6b3; --vip-fg: #8b6914;
+    --midi-bg: #fde2d0; --midi-fg: #c25a1e;
+    --h10-bg: #dcefee; --h10-fg: #1f6f72;
+    --h5-bg: #e2e0f5; --h5-fg: #4a3f8f;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+    padding: 32px 20px 60px;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; }
+  h1 { font-size: 1.7rem; font-weight: 600; margin: 0 0 6px; }
+  .sub { color: #756a4c; margin: 0 0 28px; font-size: 0.95rem; }
+
+  .stats { display: flex; gap: 14px; margin-bottom: 28px; flex-wrap: wrap; }
+  .stat {
+    background: #fff; border: 1px solid var(--line); border-radius: 10px;
+    padding: 14px 18px; min-width: 110px;
+  }
+  .stat .n { font-size: 1.5rem; font-weight: 700; }
+  .stat .l { font-size: 0.78rem; color: #756a4c; text-transform: uppercase; letter-spacing: 0.03em; }
+
+  table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
+  thead th {
+    background: var(--paper-2); text-align: left; padding: 12px 16px;
+    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; color: #756a4c;
+    border-bottom: 1px solid var(--line);
+  }
+  tbody td { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 0.95rem; }
+  tbody tr:last-child td { border-bottom: none; }
+
+  .badge {
+    display: inline-block; padding: 4px 12px; border-radius: 999px;
+    font-size: 0.82rem; font-weight: 600; white-space: nowrap;
+  }
+  .badge-vip { background: var(--vip-bg); color: var(--vip-fg); }
+  .badge-midi { background: var(--midi-bg); color: var(--midi-fg); }
+  .badge-10h { background: var(--h10-bg); color: var(--h10-fg); }
+  .badge-5h { background: var(--h5-bg); color: var(--h5-fg); }
+
+  .presence-oui { color: #2f7d4f; font-weight: 600; }
+  .presence-non { color: #b04a3f; }
+
+  .loading, .error { padding: 40px; text-align: center; color: #756a4c; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Inscrits du Challenge</h1>
+  <p class="sub" id="subtitle">Chargement…</p>
+
+  <div class="stats" id="stats"></div>
+
+  <div id="content"><div class="loading">Chargement des inscrits…</div></div>
+</div>
+
+<script>
+  const WEBHOOK_URL = "https://n8n.srv936251.hstgr.cloud/webhook/crm-challenge-inscrits";
+
+  const params = new URLSearchParams(window.location.search);
+  const webinarId = params.get("webinar_id") || "6";
+
+  const badgeClass = {
+    "VIP": "badge-vip",
+    "Midi": "badge-midi",
+    "10h": "badge-10h",
+    "5h": "badge-5h"
+  };
+  const badgeIcon = {
+    "VIP": "🏆",
+    "Midi": "☀️",
+    "10h": "🌤️",
+    "5h": "🌙"
+  };
+
+  fetch(`${WEBHOOK_URL}?webinar_id=${encodeURIComponent(webinarId)}`)
+    .then(r => r.json())
+    .then(data => {
+      if (!data.success) {
+        document.getElementById("content").innerHTML = `<div class="error">Erreur : ${data.message || "impossible de charger les inscrits"}</div>`;
+        return;
+      }
+      const inscrits = data.inscrits || [];
+      document.getElementById("subtitle").textContent = `${inscrits.length} inscrit(s)`;
+
+      const counts = { VIP: 0, Midi: 0, "10h": 0, "5h": 0 };
+      inscrits.forEach(i => { if (counts[i.groupe] !== undefined) counts[i.groupe]++; });
+
+      document.getElementById("stats").innerHTML = Object.keys(counts).map(g => `
+        <div class="stat">
+          <div class="n">${counts[g]}</div>
+          <div class="l">${badgeIcon[g]} ${g}</div>
+        </div>
+      `).join("");
+
+      const rows = inscrits.map(i => `
+        <tr>
+          <td>${i.nom}</td>
+          <td>${i.email}</td>
+          <td class="${i.a_regarde ? 'presence-oui' : 'presence-non'}">${i.a_regarde ? '✅ Présent' : '❌ Absent'}</td>
+          <td>${i.points} pt${i.points > 1 ? 's' : ''}</td>
+          <td><span class="badge ${badgeClass[i.groupe] || ''}">${badgeIcon[i.groupe] || ''} ${i.groupe}</span></td>
+        </tr>
+      `).join("");
+
+      document.getElementById("content").innerHTML = `
+        <table>
+          <thead>
+            <tr><th>Nom</th><th>Email</th><th>Présence</th><th>Points</th><th>Groupe</th></tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      `;
+    })
+    .catch(err => {
+      document.getElementById("content").innerHTML = `<div class="error">Connexion impossible. Réessayez.</div>`;
+    });
+</script>
+</body>
+</html>
