@@ -50,9 +50,14 @@
     display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;
   }
   .site-name {
-    font-family: 'Cormorant Garamond', serif; font-size: 21px; font-weight: 600; color: var(--green-deep);
+    font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600; color: var(--green-deep);
   }
   .site-meta { font-size: 12px; color: var(--text-soft); margin-top: 3px; }
+  .type-group-title {
+    font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 600; color: var(--gold);
+    margin: 0 0 14px;
+  }
+  .type-group { margin-bottom: 36px; }
   .type-chip {
     display: inline-block; padding: 3px 11px; border-radius: 11px; font-size: 11px;
     font-weight: 600; text-transform: capitalize; background: rgba(184, 150, 90, 0.15); color: #8B6E3A;
@@ -602,6 +607,17 @@
     if (!d) return 'Date non définie';
     return new Date(d.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
+  function fmtDateOnly(d) {
+    if (!d) return null;
+    return new Date(d.replace(' ', 'T')).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+  function getSiteDateRange(site) {
+    const dates = (site.webinars || []).map(w => w.date_webinar).filter(Boolean).sort();
+    if (dates.length === 0) return 'Dates non définies';
+    const debut = fmtDateOnly(dates[0]);
+    const fin = fmtDateOnly(dates[dates.length - 1]);
+    return debut === fin ? debut : debut + ' → ' + fin;
+  }
 
   async function loadSites() {
     try {
@@ -615,21 +631,16 @@
     }
   }
 
-  function render(sites) {
-    const container = document.getElementById('sitesContainer');
-    if (sites.length === 0) {
-      container.innerHTML = '<div class="empty-state">Aucun site créé pour le moment.</div>';
-      return;
-    }
+  const SITE_TYPE_LABELS = { SW: 'Webinaire', SC: 'Challenge 3 jours', SB: 'Challenge 5 jours' };
+  const SITE_TYPE_ORDER = ['SW', 'SC', 'SB'];
 
-    let html = '';
-    sites.forEach(site => {
+  function renderSiteCard(site) {
+      let html = '';
       html += '<div class="site-card">';
       html += '<div class="site-header">';
       html += '<div>';
       html += '<div class="site-name">' + esc(site.nom_site) + '</div>';
-      const siteTypeLabels = { SW: 'Webinaire', SC: 'Challenge 3 jours', SB: 'Challenge 5 jours' };
-      html += '<div class="site-meta"><span class="type-chip">' + esc(siteTypeLabels[site.type] || site.type || 'Site') + '</span> &nbsp;/' + esc(site.url_slug || '') + '</div>';
+      html += '<div class="site-meta">' + esc(getSiteDateRange(site)) + ' &nbsp;·&nbsp; /' + esc(site.url_slug || '') + '</div>';
       html += '</div>';
       html += '<div class="lead-count-badge"><b>' + site.lead_count + '</b> lead(s)</div>';
       html += '<button class="toggle-btn" id="toggleBtn-' + site.id + '" onclick="toggleSiteBody(' + site.id + ')" title="Afficher / masquer les détails">▾</button>';
@@ -687,6 +698,31 @@
       html += '</div></div>'; // content-row, site-body
       html += '</div>'; // site-body-wrap
       html += '</div>'; // site-card
+      return html;
+  }
+
+  function render(sites) {
+    const container = document.getElementById('sitesContainer');
+    if (sites.length === 0) {
+      container.innerHTML = '<div class="empty-state">Aucun site créé pour le moment.</div>';
+      return;
+    }
+
+    const groups = {};
+    sites.forEach(site => {
+      const key = SITE_TYPE_LABELS[site.type] ? site.type : 'AUTRE';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(site);
+    });
+
+    let html = '';
+    const orderedKeys = SITE_TYPE_ORDER.filter(k => groups[k]).concat(Object.keys(groups).filter(k => !SITE_TYPE_ORDER.includes(k)));
+    orderedKeys.forEach(key => {
+      const label = SITE_TYPE_LABELS[key] || 'Autres sites';
+      html += '<div class="type-group">';
+      html += '<div class="type-group-title">' + esc(label) + '</div>';
+      groups[key].forEach(site => { html += renderSiteCard(site); });
+      html += '</div>';
     });
 
     container.innerHTML = html;
