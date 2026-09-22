@@ -25,7 +25,7 @@
     font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
     padding: 32px 20px 60px;
   }
-  .wrap { max-width: 900px; margin: 0 auto; }
+  .wrap { max-width: 1100px; margin: 0 auto; }
   h1 { font-size: 1.7rem; font-weight: 600; margin: 0 0 6px; }
   .sub { color: #756a4c; margin: 0 0 28px; font-size: 0.95rem; }
 
@@ -39,11 +39,12 @@
 
   table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 10px; overflow: hidden; border: 1px solid var(--line); }
   thead th {
-    background: var(--paper-2); text-align: left; padding: 12px 16px;
-    font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.03em; color: #756a4c;
+    background: var(--paper-2); text-align: left; padding: 12px 14px;
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.03em; color: #756a4c;
     border-bottom: 1px solid var(--line);
   }
-  tbody td { padding: 12px 16px; border-bottom: 1px solid var(--line); font-size: 0.95rem; }
+  thead th.center, tbody td.center { text-align: center; }
+  tbody td { padding: 12px 14px; border-bottom: 1px solid var(--line); font-size: 0.95rem; }
   tbody tr:last-child td { border-bottom: none; }
 
   .badge {
@@ -55,8 +56,12 @@
   .badge-10h { background: var(--h10-bg); color: var(--h10-fg); }
   .badge-5h { background: var(--h5-bg); color: var(--h5-fg); }
 
-  .presence-oui { color: #2f7d4f; font-weight: 600; }
-  .presence-non { color: #b04a3f; }
+  .jour-pt { font-weight: 600; }
+  .jour-oui { color: #2f7d4f; }
+  .jour-non { color: #b04a3f; }
+  .jour-cell { font-size: 0.85rem; }
+
+  .total-pt { font-weight: 700; font-size: 1.05rem; }
 
   .loading, .error { padding: 40px; text-align: center; color: #756a4c; }
 </style>
@@ -75,33 +80,24 @@
   const WEBHOOK_URL = "https://n8n.srv936251.hstgr.cloud/webhook/crm-challenge-inscrits";
 
   const params = new URLSearchParams(window.location.search);
-  const webinarId = params.get("webinar_id") || "6";
+  const siteId = params.get("site_id") || "8";
 
-  const badgeClass = {
-    "VIP": "badge-vip",
-    "Midi": "badge-midi",
-    "10h": "badge-10h",
-    "5h": "badge-5h"
-  };
-  const badgeIcon = {
-    "VIP": "🏆",
-    "Midi": "☀️",
-    "10h": "🌤️",
-    "5h": "🌙"
-  };
+  const badgeClass = { "VIP": "badge-vip", "Midi": "badge-midi", "10h": "badge-10h", "5h": "badge-5h" };
+  const badgeIcon = { "VIP": "🏆", "Midi": "☀️", "10h": "🌤️", "5h": "🌙" };
 
-  fetch(`${WEBHOOK_URL}?webinar_id=${encodeURIComponent(webinarId)}`)
+  fetch(`${WEBHOOK_URL}?site_id=${encodeURIComponent(siteId)}`)
     .then(r => r.json())
     .then(data => {
       if (!data.success) {
         document.getElementById("content").innerHTML = `<div class="error">Erreur : ${data.message || "impossible de charger les inscrits"}</div>`;
         return;
       }
-      const inscrits = data.inscrits || [];
-      document.getElementById("subtitle").textContent = `${inscrits.length} inscrit(s)`;
+      const jours = data.jours || [];
+      const participants = data.participants || [];
+      document.getElementById("subtitle").textContent = `${participants.length} inscrit(s) · ${jours.length} jour(s) de show`;
 
       const counts = { VIP: 0, Midi: 0, "10h": 0, "5h": 0 };
-      inscrits.forEach(i => { if (counts[i.groupe] !== undefined) counts[i.groupe]++; });
+      participants.forEach(p => { if (counts[p.groupe] !== undefined) counts[p.groupe]++; });
 
       document.getElementById("stats").innerHTML = Object.keys(counts).map(g => `
         <div class="stat">
@@ -110,20 +106,32 @@
         </div>
       `).join("");
 
-      const rows = inscrits.map(i => `
-        <tr>
-          <td>${i.nom}</td>
-          <td>${i.email}</td>
-          <td class="${i.a_regarde ? 'presence-oui' : 'presence-non'}">${i.a_regarde ? '✅ Présent' : '❌ Absent'}</td>
-          <td>${i.points} pt${i.points > 1 ? 's' : ''}</td>
-          <td><span class="badge ${badgeClass[i.groupe] || ''}">${badgeIcon[i.groupe] || ''} ${i.groupe}</span></td>
-        </tr>
-      `).join("");
+      const jourLabels = jours.map((j, idx) => `Jour ${idx + 1}`);
+
+      const headerJours = jourLabels.map(l => `<th class="center">${l}</th>`).join("");
+
+      const rows = participants.map(p => {
+        const jourCells = p.jours.map(j => `
+          <td class="center jour-cell">
+            <span class="${j.a_regarde ? 'jour-oui' : 'jour-non'}">${j.a_regarde ? '✅' : '❌'}</span>
+            <span class="jour-pt">${j.points}pt</span>
+          </td>
+        `).join("");
+        return `
+          <tr>
+            <td>${p.nom}</td>
+            <td>${p.email}</td>
+            ${jourCells}
+            <td class="center total-pt">${p.total_points}</td>
+            <td><span class="badge ${badgeClass[p.groupe] || ''}">${badgeIcon[p.groupe] || ''} ${p.groupe}</span></td>
+          </tr>
+        `;
+      }).join("");
 
       document.getElementById("content").innerHTML = `
         <table>
           <thead>
-            <tr><th>Nom</th><th>Email</th><th>Présence</th><th>Points</th><th>Groupe</th></tr>
+            <tr><th>Nom</th><th>Email</th>${headerJours}<th class="center">Total</th><th>Groupe</th></tr>
           </thead>
           <tbody>${rows}</tbody>
         </table>
