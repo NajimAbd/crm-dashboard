@@ -376,7 +376,7 @@
         <h2 id="challengeFormTitle" style="margin:0;font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--green-deep)"></h2>
         <button onclick="closeChallengeForm()" style="border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--text-soft)">✕</button>
       </div>
-      <div style="font-size:12px;color:var(--text-soft);margin-bottom:18px">Squelette de création — visuel uniquement pour l'instant. Rien n'est encore enregistré ni connecté.</div>
+      <div style="font-size:12px;color:var(--text-soft);margin-bottom:18px">Nom, langue, dates et déclencheurs sont réellement enregistrés. La sélection des leads à inviter (boutons ADD/Remove) n'est pas encore connectée.</div>
 
       <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Nom du show</label>
       <input type="text" id="challengeNom" placeholder="Ex: Challenge Guérison Roqya" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;margin-bottom:16px;box-sizing:border-box">
@@ -908,10 +908,49 @@
     d.setDate(d.getDate() + dureeJours);
     finEl.value = d.toISOString().slice(0, 10);
   }
-  function submitChallengeSkeleton() {
-    closeChallengeForm();
-    const label = currentChallengeType === '5j' ? 'Challenge 5 jours' : 'Challenge 3 jours';
-    showComingSoon(label + ' — brouillon noté, création réelle bientôt disponible');
+  async function submitChallengeSkeleton() {
+    const nom = document.getElementById('challengeNom').value.trim();
+    const langue = document.getElementById('challengeLangue').value;
+    const dateDebut = document.getElementById('challengeDateDebut').value;
+    const dateFin = document.getElementById('challengeDateFin').value;
+
+    if (!nom || !dateDebut) {
+      showComingSoon('Merci de remplir au moins le nom et la date de début');
+      return;
+    }
+
+    const type = currentChallengeType === '5j' ? 'SB' : 'SC';
+    const declencheurs = Array.from(document.querySelectorAll('.challenge-trigger'))
+      .filter(cb => cb.checked)
+      .map(cb => cb.closest('label').textContent.trim());
+
+    const payload = {
+      nom, langue, type,
+      date_debut: dateDebut,
+      date_fin: dateFin,
+      account_id: session.account_id,
+      declencheurs,
+      leads_invites: []
+    };
+
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-create-site-challenge', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await resp.json();
+      closeChallengeForm();
+      if (data.success) {
+        showComingSoon(nom + ' créé avec succès');
+        loadSites();
+      } else {
+        showComingSoon('Erreur : ' + (data.message || 'création impossible'));
+      }
+    } catch (err) {
+      closeChallengeForm();
+      showComingSoon('Connexion impossible au serveur');
+    }
   }
 
   function openDeroulement(type) {
