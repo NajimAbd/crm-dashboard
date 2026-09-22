@@ -840,6 +840,10 @@
     html += '<div>';
     const isShowType = ['SW','SC','SB'].includes(l.type_client);
     const isAA = l.type_client === 'AA';
+    // Pour un lead Show (SW/SC/SB), certains blocs (type de diagnostic Tally, conversion
+    // entrepreneur) n'ont de sens qu'une fois le diagnostic accepté par le client —
+    // pas dès la simple inscription au show.
+    const showPasEncoreQualifie = isShowType && l.diagnostic_accepte != 1;
     let interetBullets = '';
     if (isAA) {
       const interets = [];
@@ -882,16 +886,19 @@
       html += '<span class="header-chip">🧾 ' + (l.nombre_paiements || 0) + ' paiement(s)</span>';
       if (l.type_client) html += '<span class="header-chip">🏷️ ' + esc(typeLabels[l.type_client] || l.type_client) + '</span>';
       if (l.roqya_status && l.roqya_status !== 'none') html += '<span class="header-chip">🕌 Roqya : ' + esc(l.roqya_status === 'in_progress' ? 'en cours' : 'terminée') + '</span>';
-      const tallyTypeEffectif = l.tally_type || (l.type_client === 'DD' ? 'DTAP' : 'DTFF');
-      html += '<select id="tallyTypeSelect" onchange="setTallyType(' + l.id + ', this.value)" title="Type de diagnostic Tally" style="padding:5px 10px;border-radius:6px;border:1px solid ' + (tallyTypeEffectif === 'DTAP' ? '#B8965A' : '#5A8C5A') + ';font-weight:700;font-size:12.5px;cursor:pointer;background:' + (tallyTypeEffectif === 'DTAP' ? '#FCF3DC' : '#E8F3E8') + ';color:' + (tallyTypeEffectif === 'DTAP' ? '#8A6D1F' : '#3E6B3E') + '">';
-      html += '<option value="DTFF" ' + (tallyTypeEffectif === 'DTFF' ? 'selected' : '') + '>📋 DTFF — Diagnostic gratuit</option>';
-      html += '<option value="DTAP" ' + (tallyTypeEffectif === 'DTAP' ? 'selected' : '') + '>📋 DTAP — Diagnostic payant</option>';
-      html += '</select>';
+      if (!showPasEncoreQualifie) {
+        const tallyTypeEffectif = l.tally_type || (l.type_client === 'DD' ? 'DTAP' : 'DTFF');
+        html += '<select id="tallyTypeSelect" onchange="setTallyType(' + l.id + ', this.value)" title="Type de diagnostic Tally" style="padding:5px 10px;border-radius:6px;border:1px solid ' + (tallyTypeEffectif === 'DTAP' ? '#B8965A' : '#5A8C5A') + ';font-weight:700;font-size:12.5px;cursor:pointer;background:' + (tallyTypeEffectif === 'DTAP' ? '#FCF3DC' : '#E8F3E8') + ';color:' + (tallyTypeEffectif === 'DTAP' ? '#8A6D1F' : '#3E6B3E') + '">';
+        html += '<option value="DTFF" ' + (tallyTypeEffectif === 'DTFF' ? 'selected' : '') + '>📋 DTFF — Diagnostic gratuit</option>';
+        html += '<option value="DTAP" ' + (tallyTypeEffectif === 'DTAP' ? 'selected' : '') + '>📋 DTAP — Diagnostic payant</option>';
+        html += '</select>';
+      }
       html += '</div>';
     }
 
     // ==== Transformation en compte entrepreneur ====
-    if (!isAA) {
+    // Cachée tant qu'un lead Show n'a pas accepté le diagnostic (elle n'a pas de sens avant ce stade)
+    if (!isAA && !showPasEncoreQualifie) {
       if (l.converted_account_id) {
         html += '<div style="margin:8px 0;padding:10px 16px;border-radius:10px;background:#EDF4ED;border:1px solid #5A8C5A;color:#3E6B3E;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">✅ Entrepreneur — compte #' + l.converted_account_id + '</div>';
       } else {
