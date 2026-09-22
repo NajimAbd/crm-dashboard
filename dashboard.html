@@ -1115,7 +1115,7 @@
     try {
       const resp = await fetch(CRM_API_LEADS + '?account_id=' + encodeURIComponent(session.account_id));
       const data = await resp.json();
-      allLeads = data.leads || [];
+      allLeads = (data.leads || []).slice().sort((a, b) => (b.id || 0) - (a.id || 0));
       renderStats(allLeads);
       renderTable(allLeads);
     } catch (err) {
