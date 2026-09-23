@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Inscription — RoqyaSuisse (page de test)</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Karla:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --vert:#0D1A12; --vert2:#1B3325; --or:#B8965A; --or-clair:#E9DCC2;
+    --papier:#FAF8F3; --texte:#1E2621; --gris:#6B736D; --erreur:#A33A2B;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:Karla,system-ui,sans-serif;background:var(--vert);color:var(--texte);
+       min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 16px}
+  .carte{background:var(--papier);width:100%;max-width:460px;border-radius:14px;overflow:hidden;
+         border-top:6px solid var(--or)}
+  .tete{padding:28px 28px 8px}
+  .test{display:inline-block;font-size:.8rem;background:var(--or-clair);color:var(--vert2);
+        padding:4px 10px;border-radius:20px;margin-bottom:14px}
+  h1{font-family:Fraunces,Georgia,serif;font-weight:600;font-size:1.75rem;line-height:1.2;margin:0 0 8px;color:var(--vert)}
+  .sous{color:var(--gris);margin:0;line-height:1.5}
+  form{padding:18px 28px 28px}
+  label{display:block;font-weight:600;font-size:.92rem;margin:14px 0 6px}
+  input,select{width:100%;font:inherit;padding:12px 14px;border:1.5px solid #D6D2C7;border-radius:8px;background:#fff}
+  input:focus,select:focus{outline:none;border-color:var(--or);box-shadow:0 0 0 3px rgba(184,150,90,.25)}
+  .ligne{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  button{margin-top:22px;width:100%;font:inherit;font-weight:600;font-size:1.05rem;padding:14px;border:0;
+         border-radius:8px;background:var(--vert);color:var(--or);cursor:pointer}
+  button:hover{background:var(--vert2)}
+  button:disabled{opacity:.6;cursor:wait}
+  button:focus-visible{outline:3px solid var(--or);outline-offset:2px}
+  #msg{margin-top:14px;font-size:.95rem;line-height:1.45;min-height:1.2em}
+  #msg.ok{color:var(--vert2)} #msg.err{color:var(--erreur)}
+  .envoye{font-size:.8rem;color:var(--gris);margin-top:10px;word-break:break-all}
+  @media (max-width:420px){.ligne{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main class="carte">
+  <div class="tete">
+    <span class="test">Page de test interne</span>
+    <h1>Réserve ta place gratuite</h1>
+    <p class="sous">Inscris-toi en une minute. Tu reçois ta confirmation par email tout de suite.</p>
+  </div>
+
+  <form id="f" novalidate>
+    <label for="evenement">Événement</label>
+    <select id="evenement" name="type_evenement">
+      <option value="challenge_3_jours">Challenge 3 jours</option>
+      <option value="challenge_5_jours">Challenge 5 jours</option>
+      <option value="webinaire_direct">Webinaire en direct</option>
+      <option value="webinaire_enregistre">Webinaire enregistré</option>
+    </select>
+
+    <div class="ligne">
+      <div><label for="prenom">Prénom</label><input id="prenom" name="prenom" required autocomplete="given-name"></div>
+      <div><label for="nom">Nom</label><input id="nom" name="nom" autocomplete="family-name"></div>
+    </div>
+
+    <label for="email">Email</label>
+    <input id="email" name="email" type="email" required autocomplete="email">
+
+    <label for="whatsapp">WhatsApp</label>
+    <input id="whatsapp" name="whatsapp" type="tel" placeholder="+41 79 000 00 00" autocomplete="tel">
+
+    <label for="langue">Langue</label>
+    <select id="langue" name="langue">
+      <option value="fr">Français</option>
+      <option value="ar">العربية</option>
+      <option value="de">Deutsch</option>
+      <option value="sq">Shqip</option>
+      <option value="en">English</option>
+    </select>
+
+    <button type="submit" id="btn">Réserver ma place</button>
+    <div id="msg" role="status" aria-live="polite"></div>
+    <div class="envoye" id="envoye"></div>
+  </form>
+</main>
+
+<script>
+  // Adresse du webhook n8n existant (workflow "Webinaire Complet - Lead + Zoom")
+  const WEBHOOK = 'https://n8n.srv936251.hstgr.cloud/webhook/webinaire-lead';
+
+  // Lecture des paramètres du lien (publicité, réseau social, bouche à oreille)
+  const p = new URLSearchParams(location.search);
+  if (p.get('evenement')) document.getElementById('evenement').value = p.get('evenement');
+
+  // Origine du client : ads / organique / bouche_a_oreille
+  function origine(){
+    const src = (p.get('utm_source') || '').toLowerCase();
+    const med = (p.get('utm_medium') || '').toLowerCase();
+    if (!src) return 'bouche_a_oreille';
+    if (['cpc','paid','ads','ppc'].some(m => med.includes(m))) return 'ads';
+    return 'organique';
+  }
+
+  const f = document.getElementById('f'), btn = document.getElementById('btn'), msg = document.getElementById('msg');
+
+  f.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    msg.className = ''; msg.textContent = '';
+    const email = f.email.value.trim();
+    if (!f.prenom.value.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      msg.className = 'err';
+      msg.textContent = 'Indique ton prénom et une adresse email valide.';
+      return;
+    }
+
+    const data = {
+      type_evenement: f.type_evenement.value,
+      evenement_id: p.get('id') || '',
+      prenom: f.prenom.value.trim(),
+      nom: f.nom.value.trim(),
+      email: email,
+      whatsapp: f.whatsapp.value.trim(),
+      langue: f.langue.value,
+      source: p.get('utm_source') || 'direct',
+      origine: origine(),
+      campagne: p.get('utm_campaign') || '',
+      utm_source: p.get('utm_source') || '',
+      utm_medium: p.get('utm_medium') || '',
+      utm_campaign: p.get('utm_campaign') || '',
+      page: 'landing-test'
+    };
+
+    btn.disabled = true; btn.textContent = 'Envoi en cours…';
+    const ctrl = new AbortController();
+    const minuteur = setTimeout(() => ctrl.abort(), 10000);
+
+    try {
+      const r = await fetch(WEBHOOK, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify(data),
+        signal: ctrl.signal
+      });
+      msg.className = r.ok ? 'ok' : 'err';
+      msg.textContent = r.ok
+        ? 'Ta place est réservée. Vérifie ta boîte email.'
+        : 'Le serveur a répondu avec une erreur (' + r.status + '). Réessaie dans un instant.';
+    } catch (err) {
+      msg.className = 'err';
+      msg.textContent = err.name === 'AbortError'
+        ? 'Le serveur ne répond pas (plus de 10 secondes). Les données sont peut-être arrivées quand même.'
+        : 'Impossible de joindre le serveur. Vérifie ta connexion.';
+    } finally {
+      clearTimeout(minuteur);
+      btn.disabled = false; btn.textContent = 'Réserver ma place';
+      document.getElementById('envoye').textContent = 'Envoyé (test) : ' + JSON.stringify(data);
+    }
+  });
+</script>
+</body>
+</html>
