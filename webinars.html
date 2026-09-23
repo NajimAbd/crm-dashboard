@@ -401,6 +401,45 @@
         </div>
       </div>
 
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:140px">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Heure du direct</label>
+          <input type="time" id="challengeHeure" value="20:00" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
+          <div style="font-size:11px;color:var(--text-soft);margin-top:4px">Modifiable plus tard. L'email « 2 h avant » s'adapte.</div>
+        </div>
+        <div style="flex:2;min-width:220px">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Fuseau horaire du direct</label>
+          <select id="challengeFuseau" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
+            <option value="Europe/Zurich">Suisse (Lausanne, Genève, Zurich)</option>
+            <option value="Europe/Paris">France</option>
+            <option value="Europe/Brussels">Belgique</option>
+            <option value="Europe/Berlin">Allemagne / Autriche</option>
+            <option value="Europe/Rome">Italie</option>
+            <option value="Europe/Tirane">Albanie / Kosovo</option>
+            <option value="Europe/London">Royaume-Uni</option>
+            <option value="Africa/Casablanca">Maroc</option>
+            <option value="Africa/Algiers">Algérie</option>
+            <option value="Africa/Tunis">Tunisie</option>
+            <option value="Asia/Dubai">Émirats arabes unis</option>
+            <option value="Asia/Riyadh">Arabie saoudite</option>
+            <option value="America/Montreal">Canada (Montréal)</option>
+          </select>
+        </div>
+      </div>
+
+      <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Lien Zoom du direct</label>
+      <input type="url" id="challengeLienDirect" placeholder="https://zoom.us/j/..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;margin-bottom:12px">
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap">
+        <div style="flex:1;min-width:220px">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Lien du replay <span style="color:var(--text-soft)">(peut être ajouté plus tard)</span></label>
+          <input type="url" id="challengeLienReplay" placeholder="https://..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
+        </div>
+        <div style="flex:1;min-width:220px">
+          <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Lien de rendez-vous (Calendly)</label>
+          <input type="url" id="challengeLienRdv" value="https://calendly.com/info-najim1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
+        </div>
+      </div>
+
       <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:8px">
         <div style="flex:1;min-width:260px">
           <label style="display:block;font-size:13px;color:#666;margin-bottom:8px;font-weight:600">Liste des leads à inviter pour ce show</label>
@@ -411,8 +450,8 @@
           <div style="display:flex;flex-direction:column;gap:10px">
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" class="challenge-trigger"> Réservation Call</label>
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" class="challenge-trigger"> Réponse à un sondage</label>
+            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" class="challenge-trigger" data-nom="Écrit dans le chat"> Écrit dans le chat <span style="font-size:11px;color:var(--text-soft)">(suivi seulement, ne fait pas passer Midi)</span></label>
             <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" class="challenge-trigger"> Évènement à ajouter</label>
-            <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" class="challenge-trigger"> Evenement à ajouter</label>
           </div>
           <div style="margin-top:22px;padding-top:16px;border-top:1px dashed #e2d8c0">
             <label style="display:block;font-size:13px;color:#666;margin-bottom:8px;font-weight:600">Emails automatiques du show</label>
@@ -422,11 +461,14 @@
           </div>
         </div>
       </div>
-      <div style="font-size:11.5px;color:var(--text-soft);margin:10px 0 20px">* barème 5 jours estimé par mise à l'échelle du barème 3 jours — à confirmer avec Najim. Le suivi réel de présence (Zoom/webinaire) et le calcul des points seront branchés dans une prochaine étape.</div>
+      <label style="display:flex;align-items:flex-start;gap:10px;margin:18px 0 20px;padding:12px 14px;background:#FBF3E2;border:1px solid #EAD9B4;border-radius:8px;cursor:pointer;font-size:13px">
+        <input type="checkbox" id="challengeActif" style="margin-top:2px;width:17px;height:17px">
+        <span><b>Activer les emails automatiques</b><br><span style="color:var(--text-soft)">Laisse décoché pour enregistrer en brouillon. Coche seulement quand les textes des emails sont validés et les liens remplis : les emails partiront alors tout seuls aux dates prévues.</span></span>
+      </label>
 
       <div style="display:flex;gap:10px">
         <button onclick="closeChallengeForm()" style="flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer">Annuler</button>
-        <button onclick="submitChallengeSkeleton()" style="flex:1;padding:12px;border:none;border-radius:8px;background:var(--gold, #B8965A);color:var(--green-deep, #0D1A12);font-weight:700;cursor:pointer">Enregistrer (brouillon)</button>
+        <button onclick="submitChallengeSkeleton()" style="flex:1;padding:12px;border:none;border-radius:8px;background:var(--gold, #B8965A);color:var(--green-deep, #0D1A12);font-weight:700;cursor:pointer">Enregistrer le challenge</button>
       </div>
     </div>
   </div>
@@ -895,6 +937,12 @@
     document.getElementById('challengeLangue').value = 'FR';
     document.getElementById('challengeDateDebut').value = '';
     document.getElementById('challengeDateFin').value = '';
+    document.getElementById('challengeHeure').value = '20:00';
+    document.getElementById('challengeFuseau').value = 'Europe/Zurich';
+    document.getElementById('challengeLienDirect').value = '';
+    document.getElementById('challengeLienReplay').value = '';
+    document.getElementById('challengeLienRdv').value = 'https://calendly.com/info-najim1';
+    document.getElementById('challengeActif').checked = false;
 
     const groupesInfo = document.getElementById('challengeGroupesInfo');
     const chip = (key, nom) =>
@@ -970,12 +1018,18 @@
     const type = currentChallengeType === '5j' ? 'SB' : 'SC';
     const declencheurs = Array.from(document.querySelectorAll('.challenge-trigger'))
       .filter(cb => cb.checked)
-      .map(cb => cb.closest('label').textContent.trim());
+      .map(cb => cb.dataset.nom || cb.closest('label').textContent.trim());
 
     const payload = {
       nom, langue, type,
       date_debut: dateDebut,
       date_fin: dateFin,
+      heure_direct: document.getElementById('challengeHeure').value || '20:00',
+      fuseau_horaire: document.getElementById('challengeFuseau').value,
+      lien_direct: document.getElementById('challengeLienDirect').value.trim(),
+      lien_replay: document.getElementById('challengeLienReplay').value.trim(),
+      lien_rdv: document.getElementById('challengeLienRdv').value.trim(),
+      actif: document.getElementById('challengeActif').checked,
       account_id: session.account_id,
       declencheurs,
       leads_invites: challengeLeadsInvites
