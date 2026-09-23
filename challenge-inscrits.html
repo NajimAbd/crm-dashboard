@@ -138,6 +138,7 @@
   let heureSoir = '-2h';
   let allDeclencheurs = [];
   let allInvites = null;
+  let cinqJours = false; // Challenge 5 jours : Valeur 2 + Témoignages en plus
 
   // Icones des declencheurs
   const ICO_TEL = `<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z" fill="#8b6914"/></svg>`;
@@ -223,12 +224,14 @@
           <td>${p.email}</td>
           <td class="center">${mailIcon(p.avant.confirmation)}</td>
           <td class="center">${mailIcon(p.avant.valeur)}</td>
+          ${cinqJours ? `<td class="center">${mailIcon(p.avant.valeur2)}</td>` : ''}
           <td class="center">${mailIcon(p.avant.relance_j2)}</td>
           <td class="center">${mailIcon(p.avant.relance_j1)}</td>
           ${jourCells}
           ${interCells}
           <td class="center">${p.apres.replay ? mailIcon(p.apres.replay) : (p.groupe === 'Midi' ? '<span class="non-prevu" title="Groupe Midi : pas de replay (a assisté en direct)">–</span>' : '')}</td>
           <td class="center jour-cell"><div class="jour-mails"><span class="jour-mail"><span class="jour-mail-ico">${mailIcon(p.apres.qr)}</span><span class="jour-mail-lbl">10h</span></span><span class="jour-mail"><span class="jour-mail-ico">${mailIcon(p.apres.qr_soir)}</span><span class="jour-mail-lbl">${heureSoir}</span></span></div></td>
+          ${cinqJours ? `<td class="center">${mailIcon(p.apres.temoignages)}</td>` : ''}
           <td class="center">${mailIcon(p.apres.cloture)}</td>
           <td class="center">${p.suivi.suivi1 ? mailIcon(p.suivi.suivi1) : (p.groupe === 'VIP' ? '<span class="non-prevu" title="A acheté : pas de suivi">–</span>' : '')}</td>
           <td class="center">${p.suivi.suivi2 ? mailIcon(p.suivi.suivi2) : (p.groupe === 'VIP' ? '<span class="non-prevu" title="A acheté : pas de suivi">–</span>' : '')}</td>
@@ -244,18 +247,20 @@
         <thead>
           <tr class="phase-row">
             <th colspan="2"></th>
-            <th colspan="4">Avant le show</th>
+            <th colspan="${cinqJours ? 5 : 4}">Avant le show</th>
             <th colspan="${nbJours + allDeclencheurs.length}">Durant le show</th>
-            <th colspan="3">Après le show</th>
+            <th colspan="${cinqJours ? 4 : 3}">Après le show</th>
             <th colspan="2">Suivi</th>
             <th colspan="2"></th>
           </tr>
           <tr>
             <th>Nom</th><th>Email</th>
-            <th class="center">Confirmation</th><th class="center">Valeur</th><th class="center" title="Rendez-vous 2 jours avant">Rdv (J-2)</th><th class="center" title="Rendez-vous la veille">Rdv (J-1)</th>
+            <th class="center">Confirmation</th><th class="center">Valeur${cinqJours ? ' 1' : ''}</th>${cinqJours ? '<th class="center">Valeur 2</th>' : ''}<th class="center" title="Rendez-vous 2 jours avant">Rdv (J-2)</th><th class="center" title="Rendez-vous la veille">Rdv (J-1)</th>
             ${headerJours}
             ${allDeclencheurs.map(n => `<th class="center th-inter" title="${n}">${enteteDeclencheur(n)}</th>`).join("")}
-            <th class="center">Replay (J4)</th><th class="center">Q&R (J5)</th><th class="center">Clôture (J6)</th>
+            ${cinqJours
+              ? '<th class="center">Replay (J6)</th><th class="center">Q&R (J7)</th><th class="center">Témoignages (J8)</th><th class="center">Clôture (J9)</th>'
+              : '<th class="center">Replay (J4)</th><th class="center">Q&R (J5)</th><th class="center">Clôture (J6)</th>'}
             <th class="center">Suivi 1 (J+20)</th><th class="center">Suivi 2 (J+40)</th>
             <th class="center">Total</th><th>Groupe</th>
           </tr>
@@ -301,6 +306,7 @@
       allJours = data.jours || [];
       allDeclencheurs = data.declencheurs || [];
       allInvites = data.invites || null;
+      cinqJours = Number(data.nb_jours) === 5 || (data.jours || []).length === 5;
       if (data.heure_direct) {
         const [h, m] = data.heure_direct.split(':').map(Number);
         const t = h * 60 + m - 120;
