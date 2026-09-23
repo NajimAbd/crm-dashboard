@@ -34,7 +34,7 @@
   <h2>1. Où se trouvent les textes ?</h2>
   <ol>
     <li>Va dans <b>Shows</b>, clique sur <b>Challenge 3 jours</b> (ou 5 jours), puis sur le bouton <b>✉️ Textes des emails</b>. Tu peux aussi passer par le lien en haut de la page des inscrits.</li>
-    <li>À gauche : la liste des emails, rangés par phase (<b>Avant</b>, <b>Durant</b>, <b>Après</b>, <b>Suivi</b>).</li>
+    <li>À gauche : la liste des emails, rangés par phase (<b>Invitation</b>, <b>Avant</b>, <b>Durant</b>, <b>Après</b>, <b>Suivi</b>).</li>
     <li>À droite : l'éditeur de l'email choisi, et en dessous son <b>aperçu</b>, exactement comme le client le verra.</li>
   </ol>
 
@@ -61,6 +61,7 @@
     <tr><td><code>{{lien_direct}}</code></td><td>Le lien Zoom du direct</td><td>(lien du challenge)</td></tr>
     <tr><td><code>{{lien_replay}}</code></td><td>Le lien du replay</td><td>(lien du challenge)</td></tr>
     <tr><td><code>{{lien_rdv}}</code></td><td>Le lien de prise de rendez-vous (Calendly)</td><td>(lien du challenge)</td></tr>
+    <tr><td><code>{{lien_inscription}}</code></td><td>Le lien d'inscription au challenge (emails d'invitation aux anciens leads)</td><td>(lien du challenge)</td></tr>
   </table>
   <div class="boite attention"><b>⚠️ Attention</b>Écris les zones <b>exactement</b> comme dans le tableau : deux accolades de chaque côté, sans espace, sans accent. <code>{{prenom}}</code> fonctionne, <code>{prenom}</code> ou <code>{{ Prénom }}</code> ne fonctionnent pas : le client verrait le texte tel quel.</div>
 
@@ -78,7 +79,7 @@
 
   <h2>5. Les boutons cliquables</h2>
   <p>Le bouton <b>+ Bouton</b> insère un bouton prêt à l'emploi. Change seulement le texte <b>« Texte du bouton »</b>. Pour changer sa destination, remplace <code>{{lien_direct}}</code> dans le code du bouton par <code>{{lien_replay}}</code> ou <code>{{lien_rdv}}</code>.</p>
-  <div class="boite attention"><b>⚠️ Les liens viennent du challenge</b>Les liens Zoom, replay et rendez-vous sont enregistrés <b>dans chaque challenge</b>, pas dans le texte. Si un bouton ne mène nulle part, c'est que le lien n'a pas encore été rempli pour ce challenge.</div>
+  <div class="boite attention"><b>⚠️ Les liens viennent du challenge</b>Les liens Zoom, replay, rendez-vous et inscription sont enregistrés <b>dans chaque challenge</b>, pas dans le texte. Si un bouton ne mène nulle part, c'est que le lien n'a pas encore été rempli pour ce challenge.</div>
 
   <h2>6. Points d'attention avant un vrai lancement</h2>
   <ul>
