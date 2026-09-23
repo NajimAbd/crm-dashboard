@@ -96,8 +96,15 @@
 
   .total-pt { font-weight: 700; font-size: 1.05rem; }
 
-  .legende { display: flex; gap: 22px; align-items: center; margin: -14px 0 18px; font-size: 0.85rem; color: #756a4c; }
-  .legende span { display: inline-flex; align-items: center; gap: 6px; }
+  .legende { margin: -14px 0 18px; font-size: 0.82rem; color: #756a4c; }
+  .leg-ligne { display: flex; flex-wrap: wrap; gap: 8px 20px; align-items: center; }
+  .leg-ligne > span { display: inline-flex; align-items: center; gap: 6px; }
+  .leg-aide { margin-top: 10px; }
+  .leg-aide summary { cursor: pointer; color: var(--gold); font-weight: 600; }
+  .leg-exemple { display: flex; gap: 22px; align-items: flex-start; margin-top: 10px; padding: 12px 16px; background: #fff; border: 1px solid var(--line); border-radius: 10px; max-width: 900px; }
+  .leg-case { flex: none; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 8px; text-align: center; }
+  .leg-exemple ol { margin: 0; padding-left: 18px; line-height: 1.5; color: var(--ink); }
+  .leg-resume { margin: 8px 0 0; font-style: italic; }
   .loading, .error { padding: 40px; text-align: center; color: #756a4c; }
 </style>
 </head>
@@ -106,7 +113,7 @@
   <a class="back-link" href="webinars.html">← Retour aux Shows</a>
   <h1>Page Test — à effacer dans le futur</h1>
   <p class="sub" id="subtitle">Chargement…</p>
-  <p class="legende" id="legende"></p>
+  <div class="legende" id="legende"></div>
 
   <div id="content"><div class="loading">Chargement des inscrits…</div></div>
 </div>
@@ -269,7 +276,30 @@
       // On ignore les lignes vides (sans vrai email)
       allParticipants = (data.participants || []).filter(p => p && p.email && p.email !== 'undefined' && String(p.email).includes('@'));
       document.getElementById("subtitle").textContent = `${allParticipants.length} inscrit(s) · ${allJours.length} jour(s) de show`;
-      document.getElementById("legende").innerHTML = `<span>${ENVELOPPE_OK} Email envoyé</span><span>${ENVELOPPE_OUVERTE} Email ouvert</span>`;
+      document.getElementById("legende").innerHTML = `
+        <div class="leg-ligne">
+          <span>${ENVELOPPE_OK} Email envoyé (pas encore ouvert)</span>
+          <span>${ENVELOPPE_OUVERTE} Email ouvert</span>
+          <span><span class="pres pres-direct">● Direct · 5 pt</span> A assisté au direct (au moins 50 %)</span>
+          <span><span class="pres pres-replay">↻ Replay · 3 pt</span> A regardé l'enregistrement, ou moins de 50 % du direct</span>
+          <span>${CASE_OUI} Action faite (J1, J2… = jour de l'action)</span>
+          <span>${CASE_NON} Pas encore fait</span>
+        </div>
+        <details class="leg-aide">
+          <summary>Comment lire une case « Jour » ?</summary>
+          <div class="leg-exemple">
+            <div class="leg-case">
+              <div class="jour-mails"><span class="jour-mail"><span class="jour-mail-ico">${ENVELOPPE_OK}</span><span class="jour-mail-lbl">10h</span></span><span class="jour-mail"><span class="jour-mail-ico">${ENVELOPPE_OK}</span><span class="jour-mail-lbl">${heureSoir}</span></span></div>
+              <div class="jour-presence"><span class="pres pres-replay">↻ Replay · 3 pt</span></div>
+            </div>
+            <ol>
+              <li><b>Les 2 enveloppes</b> : l'email du matin (10h) et l'email envoyé 2 h avant le direct. Dorées et fermées = reçus mais pas ouverts. Vertes et ouvertes = ouverts.</li>
+              <li><b>L'étiquette en dessous</b> : la présence ce jour-là. Ici, la personne a manqué le direct mais a regardé le replay : 3 points.</li>
+              <li><b>Case vide</b> : rien ne s'est encore passé (email pas encore parti, ou absent).</li>
+            </ol>
+            <p class="leg-resume">En résumé : « Ce jour-là, la personne a reçu ses 2 emails sans les ouvrir, a manqué le direct, mais a rattrapé en replay. » Profil tiède, groupe 10h, sauf si elle a fait un Call ou un Sondage.</p>
+          </div>
+        </details>`;
       renderTable(allParticipants);
     })
     .catch(err => {
