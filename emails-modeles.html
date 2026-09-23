@@ -64,7 +64,8 @@
 <body>
 <div class="wrap">
   <a class="back" href="webinars.html">← Retour aux Shows</a>
-  <h1>Textes des emails — Challenge 3 jours</h1>
+  <a class="back" href="guide-textes-emails.html" target="_blank" rel="noopener" style="margin-left:22px">📖 Guide : comment modifier les textes</a>
+  <h1 id="titre">Textes des emails — Challenge 3 jours</h1>
   <p class="sub">Clique sur un email pour modifier son sujet et son texte. Les zones entre accolades, comme <b>{{prenom}}</b>, sont remplies automatiquement pour chaque personne.</p>
 
   <div class="grid">
@@ -103,6 +104,8 @@
   };
   const BOUTON = '<p style="margin:22px 0"><a href="{{lien_direct}}" style="background:#0D1A12;color:#B8965A;padding:13px 24px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block">Texte du bouton</a></p>';
 
+  const NOMS_TYPES = { challenge_3_jours: "Challenge 3 jours", challenge_5_jours: "Challenge 5 jours", webinaire_direct: "Webinaire en direct", webinaire_enregistre: "Webinaire enregistré" };
+  document.getElementById("titre").textContent = "Textes des emails — " + (NOMS_TYPES[TYPE_EVENEMENT] || TYPE_EVENEMENT);
   let modeles = [];
   let courant = null;
 
@@ -111,7 +114,7 @@
 
   function afficherListe() {
     const el = document.getElementById("liste");
-    if (!modeles.length) { el.innerHTML = '<div class="vide">Aucun email trouvé pour ce type de show.</div>'; return; }
+    if (!modeles.length) { el.innerHTML = '<div class="vide">Les textes de ce type de show ne sont pas encore créés. Demande à Claude de les rédiger.</div>'; return; }
     let phaseEnCours = "", html = "";
     modeles.forEach(m => {
       const [nom, phase] = INFO[m.type_email] || [m.type_email, "Autres"];

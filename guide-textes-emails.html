@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guide — Textes des emails</title>
+<style>
+  :root { --paper: #faf6ef; --paper-2: #f1ebdd; --ink: #2b2618; --line: #e2d8c0; --gold: #8b6914; --muted: #756a4c; --green: #2f7d4f; --green-bg: #dcf3e1; --warn: #9a5b12; --warn-bg: #fbe8c8; --red: #a33a2b; --red-bg: #f8e1dd; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--paper); color: var(--ink); font-family: "Iowan Old Style", "Palatino Linotype", Georgia, serif; padding: 28px 16px 70px; line-height: 1.6; }
+  .wrap { max-width: 820px; margin: 0 auto; }
+  a { color: var(--gold); font-weight: 600; }
+  h1 { font-size: 1.7rem; margin: 14px 0 6px; line-height: 1.25; }
+  .sub { color: var(--muted); margin: 0 0 28px; }
+  h2 { font-size: 1.2rem; margin: 34px 0 10px; padding-top: 16px; border-top: 1px solid var(--line); }
+  ol, ul { padding-left: 22px; } li { margin: 6px 0; }
+  code { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .88em; background: #fff; border: 1px solid var(--line); padding: 1px 6px; border-radius: 5px; }
+  table { width: 100%; border-collapse: collapse; background: #fff; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; margin: 10px 0; font-size: .95rem; }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { background: var(--paper-2); font-size: .8rem; color: #6b5a2e; }
+  tr:last-child td { border-bottom: 0; }
+  .boite { border-radius: 10px; padding: 14px 18px; margin: 14px 0; }
+  .ok { background: var(--green-bg); } .attention { background: var(--warn-bg); } .danger { background: var(--red-bg); }
+  .boite b:first-child { display: block; margin-bottom: 4px; }
+  .exemple { background: #fff; border: 1px solid var(--line); border-radius: 10px; padding: 12px 16px; font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .85rem; white-space: pre-wrap; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="emails-modeles.html">← Retour à l'éditeur des textes</a>
+  <h1>Guide : modifier les textes des emails automatiques</h1>
+  <p class="sub">Tout ce qu'il faut savoir pour changer un email sans rien casser. Temps de lecture : 5 minutes.</p>
+
+  <h2>1. Où se trouvent les textes ?</h2>
+  <ol>
+    <li>Va dans <b>Shows</b>, clique sur <b>Challenge 3 jours</b> (ou 5 jours), puis sur le bouton <b>✉️ Textes des emails</b>. Tu peux aussi passer par le lien en haut de la page des inscrits.</li>
+    <li>À gauche : la liste des emails, rangés par phase (<b>Avant</b>, <b>Durant</b>, <b>Après</b>, <b>Suivi</b>).</li>
+    <li>À droite : l'éditeur de l'email choisi, et en dessous son <b>aperçu</b>, exactement comme le client le verra.</li>
+  </ol>
+
+  <h2>2. Modifier un email, étape par étape</h2>
+  <ol>
+    <li>Clique sur l'email dans la liste de gauche.</li>
+    <li>Modifie le <b>Sujet</b> (la ligne que le client voit dans sa boîte mail).</li>
+    <li>Modifie le <b>Texte</b> : clique à l'endroit voulu et tape normalement.</li>
+    <li>Vérifie le résultat dans l'<b>aperçu</b> en dessous.</li>
+    <li>Quand le texte te convient, coche <b>« Texte validé »</b>.</li>
+    <li>Clique sur <b>Enregistrer</b>. Le message « Enregistré ✔ » confirme la sauvegarde.</li>
+  </ol>
+  <div class="boite ok"><b>✅ Bon à savoir</b>Le nouveau texte est utilisé pour les <b>prochains</b> envois. Les emails déjà partis ne changent pas.</div>
+
+  <h2>3. Les zones automatiques (entre accolades)</h2>
+  <p>Ces zones sont remplacées automatiquement pour chaque personne. Pour en ajouter une, clique sur son bouton sous le texte : elle s'insère à l'endroit du curseur.</p>
+  <table>
+    <tr><th>Zone</th><th>Remplacée par</th><th>Exemple</th></tr>
+    <tr><td><code>{{prenom}}</code></td><td>Le prénom du client</td><td>Aïcha</td></tr>
+    <tr><td><code>{{titre_challenge}}</code></td><td>Le nom du challenge</td><td>Challenge Guérison Roqya</td></tr>
+    <tr><td><code>{{date_debut}}</code></td><td>Le premier jour du challenge</td><td>jeudi 1 octobre</td></tr>
+    <tr><td><code>{{heure_direct}}</code></td><td>L'heure du direct</td><td>20h00</td></tr>
+    <tr><td><code>{{jours_restants_texte}}</code></td><td>Le nombre de jours avant le début</td><td>2 jours / 1 jour</td></tr>
+    <tr><td><code>{{lien_direct}}</code></td><td>Le lien Zoom du direct</td><td>(lien du challenge)</td></tr>
+    <tr><td><code>{{lien_replay}}</code></td><td>Le lien du replay</td><td>(lien du challenge)</td></tr>
+    <tr><td><code>{{lien_rdv}}</code></td><td>Le lien de prise de rendez-vous (Calendly)</td><td>(lien du challenge)</td></tr>
+  </table>
+  <div class="boite attention"><b>⚠️ Attention</b>Écris les zones <b>exactement</b> comme dans le tableau : deux accolades de chaque côté, sans espace, sans accent. <code>{{prenom}}</code> fonctionne, <code>{prenom}</code> ou <code>{{ Prénom }}</code> ne fonctionnent pas : le client verrait le texte tel quel.</div>
+
+  <h2>4. Les petits codes de mise en page</h2>
+  <p>Le texte contient quelques codes entre chevrons. Ils servent uniquement à la mise en page.</p>
+  <table>
+    <tr><th>Code</th><th>Rôle</th></tr>
+    <tr><td><code>&lt;p&gt;</code> … <code>&lt;/p&gt;</code></td><td>Un paragraphe (un bloc de texte avec un espace en dessous)</td></tr>
+    <tr><td><code>&lt;b&gt;</code> … <code>&lt;/b&gt;</code></td><td>Met le texte en <b>gras</b></td></tr>
+    <tr><td><code>&lt;br&gt;</code></td><td>Retour à la ligne, sans espace</td></tr>
+  </table>
+  <p>Exemple : pour changer « un cahier » en « un carnet », ne modifie que le mot :</p>
+  <div class="exemple">&lt;p&gt;Conseil : prépare <b>un carnet</b> et un stylo.&lt;/p&gt;</div>
+  <div class="boite danger"><b>⛔ À ne pas faire</b>Ne supprime jamais un <code>&lt;p&gt;</code> sans son <code>&lt;/p&gt;</code>, ni un <code>&lt;b&gt;</code> sans son <code>&lt;/b&gt;</code>. Tout le reste de l'email risquerait de s'afficher en gras ou collé. Si l'aperçu devient bizarre, annule ta dernière modification avec <b>Ctrl + Z</b>.</div>
+
+  <h2>5. Les boutons cliquables</h2>
+  <p>Le bouton <b>+ Bouton</b> insère un bouton prêt à l'emploi. Change seulement le texte <b>« Texte du bouton »</b>. Pour changer sa destination, remplace <code>{{lien_direct}}</code> dans le code du bouton par <code>{{lien_replay}}</code> ou <code>{{lien_rdv}}</code>.</p>
+  <div class="boite attention"><b>⚠️ Les liens viennent du challenge</b>Les liens Zoom, replay et rendez-vous sont enregistrés <b>dans chaque challenge</b>, pas dans le texte. Si un bouton ne mène nulle part, c'est que le lien n'a pas encore été rempli pour ce challenge.</div>
+
+  <h2>6. Points d'attention avant un vrai lancement</h2>
+  <ul>
+    <li><b>Tous les emails doivent être « Validé »</b> (badge vert) avant d'activer un challenge.</li>
+    <li>Les textes sont <b>communs à tous les challenges</b> du même type. Évite les dates écrites en dur : utilise <code>{{date_debut}}</code> et <code>{{heure_direct}}</code>.</li>
+    <li>Pour l'instant, les textes existent en <b>français</b> uniquement. Les autres langues seront ajoutées plus tard.</li>
+    <li>Avant une grosse modification, <b>copie l'ancien texte</b> (Ctrl + A, puis Ctrl + C) dans une note, pour pouvoir revenir en arrière.</li>
+    <li>Les emojis (🔥 ✅ 📅) fonctionnent dans le sujet et dans le texte.</li>
+    <li>Le sujet doit rester <b>court</b> : environ 60 caractères, sinon il est coupé sur téléphone.</li>
+    <li>Le <b>Replay</b> n'est pas envoyé au groupe Midi, et les emails de <b>Suivi</b> ne sont pas envoyés aux acheteurs. C'est automatique, rien à écrire pour ça.</li>
+  </ul>
+
+  <h2>7. Tester un email modifié</h2>
+  <p>La simulation permet de recevoir l'email dans ta propre boîte avant les clients. Demande à Claude de relancer le test sur le challenge de test : l'email arrive avec la mention <b>[TEST]</b> dans le sujet.</p>
+</div>
+</body>
+</html>
