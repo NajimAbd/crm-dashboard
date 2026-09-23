@@ -408,6 +408,10 @@
           <div style="flex:1;min-width:220px"><label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Lien du replay</label><input type="url" id="ecLienReplay" placeholder="https://..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box"></div>
           <div style="flex:1;min-width:220px"><label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Lien de rendez-vous (Calendly)</label><input type="url" id="ecLienRdv" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box"></div>
         </div>
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Lien d'inscription (page du challenge)</label>
+        <input type="url" id="ecLienInscription" placeholder="https://..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
+        <span style="display:block;font-size:12px;color:#8a8a8a;margin-top:4px">Adresse du bouton « Je réserve ma place » dans l'email d'invitation aux anciens leads. Vide = page d'inscription de test.</span>
+        <div style="height:14px"></div>
         <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;font-weight:600">Déclencheurs passage au groupe Midi</label>
         <div id="ecDeclencheurs" style="display:flex;flex-direction:column;gap:9px;margin-bottom:10px"></div>
         <input type="text" id="ecAutre" placeholder="Ajouter un autre déclencheur (ex. : Clic sur le bouton programme)" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;margin-bottom:6px">
@@ -492,6 +496,10 @@
           <input type="url" id="challengeLienRdv" value="https://calendly.com/info-najim1" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
         </div>
       </div>
+      <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Lien d'inscription (page du challenge) <span style="color:var(--text-soft)">(peut être ajouté plus tard)</span></label>
+      <input type="url" id="challengeLienInscription" placeholder="https://..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box">
+      <span style="display:block;font-size:12px;color:#8a8a8a;margin-top:4px">Adresse du bouton « Je réserve ma place » dans l'email d'invitation aux anciens leads. Vide = page d'inscription de test.</span>
+      <div style="height:16px"></div>
 
       <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:8px">
         <div style="flex:1;min-width:260px">
@@ -996,6 +1004,7 @@
     document.getElementById('challengeLienDirect').value = '';
     document.getElementById('challengeLienReplay').value = '';
     document.getElementById('challengeLienRdv').value = 'https://calendly.com/info-najim1';
+    document.getElementById('challengeLienInscription').value = '';
     document.getElementById('challengeActif').checked = false;
 
     const groupesInfo = document.getElementById('challengeGroupesInfo');
@@ -1041,6 +1050,7 @@
       document.getElementById('ecLienDirect').value = c.lien_direct || '';
       document.getElementById('ecLienReplay').value = c.lien_replay || '';
       document.getElementById('ecLienRdv').value = c.lien_rdv || 'https://calendly.com/info-najim1';
+      document.getElementById('ecLienInscription').value = c.lien_inscription || '';
       document.getElementById('ecActif').checked = c.statut === 'actif';
       document.getElementById('ecAutre').value = '';
       const actifs = c.declencheurs || [];
@@ -1071,7 +1081,7 @@
         date_debut: document.getElementById('ecDebut').value, date_fin: document.getElementById('ecFin').value,
         heure_direct: document.getElementById('ecHeure').value, fuseau_horaire: document.getElementById('ecFuseau').value,
         lien_direct: document.getElementById('ecLienDirect').value.trim(), lien_replay: document.getElementById('ecLienReplay').value.trim(),
-        lien_rdv: document.getElementById('ecLienRdv').value.trim(), actif, declencheurs: decl }) });
+        lien_rdv: document.getElementById('ecLienRdv').value.trim(), lien_inscription: document.getElementById('ecLienInscription').value.trim(), actif, declencheurs: decl }) });
       const j = await r.json();
       if (!j.success) throw new Error(j.erreur || 'erreur');
       closeEditChallenge();
@@ -1154,6 +1164,7 @@
       lien_direct: document.getElementById('challengeLienDirect').value.trim(),
       lien_replay: document.getElementById('challengeLienReplay').value.trim(),
       lien_rdv: document.getElementById('challengeLienRdv').value.trim(),
+      lien_inscription: document.getElementById('challengeLienInscription').value.trim(),
       actif: document.getElementById('challengeActif').checked,
       account_id: session.account_id,
       declencheurs,
