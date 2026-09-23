@@ -370,6 +370,59 @@
 
   <div id="comingSoonToast" class="toast"></div>
 
+  <div id="editChallengeOverlay" style="display:none;position:fixed;inset:0;background:rgba(13,26,18,0.6);z-index:1001;align-items:center;justify-content:center">
+    <div style="background:#fff;border-radius:14px;padding:28px;max-width:720px;width:94%;max-height:88vh;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h2 style="margin:0;font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--green-deep)">✏️ Modifier le challenge</h2>
+        <button onclick="closeEditChallenge()" style="border:none;background:transparent;font-size:20px;cursor:pointer;color:var(--text-soft)">✕</button>
+      </div>
+      <p style="font-size:12.5px;color:var(--text-soft);margin:0 0 18px">Les changements s'appliquent aux prochains emails. Les emails déjà partis ne sont pas renvoyés.</p>
+      <div id="editChallengeChargement" style="padding:30px;text-align:center;color:var(--text-soft)">Chargement…</div>
+      <div id="editChallengeForm" style="display:none">
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Nom du show</label>
+        <input type="text" id="ecNom" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;margin-bottom:14px">
+        <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+          <div style="flex:1;min-width:150px"><label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Date de début</label><input type="date" id="ecDebut" onchange="ecMajFin()" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box"></div>
+          <div style="flex:1;min-width:150px"><label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Date de fin</label><input type="date" id="ecFin" readonly style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;background:#F4EFE3;color:#555"></div>
+          <div style="flex:1;min-width:120px"><label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Heure du direct</label><input type="time" id="ecHeure" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box"></div>
+        </div>
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Fuseau horaire du direct</label>
+        <select id="ecFuseau" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;margin-bottom:14px">
+            <option value="Europe/Zurich">Suisse (Lausanne, Genève, Zurich)</option>
+            <option value="Europe/Paris">France</option>
+            <option value="Europe/Brussels">Belgique</option>
+            <option value="Europe/Berlin">Allemagne / Autriche</option>
+            <option value="Europe/Rome">Italie</option>
+            <option value="Europe/Tirane">Albanie / Kosovo</option>
+            <option value="Europe/London">Royaume-Uni</option>
+            <option value="Africa/Casablanca">Maroc</option>
+            <option value="Africa/Algiers">Algérie</option>
+            <option value="Africa/Tunis">Tunisie</option>
+            <option value="Asia/Dubai">Émirats arabes unis</option>
+            <option value="Asia/Riyadh">Arabie saoudite</option>
+            <option value="America/Montreal">Canada (Montréal)</option>
+          </select>
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Lien Zoom du direct</label>
+        <input type="url" id="ecLienDirect" placeholder="https://zoom.us/j/..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;margin-bottom:12px">
+        <div style="display:flex;gap:12px;margin-bottom:14px;flex-wrap:wrap">
+          <div style="flex:1;min-width:220px"><label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Lien du replay</label><input type="url" id="ecLienReplay" placeholder="https://..." style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box"></div>
+          <div style="flex:1;min-width:220px"><label style="display:block;font-size:13px;color:#666;margin-bottom:6px">Lien de rendez-vous (Calendly)</label><input type="url" id="ecLienRdv" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box"></div>
+        </div>
+        <label style="display:block;font-size:13px;color:#666;margin-bottom:6px;font-weight:600">Déclencheurs passage au groupe Midi</label>
+        <div id="ecDeclencheurs" style="display:flex;flex-direction:column;gap:9px;margin-bottom:10px"></div>
+        <input type="text" id="ecAutre" placeholder="Ajouter un autre déclencheur (ex. : Clic sur le bouton programme)" style="width:100%;padding:10px;border:1px solid #ddd;border-radius:8px;box-sizing:border-box;margin-bottom:6px">
+        <label style="display:flex;align-items:flex-start;gap:10px;margin:18px 0 20px;padding:12px 14px;background:#FBF3E2;border:1px solid #EAD9B4;border-radius:8px;cursor:pointer;font-size:13px">
+          <input type="checkbox" id="ecActif" style="margin-top:2px;width:17px;height:17px">
+          <span><b>Emails automatiques activés</b><br><span style="color:var(--text-soft)">Décoche pour mettre le challenge en pause : plus aucun email automatique ne partira.</span></span>
+        </label>
+        <div id="ecMsg" style="font-size:13px;min-height:18px;margin-bottom:10px"></div>
+        <div style="display:flex;gap:10px">
+          <button onclick="closeEditChallenge()" style="flex:1;padding:12px;border:1px solid #ddd;border-radius:8px;background:#fff;cursor:pointer">Annuler</button>
+          <button id="ecEnreg" onclick="saveEditChallenge()" style="flex:1;padding:12px;border:none;border-radius:8px;background:var(--gold, #B8965A);color:var(--green-deep, #0D1A12);font-weight:700;cursor:pointer">Enregistrer les modifications</button>
+        </div>
+      </div>
+    </div>
+  </div>
   <div id="challengeFormOverlay" style="display:none;position:fixed;inset:0;background:rgba(13,26,18,0.6);z-index:1000;align-items:center;justify-content:center">
     <div style="background:#fff;border-radius:14px;padding:28px;max-width:760px;width:94%;max-height:88vh;overflow-y:auto">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
@@ -698,6 +751,7 @@
 
       html += '<div class="site-actions">';
       html += '<button onclick="copyRegisterLink(\'' + esc(site.url_slug || '') + '\', this)" style="padding:8px 16px;border:1px solid var(--gold, #B8965A);border-radius:8px;background:transparent;color:var(--gold, #B8965A);font-weight:700;font-size:12px;cursor:pointer">📋 Copier le lien d\'inscription</button>';
+      if (site.type === 'SC' || site.type === 'SB') html += '<button onclick="openEditChallenge(' + site.id + ', \'' + site.type + '\')" style="margin-left:8px;padding:8px 16px;border:1px solid #0D1A12;border-radius:8px;background:#0D1A12;color:#B8965A;font-weight:700;font-size:12px;cursor:pointer">✏️ Modifier le challenge</button>';
       html += '<button onclick="window.open(\'challenge-inscrits.html?site_id=' + site.id + '\', \'_blank\')" style="margin-left:8px;padding:8px 16px;border:1px solid #8b6914;border-radius:8px;background:transparent;color:#8b6914;font-weight:700;font-size:12px;cursor:pointer">🧪 Page Test</button>';
       html += '</div>';
 
@@ -957,6 +1011,77 @@
 
     document.getElementById('challengeFormOverlay').style.display = 'flex';
   }
+
+  // ===== Modifier un challenge existant =====
+  const EDITION_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-challenge-edition';
+  const DECL_STANDARD = [['Réservation Call', ''], ['Réponse à un sondage', ''], ['Écrit dans le chat', ' (suivi seulement)']];
+  let ecSite = null, ecType = 'SC';
+  function ecMajFin() {
+    const d = document.getElementById('ecDebut').value;
+    if (!d) { document.getElementById('ecFin').value = ''; return; }
+    const x = new Date(d + 'T00:00:00'); x.setDate(x.getDate() + (ecType === 'SB' ? 12 : 6));
+    document.getElementById('ecFin').value = x.toISOString().slice(0, 10);
+  }
+  async function openEditChallenge(siteId, type) {
+    ecSite = siteId; ecType = type;
+    document.getElementById('editChallengeOverlay').style.display = 'flex';
+    document.getElementById('editChallengeForm').style.display = 'none';
+    const ch = document.getElementById('editChallengeChargement'); ch.style.display = 'block'; ch.textContent = 'Chargement…';
+    document.getElementById('ecMsg').textContent = '';
+    try {
+      const r = await fetch(EDITION_API + '?site_id=' + siteId + '&account_id=' + encodeURIComponent(session.account_id));
+      const j = await r.json();
+      if (!j.success) throw new Error(j.erreur || 'introuvable');
+      const c = j.challenge;
+      document.getElementById('ecNom').value = c.titre || '';
+      document.getElementById('ecDebut').value = c.date_debut || '';
+      document.getElementById('ecFin').value = c.date_fin || '';
+      document.getElementById('ecHeure').value = c.heure_direct || '20:00';
+      document.getElementById('ecFuseau').value = c.fuseau_horaire || 'Europe/Zurich';
+      document.getElementById('ecLienDirect').value = c.lien_direct || '';
+      document.getElementById('ecLienReplay').value = c.lien_replay || '';
+      document.getElementById('ecLienRdv').value = c.lien_rdv || 'https://calendly.com/info-najim1';
+      document.getElementById('ecActif').checked = c.statut === 'actif';
+      document.getElementById('ecAutre').value = '';
+      const actifs = c.declencheurs || [];
+      const liste = DECL_STANDARD.slice();
+      actifs.forEach(n => { if (!liste.some(([x]) => x === n)) liste.push([n, '']); });
+      document.getElementById('ecDeclencheurs').innerHTML = liste.map(([n, note]) =>
+        '<label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer"><input type="checkbox" class="ec-decl" data-nom="' + esc(n) + '"' + (actifs.includes(n) ? ' checked' : '') + '> ' + esc(n) +
+        (note ? ' <span style="font-size:11px;color:var(--text-soft)">' + note + '</span>' : '') + '</label>').join('');
+      ch.style.display = 'none';
+      document.getElementById('editChallengeForm').style.display = 'block';
+    } catch (e) {
+      ch.textContent = 'Impossible de charger ce challenge. Réessaie dans un instant.';
+    }
+  }
+  function closeEditChallenge() { document.getElementById('editChallengeOverlay').style.display = 'none'; }
+  async function saveEditChallenge() {
+    const msg = document.getElementById('ecMsg'), btn = document.getElementById('ecEnreg');
+    const nom = document.getElementById('ecNom').value.trim();
+    if (!nom || !document.getElementById('ecDebut').value) { msg.style.color = '#a33a2b'; msg.textContent = 'Le nom et la date de début sont obligatoires.'; return; }
+    const decl = Array.from(document.querySelectorAll('.ec-decl')).filter(c => c.checked).map(c => c.dataset.nom);
+    const autre = document.getElementById('ecAutre').value.trim(); if (autre) decl.push(autre);
+    const actif = document.getElementById('ecActif').checked;
+    if (actif && !document.getElementById('ecLienDirect').value.trim() && !confirm('Aucun lien Zoom n\'est rempli : les boutons « Rejoindre le direct » des emails ne mèneront nulle part. Activer quand même ?')) return;
+    btn.disabled = true; btn.textContent = 'Enregistrement…'; msg.textContent = '';
+    try {
+      const r = await fetch(EDITION_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        action: 'save', site_id: ecSite, account_id: session.account_id, nom,
+        date_debut: document.getElementById('ecDebut').value, date_fin: document.getElementById('ecFin').value,
+        heure_direct: document.getElementById('ecHeure').value, fuseau_horaire: document.getElementById('ecFuseau').value,
+        lien_direct: document.getElementById('ecLienDirect').value.trim(), lien_replay: document.getElementById('ecLienReplay').value.trim(),
+        lien_rdv: document.getElementById('ecLienRdv').value.trim(), actif, declencheurs: decl }) });
+      const j = await r.json();
+      if (!j.success) throw new Error(j.erreur || 'erreur');
+      closeEditChallenge();
+      showComingSoon(nom + ' : modifications enregistrées' + (j.statut === 'actif' ? ' (emails automatiques activés)' : ' (en brouillon)'));
+      loadSites();
+    } catch (e) {
+      msg.style.color = '#a33a2b'; msg.textContent = 'Échec de l\'enregistrement. Réessaie dans un instant.';
+    } finally { btn.disabled = false; btn.textContent = 'Enregistrer les modifications'; }
+  }
+
   function closeChallengeForm() {
     document.getElementById('challengeFormOverlay').style.display = 'none';
   }
