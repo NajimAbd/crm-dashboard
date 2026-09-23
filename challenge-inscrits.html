@@ -106,6 +106,10 @@
   .leg-case { flex: none; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 8px; text-align: center; }
   .leg-exemple ol { margin: 0; padding-left: 18px; line-height: 1.5; color: var(--ink); }
   .leg-resume { margin: 8px 0 0; font-style: italic; }
+  .ancien { display: inline-block; margin-left: 6px; font-size: 0.68rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; background: #f1ebdd; color: #6b5a2e; border: 1px solid #e2d8c0; vertical-align: middle; }
+  .invites { margin-top: 30px; }
+  .invites h2 { font-size: 1.15rem; margin: 0 0 4px; }
+  .invites .sub { margin-bottom: 12px; }
   .loading, .error { padding: 40px; text-align: center; color: #756a4c; }
 </style>
 </head>
@@ -133,6 +137,7 @@
   let allJours = [];
   let heureSoir = '-2h';
   let allDeclencheurs = [];
+  let allInvites = null;
 
   // Icones des declencheurs
   const ICO_TEL = `<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6.6 10.8a15.1 15.1 0 0 0 6.6 6.6l2.2-2.2a1 1 0 0 1 1-.25 11.4 11.4 0 0 0 3.6.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1A17 17 0 0 1 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1z" fill="#8b6914"/></svg>`;
@@ -187,7 +192,7 @@
     const headerJours = jourLabels.map(l => `<th class="center">${l}</th>`).join("");
 
     if (participants.length === 0) {
-      document.getElementById("content").innerHTML = `<div class="loading">Aucun inscrit pour le moment.</div>`;
+      document.getElementById("content").innerHTML = `<div class="loading">Aucun inscrit pour le moment.</div>${renderInvites()}`;
       return;
     }
 
@@ -214,7 +219,7 @@
       }).join("");
       return `
         <tr>
-          <td>${p.nom}</td>
+          <td>${p.nom}${p.ancien_lead ? `<span class="ancien" title="Ancien lead invité avec ADD (groupe d'origine : ${p.ancien_lead})">↻ Ancien lead · ${p.ancien_lead}</span>` : ''}</td>
           <td>${p.email}</td>
           <td class="center">${mailIcon(p.avant.confirmation)}</td>
           <td class="center">${mailIcon(p.avant.valeur)}</td>
@@ -258,7 +263,32 @@
         <tbody>${rows}</tbody>
       </table>
       </div>
+      ${renderInvites()}
     `;
+  }
+
+  // Anciens leads invites (ADD) qui ne se sont pas encore inscrits
+  function renderInvites() {
+    const liste = (allInvites && allInvites.en_attente) || [];
+    if (!allInvites || !allInvites.total) return '';
+    const lignes = liste.map(v => `
+      <tr>
+        <td>${v.nom || ''}</td>
+        <td>${v.email}</td>
+        <td><span class="badge ${badgeClass[v.groupe_origine] || ''}">${badgeIcon[v.groupe_origine] || ''} ${v.groupe_origine || ''}</span></td>
+        <td class="center">${v.ajoute_le || ''}</td>
+        <td class="center">${mailIcon(v.invitation)}</td>
+        <td class="center">${mailIcon(v.rappel)}</td>
+      </tr>`).join('');
+    return `
+      <div class="invites">
+        <h2>Invités pas encore inscrits (${liste.length})</h2>
+        <p class="sub">Anciens leads ajoutés avec ADD. Dès qu'ils s'inscrivent sur la page, ils passent dans le tableau du haut avec le badge « ↻ Ancien lead ». Sinon, ils restent dans leur groupe d'origine.</p>
+        ${liste.length ? `<div class="table-scroll"><table>
+          <thead><tr><th>Nom</th><th>Email</th><th>Groupe d'origine</th><th class="center">Ajouté le</th><th class="center">Invitation</th><th class="center">Rappel (J-2)</th></tr></thead>
+          <tbody>${lignes}</tbody>
+        </table></div>` : '<div class="loading">Tous les invités se sont inscrits.</div>'}
+      </div>`;
   }
 
   fetch(`${WEBHOOK_URL}?site_id=${encodeURIComponent(siteId)}`)
@@ -270,6 +300,7 @@
       }
       allJours = data.jours || [];
       allDeclencheurs = data.declencheurs || [];
+      allInvites = data.invites || null;
       if (data.heure_direct) {
         const [h, m] = data.heure_direct.split(':').map(Number);
         const t = h * 60 + m - 120;
@@ -277,7 +308,7 @@
       }
       // On ignore les lignes vides (sans vrai email)
       allParticipants = (data.participants || []).filter(p => p && p.email && p.email !== 'undefined' && String(p.email).includes('@'));
-      document.getElementById("subtitle").textContent = `${allParticipants.length} inscrit(s) · ${allJours.length} jour(s) de show`;
+      document.getElementById("subtitle").textContent = `${allParticipants.length} inscrit(s) · ${allJours.length} jour(s) de show` + (allInvites && allInvites.total ? ` · Invités ADD : ${allInvites.total}, dont ${allInvites.inscrits} inscrit(s)` : '');
       document.getElementById("legende").innerHTML = `
         <div class="leg-ligne">
           <span>${ENVELOPPE_OK} Email envoyé (pas encore ouvert)</span>
