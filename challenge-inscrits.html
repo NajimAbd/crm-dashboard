@@ -113,7 +113,9 @@
   }
 
   function renderTable(participants) {
-    const jourLabels = allJours.map((j, idx) => `Jour ${idx + 1}`);
+    // Au moins une colonne "Jour 1", meme si les jours du show ne sont pas encore crees
+    const nbJours = Math.max(allJours.length, 1);
+    const jourLabels = Array.from({ length: nbJours }, (_, idx) => `Jour ${idx + 1}`);
     const headerJours = jourLabels.map(l => `<th class="center">${l}</th>`).join("");
 
     if (participants.length === 0) {
@@ -130,14 +132,15 @@
         const presence = j.a_regarde ? `<span class="jour-oui">✅</span> <span class="jour-pt">${Number(j.points) || 0}pt</span>` : '';
         const emails = recus > 0 ? `<span class="jour-emails${emailsOk ? ' complet' : ''}">✉️ ${recus}/${attendus}</span>` : '';
         return `<td class="center jour-cell">${presence}${emails}</td>`;
-      }).join("");
+      }).join("") || '<td class="center jour-cell"></td>';
       return `
         <tr>
           <td>${p.nom}</td>
           <td>${p.email}</td>
           <td class="center">${mailIcon(p.avant.confirmation)}</td>
           <td class="center">${mailIcon(p.avant.valeur)}</td>
-          <td class="center">${mailIcon(p.avant.relance)}</td>
+          <td class="center">${mailIcon(p.avant.relance_j2)}</td>
+          <td class="center">${mailIcon(p.avant.relance_j1)}</td>
           ${jourCells}
           <td class="center">${mailIcon(p.apres.replay)}</td>
           <td class="center">${mailIcon(p.apres.qr)}</td>
@@ -156,15 +159,15 @@
         <thead>
           <tr class="phase-row">
             <th colspan="2"></th>
-            <th colspan="3">Avant le show</th>
-            <th colspan="${allJours.length}">Durant le show</th>
+            <th colspan="4">Avant le show</th>
+            <th colspan="${nbJours}">Durant le show</th>
             <th colspan="3">Après le show</th>
             <th colspan="2">Suivi</th>
             <th colspan="2"></th>
           </tr>
           <tr>
             <th>Nom</th><th>Email</th>
-            <th class="center">Confirmation</th><th class="center">Valeur</th><th class="center">Rendez-vous (J-1)</th>
+            <th class="center">Confirmation</th><th class="center">Valeur</th><th class="center">Rendez-vous (J-2)</th><th class="center">Rendez-vous (J-1)</th>
             ${headerJours}
             <th class="center">Replay (J4)</th><th class="center">Q&R (J5)</th><th class="center">Clôture (J6)</th>
             <th class="center">Suivi 1 (J+20)</th><th class="center">Suivi 2 (J+40)</th>
