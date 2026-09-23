@@ -92,8 +92,6 @@
   <h1>Page Test — à effacer dans le futur</h1>
   <p class="sub" id="subtitle">Chargement…</p>
 
-  <div class="stats" id="stats"></div>
-
   <div id="content"><div class="loading">Chargement des inscrits…</div></div>
 </div>
 
@@ -108,27 +106,10 @@
 
   let allParticipants = [];
   let allJours = [];
-  let activeFilter = null; // null = tous, sinon "VIP"/"Midi"/"10h"/"5h"
 
   function mailIcon(recu) {
-    return `<span class="mail-icon ${recu ? 'mail-oui' : 'mail-non'}">${recu ? '✅' : '❌'}</span>`;
-  }
-
-  function renderStats(counts) {
-    const totalTous = Object.values(counts).reduce((a, b) => a + b, 0);
-    const carteTous = `
-      <div class="stat stat-tous${activeFilter === null ? ' active' : ''}" onclick="toggleFilter(null)">
-        <div class="n">${totalTous}</div>
-        <div class="l">📋 Tous</div>
-      </div>
-    `;
-    const cartesGroupes = Object.keys(counts).map(g => `
-      <div class="stat${activeFilter === g ? ' active' : ''}" onclick="toggleFilter('${g}')">
-        <div class="n">${counts[g]}</div>
-        <div class="l">${badgeIcon[g]} ${g}</div>
-      </div>
-    `).join("");
-    document.getElementById("stats").innerHTML = carteTous + cartesGroupes;
+    // Vide tant que l'email n'est pas parti, ✅ une fois envoyé
+    return recu ? `<span class="mail-icon mail-oui">✅</span>` : '';
   }
 
   function renderTable(participants) {
@@ -136,20 +117,19 @@
     const headerJours = jourLabels.map(l => `<th class="center">${l}</th>`).join("");
 
     if (participants.length === 0) {
-      document.getElementById("content").innerHTML = `<div class="loading">Aucun inscrit dans ce groupe.</div>`;
+      document.getElementById("content").innerHTML = `<div class="loading">Aucun inscrit pour le moment.</div>`;
       return;
     }
 
     const rows = participants.map(p => {
-      const jourCells = p.jours.map(j => {
-        const emailsOk = j.emails_recus >= j.emails_attendus && j.emails_attendus > 0;
-        return `
-        <td class="center jour-cell">
-          <span class="${j.a_regarde ? 'jour-oui' : 'jour-non'}">${j.a_regarde ? '✅' : '❌'}</span>
-          <span class="jour-pt">${j.points}pt</span>
-          <span class="jour-emails${emailsOk ? ' complet' : ''}">✉️ ${j.emails_recus}/${j.emails_attendus}</span>
-        </td>
-      `;
+      const jourCells = (p.jours || []).map(j => {
+        const recus = Number(j.emails_recus) || 0;
+        const attendus = Number(j.emails_attendus) || 0;
+        const emailsOk = attendus > 0 && recus >= attendus;
+        // Rien n'est affiché tant que la journée n'a rien produit
+        const presence = j.a_regarde ? `<span class="jour-oui">✅</span> <span class="jour-pt">${Number(j.points) || 0}pt</span>` : '';
+        const emails = recus > 0 ? `<span class="jour-emails${emailsOk ? ' complet' : ''}">✉️ ${recus}/${attendus}</span>` : '';
+        return `<td class="center jour-cell">${presence}${emails}</td>`;
       }).join("");
       return `
         <tr>
@@ -164,7 +144,7 @@
           <td class="center">${mailIcon(p.apres.cloture)}</td>
           <td class="center">${mailIcon(p.suivi.suivi1)}</td>
           <td class="center">${mailIcon(p.suivi.suivi2)}</td>
-          <td class="center total-pt">${p.total_points}</td>
+          <td class="center total-pt">${Number(p.total_points) || 0}</td>
           <td><span class="badge ${badgeClass[p.groupe] || ''}">${badgeIcon[p.groupe] || ''} ${p.groupe}</span></td>
         </tr>
       `;
@@ -197,16 +177,6 @@
     `;
   }
 
-  function toggleFilter(groupe) {
-    activeFilter = (activeFilter === groupe) ? null : groupe;
-    const counts = { VIP: 0, Midi: 0, "10h": 0, "5h": 0 };
-    allParticipants.forEach(p => { if (counts[p.groupe] !== undefined) counts[p.groupe]++; });
-    renderStats(counts);
-    const visibles = activeFilter ? allParticipants.filter(p => p.groupe === activeFilter) : allParticipants;
-    renderTable(visibles);
-  }
-  window.toggleFilter = toggleFilter;
-
   fetch(`${WEBHOOK_URL}?site_id=${encodeURIComponent(siteId)}`)
     .then(r => r.json())
     .then(data => {
@@ -215,12 +185,9 @@
         return;
       }
       allJours = data.jours || [];
-      allParticipants = data.participants || [];
+      // On ignore les lignes vides (sans vrai email)
+      allParticipants = (data.participants || []).filter(p => p && p.email && p.email !== 'undefined' && String(p.email).includes('@'));
       document.getElementById("subtitle").textContent = `${allParticipants.length} inscrit(s) · ${allJours.length} jour(s) de show`;
-
-      const counts = { VIP: 0, Midi: 0, "10h": 0, "5h": 0 };
-      allParticipants.forEach(p => { if (counts[p.groupe] !== undefined) counts[p.groupe]++; });
-      renderStats(counts);
       renderTable(allParticipants);
     })
     .catch(err => {
