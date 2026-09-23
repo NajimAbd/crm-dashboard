@@ -73,7 +73,12 @@
   .jour-pt { font-weight: 600; }
   .jour-oui { color: #2f7d4f; }
   .jour-non { color: #b04a3f; }
-  .jour-cell { font-size: 0.85rem; }
+  .jour-cell { font-size: 0.85rem; min-width: 110px; }
+  .jour-mails { display: flex; justify-content: center; gap: 10px; }
+  .jour-mail { display: inline-flex; flex-direction: column; align-items: center; min-width: 34px; }
+  .jour-mail-ico { min-height: 26px; display: inline-flex; align-items: center; }
+  .jour-mail-lbl { font-size: 0.66rem; color: #9a8f6e; margin-top: 1px; }
+  .jour-presence { margin-top: 4px; }
   .jour-emails { display: block; margin-top: 3px; font-size: 0.7rem; color: #9a8f6e; }
   .jour-emails.complet { color: #2f7d4f; font-weight: 600; }
 
@@ -109,6 +114,7 @@
 
   let allParticipants = [];
   let allJours = [];
+  let heureSoir = '-2h';
 
   // Petite enveloppe avec une coche verte = email envoye
   const ENVELOPPE_OK = `<svg width="30" height="24" viewBox="0 0 30 24" aria-label="Email envoyé" role="img">
@@ -146,13 +152,11 @@
 
     const rows = participants.map(p => {
       const jourCells = (p.jours || []).map(j => {
-        const recus = Number(j.emails_recus) || 0;
-        const attendus = Number(j.emails_attendus) || 0;
-        const emailsOk = attendus > 0 && recus >= attendus;
-        // Rien n'est affiché tant que la journée n'a rien produit
-        const presence = j.a_regarde ? `<span class="jour-oui">✅</span> <span class="jour-pt">${Number(j.points) || 0}pt</span>` : '';
-        const emails = recus > 0 ? `<span class="jour-emails${emailsOk ? ' complet' : ''}">✉️ ${recus}/${attendus}</span>` : '';
-        return `<td class="center jour-cell">${presence}${emails}</td>`;
+        // 2 emails du jour : matin (10h) et 2h avant le direct. Case vide tant que rien n'est parti.
+        const slot = (etat, label) => `<span class="jour-mail"><span class="jour-mail-ico">${mailIcon(etat)}</span><span class="jour-mail-lbl">${label}</span></span>`;
+        const emails = `<div class="jour-mails">${slot(j.email_matin, '10h')}${slot(j.email_soir, heureSoir)}</div>`;
+        const presence = j.a_regarde ? `<div class="jour-presence"><span class="jour-oui">✅</span> <span class="jour-pt">${Number(j.points) || 0} pt</span></div>` : '';
+        return `<td class="center jour-cell">${emails}${presence}</td>`;
       }).join("") || '<td class="center jour-cell"></td>';
       return `
         <tr>
@@ -209,6 +213,11 @@
         return;
       }
       allJours = data.jours || [];
+      if (data.heure_direct) {
+        const [h, m] = data.heure_direct.split(':').map(Number);
+        const t = h * 60 + m - 120;
+        heureSoir = String(Math.floor(t / 60)).padStart(2, '0') + 'h' + (t % 60 ? String(t % 60).padStart(2, '0') : '');
+      }
       // On ignore les lignes vides (sans vrai email)
       allParticipants = (data.participants || []).filter(p => p && p.email && p.email !== 'undefined' && String(p.email).includes('@'));
       document.getElementById("subtitle").textContent = `${allParticipants.length} inscrit(s) · ${allJours.length} jour(s) de show`;
