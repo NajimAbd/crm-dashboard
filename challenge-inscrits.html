@@ -224,8 +224,8 @@
           <td class="center">${p.apres.replay ? mailIcon(p.apres.replay) : (p.groupe === 'Midi' ? '<span class="non-prevu" title="Groupe Midi : pas de replay (a assisté en direct)">–</span>' : '')}</td>
           <td class="center jour-cell"><div class="jour-mails"><span class="jour-mail"><span class="jour-mail-ico">${mailIcon(p.apres.qr)}</span><span class="jour-mail-lbl">10h</span></span><span class="jour-mail"><span class="jour-mail-ico">${mailIcon(p.apres.qr_soir)}</span><span class="jour-mail-lbl">${heureSoir}</span></span></div></td>
           <td class="center">${mailIcon(p.apres.cloture)}</td>
-          <td class="center">${mailIcon(p.suivi.suivi1)}</td>
-          <td class="center">${mailIcon(p.suivi.suivi2)}</td>
+          <td class="center">${p.suivi.suivi1 ? mailIcon(p.suivi.suivi1) : (p.groupe === 'VIP' ? '<span class="non-prevu" title="A acheté : pas de suivi">–</span>' : '')}</td>
+          <td class="center">${p.suivi.suivi2 ? mailIcon(p.suivi.suivi2) : (p.groupe === 'VIP' ? '<span class="non-prevu" title="A acheté : pas de suivi">–</span>' : '')}</td>
           <td class="center total-pt">${Number(p.total_points) || 0}</td>
           <td><span class="badge ${badgeClass[p.groupe] || ''}">${badgeIcon[p.groupe] || ''} ${p.groupe}</span></td>
         </tr>
@@ -285,7 +285,7 @@
           <span><span class="pres pres-replay">↻ Replay · 3 pt</span> A regardé l'enregistrement, ou moins de 50 % du direct</span>
           <span>${CASE_OUI} Action faite (J1, J2… = jour de l'action)</span>
           <span>${CASE_NON} Pas encore fait</span>
-          <span><span class="non-prevu">–</span> Non prévu (ex. : pas de replay pour le groupe Midi)</span>
+          <span><span class="non-prevu">–</span> Non prévu (pas de replay pour Midi, pas de suivi pour un acheteur)</span>
         </div>
         <details class="leg-aide">
           <summary>Comment lire une case « Jour » ?</summary>
