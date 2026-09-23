@@ -87,11 +87,12 @@
   const p = new URLSearchParams(location.search);
   if (p.get('evenement')) document.getElementById('evenement').value = p.get('evenement');
 
-  // Origine du client : ads / organique / bouche_a_oreille
+  // Origine du client : ads / organique / bouche_a_oreille / invitation
   function origine(){
     const src = (p.get('utm_source') || '').toLowerCase();
     const med = (p.get('utm_medium') || '').toLowerCase();
     if (!src) return 'bouche_a_oreille';
+    if (src === 'invitation') return 'invitation'; // ancien lead venu par l'email d'invitation
     if (['cpc','paid','ads','ppc'].some(m => med.includes(m))) return 'ads';
     return 'organique';
   }
