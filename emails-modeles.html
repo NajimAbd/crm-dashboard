@@ -80,6 +80,8 @@
 
   // Nom lisible et phase de chaque email
   const INFO = {
+    invitation: ["Invitation (anciens leads ADD)", "Invitation — anciens leads"],
+    rappel_invitation: ["Rappel d'invitation (J-2, non-inscrits)", "Invitation — anciens leads"],
     confirmation: ["Confirmation d'inscription", "Avant le show"],
     valeur: ["Email de valeur", "Avant le show"],
     relance: ["Rappel (Rdv J-2 / J-1)", "Avant le show"],
@@ -94,13 +96,14 @@
   const ZONES = [
     ["{{prenom}}", "Prénom"], ["{{titre_challenge}}", "Nom du challenge"], ["{{date_debut}}", "Date de début"],
     ["{{heure_direct}}", "Heure du direct"], ["{{jours_restants_texte}}", "Jours restants (ex. « 2 jours »)"],
-    ["{{lien_direct}}", "Lien du direct (Zoom)"], ["{{lien_replay}}", "Lien du replay"], ["{{lien_rdv}}", "Lien de rendez-vous"]
+    ["{{lien_direct}}", "Lien du direct (Zoom)"], ["{{lien_replay}}", "Lien du replay"], ["{{lien_rdv}}", "Lien de rendez-vous"],
+    ["{{lien_inscription}}", "Lien d'inscription (invitations)"]
   ];
   // Valeurs d'exemple pour l'apercu
   const EXEMPLE = {
     "{{prenom}}": "Aïcha", "{{titre_challenge}}": "Challenge Guérison Roqya", "{{date_debut}}": "jeudi 1 octobre",
     "{{heure_direct}}": "20h00", "{{jours_restants}}": "2", "{{jours_restants_texte}}": "2 jours",
-    "{{lien_direct}}": "#", "{{lien_replay}}": "#", "{{lien_rdv}}": "#"
+    "{{lien_direct}}": "#", "{{lien_replay}}": "#", "{{lien_rdv}}": "#", "{{lien_inscription}}": "#"
   };
   const BOUTON = '<p style="margin:22px 0"><a href="{{lien_direct}}" style="background:#0D1A12;color:#B8965A;padding:13px 24px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block">Texte du bouton</a></p>';
 
@@ -116,7 +119,10 @@
     const el = document.getElementById("liste");
     if (!modeles.length) { el.innerHTML = '<div class="vide">Les textes de ce type de show ne sont pas encore créés. Demande à Claude de les rédiger.</div>'; return; }
     let phaseEnCours = "", html = "";
-    modeles.forEach(m => {
+    // Ordre chronologique : invitation, avant, durant, apres, suivi
+    const ORDRE = Object.keys(INFO);
+    const rang = t => { const i = ORDRE.indexOf(t); return i < 0 ? 999 : i; };
+    modeles.slice().sort((a, b) => rang(a.type_email) - rang(b.type_email)).forEach(m => {
       const [nom, phase] = INFO[m.type_email] || [m.type_email, "Autres"];
       if (phase !== phaseEnCours) { html += `<div class="phase">${phase}</div>`; phaseEnCours = phase; }
       const badge = Number(m.a_modifier) ? '<span class="badge b-modif">À modifier</span>' : '<span class="badge b-ok">Validé</span>';
