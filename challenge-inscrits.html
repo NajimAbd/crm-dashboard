@@ -79,6 +79,9 @@
   .jour-mail-ico { min-height: 20px; display: inline-flex; align-items: center; }
   .jour-mail-lbl { font-size: 0.66rem; color: #9a8f6e; margin-top: 1px; }
   .jour-presence { margin-top: 4px; }
+  .pres { display: inline-block; font-size: 0.68rem; font-weight: 600; padding: 1px 7px; border-radius: 999px; white-space: nowrap; }
+  .pres-direct { background: #dcf3e1; color: #1f6b35; }
+  .pres-replay { background: #dde9f7; color: #2a5a8c; }
   .th-inter { white-space: normal !important; max-width: 90px; line-height: 1.25; background: #f7eed6 !important; }
   .th-ico { display: block; margin: 0 auto 3px; width: 18px; height: 18px; }
   .inter-cell { background: #fdf9ef; }
@@ -184,7 +187,13 @@
         // 2 emails du jour : matin (10h) et 2h avant le direct. Case vide tant que rien n'est parti.
         const slot = (etat, label) => `<span class="jour-mail"><span class="jour-mail-ico">${mailIcon(etat)}</span><span class="jour-mail-lbl">${label}</span></span>`;
         const emails = `<div class="jour-mails">${slot(j.email_matin, '10h')}${slot(j.email_soir, heureSoir)}</div>`;
-        const presence = j.a_regarde ? `<div class="jour-presence"><span class="jour-oui">✅</span> <span class="jour-pt">${Number(j.points) || 0} pt</span></div>` : '';
+        // Presence : Direct (vert) ou Replay (bleu), avec les points ; vide si absent
+        let presence = '';
+        if (j.a_regarde) {
+          const replay = j.mode === 'replay';
+          const detail = j.minutes ? `${j.minutes} min${j.pct ? ' (' + j.pct + '%)' : ''}` : '';
+          presence = `<div class="jour-presence" title="${replay ? 'Replay' : 'Direct'}${detail ? ' : ' + detail : ''}"><span class="pres ${replay ? 'pres-replay' : 'pres-direct'}">${replay ? '↻ Replay' : '● Direct'} · ${Number(j.points) || 0} pt</span></div>`;
+        }
         return `<td class="center jour-cell">${emails}${presence}</td>`;
       }).join("") || '<td class="center jour-cell"></td>';
       const interCells = allDeclencheurs.map(nom => {
