@@ -360,8 +360,8 @@
   </div>
 
   <div class="target-tabs">
-    <div class="target-tab active" data-target="webinaire" id="tabWebinaire">Webinaire</div>
-    <div class="target-tab" data-target="academie" id="tabAcademie">Académie</div>
+    <div class="target-tab active" data-target="webinaire" id="tabWebinaire" style="display:none">Webinaire</div>
+    <div class="target-tab" data-target="academie" id="tabAcademie" style="display:none">Académie</div>
   </div>
 
   <div class="dropzone" id="dropzone">
@@ -717,5 +717,30 @@ function confirmDelete(target, filename, displayName) {
 loadFilesList();
 </script>
 
+<script>
+/* Onglets selon les achats (24.09.2026) : Webinaire = Show enregistre, Academie = Academie. L'administrateur voit tout. */
+(function(){
+  var s = JSON.parse(localStorage.getItem('crm_session_user') || 'null');
+  if (!s) return;
+  var tW = document.getElementById('tabWebinaire'), tA = document.getElementById('tabAcademie');
+  function montrer(w, a) {
+    if (w) tW.style.display = '';
+    if (a) tA.style.display = '';
+    if (!w && a) setTarget('academie');
+    if (!w && !a) {
+      var m = document.querySelector('main');
+      if (m) m.innerHTML = '<div class="message error">L\'envoi de vidéos fait partie de l\'abonnement Show enregistré. Il n\'est pas encore activé sur ton compte. Pour l\'activer, contacte-nous : info.najim1@gmail.com</div>';
+    }
+  }
+  if (s.role === 'super_admin') { montrer(true, true); return; }
+  var B = 'https://n8n.srv936251.hstgr.cloud/webhook/';
+  function demander(chemin) {
+    return fetch(B + chemin, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: s.account_id, login: s.login }) })
+      .then(function(r){ return r.json(); }).catch(function(){ return {}; });
+  }
+  Promise.all([demander('crm-check-show-enregistre-access'), demander('crm-check-formation-access')])
+    .then(function(r){ montrer(r[0] && r[0].show_enregistre, r[1] && r[1].formation); });
+})();
+</script>
 </body>
 </html>
