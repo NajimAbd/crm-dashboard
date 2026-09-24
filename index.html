@@ -270,7 +270,7 @@
       const resp = await fetch(CRM_2FA_VERIFY_WEBHOOK, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ login: pendingSession.login, code })
+        body: JSON.stringify({ login: pendingSession.login, code, jeton: pendingSession.token || '' })
       });
       const data = await resp.json();
       if (data.success) {

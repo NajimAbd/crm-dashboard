@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<script src="session-securite.js?v=20260924"></script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nexa — Tableau de bord</title>
@@ -918,8 +919,11 @@
           blockedLogin = data.login || '';
           blockedNom = data.nom_praticien || '';
         } else if (data.success && localStorage.getItem('crm_real_login_done') === '1') {
+          // On garde le jeton de session du serveur si c'est la meme personne (24.09.2026)
+          let ancienJeton = '';
+          try { const anc = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); if (anc && anc.login === data.login && anc.token) ancienJeton = anc.token; } catch (e) {}
           localStorage.setItem(SESSION_KEY, JSON.stringify({
-            login: data.login, role: data.role, account_id: data.account_id, nom_praticien: data.nom_praticien, totp_enabled: data.totp_enabled
+            login: data.login, role: data.role, account_id: data.account_id, nom_praticien: data.nom_praticien, totp_enabled: data.totp_enabled, token: ancienJeton
           }));
           localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
         }
