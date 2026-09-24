@@ -676,7 +676,8 @@ async function loadFilesList() {
     return html;
   }
 
-  container.innerHTML = renderGroup('Webinaire', res.webinaire, 'webinaire') + renderGroup('Académie', res.academie, 'academie');
+  // Chaque groupe n'apparait que si le module est achete (voir script d'acces en bas de page)
+  container.innerHTML = (window.accesWebinaire ? renderGroup('Webinaire', res.webinaire, 'webinaire') : '') + (window.accesAcademie ? renderGroup('Académie', res.academie, 'academie') : '');
 
   const totalMo = [...res.webinaire, ...res.academie].reduce((sum, f) => sum + parseFloat(f.size_mo || 0), 0);
   updateQuotaDisplay(totalMo / 1000);
@@ -724,6 +725,8 @@ loadFilesList();
   if (!s) return;
   var tW = document.getElementById('tabWebinaire'), tA = document.getElementById('tabAcademie');
   function montrer(w, a) {
+    window.accesWebinaire = !!w; window.accesAcademie = !!a;
+    try { loadFilesList(); } catch (e) {}
     if (w) tW.style.display = '';
     if (a) tA.style.display = '';
     if (!w && a) setTarget('academie');
