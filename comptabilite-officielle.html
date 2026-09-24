@@ -195,11 +195,12 @@
   <div style="display:flex;align-items:center;gap:10px">
     <div class="product-switch-group" style="display:flex;background:rgba(255,255,255,0.03);border:1px solid #2A3A2A;border-radius:10px;padding:4px;gap:6px">
       <a id="laboratoireLink" class="product-btn disabled" onclick="handleLockedClick('laboratoireLink', function(){ window.location.href='laboratoire.html'; })">Laboratoire</a>
+      <a id="showBtn" class="product-btn disabled" onclick="handleLockedClick('showBtn', function(){ window.location.href='webinars.html'; })">Show</a>
+      <a id="showEnrBtn" class="product-btn disabled" onclick="handleLockedClick('showEnrBtn', function(){ window.location.href='webinars.html#show-enregistre'; })">Show enregistré</a>
       <a id="adminLink" href="admin.html" class="product-btn" style="display:none">Panel Admin</a>
       <a id="irisBtn" class="product-btn disabled" onclick="handleLockedClick('irisBtn', goToIris)">Iris</a>
       <a id="iriscueBtn" class="product-btn disabled" onclick="handleLockedClick('iriscueBtn', goToIriscue)">IrisCue</a>
       <a id="formationBtn" class="product-btn disabled" onclick="handleLockedClick('formationBtn', function(){ window.location.href='formation.html'; })">Académie</a>
-      <a id="showEnrBtn" class="product-btn disabled" onclick="handleLockedClick('showEnrBtn', function(){ window.location.href='webinars.html#show-enregistre'; })">Show enregistré</a>
     </div>
     <div style="width:1px;height:24px;background:#2A3A2A;margin:0 4px"></div>
     <button class="logout-btn-gold" onclick="logout()">
@@ -212,7 +213,6 @@
 <div class="topbar-row2" style="background:#131F16;padding:10px 32px;display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap">
   <a class="nav-link-v2" onclick="window.location.href='dashboard.html'">Tableau de bord</a>
   <a class="nav-link-v2" onclick="window.location.href='kpi.html'">KPI</a>
-  <a class="nav-link-v2" onclick="window.location.href='webinars.html'">Shows</a>
   <a class="nav-link-v2" onclick="window.location.href='calendar.html'">Calendrier</a>
   <a class="nav-link-v2" onclick="window.location.href='sales.html'">Mes ventes</a>
   <a class="nav-link-v2" onclick="window.location.href='finances.html'">Finances</a>
@@ -1463,6 +1463,21 @@
     fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-show-enregistre-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: s.account_id }) })
       .then(function(r){ return r.json(); })
       .then(function(d){ if (d && d.show_enregistre) b.classList.remove('disabled'); })
+      .catch(function(){});
+  } catch (e) {}
+})();
+</script>
+<script>
+/* Bouton Show en haut : ouvert pour l'administrateur ou si le compte a le Show (24.09.2026) */
+(function(){
+  try {
+    var s = JSON.parse(localStorage.getItem('crm_session_user') || 'null');
+    var b = document.getElementById('showBtn');
+    if (!s || !b) return;
+    if (s.role === 'super_admin') { b.classList.remove('disabled'); return; }
+    fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-show-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: s.account_id }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if (d && d.show) b.classList.remove('disabled'); })
       .catch(function(){});
   } catch (e) {}
 })();
