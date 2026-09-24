@@ -118,7 +118,8 @@
     SEPARATEUR: '<hr style="border:0;border-top:1px solid #E2D8C0;margin:24px 0">',
     SIGNATURE: '{{signature}}'
   };
-  const imageHtml = url => `<p style="margin:18px 0;text-align:center"><img src="${url}" alt="" width="560" style="max-width:100%;height:auto;border-radius:8px;display:inline-block"></p>`;
+  // Taille de l'image dans l'email (largeur en pixels) : petite 200, moyenne 360, grande 560
+  const imageHtml = (url, l) => `<p style="margin:18px 0;text-align:center"><img src="${url}" alt="" width="${l}" style="width:${l}px;max-width:100%;height:auto;border-radius:8px;display:inline-block"></p>`;
   const BOUTON = '<p style="margin:22px 0"><a href="{{lien_direct}}" style="background:#0D1A12;color:#B8965A;padding:13px 24px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block">Texte du bouton</a></p>';
 
   const NOMS_TYPES = { challenge_3_jours: "Challenge 3 jours", challenge_5_jours: "Challenge 5 jours", webinaire_direct: "Webinaire en direct", webinaire_enregistre: "Webinaire enregistré" };
@@ -171,6 +172,10 @@
         <button type="button" class="bloc" data-b="SEPARATEUR">➖ Séparateur</button>
         ${estSignature ? '' : '<button type="button" class="bloc" data-b="SIGNATURE">✍️ Signature</button>'}
         <input type="file" id="fichierImage" accept="image/*" hidden>
+        <span id="choixTaille" style="display:none;gap:4px;align-items:center;font:12px system-ui,sans-serif">Taille :
+          <button type="button" class="zone taille" data-l="200">Petite</button>
+          <button type="button" class="zone taille" data-l="360">Moyenne</button>
+          <button type="button" class="zone taille" data-l="560">Grande</button></span>
         <span id="msgImage" class="aide" style="margin:0 0 0 6px"></span></div>
       <p class="aide">Clique sur une zone pour l'insérer à l'endroit du curseur. <b>&lt;p&gt;</b> = paragraphe, <b>&lt;b&gt;</b> = gras, <b>&lt;br&gt;</b> = retour à la ligne.</p>
       <div class="apercu-titre">Aperçu (avec un exemple de prénom et de date)</div>
@@ -194,13 +199,17 @@
       c.value = c.value.slice(0, d) + v + c.value.slice(f);
       c.focus(); c.selectionStart = c.selectionEnd = d + v.length; maj();
     };
-    document.querySelectorAll(".zone").forEach(z => z.addEventListener("click", () => inserer(dernierChamp, z.dataset.z)));
+    document.querySelectorAll(".zone:not(.taille)").forEach(z => z.addEventListener("click", () => inserer(dernierChamp, z.dataset.z)));
     // Blocs : bouton, image, encadre, separateur, signature (toujours dans le texte)
     const fichier = document.getElementById("fichierImage"), msgImage = document.getElementById("msgImage");
-    let positionImage = 0;
+    let positionImage = 0, largeurImage = 560;
+    const choixTaille = document.getElementById("choixTaille");
+    choixTaille.querySelectorAll("button").forEach(t => t.addEventListener("click", ev => {
+      ev.stopPropagation(); largeurImage = Number(t.dataset.l); choixTaille.style.display = "none"; fichier.click();
+    }));
     document.querySelectorAll(".bloc").forEach(bt => bt.addEventListener("click", () => {
       const b = bt.dataset.b;
-      if (b === "IMAGE") { positionImage = texte.selectionStart ?? texte.value.length; fichier.click(); return; }
+      if (b === "IMAGE") { positionImage = texte.selectionStart ?? texte.value.length; choixTaille.style.display = "inline-flex"; msgImage.textContent = "Choisis la taille de l'image :"; return; }
       inserer(texte, "\n" + (b === "BOUTON" ? BOUTON : BLOCS[b]) + "\n");
     }));
     fichier.addEventListener("change", async () => {
@@ -213,7 +222,7 @@
         const j = await r.json();
         if (!j.success) throw new Error(j.erreur || "erreur");
         texte.selectionStart = texte.selectionEnd = positionImage;
-        inserer(texte, "\n" + imageHtml(j.url) + "\n");
+        inserer(texte, "\n" + imageHtml(j.url, largeurImage) + "\n");
         msgImage.textContent = "Image ajoutée ✔ (pense à Enregistrer)";
       } catch (e) { msgImage.textContent = "Échec de l'envoi de l'image. Réessaie."; }
     });
