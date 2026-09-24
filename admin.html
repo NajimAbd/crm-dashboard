@@ -88,6 +88,19 @@
     box-shadow: 0 4px 12px rgba(0,0,0,0.12);
   }
   .modal-close-x:hover { background: #F4ECE0; }
+  .offres-wrap { background: #fff; border: 1px solid #E8E0D2; border-radius: 16px; overflow: hidden; margin-top: 16px; }
+  .offre-ligne { display: grid; grid-template-columns: 1.6fr 0.8fr auto; gap: 14px; align-items: center; padding: 16px 20px; border-bottom: 1px solid #F1EBDF; }
+  .offre-ligne:last-child { border-bottom: none; }
+  .offre-ligne.premium { background: linear-gradient(90deg, #FBF6EC, #fff); }
+  .offre-nom { font-weight: 600; color: #0D1A12; }
+  .offre-desc { font-size: 12px; color: #8A8577; margin-top: 3px; }
+  .offre-prix { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; color: #B8965A; white-space: nowrap; }
+  .offre-prix small { font-family: Inter, sans-serif; font-size: 12px; color: #8A8577; font-weight: 500; }
+  .offre-actions { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .offre-btn { border: 1px solid #E5DECF; background: #fff; color: #0D1A12; border-radius: 8px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .offre-btn:hover { border-color: #B8965A; }
+  .offre-btn.or { background: #0D1A12; color: #D9BC84; border-color: #0D1A12; }
+  @media (max-width: 640px) { .offre-ligne { grid-template-columns: 1fr; } .offre-actions { justify-content: flex-start; } }
   .modal-title {
     font-family: 'Cormorant Garamond', serif; font-size: 24px; font-weight: 600;
     color: var(--green-deep); margin: 0 0 20px;
@@ -364,6 +377,36 @@
     <div class="loading-state">
       <div class="spinner"></div>
       <div>Chargement des comptes…</div>
+    </div>
+  </div>
+
+  <div class="page-header" style="margin-top: 44px;">
+    <div>
+      <div class="eyebrow">Ventes</div>
+      <h1 style="font-size: 26px;">Offres et prix Nexa</h1>
+      <div class="subtitle">Tes liens de paiement Stripe. « Changer le prix » crée un nouveau lien au nouveau prix et désactive l'ancien.</div>
+    </div>
+  </div>
+  <div class="offres-wrap" id="offresContainer"><div class="loading-state"><div class="spinner"></div><div>Chargement des offres…</div></div></div>
+
+  <div class="modal-overlay" id="prixModal">
+    <div class="modal-box" style="max-width:400px">
+      <button type="button" class="modal-close-x" onclick="fermerPrix()" aria-label="Fermer" title="Fermer">✕</button>
+      <h3 class="modal-title">Changer le prix</h3>
+      <p id="prixOffreNom" style="margin:-6px 0 16px;color:#6B6A66;font-size:14px"></p>
+      <div class="modal-field">
+        <label>Nouveau prix (CHF par mois)</label>
+        <input type="number" id="prixNouveau" min="1" step="1" placeholder="ex : 49">
+      </div>
+      <div class="modal-field">
+        <label>Ton mot de passe Nexa (sécurité)</label>
+        <input type="password" id="prixMdp" autocomplete="current-password" placeholder="Mot de passe administrateur">
+      </div>
+      <div class="modal-msg" id="prixMsg"></div>
+      <div class="modal-actions">
+        <button class="modal-btn-cancel" onclick="fermerPrix()">Annuler</button>
+        <button class="modal-btn-confirm" id="prixBtn" onclick="validerPrix()">Changer le prix</button>
+      </div>
     </div>
   </div>
 
@@ -1335,6 +1378,78 @@
 document.addEventListener('keydown', function (e) {
   if (e.key === 'Escape') { var m = document.getElementById('createModal'); if (m && (m.classList.contains('show') || m.style.display === 'flex')) closeCreateModal(); }
 });
+</script>
+<script>
+/* Offres et prix Nexa (24.09.2026) : liste des liens de paiement Stripe + changement de prix securise par le mot de passe admin */
+(function () {
+  var API = 'https://n8n.srv936251.hstgr.cloud/webhook/';
+  var DESC = {
+    essentiel: 'Nexa complet + Show en direct (webinaire, challenges 3 et 5 jours)',
+    show_enregistre: 'Webinaire diffusé automatiquement + envoi de vidéos',
+    laboratoire: 'Pack de 6 outils : Crete, Staircase, Zahra, Sophy, Elarion AI, Challenge',
+    academie: 'Espace de formation à vendre à ses élèves',
+    iris: 'Création de contenu',
+    iriscue: 'Téléprompteur mobile et ordinateur',
+    premium: 'TOUT le paquet : Nexa Essentiel + tous les modules'
+  };
+  var offres = [];
+  var enCours = null;
+  function e(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  window.chargerOffres = function () {
+    var box = document.getElementById('offresContainer');
+    fetch(API + 'crm-offres-nexa').then(function (r) { return r.json(); }).then(function (d) {
+      offres = (d && d.offres) || [];
+      if (offres.length === 0) { box.innerHTML = '<div class="loading-state">Aucune offre pour le moment.</div>'; return; }
+      box.innerHTML = offres.map(function (o, i) {
+        return '<div class="offre-ligne' + (o.code === 'premium' ? ' premium' : '') + '">' +
+          '<div><div class="offre-nom">' + (o.code === 'premium' ? '⭐ ' : '') + e(o.nom) + '</div><div class="offre-desc">' + e(DESC[o.code] || '') + '</div></div>' +
+          '<div class="offre-prix">' + Number(o.prix).toFixed(0) + ' ' + e(o.devise || 'CHF') + ' <small>/ mois</small></div>' +
+          '<div class="offre-actions">' +
+            '<button class="offre-btn" onclick="copierLienOffre(' + i + ', this)">📋 Copier le lien</button>' +
+            '<button class="offre-btn or" onclick="ouvrirPrix(' + i + ')">Changer le prix</button>' +
+          '</div></div>';
+      }).join('');
+    }).catch(function () { box.innerHTML = '<div class="loading-state">Impossible de charger les offres.</div>'; });
+  };
+
+  window.copierLienOffre = function (i, btn) {
+    var url = offres[i] && offres[i].lien_url;
+    if (!url) return;
+    navigator.clipboard.writeText(url).then(function () { var t = btn.textContent; btn.textContent = '✓ Copié'; setTimeout(function () { btn.textContent = t; }, 1600); });
+  };
+
+  window.ouvrirPrix = function (i) {
+    enCours = offres[i];
+    document.getElementById('prixOffreNom').textContent = enCours.nom + ' — prix actuel : ' + Number(enCours.prix).toFixed(0) + ' CHF / mois';
+    document.getElementById('prixNouveau').value = Number(enCours.prix).toFixed(0);
+    document.getElementById('prixMdp').value = '';
+    var m = document.getElementById('prixMsg'); m.style.display = 'none'; m.textContent = '';
+    var modal = document.getElementById('prixModal'); modal.classList.add('show'); modal.style.display = 'flex';
+  };
+  window.fermerPrix = function () { var modal = document.getElementById('prixModal'); modal.classList.remove('show'); modal.style.display = ''; };
+
+  window.validerPrix = function () {
+    var prix = parseFloat(String(document.getElementById('prixNouveau').value).replace(',', '.'));
+    var mdp = document.getElementById('prixMdp').value;
+    var msg = document.getElementById('prixMsg');
+    function erreur(t) { msg.textContent = t; msg.style.display = 'block'; msg.style.color = '#A33A2B'; }
+    if (!(prix >= 1 && prix <= 10000)) { erreur('Prix invalide (entre 1 et 10 000 CHF).'); return; }
+    if (!mdp) { erreur('Entre ton mot de passe Nexa.'); return; }
+    var btn = document.getElementById('prixBtn'); btn.disabled = true; btn.textContent = 'Changement en cours…';
+    fetch(API + 'crm-offres-nexa-prix', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ login: session.login, password: mdp, code: enCours.code, prix: prix }) })
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        btn.disabled = false; btn.textContent = 'Changer le prix';
+        if (d && d.ok) { fermerPrix(); showToast('Nouveau prix enregistré : ' + prix.toFixed(0) + ' CHF. Nouveau lien créé.'); chargerOffres(); }
+        else erreur((d && d.erreur) || 'Le changement a échoué.');
+      })
+      .catch(function () { btn.disabled = false; btn.textContent = 'Changer le prix'; erreur('Erreur de connexion. Réessaie.'); });
+  };
+
+  chargerOffres();
+})();
 </script>
 </body>
 </html>
