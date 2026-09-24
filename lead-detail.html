@@ -814,6 +814,10 @@
   }
 
   async function convertToEntrepreneur(leadId) {
+    const l = leadCourant || {};
+    const qui = ((l.prenom || '') + ' ' + (l.nom || '')).trim() || 'ce lead';
+    if (!l.email) { alert("Ce lead n'a pas d'adresse e-mail. Ajoute-la d'abord avec « Modifier les informations »."); return; }
+    if (!confirm('Créer un compte entrepreneur Nexa pour ' + qui + ' ?\n\nE-mail de connexion : ' + l.email + '\nUn e-mail avec ses accès lui sera envoyé tout de suite.')) return;
     const btn = document.getElementById('convertEntrepreneurBtn');
     if (btn) { btn.disabled = true; btn.textContent = '⏳ Création en cours…'; }
     try {
@@ -966,8 +970,8 @@
     }
 
     // ==== Transformation en compte entrepreneur ====
-    // Cachée tant qu'un lead Show n'a pas accepté le diagnostic (elle n'a pas de sens avant ce stade)
-    if (!isAA && !showPasEncoreQualifie) {
+    // Visible pour l'administrateur seulement, pour tous les leads (y compris Show) (25.09.2026)
+    if (!isAA && session.role === 'super_admin') {
       if (l.converted_account_id) {
         html += '<div style="margin:8px 0;padding:10px 16px;border-radius:10px;background:#EDF4ED;border:1px solid #5A8C5A;color:#3E6B3E;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px">✅ Entrepreneur — compte #' + l.converted_account_id + '</div>';
       } else {
@@ -1056,7 +1060,7 @@
     html += buyerChip;
     html += '<button onclick="refreshLead()" id="refreshLeadBtn" title="V\u00e9rifier si le formulaire est arriv\u00e9" class="btn-refresh-3d" style="width:150px;text-align:center;margin-right:0">\ud83d\udd04 Actualiser</button>';
     html += '<button onclick="window.print()" style="width:150px;text-align:center;padding:8px 18px;border:none;border-radius:6px;background:var(--gold);color:var(--green-deep);font-weight:700;font-size:13px;cursor:pointer">🖨️ Imprimer</button>';
-    if (isAA) {
+    if (isAA && session.role === 'super_admin') {
       if (l.converted_account_id) {
         html += '<div style="width:150px;text-align:center;padding:8px 10px;border-radius:6px;background:#EDF4ED;border:1px solid #5A8C5A;color:#3E6B3E;font-size:12px;font-weight:600">✅ Entrepreneur #' + l.converted_account_id + '</div>';
       } else {
