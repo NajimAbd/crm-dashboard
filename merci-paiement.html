@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexa — Merci pour ton paiement</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+  :root {
+    --green-deep: #0D1A12;
+    --green-mid: #16261A;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --bg-soft: #FAF7F1;
+    --text-main: #2C2C2A;
+    --text-soft: #6B6A66;
+    --ok: #3D7A4F;
+    --warn: #A8742A;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; min-height: 100vh; background: var(--bg-soft); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; flex-direction: column; }
+  header { background: var(--green-deep); padding: 18px 24px; border-bottom: 2px solid var(--gold); }
+  header .brand { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; color: var(--cream); }
+  main { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 48px 16px; }
+  .carte { width: 100%; max-width: 560px; background: #fff; border: 1px solid #E8E0D2; border-radius: 18px; padding: 36px 32px; text-align: center; box-shadow: 0 8px 30px rgba(13,26,18,0.06); }
+  .icone { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 18px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
+  .icone.ok { background: rgba(61,122,79,0.12); color: var(--ok); }
+  .icone.attente { background: rgba(184,150,90,0.14); color: var(--gold); }
+  .icone.info { background: rgba(168,116,42,0.12); color: var(--warn); }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: 34px; margin: 0 0 10px; color: var(--green-deep); }
+  p { line-height: 1.6; color: var(--text-soft); margin: 0 0 14px; }
+  .recap { text-align: left; background: var(--bg-soft); border: 1px solid #EFE7D8; border-radius: 12px; padding: 16px 18px; margin: 20px 0; }
+  .recap div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 15px; }
+  .recap div span:first-child { color: var(--text-soft); }
+  .recap div span:last-child { font-weight: 600; color: var(--text-main); text-align: right; }
+  .etapes { text-align: left; margin: 18px 0 24px; padding-left: 20px; color: var(--text-main); line-height: 1.8; }
+  .bouton { display: inline-block; background: var(--green-deep); color: var(--gold-light); text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: 600; }
+  .bouton:hover { background: var(--green-mid); }
+  .petit { font-size: 13px; margin-top: 22px; }
+  .petit a { color: var(--gold); }
+  .rond { width: 34px; height: 34px; border: 3px solid rgba(184,150,90,0.25); border-top-color: var(--gold); border-radius: 50%; animation: tourne 0.9s linear infinite; }
+  @keyframes tourne { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<header><div class="brand">Nexa</div></header>
+<main>
+  <div class="carte" id="carte">
+    <div class="icone attente"><div class="rond"></div></div>
+    <h1>Vérification de ton paiement…</h1>
+    <p>Merci de patienter quelques secondes, nous confirmons ton paiement auprès de Stripe.</p>
+  </div>
+</main>
+<script>
+/* Page de remerciement apres paiement Stripe (24.09.2026).
+   Adresse a donner a Stripe : https://entrepreneur.contentviral.ch/merci-paiement.html?session_id={CHECKOUT_SESSION_ID} */
+(function () {
+  var API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-stripe-session-status';
+  var CONTACT = 'info.najim1@gmail.com';
+  var carte = document.getElementById('carte');
+  var sessionId = new URLSearchParams(window.location.search).get('session_id') || '';
+  var essais = 0;
+
+  function echapper(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+
+  function merci(d) {
+    var montant = (Number(d.montant) || 0).toFixed(2) + ' ' + echapper(d.devise || 'CHF');
+    carte.innerHTML =
+      '<div class="icone ok">✓</div>' +
+      '<h1>Merci pour ton paiement' + (d.prenom ? ', ' + echapper(d.prenom) : '') + ' !</h1>' +
+      '<p>Ton paiement est <b>confirmé</b>. Tout est en ordre.</p>' +
+      '<div class="recap">' +
+        '<div><span>Produit</span><span>' + echapper(d.produit || 'Achat Nexa') + '</span></div>' +
+        '<div><span>Montant payé</span><span>' + montant + '</span></div>' +
+        '<div><span>Date</span><span>' + echapper(d.date || '') + '</span></div>' +
+        (d.email ? '<div><span>Email</span><span>' + echapper(d.email) + '</span></div>' : '') +
+      '</div>' +
+      '<ol class="etapes">' +
+        '<li>Tu vas recevoir <b>un email de confirmation</b> avec ton reçu.</li>' +
+        '<li>Ton module est <b>activé automatiquement</b> sur ton compte (cela peut prendre une minute).</li>' +
+        '<li>Connecte-toi à ton espace pour commencer.</li>' +
+      '</ol>' +
+      '<a class="bouton" href="index.html">Accéder à mon espace Nexa</a>' +
+      '<p class="petit">Une question ? Écris-nous : <a href="mailto:' + CONTACT + '">' + CONTACT + '</a></p>';
+  }
+
+  function enAttente() {
+    carte.innerHTML =
+      '<div class="icone attente"><div class="rond"></div></div>' +
+      '<h1>Paiement en cours de confirmation…</h1>' +
+      '<p>Stripe n\'a pas encore confirmé ton paiement. Cette page se met à jour toute seule, ne la ferme pas.</p>';
+  }
+
+  function sansInfo() {
+    carte.innerHTML =
+      '<div class="icone info">i</div>' +
+      '<h1>Merci !</h1>' +
+      '<p>Nous n\'avons pas pu afficher le détail de ton paiement sur cette page.</p>' +
+      '<p>Si ton paiement a été accepté, tu vas recevoir <b>un email de confirmation</b> avec ton reçu dans quelques minutes.</p>' +
+      '<a class="bouton" href="index.html">Accéder à mon espace Nexa</a>' +
+      '<p class="petit">Pas d\'email d\'ici 30 minutes ? Écris-nous : <a href="mailto:' + CONTACT + '">' + CONTACT + '</a></p>';
+  }
+
+  function verifier() {
+    if (!/^cs_(live|test)_[A-Za-z0-9]+$/.test(sessionId)) { sansInfo(); return; }
+    fetch(API + '?session_id=' + encodeURIComponent(sessionId))
+      .then(function (r) { return r.json(); })
+      .then(function (d) {
+        if (d && d.paye) { merci(d); return; }
+        if (d && d.trouve && essais < 10) { essais++; enAttente(); setTimeout(verifier, 4000); return; }
+        sansInfo();
+      })
+      .catch(function () {
+        if (essais < 3) { essais++; setTimeout(verifier, 3000); return; }
+        sansInfo();
+      });
+  }
+  verifier();
+})();
+</script>
+</body>
+</html>
