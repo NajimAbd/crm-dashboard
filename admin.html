@@ -407,6 +407,9 @@
         <label class="product-row" title="Espace Webinaire / Show (Everwebinar) pour l'entrepreneur.">
           <input type="checkbox" id="chkWebinaire"> Webinaire / Show
         </label>
+        <label class="product-row sub" title="Show en enregistré (webinaire diffusé automatiquement + envoi de vidéos). Abonnement séparé.">
+          <input type="checkbox" id="chkShowEnregistre"> Show enregistré
+        </label>
         <hr>
         <label class="product-row" title="Débloque le pack de 6 outils : Crete, Staircase, Zahra, Sophy, Elarion AI, Challenge.">
           <input type="checkbox" id="chkLaboratoire"> Laboratoire
@@ -626,6 +629,7 @@
     const names = {
       premium: 'Premium',
       webinaire: 'Webinaire',
+      show_enregistre: 'Show enregistré',
       laboratoire: 'Laboratoire',
       iris_studio: 'Iris', iriscue: 'IrisCue',
       formation: 'Académie'
@@ -751,7 +755,7 @@
     }
   }
 
-  const PRODUCT_CHECKBOX_IDS = ['chkPremium','chkPremiumTrial','chkWebinaire','chkLaboratoire','chkLaboratoireTrial','chkIrisStudio','chkIriscue','chkIriscueTrial','chkFormation'];
+  const PRODUCT_CHECKBOX_IDS = ['chkPremium','chkPremiumTrial','chkWebinaire','chkShowEnregistre','chkLaboratoire','chkLaboratoireTrial','chkIrisStudio','chkIriscue','chkIriscueTrial','chkFormation'];
 
   function resetProductCheckboxes() {
     PRODUCT_CHECKBOX_IDS.forEach(id => { document.getElementById(id).checked = false; });
@@ -784,6 +788,7 @@
     resetProductCheckboxes();
     document.getElementById('chkPremium').checked = (acc.premium === 'oui');
     document.getElementById('chkWebinaire').checked = (acc.webinaire === 'oui');
+    document.getElementById('chkShowEnregistre').checked = (acc.show_enregistre === 'oui');
     document.getElementById('chkLaboratoire').checked = (acc.laboratoire === 'oui');
     document.getElementById('chkIrisStudio').checked = (acc.iris_studio === 'oui');
     document.getElementById('chkIriscue').checked = (acc.iriscue === 'oui');
@@ -1031,6 +1036,7 @@
       premium: document.getElementById('chkPremium').checked,
       premium_trial: document.getElementById('chkPremiumTrial').checked,
       webinaire: document.getElementById('chkWebinaire').checked,
+      show_enregistre: document.getElementById('chkShowEnregistre').checked,
       laboratoire: document.getElementById('chkLaboratoire').checked,
       laboratoire_trial: document.getElementById('chkLaboratoireTrial').checked,
       iris_studio: document.getElementById('chkIrisStudio').checked,
