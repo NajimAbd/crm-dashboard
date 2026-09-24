@@ -305,6 +305,7 @@
       <a id="irisBtn" class="product-btn disabled" onclick="handleLockedClick('irisBtn', goToIris)">Iris</a>
       <a id="iriscueBtn" class="product-btn disabled" onclick="handleLockedClick('iriscueBtn', goToIriscue)">IrisCue</a>
       <a id="formationBtn" class="product-btn disabled" onclick="handleLockedClick('formationBtn', function(){ window.location.href='formation.html'; })">Académie</a>
+      <a id="showEnrBtn" class="product-btn disabled" onclick="handleLockedClick('showEnrBtn', function(){ window.location.href='webinars.html#show-enregistre'; })">Show enregistré</a>
     </div>
     <div style="width:1px;height:24px;background:#2A3A2A;margin:0 4px"></div>
     <button class="logout-btn-gold" onclick="logout()">
@@ -354,15 +355,15 @@
   <hr class="section-divider">
 
   <div class="show-section">
-    <h2 class="show-section-title">🎬 Show en enregistré</h2>
+    <h2 class="show-section-title" id="show-enregistre">🎬 Show en enregistré</h2>
     <div class="show-section-sub">Webinaire uniquement — vidéo envoyée, diffusée automatiquement selon un horaire.</div>
     <div class="show-type-buttons">
       <div class="show-type-col">
-        <button class="show-type-btn" onclick="openCreateShowModal()">+ Webinaire</button>
+        <button class="show-type-btn se-verrou" style="opacity:0.35" onclick="siShowEnregistre(function(){ openCreateShowModal(); })">+ Webinaire</button>
         <a class="deroulement-link invisible">placeholder</a>
       </div>
       <div class="show-type-col">
-        <button class="show-type-btn filled" onclick="window.location.href='upload-video.html'">📹 Envoyer mes vidéos</button>
+        <button class="show-type-btn filled se-verrou" style="opacity:0.35" onclick="siShowEnregistre(function(){ window.location.href='upload-video.html'; })">📹 Envoyer mes vidéos</button>
         <a class="deroulement-link invisible">placeholder</a>
       </div>
     </div>
@@ -1371,5 +1372,40 @@
   }
 </script>
 
+<script>
+/* Show enregistre : bouton ouvert pour l'administrateur ou si le client l'a achete (24.09.2026) */
+(function(){
+  try {
+    var s = JSON.parse(localStorage.getItem('crm_session_user') || 'null');
+    var b = document.getElementById('showEnrBtn');
+    if (!s || !b) return;
+    if (s.role === 'super_admin') { b.classList.remove('disabled'); return; }
+    fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-show-enregistre-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: s.account_id }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if (d && d.show_enregistre) b.classList.remove('disabled'); })
+      .catch(function(){});
+  } catch (e) {}
+})();
+</script>
+<script>
+/* Section Show en enregistre : grisee tant que le client ne l'a pas achetee (24.09.2026) */
+var showEnregistreOk = false;
+function siShowEnregistre(action) {
+  if (showEnregistreOk) { action(); return; }
+  alert("Le Show enregistré fait partie d'un abonnement. Il n'est pas encore activé sur ton compte. Pour l'activer, contacte-nous : info.najim1@gmail.com");
+}
+(function(){
+  function ouvrir() { showEnregistreOk = true; document.querySelectorAll('.se-verrou').forEach(function(x){ x.style.opacity = ''; }); }
+  try {
+    var s = JSON.parse(localStorage.getItem('crm_session_user') || 'null');
+    if (!s) return;
+    if (s.role === 'super_admin') { ouvrir(); return; }
+    fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-show-enregistre-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: s.account_id }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if (d && d.show_enregistre) ouvrir(); })
+      .catch(function(){});
+  } catch (e) {}
+})();
+</script>
 </body>
 </html>
