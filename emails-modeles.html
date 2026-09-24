@@ -177,7 +177,7 @@
           <button type="button" class="zone taille" data-l="360">Moyenne</button>
           <button type="button" class="zone taille" data-l="560">Grande</button></span>
         <span id="msgImage" class="aide" style="margin:0 0 0 6px"></span></div>
-      <p class="aide">Clique sur une zone pour l'insérer à l'endroit du curseur. <b>&lt;p&gt;</b> = paragraphe, <b>&lt;b&gt;</b> = gras, <b>&lt;br&gt;</b> = retour à la ligne.</p>
+      <p class="aide"><b>Pour placer un bloc ou une image :</b> clique d'abord dans le texte, à l'endroit voulu (par exemple juste après un <b>&lt;/p&gt;</b>), puis sur le bouton. Clique sur une zone pour l'insérer à l'endroit du curseur. <b>&lt;p&gt;</b> = paragraphe, <b>&lt;b&gt;</b> = gras, <b>&lt;br&gt;</b> = retour à la ligne.</p>
       <div class="apercu-titre">Aperçu (avec un exemple de prénom et de date)</div>
       <div class="apercu"><div class="apercu-sujet" id="ap-sujet"></div><div class="apercu-mail" id="ap-mail"></div></div>
       <div class="ligne-actions">
@@ -192,12 +192,16 @@
     };
     sujet.addEventListener("input", maj); texte.addEventListener("input", maj); maj();
     let dernierChamp = texte;
+    // Position du curseur dans le texte, memorisee a chaque clic ou frappe (utilisee pour placer les blocs)
+    let curseur = texte.value.length;
+    ["click", "keyup", "select", "input", "focus"].forEach(ev => texte.addEventListener(ev, () => { curseur = texte.selectionStart ?? curseur; }));
     sujet.addEventListener("focus", () => dernierChamp = sujet);
     texte.addEventListener("focus", () => dernierChamp = texte);
-    const inserer = (c, v) => {
-      const d = c.selectionStart ?? c.value.length, f = c.selectionEnd ?? c.value.length;
+    const inserer = (c, v, pos) => {
+      const d = pos ?? c.selectionStart ?? c.value.length, f = pos ?? c.selectionEnd ?? c.value.length;
       c.value = c.value.slice(0, d) + v + c.value.slice(f);
       c.focus(); c.selectionStart = c.selectionEnd = d + v.length; maj();
+      if (c === texte) curseur = d + v.length;
     };
     document.querySelectorAll(".zone:not(.taille)").forEach(z => z.addEventListener("click", () => inserer(dernierChamp, z.dataset.z)));
     // Blocs : bouton, image, encadre, separateur, signature (toujours dans le texte)
@@ -209,8 +213,8 @@
     }));
     document.querySelectorAll(".bloc").forEach(bt => bt.addEventListener("click", () => {
       const b = bt.dataset.b;
-      if (b === "IMAGE") { positionImage = texte.selectionStart ?? texte.value.length; choixTaille.style.display = "inline-flex"; msgImage.textContent = "Choisis la taille de l'image :"; return; }
-      inserer(texte, "\n" + (b === "BOUTON" ? BOUTON : BLOCS[b]) + "\n");
+      if (b === "IMAGE") { positionImage = curseur; choixTaille.style.display = "inline-flex"; msgImage.textContent = "Choisis la taille de l'image :"; return; }
+      inserer(texte, "\n" + (b === "BOUTON" ? BOUTON : BLOCS[b]) + "\n", curseur);
     }));
     fichier.addEventListener("change", async () => {
       const f = fichier.files[0]; fichier.value = "";
@@ -221,8 +225,7 @@
         const r = await fetch(IMAGE_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "upload", nom: f.name, mime, data }) });
         const j = await r.json();
         if (!j.success) throw new Error(j.erreur || "erreur");
-        texte.selectionStart = texte.selectionEnd = positionImage;
-        inserer(texte, "\n" + imageHtml(j.url, largeurImage) + "\n");
+        inserer(texte, "\n" + imageHtml(j.url, largeurImage) + "\n", positionImage);
         msgImage.textContent = "Image ajoutée ✔ (pense à Enregistrer)";
       } catch (e) { msgImage.textContent = "Échec de l'envoi de l'image. Réessaie."; }
     });
