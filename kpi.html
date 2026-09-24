@@ -1499,7 +1499,7 @@
     body.innerHTML = '<div class="treasury-loading">Chargement…</div>';
     try {
       const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-tresorerie-manuelle', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get' })
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'get', account_id: session ? session.account_id : null })
       });
       const data = await resp.json();
       lastManualSources = data.sources || [];
@@ -1559,7 +1559,7 @@
 
     try {
       const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-tresorerie-manuelle', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set', source, montant: newValue })
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'set', source, montant: newValue, account_id: session ? session.account_id : null })
       });
       const data = await resp.json();
       const freshSources = data.sources || lastManualSources;
@@ -1586,7 +1586,7 @@
     const body = document.getElementById('treasuryBody');
     body.innerHTML = '<div class="treasury-loading">Chargement de la trésorerie…</div>';
     try {
-      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-stripe-balance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({}) });
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-stripe-balance', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: session ? session.account_id : null }) });
       const data = await resp.json();
 
       // Charges mensuelles recurrentes, meme logique que le module Finances
