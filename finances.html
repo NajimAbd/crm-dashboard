@@ -177,6 +177,7 @@
       <a id="irisBtn" class="product-btn disabled" onclick="handleLockedClick('irisBtn', goToIris)">Iris</a>
       <a id="iriscueBtn" class="product-btn disabled" onclick="handleLockedClick('iriscueBtn', goToIriscue)">IrisCue</a>
       <a id="formationBtn" class="product-btn disabled" onclick="handleLockedClick('formationBtn', function(){ window.location.href='formation.html'; })">Académie</a>
+      <a id="showEnrBtn" class="product-btn disabled" onclick="handleLockedClick('showEnrBtn', function(){ window.location.href='webinars.html#show-enregistre'; })">Show enregistré</a>
     </div>
     <div style="width:1px;height:24px;background:#2A3A2A;margin:0 4px"></div>
     <button class="logout-btn-gold" onclick="logout()">
@@ -667,5 +668,20 @@
   loadAll();
 </script>
 
+<script>
+/* Show enregistre : bouton ouvert pour l'administrateur ou si le client l'a achete (24.09.2026) */
+(function(){
+  try {
+    var s = JSON.parse(localStorage.getItem('crm_session_user') || 'null');
+    var b = document.getElementById('showEnrBtn');
+    if (!s || !b) return;
+    if (s.role === 'super_admin') { b.classList.remove('disabled'); return; }
+    fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-show-enregistre-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: s.account_id }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if (d && d.show_enregistre) b.classList.remove('disabled'); })
+      .catch(function(){});
+  } catch (e) {}
+})();
+</script>
 </body>
 </html>
