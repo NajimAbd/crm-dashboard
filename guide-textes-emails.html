@@ -29,7 +29,7 @@
 <div class="wrap">
   <a href="emails-modeles.html">← Retour à l'éditeur des textes</a>
   <h1>Guide : modifier les textes des emails automatiques</h1>
-  <p class="sub">Tout ce qu'il faut savoir pour changer un email sans rien casser. Temps de lecture : 5 minutes.</p>
+  <p class="sub">Tout ce qu'il faut savoir pour changer un email sans rien casser. Temps de lecture : 4 minutes.</p>
 
   <h2>1. Où se trouvent les textes ?</h2>
   <ol>
@@ -41,50 +41,41 @@
   <h2>2. Modifier un email, étape par étape</h2>
   <ol>
     <li>Clique sur l'email dans la liste de gauche.</li>
-    <li>Modifie le <b>Sujet</b> (la ligne que le client voit dans sa boîte mail).</li>
-    <li>Modifie le <b>Texte</b> : clique à l'endroit voulu et tape normalement.</li>
-    <li>Vérifie le résultat dans l'<b>aperçu</b> en dessous.</li>
-    <li>Quand le texte te convient, coche <b>« Texte validé »</b>.</li>
-    <li>Clique sur <b>Enregistrer</b>. Le message « Enregistré ✔ » confirme la sauvegarde.</li>
+    <li>Modifie le <b>Sujet</b> (la ligne que le client voit dans sa boîte mail). Juste en dessous, tu vois le sujet avec un exemple de prénom.</li>
+    <li>Clique <b>directement dans l'email</b> et écris, comme dans Word. <b>Entrée</b> crée une nouvelle ligne, <b>Retour arrière</b> efface.</li>
+    <li>Pour mettre des mots en <b>gras</b> : sélectionne-les, puis clique sur <b>G Gras</b>.</li>
+    <li>Quand le texte te convient, coche <b>« Texte validé »</b>, puis clique sur <b>Enregistrer</b>. Le message « Enregistré ✔ » confirme la sauvegarde.</li>
   </ol>
-  <div class="boite ok"><b>✅ Bon à savoir</b>Le nouveau texte est utilisé pour les <b>prochains</b> envois. Les emails déjà partis ne changent pas.</div>
+  <div class="boite ok"><b>✅ Bon à savoir</b>Le nouveau texte est utilisé pour les <b>prochains</b> envois. Les emails déjà partis ne changent pas. Si tu t'es trompé avant d'enregistrer, recharge simplement la page.</div>
 
-  <h2>3. Les zones automatiques (entre accolades)</h2>
-  <p>Ces zones sont remplacées automatiquement pour chaque personne. Pour en ajouter une, clique sur son bouton sous le texte : elle s'insère à l'endroit du curseur.</p>
+  <h2>3. Les étiquettes dorées (zones automatiques)</h2>
+  <p>Les étiquettes dorées comme <b>Prénom</b> ou <b>Date de début</b> sont remplacées automatiquement pour chaque personne. Pour en ajouter une : clique à l'endroit voulu dans l'email, puis sur l'étiquette dans la ligne <b>Zones automatiques</b>.</p>
   <table>
-    <tr><th>Zone</th><th>Remplacée par</th><th>Exemple</th></tr>
-    <tr><td><code>{{prenom}}</code></td><td>Le prénom du client</td><td>Aïcha</td></tr>
-    <tr><td><code>{{titre_challenge}}</code></td><td>Le nom du challenge</td><td>Challenge Guérison Roqya</td></tr>
-    <tr><td><code>{{date_debut}}</code></td><td>Le premier jour du challenge</td><td>jeudi 1 octobre</td></tr>
-    <tr><td><code>{{heure_direct}}</code></td><td>L'heure du direct</td><td>20h00</td></tr>
-    <tr><td><code>{{jours_restants_texte}}</code></td><td>Le nombre de jours avant le début</td><td>2 jours / 1 jour</td></tr>
-    <tr><td><code>{{lien_direct}}</code></td><td>Le lien Zoom du direct</td><td>(lien du challenge)</td></tr>
-    <tr><td><code>{{lien_replay}}</code></td><td>Le lien du replay</td><td>(lien du challenge)</td></tr>
-    <tr><td><code>{{lien_rdv}}</code></td><td>Le lien de prise de rendez-vous (Calendly)</td><td>(lien du challenge)</td></tr>
-    <tr><td><code>{{lien_inscription}}</code></td><td>Le lien d'inscription au challenge (emails d'invitation aux anciens leads)</td><td>(lien du challenge)</td></tr>
+    <tr><th>Étiquette</th><th>Remplacée par</th><th>Exemple</th></tr>
+    <tr><td>Prénom</td><td>Le prénom du client</td><td>Aïcha</td></tr>
+    <tr><td>Nom du challenge</td><td>Le nom du challenge</td><td>Challenge Guérison Roqya</td></tr>
+    <tr><td>Date de début</td><td>Le premier jour du challenge</td><td>jeudi 1 octobre</td></tr>
+    <tr><td>Heure du direct</td><td>L'heure du direct</td><td>20h00</td></tr>
+    <tr><td>Jours restants</td><td>Le nombre de jours avant le début</td><td>2 jours / 1 jour</td></tr>
   </table>
-  <div class="boite attention"><b>⚠️ Attention</b>Écris les zones <b>exactement</b> comme dans le tableau : deux accolades de chaque côté, sans espace, sans accent. <code>{{prenom}}</code> fonctionne, <code>{prenom}</code> ou <code>{{ Prénom }}</code> ne fonctionnent pas : le client verrait le texte tel quel.</div>
+  <div class="boite attention"><b>⚠️ Dans le sujet</b>Le sujet est une simple ligne de texte : les zones y apparaissent entre accolades, par exemple <code>{{prenom}}</code>. Clique dans le sujet, puis sur l'étiquette pour l'ajouter.</div>
 
-  <h2>4. Les petits codes de mise en page</h2>
-  <p>Le texte contient quelques codes entre chevrons. Ils servent uniquement à la mise en page.</p>
-  <table>
-    <tr><th>Code</th><th>Rôle</th></tr>
-    <tr><td><code>&lt;p&gt;</code> … <code>&lt;/p&gt;</code></td><td>Un paragraphe (un bloc de texte avec un espace en dessous)</td></tr>
-    <tr><td><code>&lt;b&gt;</code> … <code>&lt;/b&gt;</code></td><td>Met le texte en <b>gras</b></td></tr>
-    <tr><td><code>&lt;br&gt;</code></td><td>Retour à la ligne, sans espace</td></tr>
-  </table>
-  <p>Exemple : pour changer « un cahier » en « un carnet », ne modifie que le mot :</p>
-  <div class="exemple">&lt;p&gt;Conseil : prépare <b>un carnet</b> et un stylo.&lt;/p&gt;</div>
-  <div class="boite danger"><b>⛔ À ne pas faire</b>Ne supprime jamais un <code>&lt;p&gt;</code> sans son <code>&lt;/p&gt;</code>, ni un <code>&lt;b&gt;</code> sans son <code>&lt;/b&gt;</code>. Tout le reste de l'email risquerait de s'afficher en gras ou collé. Si l'aperçu devient bizarre, annule ta dernière modification avec <b>Ctrl + Z</b>.</div>
+  <h2>4. Les objets : bouton, image, encadré, séparateur, signature</h2>
+  <ol>
+    <li><b>Ajouter</b> : clique dans l'email sur la ligne après laquelle tu veux l'objet, puis sur le bouton noir (🔘 Bouton, 🖼️ Image, 📦 Encadré, ➖ Séparateur, ✍️ Signature).</li>
+    <li><b>Image</b> : choisis d'abord la taille (Petite, Moyenne, Grande), puis la photo sur ton ordinateur. Elle est envoyée et placée automatiquement.</li>
+    <li><b>Choisir un objet</b> : clique dessus. Un cadre doré l'entoure et une barre apparaît au-dessus de l'email.</li>
+    <li>Dans cette barre : <b>⬆️ Monter</b> / <b>⬇️ Descendre</b> pour le déplacer, <b>🗑️ Supprimer</b> pour l'enlever. Pour une image : sa taille. Pour un bouton : son <b>texte</b> et sa destination (<b>Mène vers</b> : direct, replay, rendez-vous ou inscription).</li>
+  </ol>
+  <div class="boite attention"><b>⚠️ Les liens viennent du challenge</b>Les liens Zoom, replay, rendez-vous et inscription sont enregistrés <b>dans chaque challenge</b> (bouton ✏️ Modifier le challenge), pas dans le texte. Si un bouton ne mène nulle part, c'est que le lien n'a pas encore été rempli pour ce challenge.</div>
 
-  <h2>5. Les boutons cliquables</h2>
-  <p>Le bouton <b>+ Bouton</b> insère un bouton prêt à l'emploi. Change seulement le texte <b>« Texte du bouton »</b>. Pour changer sa destination, remplace <code>{{lien_direct}}</code> dans le code du bouton par <code>{{lien_replay}}</code> ou <code>{{lien_rdv}}</code>.</p>
-  <div class="boite attention"><b>⚠️ Les liens viennent du challenge</b>Les liens Zoom, replay, rendez-vous et inscription sont enregistrés <b>dans chaque challenge</b>, pas dans le texte. Si un bouton ne mène nulle part, c'est que le lien n'a pas encore été rempli pour ce challenge.</div>
+  <h2>5. La signature commune</h2>
+  <p>Tout en haut de la liste se trouve <b>Signature (commune à tous les emails)</b>. Modifie-la une seule fois : tous les emails qui contiennent le cadre pointillé « Signature » l'utilisent automatiquement.</p>
 
   <h2>6. Points d'attention avant un vrai lancement</h2>
   <ul>
     <li><b>Tous les emails doivent être « Validé »</b> (badge vert) avant d'activer un challenge.</li>
-    <li>Les textes sont <b>communs à tous les challenges</b> du même type. Évite les dates écrites en dur : utilise <code>{{date_debut}}</code> et <code>{{heure_direct}}</code>.</li>
+    <li>Les textes sont <b>communs à tous les challenges</b> du même type. Évite les dates écrites en dur : utilise les étiquettes <b>Date de début</b> et <b>Heure du direct</b>.</li>
     <li>Pour l'instant, les textes existent en <b>français</b> uniquement. Les autres langues seront ajoutées plus tard.</li>
     <li>Avant une grosse modification, <b>copie l'ancien texte</b> (Ctrl + A, puis Ctrl + C) dans une note, pour pouvoir revenir en arrière.</li>
     <li>Les emojis (🔥 ✅ 📅) fonctionnent dans le sujet et dans le texte.</li>
