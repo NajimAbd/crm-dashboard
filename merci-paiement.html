@@ -5,55 +5,108 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nexa — Merci pour ton paiement</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600&display=swap');
   :root {
-    --green-deep: #0D1A12;
+    --green-deep: #0B1610;
+    --green: #0D1A12;
     --green-mid: #16261A;
     --gold: #B8965A;
-    --gold-light: #D4AF7A;
-    --cream: #F4ECE0;
-    --bg-soft: #FAF7F1;
-    --text-main: #2C2C2A;
-    --text-soft: #6B6A66;
-    --ok: #3D7A4F;
-    --warn: #A8742A;
+    --gold-light: #D9BC84;
+    --gold-pale: #F1E4C6;
+    --cream: #F6F0E4;
+    --bg: #FAF7F1;
+    --text: #1F2420;
+    --soft: #6E6B63;
+    --line: #ECE3D2;
   }
   * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; background: var(--bg-soft); color: var(--text-main); font-family: 'Inter', sans-serif; display: flex; flex-direction: column; }
-  header { background: var(--green-deep); padding: 18px 24px; border-bottom: 2px solid var(--gold); }
-  header .brand { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; color: var(--cream); }
-  main { flex: 1; display: flex; align-items: flex-start; justify-content: center; padding: 48px 16px; }
-  .carte { width: 100%; max-width: 560px; background: #fff; border: 1px solid #E8E0D2; border-radius: 18px; padding: 36px 32px; text-align: center; box-shadow: 0 8px 30px rgba(13,26,18,0.06); }
-  .icone { width: 72px; height: 72px; border-radius: 50%; margin: 0 auto 18px; display: flex; align-items: center; justify-content: center; font-size: 36px; }
-  .icone.ok { background: rgba(61,122,79,0.12); color: var(--ok); }
-  .icone.attente { background: rgba(184,150,90,0.14); color: var(--gold); }
-  .icone.info { background: rgba(168,116,42,0.12); color: var(--warn); }
-  h1 { font-family: 'Cormorant Garamond', serif; font-size: 34px; margin: 0 0 10px; color: var(--green-deep); }
-  p { line-height: 1.6; color: var(--text-soft); margin: 0 0 14px; }
-  .recap { text-align: left; background: var(--bg-soft); border: 1px solid #EFE7D8; border-radius: 12px; padding: 16px 18px; margin: 20px 0; }
-  .recap div { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; font-size: 15px; }
-  .recap div span:first-child { color: var(--text-soft); }
-  .recap div span:last-child { font-weight: 600; color: var(--text-main); text-align: right; }
-  .etapes { text-align: left; margin: 18px 0 24px; padding-left: 20px; color: var(--text-main); line-height: 1.8; }
-  .bouton { display: inline-block; background: var(--green-deep); color: var(--gold-light); text-decoration: none; padding: 14px 28px; border-radius: 10px; font-weight: 600; }
-  .bouton:hover { background: var(--green-mid); }
-  .petit { font-size: 13px; margin-top: 22px; }
-  .petit a { color: var(--gold); }
-  .rond { width: 34px; height: 34px; border: 3px solid rgba(184,150,90,0.25); border-top-color: var(--gold); border-radius: 50%; animation: tourne 0.9s linear infinite; }
+  html, body { margin: 0; }
+  body { min-height: 100vh; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; -webkit-font-smoothing: antialiased; }
+
+  /* Bandeau haut */
+  .hero { position: relative; background: radial-gradient(1200px 500px at 50% -10%, #1F3526 0%, var(--green) 55%, var(--green-deep) 100%); padding: 28px 20px 205px; text-align: center; overflow: hidden; }
+  .hero::after { content: ''; position: absolute; inset: 0; background: repeating-linear-gradient(135deg, rgba(217,188,132,0.035) 0 2px, transparent 2px 14px); pointer-events: none; }
+  .brand { position: relative; z-index: 1; display: inline-flex; align-items: center; gap: 10px; color: var(--cream); font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; letter-spacing: 0.5px; }
+  .brand .point { width: 8px; height: 8px; border-radius: 50%; background: var(--gold); box-shadow: 0 0 14px var(--gold); }
+  .hero .sur-titre { position: relative; z-index: 1; margin-top: 14px; color: var(--gold-light); font-size: 12px; letter-spacing: 3px; text-transform: uppercase; font-weight: 600; }
+
+  /* Carte */
+  main { position: relative; z-index: 2; max-width: 620px; margin: -120px auto 0; padding: 0 16px 48px; }
+  .carte { background: #fff; border: 1px solid var(--line); border-radius: 24px; padding: 44px 40px 36px; text-align: center; box-shadow: 0 24px 60px rgba(11,22,16,0.14), 0 2px 6px rgba(11,22,16,0.05); }
+  @media (max-width: 520px) { .carte { padding: 36px 22px 28px; } }
+
+  /* Coche animée */
+  .sceau { width: 104px; height: 104px; margin: -96px auto 22px; border-radius: 50%; background: linear-gradient(145deg, var(--gold-light), var(--gold)); display: flex; align-items: center; justify-content: center; box-shadow: 0 12px 30px rgba(184,150,90,0.45), inset 0 2px 0 rgba(255,255,255,0.4); border: 6px solid #fff; }
+  .sceau svg { width: 48px; height: 48px; }
+  .sceau path { fill: none; stroke: var(--green); stroke-width: 3.4; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 40; stroke-dashoffset: 40; animation: trace 0.7s 0.25s ease-out forwards; }
+  @keyframes trace { to { stroke-dashoffset: 0; } }
+  .sceau.attente { background: linear-gradient(145deg, #F4ECDC, #E9DDC4); }
+  .sceau.info { background: linear-gradient(145deg, #F4ECDC, #E9DDC4); color: var(--gold); font-family: 'Cormorant Garamond', serif; font-size: 44px; font-weight: 700; }
+  .rond { width: 40px; height: 40px; border: 3px solid rgba(184,150,90,0.25); border-top-color: var(--gold); border-radius: 50%; animation: tourne 0.9s linear infinite; }
   @keyframes tourne { to { transform: rotate(360deg); } }
+
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 700; font-size: 40px; line-height: 1.1; margin: 0 0 12px; color: var(--green); }
+  h1 em { font-style: italic; color: var(--gold); font-weight: 600; }
+  @media (max-width: 520px) { h1 { font-size: 32px; } }
+  .intro { color: var(--soft); font-size: 16px; line-height: 1.6; margin: 0 auto 26px; max-width: 440px; }
+  .badge { display: inline-flex; align-items: center; gap: 8px; background: #EEF5EF; color: #2F6B40; font-size: 13px; font-weight: 600; padding: 7px 14px; border-radius: 999px; margin-bottom: 18px; }
+  .badge::before { content: ''; width: 7px; height: 7px; border-radius: 50%; background: #3D8B55; }
+
+  /* Récapitulatif */
+  .recap { border: 1px solid var(--line); border-radius: 16px; overflow: hidden; margin: 0 0 28px; text-align: left; }
+  .recap .tete { background: linear-gradient(90deg, #FBF6EC, #F6EEDD); padding: 18px 22px; display: flex; justify-content: space-between; align-items: center; gap: 14px; border-bottom: 1px solid var(--line); }
+  .recap .produit { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 700; color: var(--green); }
+  .recap .montant { font-family: 'Cormorant Garamond', serif; font-size: 26px; font-weight: 700; color: var(--gold); white-space: nowrap; }
+  .recap .ligne { display: flex; justify-content: space-between; gap: 12px; padding: 12px 22px; font-size: 14px; border-bottom: 1px solid #F3EDE1; }
+  .recap .ligne:last-child { border-bottom: none; }
+  .recap .ligne span:first-child { color: var(--soft); }
+  .recap .ligne span:last-child { font-weight: 600; text-align: right; word-break: break-all; }
+
+  /* Étapes */
+  .etapes-titre { font-size: 12px; letter-spacing: 2px; text-transform: uppercase; color: var(--gold); font-weight: 700; text-align: left; margin: 0 0 12px; }
+  .etapes { list-style: none; padding: 0; margin: 0 0 30px; text-align: left; }
+  .etapes li { display: flex; gap: 14px; align-items: flex-start; padding: 12px 0; }
+  .etapes .num { flex: 0 0 34px; height: 34px; border-radius: 50%; background: var(--green); color: var(--gold-light); font-family: 'Cormorant Garamond', serif; font-size: 18px; font-weight: 700; display: flex; align-items: center; justify-content: center; }
+  .etapes b { display: block; font-size: 15px; color: var(--text); margin-bottom: 2px; }
+  .etapes span.texte { font-size: 14px; color: var(--soft); line-height: 1.5; }
+
+  .bouton { display: inline-flex; align-items: center; justify-content: center; gap: 10px; width: 100%; background: linear-gradient(135deg, var(--green-mid), var(--green)); color: var(--gold-light); text-decoration: none; padding: 17px 28px; border-radius: 14px; font-weight: 600; font-size: 16px; letter-spacing: 0.2px; box-shadow: 0 10px 24px rgba(13,26,18,0.25); transition: transform 0.15s ease, box-shadow 0.15s ease; }
+  .bouton:hover { transform: translateY(-1px); box-shadow: 0 14px 30px rgba(13,26,18,0.3); }
+  .bouton .fleche { transition: transform 0.15s ease; }
+  .bouton:hover .fleche { transform: translateX(3px); }
+
+  .aide { margin-top: 20px; font-size: 13px; color: var(--soft); }
+  .aide a { color: var(--gold); font-weight: 600; text-decoration: none; }
+
+  footer { text-align: center; color: #9A958A; font-size: 12px; padding: 0 16px 36px; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  footer .securise { display: inline-flex; align-items: center; gap: 6px; }
+
+  .apparait { animation: monte 0.6s ease-out both; }
+  @keyframes monte { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @media (prefers-reduced-motion: reduce) { .apparait, .sceau path, .rond { animation: none; stroke-dashoffset: 0; } }
 </style>
 </head>
 <body>
-<header><div class="brand">Nexa</div></header>
+<header class="hero">
+  <div class="brand"><span class="point"></span>Nexa</div>
+  <div class="sur-titre">Confirmation de paiement</div>
+</header>
+
 <main>
-  <div class="carte" id="carte">
-    <div class="icone attente"><div class="rond"></div></div>
-    <h1>Vérification de ton paiement…</h1>
-    <p>Merci de patienter quelques secondes, nous confirmons ton paiement auprès de Stripe.</p>
+  <div class="carte apparait" id="carte">
+    <div class="sceau attente"><div class="rond"></div></div>
+    <h1>Un instant…</h1>
+    <p class="intro">Nous confirmons ton paiement auprès de Stripe. Cela prend quelques secondes.</p>
   </div>
 </main>
+
+<footer>
+  <span class="securise">🔒 Paiement sécurisé par Stripe</span>
+  <span>RoqyaSuisse · Nexa — Lausanne, Suisse</span>
+</footer>
+
 <script>
-/* Page de remerciement apres paiement Stripe (24.09.2026).
+/* Page de remerciement apres paiement Stripe (version premium, 24.09.2026).
    Adresse a donner a Stripe : https://entrepreneur.contentviral.ch/merci-paiement.html?session_id={CHECKOUT_SESSION_ID} */
 (function () {
   var API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-stripe-session-status';
@@ -63,43 +116,49 @@
   var essais = 0;
 
   function echapper(t) { return String(t == null ? '' : t).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
+  function afficher(html) { carte.classList.remove('apparait'); void carte.offsetWidth; carte.innerHTML = html; carte.classList.add('apparait'); }
+  var coche = '<div class="sceau"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.2 4.2L19 7"/></svg></div>';
 
   function merci(d) {
     var montant = (Number(d.montant) || 0).toFixed(2) + ' ' + echapper(d.devise || 'CHF');
-    carte.innerHTML =
-      '<div class="icone ok">✓</div>' +
-      '<h1>Merci pour ton paiement' + (d.prenom ? ', ' + echapper(d.prenom) : '') + ' !</h1>' +
-      '<p>Ton paiement est <b>confirmé</b>. Tout est en ordre.</p>' +
+    afficher(
+      coche +
+      '<div class="badge">Paiement confirmé</div>' +
+      '<h1>Merci' + (d.prenom ? ', <em>' + echapper(d.prenom) + '</em>' : '') + ' !</h1>' +
+      '<p class="intro">Ton paiement est bien reçu. Bienvenue — tout est prêt pour la suite.</p>' +
       '<div class="recap">' +
-        '<div><span>Produit</span><span>' + echapper(d.produit || 'Achat Nexa') + '</span></div>' +
-        '<div><span>Montant payé</span><span>' + montant + '</span></div>' +
-        '<div><span>Date</span><span>' + echapper(d.date || '') + '</span></div>' +
-        (d.email ? '<div><span>Email</span><span>' + echapper(d.email) + '</span></div>' : '') +
+        '<div class="tete"><span class="produit">' + echapper(d.produit || 'Achat Nexa') + '</span><span class="montant">' + montant + '</span></div>' +
+        '<div class="ligne"><span>Date</span><span>' + echapper(d.date || '') + '</span></div>' +
+        (d.email ? '<div class="ligne"><span>Email</span><span>' + echapper(d.email) + '</span></div>' : '') +
+        '<div class="ligne"><span>Statut</span><span style="color:#2F6B40">Payé ✓</span></div>' +
       '</div>' +
+      '<div class="etapes-titre">La suite</div>' +
       '<ol class="etapes">' +
-        '<li>Tu vas recevoir <b>un email de confirmation</b> avec ton reçu.</li>' +
-        '<li>Ton module est <b>activé automatiquement</b> sur ton compte (cela peut prendre une minute).</li>' +
-        '<li>Connecte-toi à ton espace pour commencer.</li>' +
+        '<li><span class="num">1</span><div><b>Ton reçu arrive par email</b><span class="texte">Tu vas recevoir ton reçu officiel dans quelques minutes. Pense à regarder aussi les indésirables.</span></div></li>' +
+        '<li><span class="num">2</span><div><b>Ton accès est activé</b><span class="texte">Ton module est ouvert automatiquement sur ton compte (cela peut prendre une minute).</span></div></li>' +
+        '<li><span class="num">3</span><div><b>Commence maintenant</b><span class="texte">Connecte-toi à ton espace Nexa pour découvrir ce que tu viens d\'acquérir.</span></div></li>' +
       '</ol>' +
-      '<a class="bouton" href="index.html">Accéder à mon espace Nexa</a>' +
-      '<p class="petit">Une question ? Écris-nous : <a href="mailto:' + CONTACT + '">' + CONTACT + '</a></p>';
+      '<a class="bouton" href="index.html">Accéder à mon espace Nexa <span class="fleche">→</span></a>' +
+      '<p class="aide">Une question ? Écris-nous : <a href="mailto:' + CONTACT + '">' + CONTACT + '</a></p>'
+    );
   }
 
   function enAttente() {
-    carte.innerHTML =
-      '<div class="icone attente"><div class="rond"></div></div>' +
-      '<h1>Paiement en cours de confirmation…</h1>' +
-      '<p>Stripe n\'a pas encore confirmé ton paiement. Cette page se met à jour toute seule, ne la ferme pas.</p>';
+    afficher(
+      '<div class="sceau attente"><div class="rond"></div></div>' +
+      '<h1>Presque terminé…</h1>' +
+      '<p class="intro">Stripe finalise la confirmation de ton paiement. Cette page se met à jour toute seule, ne la ferme pas.</p>'
+    );
   }
 
   function sansInfo() {
-    carte.innerHTML =
-      '<div class="icone info">i</div>' +
-      '<h1>Merci !</h1>' +
-      '<p>Nous n\'avons pas pu afficher le détail de ton paiement sur cette page.</p>' +
-      '<p>Si ton paiement a été accepté, tu vas recevoir <b>un email de confirmation</b> avec ton reçu dans quelques minutes.</p>' +
-      '<a class="bouton" href="index.html">Accéder à mon espace Nexa</a>' +
-      '<p class="petit">Pas d\'email d\'ici 30 minutes ? Écris-nous : <a href="mailto:' + CONTACT + '">' + CONTACT + '</a></p>';
+    afficher(
+      '<div class="sceau info">i</div>' +
+      '<h1>Merci pour ta confiance</h1>' +
+      '<p class="intro">Nous n\'avons pas pu afficher le détail de ton paiement sur cette page. Si ton paiement a été accepté, tu vas recevoir <b>un email de confirmation</b> avec ton reçu dans quelques minutes.</p>' +
+      '<a class="bouton" href="index.html">Accéder à mon espace Nexa <span class="fleche">→</span></a>' +
+      '<p class="aide">Pas d\'email d\'ici 30 minutes ? Écris-nous : <a href="mailto:' + CONTACT + '">' + CONTACT + '</a></p>'
+    );
   }
 
   function verifier() {
@@ -108,7 +167,7 @@
       .then(function (r) { return r.json(); })
       .then(function (d) {
         if (d && d.paye) { merci(d); return; }
-        if (d && d.trouve && essais < 10) { essais++; enAttente(); setTimeout(verifier, 4000); return; }
+        if (d && d.trouve && essais < 10) { essais++; if (essais === 1) enAttente(); setTimeout(verifier, 4000); return; }
         sansInfo();
       })
       .catch(function () {
