@@ -59,6 +59,24 @@
     font-size: 0.68rem; padding: 6px 8px;
   }
   thead th.center, tbody td.center { text-align: center; }
+  /* Lampes : cacher / montrer une phase (25.09.2026) */
+  .lampe {
+    display: inline-flex; align-items: center; justify-content: center; vertical-align: middle;
+    width: 22px; height: 22px; margin-left: 6px; padding: 0; border: none; border-radius: 50%;
+    background: transparent; cursor: pointer; transition: background .15s, transform .15s;
+  }
+  .lampe:hover { background: rgba(107, 90, 46, 0.12); transform: scale(1.1); }
+  .lampe svg { display: block; }
+  .lampe .ampoule { fill: #F2C94C; stroke: #8B6E3A; }
+  .lampe .rayons { stroke: #E0A800; }
+  .lampe.eteinte .ampoule { fill: #ffffff; stroke: #9a9180; }
+  .lampe.eteinte .rayons { display: none; }
+  thead tr.phase-row th.phase-fermee { background: #efe8d6; color: #9a9180; cursor: pointer; }
+  .plie { display: none; min-width: 34px; width: 34px; padding: 0 !important;
+    background: repeating-linear-gradient(135deg, #faf6ec, #faf6ec 6px, #f1eadb 6px, #f1eadb 12px); }
+  .plie-lbl { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 0.66rem; letter-spacing: 0.08em; color: #9a9180; display: inline-block; padding: 6px 0; }
+  table.ferme-avant .ph-avant, table.ferme-durant .ph-durant, table.ferme-apres .ph-apres, table.ferme-suivi .ph-suivi { display: none; }
+  table.ferme-avant .plie-avant, table.ferme-durant .plie-durant, table.ferme-apres .plie-apres, table.ferme-suivi .plie-suivi { display: table-cell; }
   tbody td { padding: 10px 12px; border-bottom: 1px solid var(--line); font-size: 0.9rem; white-space: nowrap; }
   tbody tr:last-child td { border-bottom: none; }
 
@@ -187,11 +205,40 @@
     return recu ? `<span class="mail-icon mail-oui" title="Email envoyé (pas encore ouvert)">${ENVELOPPE_OK}</span>` : '';
   }
 
+  // === Lampes : cacher / montrer les colonnes d'une phase (25.09.2026) ===
+  const LAMPE_SVG = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><g class="rayons"><line x1="12" y1="1.5" x2="12" y2="3"/><line x1="4.5" y1="4.5" x2="5.6" y2="5.6"/><line x1="19.5" y1="4.5" x2="18.4" y2="5.6"/><line x1="2" y1="11" x2="3.5" y2="11"/><line x1="20.5" y1="11" x2="22" y2="11"/></g><path class="ampoule" d="M12 5a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1 2V18h5.2v-.2c0-.8.4-1.5 1-2A6 6 0 0 0 12 5z"/><line x1="9.8" y1="20.5" x2="14.2" y2="20.5" stroke="#8B6E3A"/><line x1="10.6" y1="22.5" x2="13.4" y2="22.5" stroke="#8B6E3A"/></svg>';
+  let phasesFermees = {};
+  try { phasesFermees = JSON.parse(localStorage.getItem('inscrits_phases_fermees') || '{}') || {}; } catch (e) { phasesFermees = {}; }
+  function entetePhase(cle, titre, nb) {
+    return `<th colspan="${nb}" data-phase="${cle}" data-nb="${nb}" title="Clique sur la lampe pour cacher ou montrer ces colonnes"><span class="phase-titre">${titre}</span><button type="button" class="lampe" onclick="basculerPhase('${cle}')" aria-label="Cacher ou montrer : ${titre}">${LAMPE_SVG}</button></th>`;
+  }
+  function appliquerPhases() {
+    const t = document.getElementById('tableInscrits');
+    if (!t) return;
+    t.querySelectorAll('thead th[data-phase]').forEach(th => {
+      const cle = th.dataset.phase;
+      const ferme = !!phasesFermees[cle];
+      t.classList.toggle('ferme-' + cle, ferme);
+      th.colSpan = ferme ? 1 : Number(th.dataset.nb);
+      th.classList.toggle('phase-fermee', ferme);
+      th.querySelector('.phase-titre').style.display = ferme ? 'none' : '';
+      const b = th.querySelector('.lampe');
+      b.classList.toggle('eteinte', ferme);
+      b.title = ferme ? 'Lampe éteinte : clique pour montrer les colonnes' : 'Lampe allumée : clique pour cacher les colonnes';
+      th.onclick = ferme ? (ev) => { if (!ev.target.closest('.lampe')) basculerPhase(cle); } : null;
+    });
+  }
+  function basculerPhase(cle) {
+    phasesFermees[cle] = !phasesFermees[cle];
+    try { localStorage.setItem('inscrits_phases_fermees', JSON.stringify(phasesFermees)); } catch (e) {}
+    appliquerPhases();
+  }
+
   function renderTable(participants) {
     // Au moins une colonne "Jour 1", meme si les jours du show ne sont pas encore crees
     const nbJours = Math.max(allJours.length, 1);
     const jourLabels = Array.from({ length: nbJours }, (_, idx) => `Jour ${idx + 1}`);
-    const headerJours = jourLabels.map(l => `<th class="center">${l}</th>`).join("");
+    const headerJours = jourLabels.map(l => `<th class="center ph-durant">${l}</th>`).join("");
 
     if (participants.length === 0) {
       document.getElementById("content").innerHTML = `<div class="loading">Aucun inscrit pour le moment.</div>${renderInvites()}`;
@@ -210,32 +257,36 @@
           const detail = j.minutes ? `${j.minutes} min${j.pct ? ' (' + j.pct + '%)' : ''}` : '';
           presence = `<div class="jour-presence" title="${replay ? 'Replay' : 'Direct'}${detail ? ' : ' + detail : ''}"><span class="pres ${replay ? 'pres-replay' : 'pres-direct'}">${replay ? '↻ Replay' : '● Direct'} · ${Number(j.points) || 0} pt</span></div>`;
         }
-        return `<td class="center jour-cell">${emails}${presence}</td>`;
-      }).join("") || '<td class="center jour-cell"></td>';
+        return `<td class="center jour-cell ph-durant">${emails}${presence}</td>`;
+      }).join("") || '<td class="center jour-cell ph-durant"></td>';
       const interCells = allDeclencheurs.map(nom => {
         const it = (p.interventions || []).find(x => x.nom === nom) || {};
         const jours = (it.jours || []).map(j => 'J' + j).join(' · ');
         const info = it.fait && typeDeclencheur(nom) !== 'call' && jours ? `<span class="inter-info">${jours}</span>` : '';
         const titre = it.fait ? `${nom} : fait${jours ? ' (' + jours + ')' : ''}` : `${nom} : pas encore`;
-        return `<td class="center inter-cell" title="${titre}">${it.fait ? CASE_OUI : CASE_NON}${info}</td>`;
+        return `<td class="center inter-cell ph-durant" title="${titre}">${it.fait ? CASE_OUI : CASE_NON}${info}</td>`;
       }).join("");
       return `
         <tr>
           <td>${p.nom}${p.ancien_lead ? `<span class="ancien" title="Ancien lead invité avec ADD (groupe d'origine : ${p.ancien_lead})">↻ Ancien lead · ${p.ancien_lead}</span>` : ''}</td>
           <td>${p.email}</td>
-          <td class="center">${mailIcon(p.avant.confirmation)}</td>
-          <td class="center">${mailIcon(p.avant.valeur)}</td>
-          ${cinqJours ? `<td class="center">${mailIcon(p.avant.valeur2)}</td>` : ''}
-          <td class="center">${mailIcon(p.avant.relance_j2)}</td>
-          <td class="center">${mailIcon(p.avant.relance_j1)}</td>
+          <td class="center ph-avant">${mailIcon(p.avant.confirmation)}</td>
+          <td class="center ph-avant">${mailIcon(p.avant.valeur)}</td>
+          ${cinqJours ? `<td class="center ph-avant">${mailIcon(p.avant.valeur2)}</td>` : ''}
+          <td class="center ph-avant">${mailIcon(p.avant.relance_j2)}</td>
+          <td class="center ph-avant">${mailIcon(p.avant.relance_j1)}</td>
+          <td class="plie plie-avant"></td>
           ${jourCells}
           ${interCells}
-          <td class="center">${p.apres.replay ? mailIcon(p.apres.replay) : (p.groupe === 'Midi' ? '<span class="non-prevu" title="Groupe Midi : pas de replay (a assisté en direct)">–</span>' : '')}</td>
-          <td class="center jour-cell"><div class="jour-mails"><span class="jour-mail"><span class="jour-mail-ico">${mailIcon(p.apres.qr)}</span><span class="jour-mail-lbl">10h</span></span><span class="jour-mail"><span class="jour-mail-ico">${mailIcon(p.apres.qr_soir)}</span><span class="jour-mail-lbl">${heureSoir}</span></span></div></td>
-          ${cinqJours ? `<td class="center">${mailIcon(p.apres.temoignages)}</td>` : ''}
-          <td class="center">${mailIcon(p.apres.cloture)}</td>
-          <td class="center">${p.suivi.suivi1 ? mailIcon(p.suivi.suivi1) : (p.groupe === 'VIP' ? '<span class="non-prevu" title="A acheté : pas de suivi">–</span>' : '')}</td>
-          <td class="center">${p.suivi.suivi2 ? mailIcon(p.suivi.suivi2) : (p.groupe === 'VIP' ? '<span class="non-prevu" title="A acheté : pas de suivi">–</span>' : '')}</td>
+          <td class="plie plie-durant"></td>
+          <td class="center ph-apres">${p.apres.replay ? mailIcon(p.apres.replay) : (p.groupe === 'Midi' ? '<span class="non-prevu" title="Groupe Midi : pas de replay (a assisté en direct)">–</span>' : '')}</td>
+          <td class="center jour-cell ph-apres"><div class="jour-mails"><span class="jour-mail"><span class="jour-mail-ico">${mailIcon(p.apres.qr)}</span><span class="jour-mail-lbl">10h</span></span><span class="jour-mail"><span class="jour-mail-ico">${mailIcon(p.apres.qr_soir)}</span><span class="jour-mail-lbl">${heureSoir}</span></span></div></td>
+          ${cinqJours ? `<td class="center ph-apres">${mailIcon(p.apres.temoignages)}</td>` : ''}
+          <td class="center ph-apres">${mailIcon(p.apres.cloture)}</td>
+          <td class="plie plie-apres"></td>
+          <td class="center ph-suivi">${p.suivi.suivi1 ? mailIcon(p.suivi.suivi1) : (p.groupe === 'VIP' ? '<span class="non-prevu" title="A acheté : pas de suivi">–</span>' : '')}</td>
+          <td class="center ph-suivi">${p.suivi.suivi2 ? mailIcon(p.suivi.suivi2) : (p.groupe === 'VIP' ? '<span class="non-prevu" title="A acheté : pas de suivi">–</span>' : '')}</td>
+          <td class="plie plie-suivi"></td>
           <td class="center total-pt">${Number(p.total_points) || 0}</td>
           <td><span class="badge ${badgeClass[p.groupe] || ''}">${badgeIcon[p.groupe] || ''} ${p.groupe}</span></td>
         </tr>
@@ -244,25 +295,25 @@
 
     document.getElementById("content").innerHTML = `
       <div class="table-scroll">
-      <table>
+      <table id="tableInscrits">
         <thead>
           <tr class="phase-row">
             <th colspan="2"></th>
-            <th colspan="${cinqJours ? 5 : 4}">Avant le show</th>
-            <th colspan="${nbJours + allDeclencheurs.length}">Durant le show</th>
-            <th colspan="${cinqJours ? 4 : 3}">Après le show</th>
-            <th colspan="2">Suivi</th>
+            ${entetePhase('avant', 'Avant le show', cinqJours ? 5 : 4)}
+            ${entetePhase('durant', 'Durant le show', nbJours + allDeclencheurs.length)}
+            ${entetePhase('apres', 'Après le show', cinqJours ? 4 : 3)}
+            ${entetePhase('suivi', 'Suivi', 2)}
             <th colspan="2"></th>
           </tr>
           <tr>
             <th>Nom</th><th>Email</th>
-            <th class="center">Confirmation</th><th class="center">Valeur${cinqJours ? ' 1' : ''}</th>${cinqJours ? '<th class="center">Valeur 2</th>' : ''}<th class="center" title="Rendez-vous 2 jours avant">Rdv (J-2)</th><th class="center" title="Rendez-vous la veille">Rdv (J-1)</th>
+            <th class="center ph-avant">Confirmation</th><th class="center ph-avant">Valeur${cinqJours ? ' 1' : ''}</th>${cinqJours ? '<th class="center ph-avant">Valeur 2</th>' : ''}<th class="center ph-avant" title="Rendez-vous 2 jours avant">Rdv (J-2)</th><th class="center ph-avant" title="Rendez-vous la veille">Rdv (J-1)</th><th class="plie plie-avant" title="Colonnes cachées : clique sur la lampe au-dessus pour les montrer"><span class="plie-lbl">Avant</span></th>
             ${headerJours}
-            ${allDeclencheurs.map(n => `<th class="center th-inter" title="${n}">${enteteDeclencheur(n)}</th>`).join("")}
+            ${allDeclencheurs.map(n => `<th class="center th-inter ph-durant" title="${n}">${enteteDeclencheur(n)}</th>`).join("")}<th class="plie plie-durant" title="Colonnes cachées : clique sur la lampe au-dessus pour les montrer"><span class="plie-lbl">Durant</span></th>
             ${cinqJours
-              ? '<th class="center">Replay (J6)</th><th class="center">Q&R (J7)</th><th class="center">Témoignages (J8)</th><th class="center">Clôture (J9)</th>'
-              : '<th class="center">Replay (J4)</th><th class="center">Q&R (J5)</th><th class="center">Clôture (J6)</th>'}
-            <th class="center">Suivi 1 (J+20)</th><th class="center">Suivi 2 (J+40)</th>
+              ? '<th class="center ph-apres">Replay (J6)</th><th class="center ph-apres">Q&R (J7)</th><th class="center ph-apres">Témoignages (J8)</th><th class="center ph-apres">Clôture (J9)</th>'
+              : '<th class="center ph-apres">Replay (J4)</th><th class="center ph-apres">Q&R (J5)</th><th class="center ph-apres">Clôture (J6)</th>'}<th class="plie plie-apres" title="Colonnes cachées : clique sur la lampe au-dessus pour les montrer"><span class="plie-lbl">Après</span></th>
+            <th class="center ph-suivi">Suivi 1 (J+20)</th><th class="center ph-suivi">Suivi 2 (J+40)</th><th class="plie plie-suivi" title="Colonnes cachées : clique sur la lampe au-dessus pour les montrer"><span class="plie-lbl">Suivi</span></th>
             <th class="center">Total</th><th>Groupe</th>
           </tr>
         </thead>
@@ -271,6 +322,7 @@
       </div>
       ${renderInvites()}
     `;
+    appliquerPhases();
   }
 
   // Anciens leads invites (ADD) qui ne se sont pas encore inscrits
