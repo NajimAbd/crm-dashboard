@@ -641,6 +641,29 @@
 
 
 <script>
+  // Securite (24.09.2026) : chaque appel admin envoie le jeton de session donne par le serveur a la connexion.
+  // Sans jeton valide, le serveur refuse (401) et on renvoie vers la page de connexion.
+  (function () {
+    var fetchOrigine = window.fetch.bind(window);
+    var dejaAverti = false;
+    window.fetch = function (url, opts) {
+      var u = String(url || '');
+      if (u.indexOf('/webhook/crm-admin-') < 0) return fetchOrigine(url, opts);
+      var s = null;
+      try { s = JSON.parse(localStorage.getItem('crm_session_user') || 'null'); } catch (e) {}
+      var jeton = (s && s.token) || '';
+      u += (u.indexOf('?') < 0 ? '?' : '&') + 'jeton=' + encodeURIComponent(jeton);
+      return fetchOrigine(u, opts).then(function (r) {
+        if (r.status === 401 && !dejaAverti) {
+          dejaAverti = true;
+          alert('Ta session a expiré. Pour ta sécurité, reconnecte-toi.');
+          localStorage.removeItem('crm_session_user'); localStorage.removeItem('crm_session_expiry');
+          window.location.href = 'index.html';
+        }
+        return r;
+      });
+    };
+  })();
   const CRM_ADMIN_LIST = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-accounts';
   const CRM_ADMIN_TOGGLE = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-toggle';
   const CRM_ADMIN_LOGS = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-logs';
@@ -669,6 +692,11 @@
       '<div><h2 style="color:#0D1A12;font-family:\'Cormorant Garamond\',serif">Accès réservé</h2><p>Cette page est réservée aux administrateurs.</p>' +
       '<a href="dashboard.html" style="color:#B8965A">Retour au tableau de bord</a></div></div>';
     throw new Error('Access denied');
+  }
+  if (!session.token) {
+    alert('Pour ta sécurité, reconnecte-toi une fois : la connexion administrateur est maintenant protégée par le serveur.');
+    logout();
+    throw new Error('Reconnexion necessaire');
   }
 
   function esc(s) {
