@@ -84,6 +84,30 @@
   }
   .lead-contact { color: var(--text-soft); font-size: 14px; line-height: 1.6; }
   .lead-contact span { display: inline-block; margin-right: 16px; }
+  /* Modifier un lead (25.09.2026) */
+  .btn-modifier-lead { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 7px 14px; border: 1px solid var(--gold, #B8965A); border-radius: 999px; background: white; color: #8B6E3A; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-modifier-lead:hover { background: #FAF3E3; }
+  .ml-fond { position: fixed; inset: 0; background: rgba(13,26,18,.55); display: none; align-items: flex-start; justify-content: center; z-index: 9999; padding: 40px 16px; overflow-y: auto; }
+  .ml-fond.show { display: flex; }
+  .ml-boite { background: white; border-radius: 16px; width: 100%; max-width: 520px; padding: 26px 26px 22px; box-shadow: 0 20px 60px rgba(0,0,0,.25); position: relative; }
+  .ml-boite h3 { font-family: 'Cormorant Garamond', serif; font-size: 26px; margin: 0 0 4px; color: var(--green-deep, #0D1A12); }
+  .ml-sous { font-size: 13px; color: var(--text-soft); margin-bottom: 18px; }
+  .ml-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .ml-champ { display: flex; flex-direction: column; gap: 5px; }
+  .ml-champ.large { grid-column: 1 / -1; }
+  .ml-champ label { font-size: 12px; font-weight: 600; color: #6B6B68; letter-spacing: .02em; }
+  .ml-champ input { padding: 10px 12px; border: 1px solid #DDD5C3; border-radius: 9px; font: inherit; font-size: 14px; color: #1a1a1a; }
+  .ml-champ input:focus { outline: none; border-color: var(--gold, #B8965A); box-shadow: 0 0 0 3px rgba(184,150,90,.15); }
+  .ml-msg { display: none; margin-top: 14px; padding: 10px 12px; border-radius: 9px; font-size: 13px; }
+  .ml-msg.erreur { display: block; background: #FBEAE7; color: #A33A2B; }
+  .ml-msg.ok { display: block; background: #E8F3E8; color: #3E6B3E; }
+  .ml-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .ml-actions button { padding: 10px 18px; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .ml-annuler { border: 1px solid #DDD5C3; background: white; color: #1a1a1a; }
+  .ml-enregistrer { border: none; background: var(--green-deep, #0D1A12); color: #E8D5A8; }
+  .ml-enregistrer:disabled { opacity: .6; cursor: default; }
+  .ml-x { position: absolute; top: 12px; right: 14px; border: none; background: none; font-size: 20px; cursor: pointer; color: #6B6B68; }
+  @media (max-width: 520px) { .ml-grille { grid-template-columns: 1fr; } }
 
   .status-chip {
     display: inline-block;
@@ -812,6 +836,47 @@
     }
   }
 
+  // === Modifier un lead (25.09.2026) ===
+  let leadCourant = null;
+  const CRM_LEAD_UPDATE = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-lead-update';
+  function ouvrirModifLead() {
+    const l = leadCourant || {};
+    ['prenom', 'nom', 'email', 'whatsapp', 'source', 'campagne'].forEach(k => { document.getElementById('ml_' + k).value = l[k] || ''; });
+    const m = document.getElementById('mlMsg'); m.className = 'ml-msg'; m.textContent = '';
+    document.getElementById('mlFond').classList.add('show');
+    setTimeout(() => document.getElementById('ml_prenom').focus(), 50);
+  }
+  function fermerModifLead() { document.getElementById('mlFond').classList.remove('show'); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerModifLead(); });
+  async function enregistrerModifLead() {
+    const m = document.getElementById('mlMsg');
+    const btn = document.getElementById('mlEnregistrer');
+    const v = k => document.getElementById('ml_' + k).value.trim();
+    const donnees = { lead_id: Number(leadId), account_id: session.account_id, prenom: v('prenom'), nom: v('nom'), email: v('email'), whatsapp: v('whatsapp'), source: v('source'), campagne: v('campagne') };
+    if (!donnees.prenom && !donnees.nom) { m.className = 'ml-msg erreur'; m.textContent = 'Le prénom ou le nom est obligatoire.'; return; }
+    if (donnees.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(donnees.email)) { m.className = 'ml-msg erreur'; m.textContent = "L'adresse e-mail n'est pas valide."; return; }
+    btn.disabled = true; btn.textContent = 'Enregistrement…';
+    try {
+      const resp = await fetch(CRM_LEAD_UPDATE, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(donnees) });
+      const data = await resp.json();
+      if (data.session_expiree) {
+        alert('Ta session a expiré. Pour ta sécurité, reconnecte-toi.');
+        localStorage.removeItem('crm_session_user'); localStorage.removeItem('crm_session_expiry');
+        window.location.href = 'index.html';
+        return;
+      }
+      if (data.success) {
+        m.className = 'ml-msg ok'; m.textContent = '✅ ' + (data.message || 'Modifications enregistrées.');
+        setTimeout(() => { fermerModifLead(); loadLeadDetail(); }, 900);
+      } else {
+        m.className = 'ml-msg erreur'; m.textContent = data.message || 'Une erreur est survenue.';
+      }
+    } catch (e) {
+      m.className = 'ml-msg erreur'; m.textContent = 'Connexion impossible. Réessayez.';
+    }
+    btn.disabled = false; btn.textContent = 'Enregistrer';
+  }
+
   function render(data) {
     const l = data.lead;
     if (l.type_client === 'Fr') { renderFormationStudent(data); return; }
@@ -872,6 +937,8 @@
     html += '<span>📅 Inscrit le ' + fmtDate(l.date_inscription) + '</span>';
     if (l.date_diagnostic) html += '<span>🩺 Diagnostiqué le ' + fmtDate(l.date_diagnostic) + '</span>';
     html += '</div>';
+    leadCourant = l;
+    html += '<button type="button" class="btn-modifier-lead" onclick="ouvrirModifLead()">✏️ Modifier les informations</button>';
     html += '<div class="source-tags">';
     if (l.source) html += '<span class="tag">Source : ' + esc(l.source) + '</span>';
     if (l.campagne) html += '<span class="tag">Campagne : ' + esc(l.campagne) + '</span>';
@@ -1372,6 +1439,27 @@
   }
   window.addEventListener('afterprint', () => document.body.classList.remove('printing-ventes'));
 </script>
+
+<div class="ml-fond" id="mlFond" onclick="if (event.target === this) fermerModifLead()">
+  <div class="ml-boite" role="dialog" aria-modal="true" aria-labelledby="mlTitre">
+    <button type="button" class="ml-x" onclick="fermerModifLead()" aria-label="Fermer">✕</button>
+    <h3 id="mlTitre">Modifier le lead</h3>
+    <div class="ml-sous">Corrige les informations puis clique sur Enregistrer.</div>
+    <div class="ml-grille">
+      <div class="ml-champ"><label for="ml_prenom">Prénom</label><input id="ml_prenom" maxlength="100" autocomplete="off"></div>
+      <div class="ml-champ"><label for="ml_nom">Nom</label><input id="ml_nom" maxlength="100" autocomplete="off"></div>
+      <div class="ml-champ large"><label for="ml_email">E-mail</label><input id="ml_email" type="email" maxlength="190" autocomplete="off"></div>
+      <div class="ml-champ large"><label for="ml_whatsapp">Téléphone / WhatsApp</label><input id="ml_whatsapp" maxlength="40" placeholder="+41 79 000 00 00" autocomplete="off"></div>
+      <div class="ml-champ"><label for="ml_source">Source</label><input id="ml_source" maxlength="100" placeholder="TikTok, Instagram…" autocomplete="off"></div>
+      <div class="ml-champ"><label for="ml_campagne">Campagne</label><input id="ml_campagne" maxlength="150" autocomplete="off"></div>
+    </div>
+    <div class="ml-msg" id="mlMsg"></div>
+    <div class="ml-actions">
+      <button type="button" class="ml-annuler" onclick="fermerModifLead()">Annuler</button>
+      <button type="button" class="ml-enregistrer" id="mlEnregistrer" onclick="enregistrerModifLead()">Enregistrer</button>
+    </div>
+  </div>
+</div>
 
 </body>
 </html>
