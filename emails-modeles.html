@@ -43,6 +43,11 @@
   .zones { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
   .zone { font: 12px system-ui, sans-serif; background: var(--paper-2); border: 1px solid var(--line); color: #5b4a1c; padding: 4px 9px; border-radius: 6px; cursor: pointer; }
   .zone:hover { border-color: var(--gold); }
+  .blocs { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+  .blocs-titre { font: 600 12px system-ui, sans-serif; color: var(--muted); margin-right: 4px; }
+  .bloc { font: 600 12px system-ui, sans-serif; background: #0D1A12; color: #B8965A; border: 0; padding: 6px 11px; border-radius: 6px; cursor: pointer; }
+  .bloc:hover { background: #1B3325; }
+  .bloc:disabled { opacity: .6; cursor: wait; }
   .aide { font-size: .8rem; color: var(--muted); margin-top: 6px; }
   .ligne-actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
   .valide { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
@@ -80,6 +85,7 @@
 
   // Nom lisible et phase de chaque email
   const INFO = {
+    signature: ["Signature (commune à tous les emails)", "Commun à tous les emails"],
     invitation: ["Invitation (anciens leads ADD)", "Invitation — anciens leads"],
     rappel_invitation: ["Rappel d'invitation (J-2, non-inscrits)", "Invitation — anciens leads"],
     confirmation: ["Confirmation d'inscription", "Avant le show"],
@@ -97,7 +103,8 @@
     ["{{prenom}}", "Prénom"], ["{{titre_challenge}}", "Nom du challenge"], ["{{date_debut}}", "Date de début"],
     ["{{heure_direct}}", "Heure du direct"], ["{{jours_restants_texte}}", "Jours restants (ex. « 2 jours »)"],
     ["{{lien_direct}}", "Lien du direct (Zoom)"], ["{{lien_replay}}", "Lien du replay"], ["{{lien_rdv}}", "Lien de rendez-vous"],
-    ["{{lien_inscription}}", "Lien d'inscription (invitations)"]
+    ["{{lien_inscription}}", "Lien d'inscription (invitations)"],
+    ["{{signature}}", "Signature"]
   ];
   // Valeurs d'exemple pour l'apercu
   const EXEMPLE = {
@@ -105,6 +112,13 @@
     "{{heure_direct}}": "20h00", "{{jours_restants}}": "2", "{{jours_restants_texte}}": "2 jours",
     "{{lien_direct}}": "#", "{{lien_replay}}": "#", "{{lien_rdv}}": "#", "{{lien_inscription}}": "#"
   };
+  const IMAGE_API = "https://n8n.srv936251.hstgr.cloud/webhook/crm-email-image";
+  const BLOCS = {
+    ENCADRE: '<div style="background:#FAF6EF;border-left:4px solid #B8965A;padding:14px 18px;margin:18px 0;border-radius:6px"><p style="margin:0">Texte de l\'encadré</p></div>',
+    SEPARATEUR: '<hr style="border:0;border-top:1px solid #E2D8C0;margin:24px 0">',
+    SIGNATURE: '{{signature}}'
+  };
+  const imageHtml = url => `<p style="margin:18px 0;text-align:center"><img src="${url}" alt="" width="560" style="max-width:100%;height:auto;border-radius:8px;display:inline-block"></p>`;
   const BOUTON = '<p style="margin:22px 0"><a href="{{lien_direct}}" style="background:#0D1A12;color:#B8965A;padding:13px 24px;border-radius:8px;text-decoration:none;font-weight:bold;display:inline-block">Texte du bouton</a></p>';
 
   const NOMS_TYPES = { challenge_3_jours: "Challenge 3 jours", challenge_5_jours: "Challenge 5 jours", webinaire_direct: "Webinaire en direct", webinaire_enregistre: "Webinaire enregistré" };
@@ -113,7 +127,8 @@
   let courant = null;
 
   const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
-  const remplirExemple = t => Object.entries(EXEMPLE).reduce((acc, [k, v]) => acc.split(k).join(v), String(t || "")).replace(/(\d+) jour\(s\)/g, (x, n) => n + (Number(n) > 1 ? " jours" : " jour"));
+  const signatureActuelle = () => { const s = modeles.find(m => m.type_email === "signature"); return s ? (courant && courant.id === s.id && document.getElementById("texte") ? document.getElementById("texte").value : s.html) : ""; };
+  const remplirExemple = t => Object.entries(EXEMPLE).reduce((acc, [k, v]) => acc.split(k).join(v), String(t || "").split("{{signature}}").join(signatureActuelle())).replace(/(\d+) jour\(s\)/g, (x, n) => n + (Number(n) > 1 ? " jours" : " jour"));
 
   function afficherListe() {
     const el = document.getElementById("liste");
@@ -138,15 +153,25 @@
     courant = modeles.find(m => Number(m.id) === id);
     if (!courant) return;
     const [nom] = INFO[courant.type_email] || [courant.type_email];
+    const estSignature = courant.type_email === "signature";
     document.getElementById("editeur").innerHTML = `
       <h2>${esc(nom)}</h2>
       <p class="quand">${courant.modifie_le ? "Dernière modification : " + esc(courant.modifie_le) : ""}</p>
-      <label for="sujet">Sujet de l'email</label>
-      <input type="text" id="sujet" value="${esc(courant.sujet)}">
-      <label for="texte">Texte de l'email</label>
+      <div ${estSignature ? 'hidden' : ''}><label for="sujet">Sujet de l'email</label>
+      <input type="text" id="sujet" value="${esc(courant.sujet)}"></div>
+      ${estSignature ? '<p class="aide" style="font-size:.9rem">Cette signature s\'ajoute partout où tu places la zone <b>Signature</b> dans un email. Modifie-la ici une seule fois : tous les emails suivent.</p>' : ''}
+      <label for="texte">${estSignature ? "Texte de la signature" : "Texte de l'email"}</label>
       <textarea id="texte">${esc(courant.html)}</textarea>
       <div class="zones">${ZONES.map(([z, l]) => `<button type="button" class="zone" data-z="${z}" title="Insérer : ${l}">${l}</button>`).join("")}
-        <button type="button" class="zone" data-z="BOUTON" title="Insérer un bouton cliquable">+ Bouton</button></div>
+        </div>
+      <div class="blocs"><span class="blocs-titre">Ajouter un bloc :</span>
+        <button type="button" class="bloc" data-b="BOUTON">🔘 Bouton</button>
+        <button type="button" class="bloc" data-b="IMAGE">🖼️ Image</button>
+        <button type="button" class="bloc" data-b="ENCADRE">📦 Encadré</button>
+        <button type="button" class="bloc" data-b="SEPARATEUR">➖ Séparateur</button>
+        ${estSignature ? '' : '<button type="button" class="bloc" data-b="SIGNATURE">✍️ Signature</button>'}
+        <input type="file" id="fichierImage" accept="image/*" hidden>
+        <span id="msgImage" class="aide" style="margin:0 0 0 6px"></span></div>
       <p class="aide">Clique sur une zone pour l'insérer à l'endroit du curseur. <b>&lt;p&gt;</b> = paragraphe, <b>&lt;b&gt;</b> = gras, <b>&lt;br&gt;</b> = retour à la ligne.</p>
       <div class="apercu-titre">Aperçu (avec un exemple de prénom et de date)</div>
       <div class="apercu"><div class="apercu-sujet" id="ap-sujet"></div><div class="apercu-mail" id="ap-mail"></div></div>
@@ -164,15 +189,60 @@
     let dernierChamp = texte;
     sujet.addEventListener("focus", () => dernierChamp = sujet);
     texte.addEventListener("focus", () => dernierChamp = texte);
-    document.querySelectorAll(".zone").forEach(z => z.addEventListener("click", () => {
-      const v = z.dataset.z === "BOUTON" ? BOUTON : z.dataset.z;
-      const c = z.dataset.z === "BOUTON" ? texte : dernierChamp;
+    const inserer = (c, v) => {
       const d = c.selectionStart ?? c.value.length, f = c.selectionEnd ?? c.value.length;
       c.value = c.value.slice(0, d) + v + c.value.slice(f);
       c.focus(); c.selectionStart = c.selectionEnd = d + v.length; maj();
+    };
+    document.querySelectorAll(".zone").forEach(z => z.addEventListener("click", () => inserer(dernierChamp, z.dataset.z)));
+    // Blocs : bouton, image, encadre, separateur, signature (toujours dans le texte)
+    const fichier = document.getElementById("fichierImage"), msgImage = document.getElementById("msgImage");
+    let positionImage = 0;
+    document.querySelectorAll(".bloc").forEach(bt => bt.addEventListener("click", () => {
+      const b = bt.dataset.b;
+      if (b === "IMAGE") { positionImage = texte.selectionStart ?? texte.value.length; fichier.click(); return; }
+      inserer(texte, "\n" + (b === "BOUTON" ? BOUTON : BLOCS[b]) + "\n");
     }));
+    fichier.addEventListener("change", async () => {
+      const f = fichier.files[0]; fichier.value = "";
+      if (!f) return;
+      msgImage.textContent = "Envoi de l'image…";
+      try {
+        const { data, mime } = await reduireImage(f);
+        const r = await fetch(IMAGE_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "upload", nom: f.name, mime, data }) });
+        const j = await r.json();
+        if (!j.success) throw new Error(j.erreur || "erreur");
+        texte.selectionStart = texte.selectionEnd = positionImage;
+        inserer(texte, "\n" + imageHtml(j.url) + "\n");
+        msgImage.textContent = "Image ajoutée ✔ (pense à Enregistrer)";
+      } catch (e) { msgImage.textContent = "Échec de l'envoi de l'image. Réessaie."; }
+    });
     document.getElementById("enreg").addEventListener("click", enregistrer);
     afficherListe();
+  }
+
+  // Reduit l'image (largeur max 1200 px) pour qu'elle reste legere dans les emails
+  function reduireImage(f) {
+    return new Promise((ok, ko) => {
+      const lecteur = new FileReader();
+      lecteur.onerror = ko;
+      lecteur.onload = () => {
+        const img = new Image();
+        img.onerror = ko;
+        img.onload = () => {
+          const l = Math.min(1200, img.width), h = Math.round(img.height * l / img.width);
+          const cv = document.createElement("canvas"); cv.width = l; cv.height = h;
+          const ctx = cv.getContext("2d");
+          const png = f.type === "image/png" || f.type === "image/gif";
+          if (!png) { ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, l, h); }
+          ctx.drawImage(img, 0, 0, l, h);
+          const mime = png ? "image/png" : "image/jpeg";
+          ok({ mime, data: cv.toDataURL(mime, 0.85).split(",")[1] });
+        };
+        img.src = lecteur.result;
+      };
+      lecteur.readAsDataURL(f);
+    });
   }
 
   async function enregistrer() {
@@ -194,7 +264,7 @@
 
   fetch(`${API}?action=list&type_evenement=${encodeURIComponent(TYPE_EVENEMENT)}`)
     .then(r => r.json())
-    .then(j => { modeles = j.modeles || []; afficherListe(); if (modeles[0]) ouvrir(Number(modeles[0].id)); })
+    .then(j => { modeles = j.modeles || []; afficherListe(); const premier = modeles.find(m => m.type_email !== "signature") || modeles[0]; if (premier) ouvrir(Number(premier.id)); })
     .catch(() => { document.getElementById("liste").innerHTML = '<div class="vide">Connexion impossible. Recharge la page.</div>'; });
 </script>
 </body>
