@@ -892,11 +892,9 @@
       chaud: { label: 'Lead chaud 🔥', cls: 'status-diagnosed' },
       nouveau: { label: 'Prospect', cls: 'status-prospect' }
     };
-    const statutInfo = statutMap[l.statut_global] || (
-      (l.a_achete == 1 || l.a_achete === true)
-        ? statutMap.client
-        : statutMap.nouveau
-    );
+    // Un lead qui a acheté est un client VIP, quelle que soit sa température (25.09.2026)
+    const aAchete = l.a_achete == 1 || l.a_achete === true || parseFloat(l.montant_total_paye || 0) > 0 || Number(l.nombre_paiements || 0) > 0 || l.statut_global === 'client';
+    const statutInfo = aAchete ? statutMap.client : (statutMap[l.statut_global] || statutMap.nouveau);
     const buyerChip = '<span class="status-chip ' + statutInfo.cls + '">' + statutInfo.label + '</span>';
 
     const typeLabels = { SW:'Webinaire', SC:'Challenge 3 jours', SB:'Challenge 5 jours', RP:'Roqya Personne', RM:'Roqya Maison / Bureau', DD:'Diagnostic payant', Fr:'Formation Academy', AA:'Application', AP:'Produits' };
@@ -931,8 +929,10 @@
     }
     html += '<h1 class="lead-name">' + esc(fullName)
       + (l.type_client ? ' <span class="type-badge" title="' + (typeLabels[l.type_client] || '') + '">' + esc(typeAbbrev[l.type_client] || l.type_client) + '</span>' : '')
-      + ((isShowType && (l.is_vip == 1 || l.is_vip === true)) ? ' <span title="Ticket VIP" style="font-size:20px">👑</span>' : '')
-      + (tempIcons[l.statut_suivi] ? ' <span title="' + esc(l.statut_suivi) + '" style="font-size:18px">' + tempIcons[l.statut_suivi] + '</span>' : '')
+      + (aAchete
+          ? ' <span title="Client VIP : a acheté" style="display:inline-flex;align-items:center;gap:4px;vertical-align:middle;padding:3px 12px;border-radius:999px;background:#F6E7B8;color:#7A5C10;font-family:Inter,sans-serif;font-size:13px;font-weight:700">👑 VIP</span>'
+          : ((isShowType && (l.is_vip == 1 || l.is_vip === true)) ? ' <span title="Ticket VIP" style="font-size:20px">👑</span>' : '')
+            + (tempIcons[l.statut_suivi] ? ' <span title="' + esc(l.statut_suivi) + '" style="font-size:18px">' + tempIcons[l.statut_suivi] + '</span>' : ''))
       + interetBullets
       + '</h1>';
     html += '<div class="lead-contact">';
