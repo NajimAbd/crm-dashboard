@@ -273,6 +273,9 @@
   .products-box .product-row.sub {
     font-size: 12.5px; color: var(--text-soft); margin-left: 24px;
   }
+  .products-box .product-desc { font-size: 12px; color: #8A8577; line-height: 1.45; margin: -2px 0 6px 26px; }
+  .products-box .premium-row { font-weight: 700; color: #8A6A2F; }
+  #fieldAppLinks { display: none !important; }
   .products-box hr {
     border: none; border-top: 1px solid var(--border-soft); margin: 2px 0;
   }
@@ -397,40 +400,48 @@
     <div class="modal-field" id="fieldProducts">
       <label>Produits & accès</label>
       <div class="products-box">
-        <label class="product-row" title="Débloque tous les produits d'un coup pour ce compte (Laboratoire, Iris, IrisCue, Académie).">
-          <input type="checkbox" id="chkPremium"> Premium
+        <label class="product-row" title="Formule de base de tout entrepreneur.">
+          <input type="checkbox" id="chkWebinaire"> Nexa Essentiel
         </label>
-        <label class="product-row sub" title="3 jours d'essai gratuit de Premium (tous les produits débloqués temporairement).">
-          <input type="checkbox" id="chkPremiumTrial"> Essai Premium (3 jours)
-        </label>
+        <div class="product-desc">Espace Nexa complet (tableau de bord, KPI, calendrier, ventes, finances, comptabilité, sécurité) + Show en direct : webinaire en direct, challenge 3 jours et 5 jours.</div>
         <hr>
-        <label class="product-row" title="Espace Webinaire / Show (Everwebinar) pour l'entrepreneur.">
-          <input type="checkbox" id="chkWebinaire"> Webinaire / Show
-        </label>
-        <label class="product-row sub" title="Show en enregistré (webinaire diffusé automatiquement + envoi de vidéos). Abonnement séparé.">
+        <label class="product-row">
           <input type="checkbox" id="chkShowEnregistre"> Show enregistré
         </label>
+        <div class="product-desc">Webinaire diffusé automatiquement selon un horaire + envoi de ses vidéos.</div>
         <hr>
-        <label class="product-row" title="Débloque le pack de 6 outils : Crete, Staircase, Zahra, Sophy, Elarion AI, Challenge.">
+        <label class="product-row">
           <input type="checkbox" id="chkLaboratoire"> Laboratoire
         </label>
-        <label class="product-row sub" title="3 jours d'essai gratuit du Laboratoire.">
+        <div class="product-desc">Pack de 6 outils : Crete, Staircase, Zahra, Sophy, Elarion AI, Challenge.</div>
+        <label class="product-row sub">
           <input type="checkbox" id="chkLaboratoireTrial"> Essai Laboratoire (3 jours)
         </label>
         <hr>
-        <label class="product-row" title="Outil de création de contenu : hooks, reels, carrousels, textes experts.">
+        <label class="product-row">
+          <input type="checkbox" id="chkFormation"> Académie
+        </label>
+        <div class="product-desc">Espace de formation à créer et vendre à ses propres élèves (3 niveaux).</div>
+        <hr>
+        <label class="product-row">
           <input type="checkbox" id="chkIrisStudio"> Iris
         </label>
+        <div class="product-desc">Création de contenu : hooks, reels, carrousels, textes experts.</div>
         <hr>
-        <label class="product-row" title="Téléprompteur pour l'enregistrement vidéo (mobile et desktop).">
+        <label class="product-row">
           <input type="checkbox" id="chkIriscue"> IrisCue
         </label>
-        <label class="product-row sub" title="3 jours d'essai gratuit d'IrisCue.">
+        <div class="product-desc">Téléprompteur pour enregistrer ses vidéos (mobile et ordinateur).</div>
+        <label class="product-row sub">
           <input type="checkbox" id="chkIriscueTrial"> Essai IrisCue (3 jours)
         </label>
         <hr>
-        <label class="product-row" title="Espace de formation à créer et vendre à ses propres élèves (3 niveaux).">
-          <input type="checkbox" id="chkFormation"> Académie
+        <label class="product-row premium-row">
+          <input type="checkbox" id="chkPremium"> ⭐ Premium — tout le paquet
+        </label>
+        <div class="product-desc">Ouvre TOUT d'un coup : Nexa Essentiel + Show enregistré + Laboratoire + Académie + Iris + IrisCue. Pas besoin de cocher le reste.</div>
+        <label class="product-row sub">
+          <input type="checkbox" id="chkPremiumTrial"> Essai Premium (3 jours)
         </label>
       </div>
     </div>
@@ -626,21 +637,14 @@
     return new Date(String(d).replace(' ', 'T')) > new Date();
   }
   function accountSummary(a) {
-    const names = {
-      premium: 'Premium',
-      webinaire: 'Webinaire',
-      show_enregistre: 'Show enregistré',
-      laboratoire: 'Laboratoire',
-      iris_studio: 'Iris', iriscue: 'IrisCue',
-      formation: 'Académie'
-    };
-    const active = Object.keys(names).filter(k => a[k] === 'oui');
-    if (active.includes('premium')) return 'Premium';
-    if (active.length === 1) return names[active[0]];
-    if (active.length > 1) return active.length + ' produits';
+    // Premium = tout le paquet ; Nexa Essentiel = formule de base (colonne webinaire) ; le reste = modules en plus
+    if (a.premium === 'oui') return 'Premium (tout)';
     if (isFutureDate(a.premium_trial_ends_at)) return 'Essai Premium';
-    if (isFutureDate(a.laboratoire_trial_ends_at)) return 'Essai Laboratoire';
-    return 'Nexa seul';
+    const modules = { show_enregistre: 'Show enregistré', laboratoire: 'Laboratoire', formation: 'Académie', iris_studio: 'Iris', iriscue: 'IrisCue' };
+    const extras = Object.keys(modules).filter(k => a[k] === 'oui').map(k => modules[k]);
+    if (isFutureDate(a.laboratoire_trial_ends_at) && extras.indexOf('Laboratoire') < 0) extras.push('essai Laboratoire');
+    const base = a.webinaire === 'oui' ? 'Nexa Essentiel' : 'Nexa seul';
+    return extras.length ? base + ' + ' + extras.join(', ') : base;
   }
 
   function togglePwd(inputId, btn) {
