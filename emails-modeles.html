@@ -117,6 +117,21 @@
     cloture: ["Clôture (J6)", "Après le show"],
     suivi1: ["Suivi 1 (J+20, non-acheteurs)", "Suivi"], suivi2: ["Suivi 2 (J+40, non-acheteurs)", "Suivi"]
   };
+  // Challenge 5 jours : emails en plus et noms adaptes (l'ordre suit le deroulement)
+  if (TYPE_EVENEMENT === "challenge_5_jours") {
+    const I = {};
+    Object.entries(INFO).forEach(([k, v]) => {
+      I[k] = v;
+      if (k === "valeur") { I.valeur = ["Email de valeur 1", "Avant le show"]; I.valeur2 = ["Email de valeur 2", "Avant le show"]; }
+      if (k === "J3S") { I.J4M = ["Jour 4 — matin (10h)", "Durant le show"]; I.J4S = ["Jour 4 — 2 h avant le direct", "Durant le show"];
+                         I.J5M = ["Jour 5 — matin (10h)", "Durant le show"]; I.J5S = ["Jour 5 — 2 h avant le direct", "Durant le show"]; }
+      if (k === "replay") I.replay = ["Replay (J6, 15h, pas pour le groupe Midi)", "Après le show"];
+      if (k === "qr") I.qr = ["Questions-Réponses — matin (J7)", "Après le show"];
+      if (k === "qr_soir") { I.qr_soir = ["Questions-Réponses — 2 h avant (J7)", "Après le show"]; I.temoignages = ["Témoignages + inscription (J8, 15h)", "Après le show"]; }
+      if (k === "cloture") I.cloture = ["Clôture (J9, 20h)", "Après le show"];
+    });
+    Object.keys(INFO).forEach(k => delete INFO[k]); Object.assign(INFO, I);
+  }
   const ZONES = [
     ["{{prenom}}", "Prénom"], ["{{titre_challenge}}", "Nom du challenge"], ["{{date_debut}}", "Date de début"],
     ["{{heure_direct}}", "Heure du direct"], ["{{jours_restants_texte}}", "Jours restants (ex. « 2 jours »)"],
