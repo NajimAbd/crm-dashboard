@@ -684,7 +684,7 @@
     <div class="temp-tab" data-temp="Froid" onclick="setTempFilter('Froid')">❄️ Froid</div>
     <div class="temp-tab" data-temp="Tiede" onclick="setTempFilter('Tiede')">🌤️ Tiède</div>
     <div class="temp-tab" data-temp="Chaud" onclick="setTempFilter('Chaud')">🔥 Chaud</div>
-    <div class="temp-tab" data-temp="vip" onclick="setTempFilter('vip')" title="Tickets VIP">👑 VIP</div>
+    <div class="temp-tab" data-temp="vip" onclick="setTempFilter('vip')" title="VIP : clients qui ont acheté">👑 VIP</div>
   </div>
 
   <div id="diagnosticSendBar" style="display:none;align-items:center;gap:10px;background:#FAF3E5;border:1px solid #E5DECF;border-radius:10px;padding:10px 16px;margin-bottom:16px">
@@ -1249,9 +1249,9 @@
       const typeBadge = l.type_client
         ? '<span class="type-badge" title="' + (typeLabels[l.type_client] || '') + '">' + (typeAbbrev[l.type_client] || l.type_client) + '</span>'
         : '<span style="color:#C9C9C6">—</span>';
-      const vipCrown = ((l.is_vip == 1 || l.is_vip === true) && ['SW','SC','SB'].includes(l.type_client)) ? '<span class="vip-crown" title="Ticket VIP">👑</span>' : '';
+      const vipCrown = estVip(l) ? '<span class="vip-crown" title="VIP : a acheté">👑</span>' : '';
       const tempIcons = { Froid: '❄️', Tiede: '🌤️', Chaud: '🔥' };
-      const tempDot = tempIcons[l.statut_suivi] ? '<span class="temp-dot" title="' + l.statut_suivi + '">' + tempIcons[l.statut_suivi] + '</span>' : '';
+      const tempDot = (!estVip(l) && tempIcons[l.statut_suivi]) ? '<span class="temp-dot" title="' + l.statut_suivi + '">' + tempIcons[l.statut_suivi] + '</span>' : '';
 
       // Colonne unifiée "Test Diagnostic-Tally" :
       // - Déjà rempli -> coche colorée (vert = demandé par le client, rouge = obligatoire/imposé)
@@ -1475,6 +1475,11 @@
     applyFilters();
   }
 
+  // VIP = a achete (produit, ticket VIP d'un show, ou compte entrepreneur). Les VIP ne sont plus comptes Froid/Tiede/Chaud (24.09.2026)
+  function estVip(l) {
+    return l.a_achete == 1 || l.a_achete === true || ((l.is_vip == 1 || l.is_vip === true) && ['SW','SC','SB'].includes(l.type_client));
+  }
+
   function applyFilters() {
     const q = document.getElementById('searchInput').value.toLowerCase().trim();
     let filtered = allLeads;
@@ -1495,9 +1500,9 @@
     }
 
     if (currentTempFilter === 'vip') {
-      filtered = filtered.filter(l => (l.is_vip == 1 || l.is_vip === true) && ['SW','SC','SB'].includes(l.type_client));
+      filtered = filtered.filter(l => estVip(l));
     } else if (currentTempFilter !== 'all') {
-      filtered = filtered.filter(l => (l.statut_suivi || 'Froid') === currentTempFilter);
+      filtered = filtered.filter(l => !estVip(l) && (l.statut_suivi || 'Froid') === currentTempFilter);
     }
 
     if (q) {
