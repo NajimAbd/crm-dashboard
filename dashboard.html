@@ -1483,6 +1483,7 @@
   function estVip(l) {
     // VIP = a acheté (achat enregistré, paiement ou statut client) ou ticket VIP d'un show (25.09.2026)
     return l.a_achete == 1 || l.a_achete === true || parseFloat(l.montant_total_paye || 0) > 0 || Number(l.nombre_paiements || 0) > 0 || l.statut_global === 'client'
+      || l.type_client === 'AA' || !!l.converted_account_id // devenu entrepreneur = a acheté une offre Nexa
       || ((l.is_vip == 1 || l.is_vip === true) && ['SW','SC','SB'].includes(l.type_client));
   }
 

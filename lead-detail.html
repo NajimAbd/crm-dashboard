@@ -893,7 +893,8 @@
       nouveau: { label: 'Prospect', cls: 'status-prospect' }
     };
     // Un lead qui a acheté est un client VIP, quelle que soit sa température (25.09.2026)
-    const aAchete = l.a_achete == 1 || l.a_achete === true || parseFloat(l.montant_total_paye || 0) > 0 || Number(l.nombre_paiements || 0) > 0 || l.statut_global === 'client';
+    const aAchete = l.a_achete == 1 || l.a_achete === true || parseFloat(l.montant_total_paye || 0) > 0 || Number(l.nombre_paiements || 0) > 0 || l.statut_global === 'client'
+      || l.type_client === 'AA' || !!l.converted_account_id; // devenu entrepreneur = a acheté une offre Nexa
     const statutInfo = aAchete ? statutMap.client : (statutMap[l.statut_global] || statutMap.nouveau);
     const buyerChip = '<span class="status-chip ' + statutInfo.cls + '">' + statutInfo.label + '</span>';
 
