@@ -55,7 +55,10 @@
   .visuel { background: #fff; max-width: 640px; min-height: 300px; margin: 0 auto; border-radius: 8px; padding: 18px 24px; font: 15px/1.55 Arial, Helvetica, sans-serif; color: #222; outline: none; box-shadow: 0 0 0 1.5px #d6cdb4; }
   .visuel:focus { box-shadow: 0 0 0 2px var(--gold); }
   .visuel img { cursor: pointer; }
-  .visuel img.img-choisie { outline: 3px solid #B8965A; outline-offset: 2px; }
+  .visuel [data-obj] { cursor: pointer; border-radius: 6px; }
+  .visuel [data-obj]:hover { outline: 2px dashed #d9c48f; outline-offset: 3px; }
+  .visuel .obj-choisi, .visuel .obj-choisi:hover { outline: 3px solid #B8965A; outline-offset: 3px; }
+  .barre.objet { background: #fbf3df; border: 1px solid #ead9b4; border-radius: 8px; padding: 6px 10px; position: sticky; top: 0; z-index: 5; }
   .visuel a { cursor: text; }
   .chip { display: inline-block; background: #f5e6b3; color: #8b6914; border-radius: 999px; padding: 0 8px; font: 600 12px/1.7 system-ui, sans-serif; white-space: nowrap; vertical-align: baseline; user-select: all; }
   .chip-bloc { border: 1px dashed #B8965A; border-radius: 6px; padding: 2px 12px; margin: 14px 0; background: #fffdf5; user-select: none; }
@@ -193,13 +196,29 @@
     });
     cible.innerHTML = "";
     cible.appendChild(t.content);
+    marquerObjets(cible);
+  }
+  // Chaque objet est un bloc qu'on choisit d'un clic, puis qu'on monte, descend ou supprime
+  function marquerObjets(cible) {
+    [...cible.children].forEach(e => {
+      let type = null;
+      if (e.tagName === "HR") type = "separateur";
+      else if (e.classList.contains("chip-bloc")) type = "signature";
+      else if (e.querySelector("img")) type = "image";
+      else if (e.querySelector("a[style*='background']")) type = "bouton";
+      else if (e.tagName === "DIV" && /border-left/.test(e.getAttribute("style") || "")) type = "encadre";
+      if (!type) return;
+      e.dataset.obj = type;
+      if (type !== "encadre") e.contentEditable = "false";
+    });
   }
   // Editeur visuel -> code HTML (les etiquettes redeviennent des zones {{...}})
   function versHtml(source) {
     const c = source.cloneNode(true);
     c.querySelectorAll("[data-z]").forEach(e => e.replaceWith(document.createTextNode(e.dataset.z)));
     c.querySelectorAll("[contenteditable]").forEach(e => e.removeAttribute("contenteditable"));
-    c.querySelectorAll(".img-choisie").forEach(e => e.classList.remove("img-choisie"));
+    c.querySelectorAll(".obj-choisi").forEach(e => e.classList.remove("obj-choisi"));
+    c.querySelectorAll("[data-obj]").forEach(e => e.removeAttribute("data-obj"));
     c.querySelectorAll('[class=""]').forEach(e => e.removeAttribute("class"));
     return c.innerHTML.replace(/(<\/p>|<\/div>|<hr[^>]*>)\s*(?=<)/g, "$1\n").trim();
   }
@@ -237,17 +256,19 @@
         <button type="button" class="zone" data-l="560">Grande</button>
         <button type="button" class="zone" data-l="0">Annuler</button>
       </div>
-      <div class="barre" id="barreImage" style="display:none">
-        <span class="blocs-titre">Image choisie :</span>
-        <button type="button" class="zone" data-t="200">Petite</button>
-        <button type="button" class="zone" data-t="360">Moyenne</button>
-        <button type="button" class="zone" data-t="560">Grande</button>
-        <button type="button" class="zone" data-t="0">🗑️ Supprimer l'image</button>
-      </div>
-      <div class="barre" id="barreBouton" style="display:none">
-        <span class="blocs-titre">Le bouton choisi mène vers :</span>
-        <select id="lienBouton">${LIENS_BOUTON.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select>
-        <span class="aide" style="margin:0">Le texte du bouton se modifie directement dans l'email.</span>
+      <div class="barre objet" id="barreObjet" style="display:none">
+        <span class="blocs-titre" id="nomObjet">Objet choisi :</span>
+        <button type="button" class="zone" data-a="haut">⬆️ Monter</button>
+        <button type="button" class="zone" data-a="bas">⬇️ Descendre</button>
+        <span id="optImage" style="display:none;gap:6px;align-items:center"><span class="sep"></span>Taille :
+          <button type="button" class="zone" data-t="200">Petite</button>
+          <button type="button" class="zone" data-t="360">Moyenne</button>
+          <button type="button" class="zone" data-t="560">Grande</button></span>
+        <span id="optBouton" style="display:none;gap:6px;align-items:center;flex-wrap:wrap"><span class="sep"></span>Texte :
+          <input type="text" id="texteBouton" style="width:200px;padding:4px 8px;font:13px system-ui">
+          Mène vers : <select id="lienBouton">${LIENS_BOUTON.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select></span>
+        <span class="sep"></span>
+        <button type="button" class="zone" data-a="suppr" style="color:#a33a2b">🗑️ Supprimer</button>
       </div>
       <div class="barre"><span class="blocs-titre">Zones automatiques :</span>
         ${ZONES.filter(([z]) => z !== "{{signature}}" && !/lien_/.test(z)).map(([z, l]) => `<button type="button" class="zone" data-z="${z}" title="Insérer : ${l}">${l}</button>`).join("")}</div>
@@ -273,7 +294,7 @@
     texte.addEventListener("input", depuisCode);
 
     // Memoriser l'endroit ou se trouve le curseur dans l'email
-    let plage = null, dernierChamp = visuel;
+    let plage = null, dernierChamp = visuel, objetChoisi = null;
     document.onselectionchange = () => {
       const s = window.getSelection();
       if (s.rangeCount && visuel.contains(s.anchorNode)) { plage = s.getRangeAt(0).cloneRange(); dernierChamp = visuel; }
@@ -287,7 +308,9 @@
       if (bloc) {
         // Un bloc se place apres le paragraphe ou se trouve le curseur
         let n = r ? r.startContainer : null;
+        if (n === visuel) n = visuel.childNodes[Math.max(0, r.startOffset - 1)] || null;
         while (n && n.parentNode !== visuel) n = n.parentNode;
+        if (objetChoisi && visuel.contains(objetChoisi)) n = objetChoisi;
         const dernier = t.content.lastChild;
         if (n && n !== visuel) n.after(t.content); else visuel.appendChild(t.content);
         r = document.createRange(); r.setStartAfter(dernier); r.collapse(true);
@@ -300,6 +323,7 @@
       }
       plage = r;
       const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      marquerObjets(visuel); choisirObjet(null);
       versCode();
     };
     const html = h => { const t = document.createElement("div"); versVisuel(h, t, sig()); return t.innerHTML; };
@@ -345,32 +369,45 @@
       } catch (e) { msgImage.textContent = "Échec de l'envoi de l'image. Réessaie."; }
     });
 
-    // Clic sur une image ou un bouton dans l'email : barre d'outils adaptee
-    const barreImage = document.getElementById("barreImage"), barreBouton = document.getElementById("barreBouton"), lienBouton = document.getElementById("lienBouton");
-    let imgChoisie = null, boutonChoisi = null;
-    visuel.addEventListener("click", e => {
-      visuel.querySelectorAll(".img-choisie").forEach(i => i.classList.remove("img-choisie"));
-      imgChoisie = e.target.closest("img"); boutonChoisi = e.target.closest("a");
-      if (imgChoisie) imgChoisie.classList.add("img-choisie");
-      barreImage.style.display = imgChoisie ? "flex" : "none";
-      barreBouton.style.display = boutonChoisi ? "flex" : "none";
-      if (boutonChoisi) {
-        const h = boutonChoisi.getAttribute("href") || "";
-        if (![...lienBouton.options].some(o => o.value === h)) lienBouton.add(new Option(h, h));
+    // Objets : clic = choisir ; barre pour monter, descendre, supprimer, taille, texte du bouton
+    const barreObjet = document.getElementById("barreObjet"), lienBouton = document.getElementById("lienBouton"), texteBouton = document.getElementById("texteBouton");
+    const NOMS_OBJ = { image: "🖼️ Image choisie :", bouton: "🔘 Bouton choisi :", separateur: "➖ Séparateur choisi :", encadre: "📦 Encadré choisi :", signature: "✍️ Signature choisie :" };
+    function choisirObjet(o) {
+      visuel.querySelectorAll(".obj-choisi").forEach(e => e.classList.remove("obj-choisi"));
+      objetChoisi = o;
+      barreObjet.style.display = o ? "flex" : "none";
+      if (!o) return;
+      o.classList.add("obj-choisi");
+      document.getElementById("nomObjet").textContent = NOMS_OBJ[o.dataset.obj] || "Objet choisi :";
+      document.getElementById("optImage").style.display = o.dataset.obj === "image" ? "inline-flex" : "none";
+      document.getElementById("optBouton").style.display = o.dataset.obj === "bouton" ? "inline-flex" : "none";
+      const a = o.querySelector("a");
+      if (o.dataset.obj === "bouton" && a) {
+        texteBouton.value = a.textContent;
+        const h = a.getAttribute("href") || "";
+        if (![...lienBouton.options].some(x => x.value === h)) lienBouton.add(new Option(h, h));
         lienBouton.value = h;
       }
+    }
+    visuel.addEventListener("click", e => {
+      const o = e.target.closest("[data-obj]");
+      if (o && e.target.closest("a")) e.preventDefault();
+      choisirObjet(o && visuel.contains(o) ? o : null);
     });
-    barreImage.querySelectorAll("button").forEach(t => {
+    barreObjet.querySelectorAll("button").forEach(t => {
       t.addEventListener("mousedown", e => e.preventDefault());
       t.addEventListener("click", () => {
-        if (!imgChoisie) return;
-        const l = Number(t.dataset.t);
-        if (!l) { const p = imgChoisie.closest("p"); (p && p.textContent.trim() === "" && p.querySelectorAll("img").length === 1 ? p : imgChoisie).remove(); }
-        else { imgChoisie.setAttribute("width", l); imgChoisie.style.width = l + "px"; }
-        imgChoisie = null; barreImage.style.display = "none"; versCode();
+        const o = objetChoisi; if (!o) return;
+        if (t.dataset.a === "haut" && o.previousElementSibling) o.previousElementSibling.before(o);
+        else if (t.dataset.a === "bas" && o.nextElementSibling) o.nextElementSibling.after(o);
+        else if (t.dataset.a === "suppr") { o.remove(); choisirObjet(null); }
+        else if (t.dataset.t) { const i = o.querySelector("img"); if (i) { i.setAttribute("width", t.dataset.t); i.style.width = t.dataset.t + "px"; } }
+        if (objetChoisi) objetChoisi.scrollIntoView({ block: "nearest" });
+        versCode();
       });
     });
-    lienBouton.addEventListener("change", () => { if (boutonChoisi) { boutonChoisi.setAttribute("href", lienBouton.value); versCode(); } });
+    texteBouton.addEventListener("input", () => { const a = objetChoisi && objetChoisi.querySelector("a"); if (a) { a.textContent = texteBouton.value || "Bouton"; versCode(); } });
+    lienBouton.addEventListener("change", () => { const a = objetChoisi && objetChoisi.querySelector("a"); if (a) { a.setAttribute("href", lienBouton.value); versCode(); } });
 
     document.getElementById("enreg").addEventListener("click", () => { versCode(); enregistrer(); });
     afficherListe();
