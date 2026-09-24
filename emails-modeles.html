@@ -48,6 +48,21 @@
   .bloc { font: 600 12px system-ui, sans-serif; background: #0D1A12; color: #B8965A; border: 0; padding: 6px 11px; border-radius: 6px; cursor: pointer; }
   .bloc:hover { background: #1B3325; }
   .bloc:disabled { opacity: .6; cursor: wait; }
+  .barre { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 8px; }
+  .barre .sep { width: 1px; height: 22px; background: var(--line); margin: 0 4px; }
+  .barre select { font: 13px system-ui, sans-serif; padding: 4px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+  .visuel-fond { margin-top: 12px; background: #f3f3f3; border: 1px solid var(--line); border-radius: 10px; padding: 18px; }
+  .visuel { background: #fff; max-width: 640px; min-height: 300px; margin: 0 auto; border-radius: 8px; padding: 18px 24px; font: 15px/1.55 Arial, Helvetica, sans-serif; color: #222; outline: none; box-shadow: 0 0 0 1.5px #d6cdb4; }
+  .visuel:focus { box-shadow: 0 0 0 2px var(--gold); }
+  .visuel img { cursor: pointer; }
+  .visuel img.img-choisie { outline: 3px solid #B8965A; outline-offset: 2px; }
+  .visuel a { cursor: text; }
+  .chip { display: inline-block; background: #f5e6b3; color: #8b6914; border-radius: 999px; padding: 0 8px; font: 600 12px/1.7 system-ui, sans-serif; white-space: nowrap; vertical-align: baseline; user-select: all; }
+  .chip-bloc { border: 1px dashed #B8965A; border-radius: 6px; padding: 2px 12px; margin: 14px 0; background: #fffdf5; user-select: none; }
+  .chip-bloc::before { content: "✍️ Signature commune (se modifie en haut de la liste)"; display: block; font: 11px system-ui, sans-serif; color: #8b6914; margin-top: 4px; }
+  details.code { margin-top: 12px; }
+  details.code summary { cursor: pointer; color: var(--muted); font-size: .85rem; }
+  details.code textarea { margin-top: 8px; min-height: 200px; }
   .aide { font-size: .8rem; color: var(--muted); margin-top: 6px; }
   .ligne-actions { display: flex; flex-wrap: wrap; gap: 14px; align-items: center; justify-content: space-between; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
   .valide { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; cursor: pointer; }
@@ -71,7 +86,7 @@
   <a class="back" href="webinars.html">← Retour aux Shows</a>
   <a class="back" href="guide-textes-emails.html" target="_blank" rel="noopener" style="margin-left:22px">📖 Guide : comment modifier les textes</a>
   <h1 id="titre">Textes des emails — Challenge 3 jours</h1>
-  <p class="sub">Clique sur un email pour modifier son sujet et son texte. Les zones entre accolades, comme <b>{{prenom}}</b>, sont remplies automatiquement pour chaque personne.</p>
+  <p class="sub">Clique sur un email à gauche, puis écris directement dans l'email, comme dans Word. Les étiquettes dorées (Prénom, Date de début…) sont remplies automatiquement pour chaque personne.</p>
 
   <div class="grid">
     <div class="liste" id="liste"><div class="vide">Chargement…</div></div>
@@ -150,72 +165,172 @@
     el.querySelectorAll(".item").forEach(b => b.addEventListener("click", () => ouvrir(Number(b.dataset.id))));
   }
 
+  // ---------- Editeur visuel (comme Word) ----------
+  const LIBELLE_ZONE = Object.fromEntries(ZONES.map(([z, l]) => [z, l.replace(/ \(.*\)$/, "")]));
+  const LIENS_BOUTON = [["{{lien_direct}}", "Lien du direct (Zoom)"], ["{{lien_replay}}", "Lien du replay"], ["{{lien_rdv}}", "Lien de rendez-vous"], ["{{lien_inscription}}", "Lien d'inscription"]];
+
+  // Code HTML -> editeur visuel : les zones {{...}} du texte deviennent des etiquettes dorees
+  function versVisuel(html, cible, sig) {
+    const t = document.createElement("template");
+    t.innerHTML = html;
+    const marcheur = document.createTreeWalker(t.content, NodeFilter.SHOW_TEXT);
+    const noeuds = [];
+    while (marcheur.nextNode()) if (/\{\{[a-z_]+\}\}/.test(marcheur.currentNode.nodeValue)) noeuds.push(marcheur.currentNode);
+    noeuds.forEach(n => {
+      const frag = document.createDocumentFragment();
+      n.nodeValue.split(/(\{\{[a-z_]+\}\})/).forEach(morceau => {
+        if (!/^\{\{[a-z_]+\}\}$/.test(morceau)) { if (morceau) frag.appendChild(document.createTextNode(morceau)); return; }
+        let e;
+        if (morceau === "{{signature}}") {
+          e = document.createElement("div"); e.className = "chip-bloc"; e.innerHTML = sig || "<p>Signature</p>";
+        } else {
+          e = document.createElement("span"); e.className = "chip"; e.textContent = LIBELLE_ZONE[morceau] || morceau;
+        }
+        e.contentEditable = "false"; e.dataset.z = morceau;
+        frag.appendChild(e);
+      });
+      n.replaceWith(frag);
+    });
+    cible.innerHTML = "";
+    cible.appendChild(t.content);
+  }
+  // Editeur visuel -> code HTML (les etiquettes redeviennent des zones {{...}})
+  function versHtml(source) {
+    const c = source.cloneNode(true);
+    c.querySelectorAll("[data-z]").forEach(e => e.replaceWith(document.createTextNode(e.dataset.z)));
+    c.querySelectorAll("[contenteditable]").forEach(e => e.removeAttribute("contenteditable"));
+    c.querySelectorAll(".img-choisie").forEach(e => e.classList.remove("img-choisie"));
+    c.querySelectorAll('[class=""]').forEach(e => e.removeAttribute("class"));
+    return c.innerHTML.replace(/(<\/p>|<\/div>|<hr[^>]*>)\s*(?=<)/g, "$1\n").trim();
+  }
+
   function ouvrir(id) {
     courant = modeles.find(m => Number(m.id) === id);
     if (!courant) return;
     const [nom] = INFO[courant.type_email] || [courant.type_email];
     const estSignature = courant.type_email === "signature";
+    const sigModele = modeles.find(m => m.type_email === "signature");
     document.getElementById("editeur").innerHTML = `
       <h2>${esc(nom)}</h2>
       <p class="quand">${courant.modifie_le ? "Dernière modification : " + esc(courant.modifie_le) : ""}</p>
       <div ${estSignature ? 'hidden' : ''}><label for="sujet">Sujet de l'email</label>
-      <input type="text" id="sujet" value="${esc(courant.sujet)}"></div>
-      ${estSignature ? '<p class="aide" style="font-size:.9rem">Cette signature s\'ajoute partout où tu places la zone <b>Signature</b> dans un email. Modifie-la ici une seule fois : tous les emails suivent.</p>' : ''}
-      <label for="texte">${estSignature ? "Texte de la signature" : "Texte de l'email"}</label>
-      <textarea id="texte">${esc(courant.html)}</textarea>
-      <div class="zones">${ZONES.map(([z, l]) => `<button type="button" class="zone" data-z="${z}" title="Insérer : ${l}">${l}</button>`).join("")}
-        </div>
-      <div class="blocs"><span class="blocs-titre">Ajouter un bloc :</span>
+      <input type="text" id="sujet" value="${esc(courant.sujet)}">
+      <p class="aide" id="ap-sujet"></p></div>
+      ${estSignature ? '<p class="aide" style="font-size:.9rem">Cette signature s\'ajoute partout où tu places le bloc <b>Signature</b> dans un email. Modifie-la ici une seule fois : tous les emails suivent.</p>' : ''}
+      <label>${estSignature ? "Signature" : "Texte de l'email"} <span class="aide" style="font-weight:400">— clique dans le texte et écris directement, comme dans Word</span></label>
+      <div class="barre">
+        <span class="blocs-titre">Mise en forme :</span>
+        <button type="button" class="zone" id="btnGras" title="Mettre en gras le texte sélectionné"><b>G</b> Gras</button>
+        <span class="sep"></span>
+        <span class="blocs-titre">Ajouter :</span>
         <button type="button" class="bloc" data-b="BOUTON">🔘 Bouton</button>
         <button type="button" class="bloc" data-b="IMAGE">🖼️ Image</button>
         <button type="button" class="bloc" data-b="ENCADRE">📦 Encadré</button>
         <button type="button" class="bloc" data-b="SEPARATEUR">➖ Séparateur</button>
         ${estSignature ? '' : '<button type="button" class="bloc" data-b="SIGNATURE">✍️ Signature</button>'}
         <input type="file" id="fichierImage" accept="image/*" hidden>
-        <span id="choixTaille" style="display:none;gap:4px;align-items:center;font:12px system-ui,sans-serif">Taille :
-          <button type="button" class="zone taille" data-l="200">Petite</button>
-          <button type="button" class="zone taille" data-l="360">Moyenne</button>
-          <button type="button" class="zone taille" data-l="560">Grande</button></span>
-        <span id="msgImage" class="aide" style="margin:0 0 0 6px"></span></div>
-      <p class="aide"><b>Pour placer un bloc ou une image :</b> clique d'abord dans le texte, à l'endroit voulu (par exemple juste après un <b>&lt;/p&gt;</b>), puis sur le bouton. Clique sur une zone pour l'insérer à l'endroit du curseur. <b>&lt;p&gt;</b> = paragraphe, <b>&lt;b&gt;</b> = gras, <b>&lt;br&gt;</b> = retour à la ligne.</p>
-      <div class="apercu-titre">Aperçu (avec un exemple de prénom et de date)</div>
-      <div class="apercu"><div class="apercu-sujet" id="ap-sujet"></div><div class="apercu-mail" id="ap-mail"></div></div>
+      </div>
+      <div class="barre" id="choixTaille" style="display:none">
+        <span class="blocs-titre">Taille de la nouvelle image :</span>
+        <button type="button" class="zone" data-l="200">Petite</button>
+        <button type="button" class="zone" data-l="360">Moyenne</button>
+        <button type="button" class="zone" data-l="560">Grande</button>
+        <button type="button" class="zone" data-l="0">Annuler</button>
+      </div>
+      <div class="barre" id="barreImage" style="display:none">
+        <span class="blocs-titre">Image choisie :</span>
+        <button type="button" class="zone" data-t="200">Petite</button>
+        <button type="button" class="zone" data-t="360">Moyenne</button>
+        <button type="button" class="zone" data-t="560">Grande</button>
+        <button type="button" class="zone" data-t="0">🗑️ Supprimer l'image</button>
+      </div>
+      <div class="barre" id="barreBouton" style="display:none">
+        <span class="blocs-titre">Le bouton choisi mène vers :</span>
+        <select id="lienBouton">${LIENS_BOUTON.map(([v, l]) => `<option value="${v}">${l}</option>`).join("")}</select>
+        <span class="aide" style="margin:0">Le texte du bouton se modifie directement dans l'email.</span>
+      </div>
+      <div class="barre"><span class="blocs-titre">Zones automatiques :</span>
+        ${ZONES.filter(([z]) => z !== "{{signature}}" && !/lien_/.test(z)).map(([z, l]) => `<button type="button" class="zone" data-z="${z}" title="Insérer : ${l}">${l}</button>`).join("")}</div>
+      <span id="msgImage" class="aide"></span>
+      <div class="visuel-fond"><div class="visuel" id="visuel" contenteditable="true" spellcheck="true"></div></div>
+      <details class="code"><summary>Voir le code (avancé)</summary>
+        <textarea id="texte">${esc(courant.html)}</textarea></details>
       <div class="ligne-actions">
         <label class="valide"><input type="checkbox" id="valide" ${Number(courant.a_modifier) ? "" : "checked"}> Texte validé (retire « À modifier »)</label>
         <span id="msg" role="status" aria-live="polite"></span>
         <button class="enreg" id="enreg">Enregistrer</button>
       </div>`;
-    const sujet = document.getElementById("sujet"), texte = document.getElementById("texte");
-    const maj = () => {
-      document.getElementById("ap-sujet").textContent = remplirExemple(sujet.value);
-      document.getElementById("ap-mail").innerHTML = remplirExemple(texte.value);
+    const sujet = document.getElementById("sujet"), texte = document.getElementById("texte"), visuel = document.getElementById("visuel");
+    const msgImage = document.getElementById("msgImage");
+    try { document.execCommand("defaultParagraphSeparator", false, "p"); } catch (e) {}
+    const sig = () => estSignature ? "" : (sigModele ? sigModele.html : "");
+    const majSujet = () => { document.getElementById("ap-sujet").textContent = "Aperçu du sujet : " + remplirExemple(sujet.value); };
+    const depuisCode = () => versVisuel(texte.value, visuel, sig());
+    const versCode = () => { texte.value = versHtml(visuel); };
+    sujet.addEventListener("input", majSujet); majSujet();
+    depuisCode();
+    visuel.addEventListener("input", versCode);
+    texte.addEventListener("input", depuisCode);
+
+    // Memoriser l'endroit ou se trouve le curseur dans l'email
+    let plage = null, dernierChamp = visuel;
+    document.onselectionchange = () => {
+      const s = window.getSelection();
+      if (s.rangeCount && visuel.contains(s.anchorNode)) { plage = s.getRangeAt(0).cloneRange(); dernierChamp = visuel; }
     };
-    sujet.addEventListener("input", maj); texte.addEventListener("input", maj); maj();
-    let dernierChamp = texte;
-    // Position du curseur dans le texte, memorisee a chaque clic ou frappe (utilisee pour placer les blocs)
-    let curseur = texte.value.length;
-    ["click", "keyup", "select", "input", "focus"].forEach(ev => texte.addEventListener(ev, () => { curseur = texte.selectionStart ?? curseur; }));
     sujet.addEventListener("focus", () => dernierChamp = sujet);
-    texte.addEventListener("focus", () => dernierChamp = texte);
-    const inserer = (c, v, pos) => {
-      const d = pos ?? c.selectionStart ?? c.value.length, f = pos ?? c.selectionEnd ?? c.value.length;
-      c.value = c.value.slice(0, d) + v + c.value.slice(f);
-      c.focus(); c.selectionStart = c.selectionEnd = d + v.length; maj();
-      if (c === texte) curseur = d + v.length;
+    // Insertion sans execCommand (qui retire les styles des images et des boutons)
+    const insererIci = code => {
+      const t = document.createElement("template"); t.innerHTML = code.trim();
+      const bloc = /^<(p|div|hr|table|h\d)/i.test(code.trim());
+      let r = plage && visuel.contains(plage.startContainer) ? plage : null;
+      if (bloc) {
+        // Un bloc se place apres le paragraphe ou se trouve le curseur
+        let n = r ? r.startContainer : null;
+        while (n && n.parentNode !== visuel) n = n.parentNode;
+        const dernier = t.content.lastChild;
+        if (n && n !== visuel) n.after(t.content); else visuel.appendChild(t.content);
+        r = document.createRange(); r.setStartAfter(dernier); r.collapse(true);
+      } else {
+        if (!r) { r = document.createRange(); r.selectNodeContents(visuel.lastElementChild || visuel); r.collapse(false); }
+        r.deleteContents();
+        const dernier = t.content.lastChild;
+        r.insertNode(t.content);
+        r = document.createRange(); r.setStartAfter(dernier); r.collapse(true);
+      }
+      plage = r;
+      const s = window.getSelection(); s.removeAllRanges(); s.addRange(r);
+      versCode();
     };
-    document.querySelectorAll(".zone:not(.taille)").forEach(z => z.addEventListener("click", () => inserer(dernierChamp, z.dataset.z)));
-    // Blocs : bouton, image, encadre, separateur, signature (toujours dans le texte)
-    const fichier = document.getElementById("fichierImage"), msgImage = document.getElementById("msgImage");
-    let positionImage = 0, largeurImage = 560;
-    const choixTaille = document.getElementById("choixTaille");
-    choixTaille.querySelectorAll("button").forEach(t => t.addEventListener("click", ev => {
-      ev.stopPropagation(); largeurImage = Number(t.dataset.l); choixTaille.style.display = "none"; fichier.click();
-    }));
-    document.querySelectorAll(".bloc").forEach(bt => bt.addEventListener("click", () => {
-      const b = bt.dataset.b;
-      if (b === "IMAGE") { positionImage = curseur; choixTaille.style.display = "inline-flex"; msgImage.textContent = "Choisis la taille de l'image :"; return; }
-      inserer(texte, "\n" + (b === "BOUTON" ? BOUTON : BLOCS[b]) + "\n", curseur);
-    }));
+    const html = h => { const t = document.createElement("div"); versVisuel(h, t, sig()); return t.innerHTML; };
+
+    document.getElementById("btnGras").addEventListener("mousedown", e => e.preventDefault());
+    document.getElementById("btnGras").addEventListener("click", () => { document.execCommand("bold"); versCode(); });
+    document.querySelectorAll("[data-z]").forEach(z => {
+      z.addEventListener("mousedown", e => e.preventDefault());
+      z.addEventListener("click", () => {
+        if (dernierChamp === sujet) {
+          const d = sujet.selectionStart ?? sujet.value.length, f = sujet.selectionEnd ?? d;
+          sujet.value = sujet.value.slice(0, d) + z.dataset.z + sujet.value.slice(f); sujet.focus(); majSujet();
+        } else insererIci(html(z.dataset.z));
+      });
+    });
+
+    // Blocs
+    const fichier = document.getElementById("fichierImage"), choixTaille = document.getElementById("choixTaille");
+    let largeurImage = 560;
+    document.querySelectorAll(".bloc").forEach(bt => {
+      bt.addEventListener("mousedown", e => e.preventDefault());
+      bt.addEventListener("click", () => {
+        const b = bt.dataset.b;
+        if (b === "IMAGE") { choixTaille.style.display = "flex"; msgImage.textContent = ""; return; }
+        insererIci(html(b === "BOUTON" ? BOUTON : BLOCS[b]));
+      });
+    });
+    choixTaille.querySelectorAll("button").forEach(t => {
+      t.addEventListener("mousedown", e => e.preventDefault());
+      t.addEventListener("click", () => { choixTaille.style.display = "none"; largeurImage = Number(t.dataset.l); if (largeurImage) fichier.click(); });
+    });
     fichier.addEventListener("change", async () => {
       const f = fichier.files[0]; fichier.value = "";
       if (!f) return;
@@ -225,11 +340,39 @@
         const r = await fetch(IMAGE_API, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ action: "upload", nom: f.name, mime, data }) });
         const j = await r.json();
         if (!j.success) throw new Error(j.erreur || "erreur");
-        inserer(texte, "\n" + imageHtml(j.url, largeurImage) + "\n", positionImage);
+        insererIci(imageHtml(j.url, largeurImage));
         msgImage.textContent = "Image ajoutée ✔ (pense à Enregistrer)";
       } catch (e) { msgImage.textContent = "Échec de l'envoi de l'image. Réessaie."; }
     });
-    document.getElementById("enreg").addEventListener("click", enregistrer);
+
+    // Clic sur une image ou un bouton dans l'email : barre d'outils adaptee
+    const barreImage = document.getElementById("barreImage"), barreBouton = document.getElementById("barreBouton"), lienBouton = document.getElementById("lienBouton");
+    let imgChoisie = null, boutonChoisi = null;
+    visuel.addEventListener("click", e => {
+      visuel.querySelectorAll(".img-choisie").forEach(i => i.classList.remove("img-choisie"));
+      imgChoisie = e.target.closest("img"); boutonChoisi = e.target.closest("a");
+      if (imgChoisie) imgChoisie.classList.add("img-choisie");
+      barreImage.style.display = imgChoisie ? "flex" : "none";
+      barreBouton.style.display = boutonChoisi ? "flex" : "none";
+      if (boutonChoisi) {
+        const h = boutonChoisi.getAttribute("href") || "";
+        if (![...lienBouton.options].some(o => o.value === h)) lienBouton.add(new Option(h, h));
+        lienBouton.value = h;
+      }
+    });
+    barreImage.querySelectorAll("button").forEach(t => {
+      t.addEventListener("mousedown", e => e.preventDefault());
+      t.addEventListener("click", () => {
+        if (!imgChoisie) return;
+        const l = Number(t.dataset.t);
+        if (!l) { const p = imgChoisie.closest("p"); (p && p.textContent.trim() === "" && p.querySelectorAll("img").length === 1 ? p : imgChoisie).remove(); }
+        else { imgChoisie.setAttribute("width", l); imgChoisie.style.width = l + "px"; }
+        imgChoisie = null; barreImage.style.display = "none"; versCode();
+      });
+    });
+    lienBouton.addEventListener("change", () => { if (boutonChoisi) { boutonChoisi.setAttribute("href", lienBouton.value); versCode(); } });
+
+    document.getElementById("enreg").addEventListener("click", () => { versCode(); enregistrer(); });
     afficherListe();
   }
 
