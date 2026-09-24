@@ -168,6 +168,19 @@
   .log-toggle { background: rgba(108, 122, 173, 0.15); color: #5A6BA8; }
   .log-other { background: #EFEAE0; color: var(--text-soft); }
   .log-desc { color: var(--text-main); }
+  .log-achat { background: rgba(184, 150, 90, 0.22); color: #7A5C26; }
+  .log-tools { display:flex; gap:12px; align-items:center; flex-wrap:wrap; margin: 0 0 14px; }
+  .log-search { flex: 1 1 260px; max-width: 420px; position: relative; }
+  .log-search input { width: 100%; box-sizing: border-box; padding: 10px 36px 10px 38px; border: 1px solid var(--border-soft); border-radius: 10px; font: inherit; font-size: 14px; background: white; color: var(--text-main); }
+  .log-search input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(184,150,90,0.15); }
+  .log-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-soft); }
+  .log-search .log-search-clear { position: absolute; right: 8px; top: 50%; transform: translateY(-50%); border: none; background: none; cursor: pointer; font-size: 16px; color: var(--text-soft); display: none; padding: 4px 6px; }
+  .log-person { display: none; align-items: center; gap: 8px; padding: 7px 8px 7px 14px; border-radius: 999px; background: rgba(184,150,90,0.15); color: #7A5C26; font-size: 13px; font-weight: 600; }
+  .log-person button { border: none; background: white; color: var(--text-main); border-radius: 999px; padding: 4px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+  .log-name-link { cursor: pointer; color: var(--text-main); border-bottom: 1px dashed var(--gold); }
+  .log-name-link:hover { color: var(--gold); }
+  .btn-history { border: 1px solid var(--border-soft); background: white; color: var(--text-main); border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+  .btn-history:hover { border-color: var(--gold); color: #7A5C26; }
 
   .toggle-btn {
     padding: 7px 16px; border-radius: 8px; font-size: 12px; font-weight: 600;
@@ -425,6 +438,18 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
         Vider le journal
       </button>
+    </div>
+  </div>
+
+  <div class="log-tools">
+    <div class="log-search">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="search" id="logSearch" placeholder="Rechercher un nom, un email ou une action…" oninput="filtrerJournal()" autocomplete="off">
+      <button class="log-search-clear" id="logSearchClear" onclick="effacerRecherche()" title="Effacer">✕</button>
+    </div>
+    <div class="log-person" id="logPerson">
+      <span id="logPersonNom"></span>
+      <button onclick="toutAfficher()">✕ Tout afficher</button>
     </div>
   </div>
 
@@ -800,6 +825,7 @@
         '<td><span class="stat-mini"><b>' + a.total_leads + '</b> leads · <b>' + a.total_users + '</b> compte(s)</span></td>' +
         '<td>' + created + '</td>' +
         '<td><div class="actions-cell">' +
+          '<button class="btn-history" onclick="voirHistorique(' + a.id + ')" title="Voir tout ce que cette personne a fait">Historique</button>' +
           (isSelf
             ? '<span class="stat-mini" title="Vous ne pouvez pas désactiver ou supprimer votre propre compte">Protégé</span>'
             : '<button class="toggle-btn ' + btnClass + '" onclick="toggleStatus(' + a.id + ', \'' + nextStatus + '\', this)">' + btnLabel + '</button>' +
@@ -1264,7 +1290,10 @@
       admin_toggle: { label: 'Statut changé', cls: 'log-toggle' },
       login: { label: 'Connexion', cls: 'log-other' },
       lead_added: { label: 'Lead ajouté', cls: 'log-create' },
-      sale_made: { label: 'Vente réalisée', cls: 'log-create' }
+      sale_made: { label: 'Vente réalisée', cls: 'log-create' },
+      achat: { label: 'Achat', cls: 'log-achat' },
+      fin_abonnement: { label: 'Abonnement terminé', cls: 'log-delete' },
+      conversion: { label: 'Devenu entrepreneur', cls: 'log-create' }
     };
     return map[type] || { label: type, cls: 'log-other' };
   }
@@ -1275,19 +1304,84 @@
     try {
       const resp = await fetch(CRM_ADMIN_LOGS);
       const data = await resp.json();
-      const logs = data.logs || [];
-      allLogs = logs;
-      document.getElementById('logsCount').textContent = logs.length + ' entrée(s)';
-      renderLogs(logs);
+      allLogs = data.logs || [];
+      filtrerJournal();
     } catch (err) {
       document.getElementById('logsContainer').innerHTML = '<div class="loading-state">Erreur de chargement du journal.</div>';
       document.getElementById('logsCount').textContent = '—';
     }
   }
 
-  function renderLogs(logs) {
+  // === Recherche et historique d'une personne (24.09.2026) ===
+  let personneChoisie = null; // { id, nom, login }
+  function sansAccents(t) {
+    return String(t || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+  function nomDuLog(l) { return l.nom_praticien || l.target_nom || ''; }
+  function logDeLaPersonne(l, p) {
+    if (p.id && l.account_id != null && String(l.account_id) === String(p.id)) return true;
+    const login = sansAccents(l.target_login), nom = sansAccents(nomDuLog(l));
+    if (p.login && login && login === sansAccents(p.login)) return true;
+    if (p.nom && nom && nom === sansAccents(p.nom)) return true;
+    return false;
+  }
+  function filtrerJournal() {
+    const champ = document.getElementById('logSearch');
+    const q = sansAccents(champ.value.trim());
+    document.getElementById('logSearchClear').style.display = champ.value ? 'block' : 'none';
+    let logs = allLogs;
+    if (personneChoisie) logs = logs.filter(l => logDeLaPersonne(l, personneChoisie));
+    if (q) {
+      logs = logs.filter(l => {
+        const meta = logTypeMeta(l.type);
+        return sansAccents([nomDuLog(l), l.target_login, l.description, meta.label, l.target_plan].join(' ')).indexOf(q) >= 0;
+      });
+    }
+    const filtre = personneChoisie || q;
+    document.getElementById('logsCount').textContent = filtre
+      ? logs.length + ' entrée(s) sur ' + allLogs.length
+      : allLogs.length + ' entrée(s)';
+    const bloc = document.getElementById('logPerson');
+    if (personneChoisie) {
+      document.getElementById('logPersonNom').textContent = 'Historique de : ' + (personneChoisie.nom || personneChoisie.login);
+      bloc.style.display = 'inline-flex';
+    } else {
+      bloc.style.display = 'none';
+    }
+    renderLogs(logs, !!filtre);
+  }
+  function effacerRecherche() {
+    document.getElementById('logSearch').value = '';
+    filtrerJournal();
+  }
+  function toutAfficher() {
+    personneChoisie = null;
+    document.getElementById('logSearch').value = '';
+    filtrerJournal();
+  }
+  function choisirPersonne(p) {
+    personneChoisie = p;
+    document.getElementById('logSearch').value = '';
+    filtrerJournal();
+    document.getElementById('logSearch').closest('.log-tools').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  function voirHistorique(id) {
+    const a = allAccounts.find(x => String(x.id) === String(id));
+    if (!a) return;
+    choisirPersonne({ id: a.id, nom: a.nom_praticien || '', login: a.login || a.email || '' });
+  }
+  function clicNomJournal(i) {
+    const l = logsAffiches[i];
+    if (!l) return;
+    choisirPersonne({ id: l.account_id || null, nom: nomDuLog(l), login: l.target_login || '' });
+  }
+
+  let logsAffiches = [];
+  function renderLogs(logs, filtre) {
+    logsAffiches = logs;
     if (!logs.length) {
-      document.getElementById('logsContainer').innerHTML = '<div class="loading-state">Aucune activité enregistrée pour le moment.</div>';
+      document.getElementById('logsContainer').innerHTML = '<div class="loading-state">' +
+        (filtre ? 'Aucune activité trouvée pour cette recherche.' : 'Aucune activité enregistrée pour le moment.') + '</div>';
       return;
     }
     let html = '<table><thead><tr>' +
@@ -1299,15 +1393,17 @@
       '<th>Date</th>' +
       '</tr></thead><tbody>';
 
-    logs.forEach(l => {
+    logs.forEach((l, i) => {
       const meta = logTypeMeta(l.type);
       const when = l.created_at
-        ? new Date(l.created_at.replace(' ', 'T')).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+        ? new Date(String(l.created_at).replace(' ', 'T')).toLocaleString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
         : '—';
+      const nom = nomDuLog(l);
+      const cliquable = nom || l.target_login;
       html += '<tr>' +
         '<td><span class="log-type-chip ' + meta.cls + '">' + esc(meta.label) + '</span></td>' +
-        '<td>' + esc(l.nom_praticien || '—') + '</td>' +
-        '<td>' + esc(l.target_login || '—') + '</td>' +
+        '<td>' + (nom ? '<span class="log-name-link" title="Voir tout l\'historique de cette personne" onclick="clicNomJournal(' + i + ')">' + esc(nom) + '</span>' : '—') + '</td>' +
+        '<td>' + (l.target_login ? (cliquable && !nom ? '<span class="log-name-link" onclick="clicNomJournal(' + i + ')">' + esc(l.target_login) + '</span>' : esc(l.target_login)) : '—') + '</td>' +
         '<td>' + (l.target_plan ? '<span class="plan-chip">' + esc(planLabel(l.target_plan)) + '</span>' : '—') + '</td>' +
         '<td class="log-desc">' + esc(l.description || '') + '</td>' +
         '<td>' + when + '</td>' +
