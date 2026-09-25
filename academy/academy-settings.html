@@ -79,6 +79,21 @@
 const API_BASE = 'https://n8n.srv936251.hstgr.cloud/webhook';
 const params = new URLSearchParams(window.location.search);
 const ACCOUNT_ID = parseInt(params.get('account_id')) || 27;
+const PAGE_ADMIN = ACCOUNT_ID === 5 ? 'academy-admin-alex.html' : 'academy-admin.html';
+if (!sessionStorage.getItem('academy_admin_token')) { location.href = PAGE_ADMIN; throw new Error('Connexion administrateur requise'); }
+// Securite (25.09.2026) : chaque appel d'administration emporte le jeton recu a la connexion
+(function () {
+  const fo = window.fetch.bind(window); let averti = false;
+  window.fetch = function (u, o) {
+    let s = String(u);
+    const admin = /\/academy-(admin-list|admin-crud|update-settings)/.test(s);
+    if (admin) s += (s.indexOf('?') < 0 ? '?' : '&') + 'jeton=' + encodeURIComponent(sessionStorage.getItem('academy_admin_token') || '');
+    return fo(admin ? s : u, o).then(function (r) {
+      if (admin && r.status === 401 && !averti) { averti = true; sessionStorage.removeItem('academy_admin_token'); alert('Ta session administrateur a expiré. Reconnecte-toi.'); location.href = PAGE_ADMIN; }
+      return r;
+    });
+  };
+})();
 
 function previewLogo() {
   const url = document.getElementById('logo-url').value.trim();

@@ -99,6 +99,8 @@
 </div>
 
 <script>
+  // Securite (25.09.2026) : page reservee a l'administrateur connecte
+  (function () { let ok = false; try { const s = JSON.parse(localStorage.getItem('crm_session_user') || 'null'); const exp = parseInt(localStorage.getItem('crm_session_expiry') || '0', 10); ok = !!(s && s.token && s.role === 'super_admin' && Date.now() < exp); } catch (e) {} if (!ok) { location.href = 'index.html'; throw new Error('Session administrateur requise'); } })();
   const API = "https://n8n.srv936251.hstgr.cloud/webhook/crm-email-modeles";
   const TYPE_EVENEMENT = new URLSearchParams(location.search).get("type") || "challenge_3_jours";
 
