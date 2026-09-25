@@ -146,7 +146,9 @@
           : '<li><span class="num">2</span><div><b>Ton accès est activé</b><span class="texte">Ton module est ouvert automatiquement sur ton compte (cela peut prendre une minute).</span></div></li>' +
             '<li><span class="num">3</span><div><b>Commence maintenant</b><span class="texte">Connecte-toi à ton espace Nexa pour découvrir ce que tu viens d\'acquérir.</span></div></li>') +
       '</ol>' +
-      '<a class="bouton" href="' + LIEN + '">' + BOUTON + ' <span class="fleche">→</span></a>' +
+      (ACADEMIE
+        ? '<div style="margin-top:22px;padding:16px 18px;border-radius:12px;background:#F6EFDD;color:#3a3325;font-size:14.5px;line-height:1.6;text-align:left">📧 <b>Prochaine étape :</b> ouvre l\'email <b>« Votre accès à la formation »</b>. Tu y trouveras tes identifiants et le bouton <b>« Accéder à ma formation »</b>. Tu peux fermer cette page.</div>'
+        : '<a class="bouton" href="' + LIEN + '">' + BOUTON + ' <span class="fleche">→</span></a>') +
       '<p class="aide">Une question ? Écris-nous : <a href="mailto:' + CONTACT + '">' + CONTACT + '</a></p>'
     );
   }
