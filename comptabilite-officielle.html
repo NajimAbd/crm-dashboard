@@ -66,6 +66,10 @@
   .journal-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-soft); padding: 8px 6px; border-bottom: 2px solid var(--border-soft); }
   .journal-table td { padding: 10px 6px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
   .journal-table tr:last-child td { border-bottom: none; }
+  .journal-table td.recu-num { font-size: 12px; font-weight: 600; white-space: nowrap; color: var(--text-main, #0D1A12); }
+  .journal-table .recu-aucun { font-weight: 400; color: var(--text-soft); font-style: italic; }
+  .journal-table td.recu-actions { text-align: center; white-space: nowrap; }
+  .journal-table .recu-voir { font-size: 16px; margin-right: 4px; }
   .amount-in { color: #2C6B3F; font-weight: 600; white-space: nowrap; }
   .amount-out { color: #B23A2E; font-weight: 600; white-space: nowrap; }
   .journal-empty { text-align: center; padding: 40px 20px; color: var(--text-soft); font-size: 13px; }
@@ -1124,7 +1128,7 @@
     }
 
     const sorted = [...filtered].sort((a, b) => (a.date_operation || '').localeCompare(b.date_operation || ''));
-    let html = '<table class="journal-table"><thead><tr><th>#</th><th>Date</th><th>Catégorie</th><th>Description</th><th></th><th style="text-align:right;">Montant</th><th class="no-print" style="text-align:center;">Reçu envoyé</th><th class="no-print"></th></tr></thead><tbody>';
+    let html = '<table class="journal-table"><thead><tr><th>#</th><th>Date</th><th>Catégorie</th><th>Description</th><th></th><th style="text-align:right;">Montant</th><th>N° reçu</th><th class="no-print" style="text-align:center;">Reçu</th><th class="no-print"></th></tr></thead><tbody>';
 
     function libelleHighlight(libelle, modePaiement) {
       const l = (libelle || '').toLowerCase();
@@ -1160,7 +1164,8 @@
         '<td><span' + libelleStyle + '>' + esc(e.libelle) + '</span>' + (e.reference_piece ? ' <span style="color:var(--text-soft);font-size:11px;">(' + esc(e.reference_piece) + ')</span>' : '') + auditInfo + '</td>' +
         '<td><span class="tag ' + (isIn ? 'in' : 'out') + '">' + (isIn ? 'Recette' : 'Dépense') + '</span></td>' +
         '<td style="text-align:right;" class="' + (isIn ? 'amount-in' : 'amount-out') + '">' + (isIn ? '+' : '−') + parseFloat(e.montant_ht).toFixed(2) + ' CHF</td>' +
-        '<td class="no-print" style="text-align:center;">' + (isIn ? '<button class="row-delete" style="display:inline-flex;align-items:center;" onclick="envoyerRecu(' + e.id + ')" title="' + arrowTitle + '">' + envelopeIcon + '</button>' : '') + '</td>' +
+        '<td class="recu-num">' + (isIn ? (e.numero_recu ? esc(e.numero_recu) : '<span class="recu-aucun">pas encore</span>') : '') + '</td>' +
+        '<td class="no-print recu-actions">' + (isIn ? (lienRecu(e) ? '<button class="row-delete recu-voir" onclick="voirRecu(' + e.id + ')" title="Voir / imprimer le reçu">👁</button>' : '') + '<button class="row-delete" style="display:inline-flex;align-items:center;" onclick="envoyerRecu(' + e.id + ')" title="' + arrowTitle + '">' + envelopeIcon + '</button>' : '') + '</td>' +
         '<td class="no-print"><button class="row-delete" onclick="deleteEntry(' + e.id + ')" title="Supprimer">✕</button></td>' +
         '</tr>';
     });
@@ -1327,6 +1332,17 @@
     } catch (err) {
       showToast('Erreur — écriture non enregistrée.');
     }
+  }
+
+  // Reçus (25.09.2026) : voir le reçu tel que le client le reçoit (lien avec code secret)
+  function lienRecu(e) {
+    const u = String((e && e.recu_pdf_url) || '');
+    return /^https:\/\/n8n\.srv936251\.hstgr\.cloud\/webhook\/crm-comptabilite-recu-view\?id=\d+&c=[a-f0-9]{24}$/.test(u) ? u : '';
+  }
+  function voirRecu(id) {
+    const e = allEntries.find(x => String(x.id) === String(id));
+    const u = lienRecu(e);
+    if (u) window.open(u, '_blank', 'noopener');
   }
 
   async function envoyerRecu(id) {
