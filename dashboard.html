@@ -142,6 +142,9 @@
   }
   .logout-btn-gold:hover { background: rgba(196,96,78,0.18); color: #F5EFE1; }
   .logout-btn-gold svg { flex: none; }
+  .maj-btn { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 14px; background: rgba(184,150,90,0.08); border: 1px solid #B8965A; border-radius: 7px; color: #D9BF8C; font-size: 12px; font-family: 'Inter', sans-serif; cursor: pointer; transition: background .15s ease, color .15s ease; }
+  .maj-btn:hover { background: rgba(184,150,90,0.18); color: #F5EFE1; }
+  .maj-btn:disabled { opacity: .5; cursor: wait; }
 
   .nav-link-v2 {
     color: #F5F1E8;
@@ -573,6 +576,7 @@
       <a id="formationBtn" class="product-btn disabled" onclick="handleLockedClick('formationBtn', function(){ window.location.href='formation.html'; })">Académie</a>
     </div>
     <div style="width:1px;height:24px;background:#2A3A2A;margin:0 4px"></div>
+    <button class="maj-btn" id="majBtn" onclick="mettreAJourEspace()" title="Récupérer tes nouveaux modules et réglages">🔄 Mettre à jour</button>
     <button class="logout-btn-gold" onclick="logout()">
       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
       Déconnexion
@@ -1389,6 +1393,23 @@
     if (s === null || s === undefined) return '';
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
+
+  // Bouton « Mettre a jour » (25.09.2026) : prepare ce qui manque (dossiers, Academie, email) et rallume les icones
+  async function mettreAJourEspace() {
+    const b = document.getElementById('majBtn');
+    if (!session || !session.account_id) return;
+    b.disabled = true; b.textContent = '⏳ Mise à jour…';
+    try {
+      const r = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-mettre-a-jour', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: session.account_id }) });
+      const d = await r.json();
+      if (d && d.success) { try { sessionStorage.setItem('maj_espace_ok', '1'); } catch (e) {} location.reload(); return; }
+      alert((d && d.message) || 'La mise à jour n’a pas pu se faire. Réessaie.');
+    } catch (e) { alert('Connexion impossible. Réessaie.'); }
+    b.disabled = false; b.textContent = '🔄 Mettre à jour';
+  }
+  window.addEventListener('load', function () {
+    try { if (sessionStorage.getItem('maj_espace_ok')) { sessionStorage.removeItem('maj_espace_ok'); setTimeout(function () { showToast('✓ Ton espace est à jour'); }, 600); } } catch (e) {}
+  });
 
   function showToast(msg) {
     const t = document.getElementById('toast');

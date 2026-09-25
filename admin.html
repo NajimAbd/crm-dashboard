@@ -546,6 +546,9 @@
       <div style="margin-top:10px">
         <button type="button" class="btn-manage-pwd" id="btnDebloquer2fa" onclick="debloquer2faDepuisFiche()" title="Si la personne a perdu son téléphone ou son application de code">🔓 Débloquer : remettre à zéro le code à 6 chiffres</button>
       </div>
+      <div style="margin-top:10px">
+        <button type="button" class="btn-manage-pwd" id="btnMajEspace" onclick="majEspaceDepuisFiche()" title="Prépare ce qui manque pour ses modules et lui envoie un email pour les nouveaux modules">🔄 Mettre à jour son espace (icônes, dossiers, Académie, email)</button>
+      </div>
     </div>
     <div class="modal-field" id="fieldAppLinks" style="display:none">
       <label>Liens à envoyer au client</label>
@@ -953,6 +956,26 @@
       });
       const data = await resp.json();
       if (data.success) { showToast('Compte débloqué'); alert('✅ ' + data.message); }
+      else alert(data.message || 'Opération impossible.');
+    } catch (e) { alert('Erreur de connexion. Réessaie.'); }
+    btn.disabled = false;
+  }
+
+  // Mettre a jour l'espace d'un entrepreneur (25.09.2026)
+  async function majEspaceDepuisFiche() {
+    const id = parseInt(document.getElementById('modalAccountId').value, 10);
+    const acc = allAccounts.find(a => a.id === id) || {};
+    if (!confirm('Mettre à jour l’espace de ' + (acc.nom_praticien || 'ce compte') + ' ?\n\nSi tu viens de cocher des modules, clique d’abord sur « Enregistrer les modifications ».\n\nLe système prépare ce qui manque (dossiers, Académie) et lui envoie un email pour ses nouveaux modules.')) return;
+    const btn = document.getElementById('btnMajEspace');
+    btn.disabled = true;
+    try {
+      let jeton = '';
+      try { jeton = (JSON.parse(localStorage.getItem('crm_session_user') || 'null') || {}).token || ''; } catch (e) {}
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-mettre-a-jour?jeton=' + encodeURIComponent(jeton), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: id })
+      });
+      const data = await resp.json();
+      if (data.success) { showToast('Espace mis à jour'); alert('✅ Espace de ' + (acc.nom_praticien || 'ce compte') + ' mis à jour :\n\n• ' + (data.actions || []).join('\n• ')); }
       else alert(data.message || 'Opération impossible.');
     } catch (e) { alert('Erreur de connexion. Réessaie.'); }
     btn.disabled = false;
