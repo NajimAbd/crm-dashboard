@@ -100,6 +100,7 @@ const API_BASE = 'https://n8n.srv936251.hstgr.cloud/webhook';
 const ACCOUNT_ID = 5;
 const clientId = sessionStorage.getItem('academy_client_id');
 const clientNom = sessionStorage.getItem('academy_nom');
+const sessionToken = sessionStorage.getItem('academy_session') || '';
 
 if (!clientId) window.location.href = 'academy-login-alex.html';
 
@@ -112,8 +113,9 @@ let saveInterval = null;
 
 async function loadData() {
   try {
-    const res = await fetch(`${API_BASE}/academy-get-data`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: parseInt(clientId) }) });
+    const res = await fetch(`${API_BASE}/academy-get-data`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: parseInt(clientId), session_token: sessionToken }) });
     const data = await res.json();
+    if (data && data.session === 'autre_appareil') { sessionPerdue(); return; }
     formationsData = data.formations || [];
     if (data.client && data.client.nom) { document.getElementById('user-name').textContent = data.client.nom; sessionStorage.setItem('academy_nom', data.client.nom); }
     document.getElementById('loading').classList.add('hidden');
@@ -176,7 +178,7 @@ async function voirCertificat() {
   try {
     const resp = await fetch(`${API_BASE}/academy-get-certificate`, {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ client_id: parseInt(clientId), formation_id: currentFormation.id, account_id: ACCOUNT_ID })
+      body: JSON.stringify({ client_id: parseInt(clientId), session_token: sessionToken, formation_id: currentFormation.id, account_id: ACCOUNT_ID })
     });
     const data = await resp.json();
     if (data.success) {
@@ -265,7 +267,7 @@ function playLecon(lecon, sectionTitre) {
 function saveProgress(leconId, termine) {
   const player = document.getElementById('video-player');
   const position = Math.floor(player.currentTime || 0);
-  fetch(`${API_BASE}/academy-save-progress`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: parseInt(clientId), lecon_id: leconId, termine: termine, position_secondes: position }) }).catch(() => {});
+  fetch(`${API_BASE}/academy-save-progress`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ client_id: parseInt(clientId), session_token: sessionToken, lecon_id: leconId, termine: termine, position_secondes: position }) }).catch(() => {});
 }
 
 function stopSaveInterval() {
@@ -280,6 +282,126 @@ function logout() { stopSaveInterval(); sessionStorage.clear(); window.location.
 
 // loadData() est lance apres l'engagement (voir plus bas)
 </script>
+<!-- Securite (25.09.2026) : mot de passe a changer a la 1re connexion + un seul appareil a la fois -->
+<style>
+  .ses-fond { position: fixed; inset: 0; z-index: 10000; background: rgba(20, 26, 18, .82); display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+  .ses-fond.show { display: flex; }
+  .ses-feuille { background: #fffdf8; width: 100%; max-width: 460px; border-radius: 18px; padding: 30px 28px 24px; box-shadow: 0 24px 70px rgba(0,0,0,.35); border: 1px solid #e2d9c8; }
+  .ses-feuille h2 { font-family: 'Cormorant Garamond', serif; font-size: 27px; text-align: center; margin: 0 0 8px; color: #2b2620; }
+  .ses-intro { font-size: 14.5px; line-height: 1.6; color: #3a3325; text-align: center; margin: 0 0 18px; }
+  .ses-champ { margin-bottom: 14px; }
+  .ses-champ label { display: block; font-size: 13px; font-weight: 600; color: #2b2620; margin-bottom: 6px; }
+  .ses-boite { position: relative; }
+  .ses-boite input { width: 100%; box-sizing: border-box; padding: 12px 46px 12px 14px; border: 1.5px solid #e2d9c8; border-radius: 10px; font: inherit; font-size: 15px; background: #fff; color: #2b2620; }
+  .ses-boite input:focus { outline: none; border-color: #b8863f; }
+  .ses-oeil { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); border: none; background: transparent; font-size: 18px; cursor: pointer; padding: 6px 8px; line-height: 1; }
+  .ses-regles { list-style: none; padding: 0; margin: 4px 0 16px; font-size: 13px; color: #6b6255; }
+  .ses-regles li { padding: 2px 0; }
+  .ses-regles li.ok { color: #4d7c3f; }
+  .ses-regles li::before { content: '○ '; }
+  .ses-regles li.ok::before { content: '✓ '; }
+  .ses-btn { width: 100%; border: none; border-radius: 12px; padding: 14px 18px; background: #2b2620; color: #f0dfb8; font: inherit; font-size: 15.5px; font-weight: 600; cursor: pointer; }
+  .ses-btn:disabled { opacity: .4; cursor: not-allowed; }
+  .ses-msg { display: none; margin-top: 12px; font-size: 13.5px; color: #a33a2b; text-align: center; }
+  .ses-icone { text-align: center; font-size: 40px; margin-bottom: 6px; }
+</style>
+<div class="ses-fond" id="mdpFond" role="dialog" aria-modal="true" aria-labelledby="mdpTitre">
+  <div class="ses-feuille">
+    <div class="ses-icone">🔐</div>
+    <h2 id="mdpTitre">Choisissez votre mot de passe</h2>
+    <p class="ses-intro">Pour protéger votre compte, remplacez le mot de passe reçu par e-mail par un mot de passe personnel.</p>
+    <div class="ses-champ">
+      <label for="mdpNouveau">Nouveau mot de passe</label>
+      <div class="ses-boite"><input type="password" id="mdpNouveau" autocomplete="new-password" oninput="controleMdp()"><button type="button" class="ses-oeil" onclick="voirMdpAcad('mdpNouveau', this)" aria-label="Afficher le mot de passe">👁</button></div>
+    </div>
+    <ul class="ses-regles">
+      <li id="rLong">Au moins 10 caractères</li>
+      <li id="rMaj">Une majuscule</li>
+      <li id="rMin">Une minuscule</li>
+      <li id="rChif">Un chiffre</li>
+      <li id="rSpec">Un caractère spécial (ex. @ # ! ?)</li>
+    </ul>
+    <div class="ses-champ">
+      <label for="mdpConfirme">Confirmez le mot de passe</label>
+      <div class="ses-boite"><input type="password" id="mdpConfirme" autocomplete="new-password" oninput="controleMdp()"><button type="button" class="ses-oeil" onclick="voirMdpAcad('mdpConfirme', this)" aria-label="Afficher le mot de passe">👁</button></div>
+    </div>
+    <button type="button" class="ses-btn" id="mdpBtn" disabled onclick="enregistrerMdp()">Enregistrer mon mot de passe</button>
+    <div class="ses-msg" id="mdpMsg"></div>
+  </div>
+</div>
+<div class="ses-fond" id="sesFond" role="alertdialog" aria-modal="true" aria-labelledby="sesTitre">
+  <div class="ses-feuille">
+    <div class="ses-icone">📱</div>
+    <h2 id="sesTitre">Session fermée</h2>
+    <p class="ses-intro">Votre compte a été ouvert sur un autre appareil. Pour votre sécurité, vous ne pouvez être connecté(e) que sur un seul appareil à la fois (ordinateur, téléphone ou tablette).</p>
+    <button type="button" class="ses-btn" onclick="location.href = PAGE_CONNEXION">Me reconnecter ici</button>
+  </div>
+</div>
+<script>
+  const SES_API = 'https://n8n.srv936251.hstgr.cloud/webhook/academy-session';
+  const PAGE_CONNEXION = location.pathname.indexOf('-alex') > -1 ? 'academy-login-alex.html' : 'academy-login.html';
+  let sessionFermee = false;
+  async function appelSession(corps) {
+    corps.client_id = parseInt(sessionStorage.getItem('academy_client_id'), 10) || 0;
+    corps.session_token = sessionStorage.getItem('academy_session') || '';
+    const r = await fetch(SES_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(corps) });
+    return r.json();
+  }
+  function sessionPerdue() {
+    if (sessionFermee) return;
+    sessionFermee = true;
+    try { const p = document.getElementById('video-player'); if (p) { p.pause(); p.removeAttribute('src'); p.load(); } } catch (e) {}
+    try { if (saveInterval) { clearInterval(saveInterval); saveInterval = null; } } catch (e) {}
+    try { sessionStorage.clear(); } catch (e) {}
+    document.getElementById('mdpFond').classList.remove('show');
+    document.getElementById('engFond').classList.remove('show');
+    document.getElementById('sesFond').classList.add('show');
+  }
+  async function controleSession() {
+    if (sessionFermee) return;
+    try { const d = await appelSession({ action: 'verifier' }); if (d && d.success === false && d.session === 'autre_appareil') sessionPerdue(); } catch (e) {}
+  }
+  async function demarrerSession() {
+    let d = null;
+    try { d = await appelSession({ action: 'verifier' }); } catch (e) {}
+    if (d && d.success === false && d.session === 'autre_appareil') { sessionPerdue(); return; }
+    setInterval(controleSession, 60000);
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) controleSession(); });
+    if (d && d.doit_changer_mdp) { document.getElementById('mdpFond').classList.add('show'); return; }
+    verifierEngagement();
+  }
+  function voirMdpAcad(id, b) {
+    const c = document.getElementById(id);
+    const cache = c.type === 'password';
+    c.type = cache ? 'text' : 'password';
+    b.textContent = cache ? '🙈' : '👁';
+  }
+  function reglesMdp(p) {
+    return { rLong: p.length >= 10, rMaj: /\p{Lu}/u.test(p), rMin: /\p{Ll}/u.test(p), rChif: /[0-9]/.test(p), rSpec: /[^\p{L}\p{N}]/u.test(p) };
+  }
+  function controleMdp() {
+    const p = document.getElementById('mdpNouveau').value, c = document.getElementById('mdpConfirme').value;
+    const r = reglesMdp(p); let tout = true;
+    for (const k in r) { document.getElementById(k).classList.toggle('ok', r[k]); if (!r[k]) tout = false; }
+    document.getElementById('mdpBtn').disabled = !(tout && p === c);
+    const m = document.getElementById('mdpMsg');
+    if (c && p !== c) { m.textContent = 'Les deux mots de passe ne sont pas identiques.'; m.style.display = 'block'; } else m.style.display = 'none';
+  }
+  async function enregistrerMdp() {
+    const b = document.getElementById('mdpBtn'), m = document.getElementById('mdpMsg');
+    const p = document.getElementById('mdpNouveau').value;
+    if (p !== document.getElementById('mdpConfirme').value) return;
+    b.disabled = true; b.textContent = 'Enregistrement…'; m.style.display = 'none';
+    try {
+      const d = await appelSession({ action: 'changer_mdp', nouveau: p });
+      if (d && d.success) { document.getElementById('mdpFond').classList.remove('show'); verifierEngagement(); return; }
+      if (d && d.session === 'autre_appareil') { sessionPerdue(); return; }
+      m.textContent = (d && d.message) || "Le mot de passe n'a pas pu être enregistré. Réessayez."; m.style.display = 'block';
+    } catch (e) { m.textContent = 'Connexion impossible. Réessayez.'; m.style.display = 'block'; }
+    b.textContent = 'Enregistrer mon mot de passe'; controleMdp();
+  }
+</script>
+
 <!-- Engagement devant Allah (25.09.2026) : a accepter une fois avant d'entrer dans la formation -->
 <style>
   .eng-fond { position: fixed; inset: 0; z-index: 9999; background: rgba(20, 26, 18, .82); display: none; align-items: flex-start; justify-content: center; padding: 28px 16px; overflow-y: auto; }
@@ -311,19 +433,18 @@ function logout() { stopSaveInterval(); sessionStorage.clear(); window.location.
     <div class="eng-bism">بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ</div>
     <div class="eng-bism-fr">Au nom d'Allah, le Tout Miséricordieux, le Très Miséricordieux</div>
     <h2 id="engTitre">Engagement devant Allah</h2>
-    <p class="eng-intro">Avant d'accéder à votre formation, nous vous demandons de lire attentivement cet engagement. Cette formation est une <b>amâna</b>, un dépôt de confiance confié entre vos mains, et Allah en est témoin.</p>
+    <p class="eng-intro">Cette formation est une <b>amâna</b>, un dépôt de confiance remis entre vos mains. Allah en est témoin.</p>
     <ul class="eng-liste">
-      <li><span>1</span>Le contenu de cette formation est strictement réservé à <b>votre usage personnel</b> : votre apprentissage et votre pratique.</li>
-      <li><span>2</span>Vous vous engagez à <b>ne pas le partager</b>, ni en totalité ni en partie (vidéos, documents, captures d'écran, enregistrements), sur Internet, sur les réseaux sociaux ou avec quiconque.</li>
-      <li><span>3</span>Vous vous engagez à <b>ne pas le vendre ni le transmettre</b> à une autre personne, gratuitement ou contre rémunération.</li>
-      <li><span>4</span>Vous vous engagez à <b>ne jamais confier vos accès</b> (e-mail, mot de passe, code) à une autre personne.</li>
+      <li><span>1</span>Elle est réservée à <b>votre usage personnel</b>.</li>
+      <li><span>2</span>Vous ne la <b>partagez pas</b> et ne la <b>vendez pas</b>, ni en totalité ni en partie (vidéos, documents, captures, enregistrements).</li>
+      <li><span>3</span>Vous ne <b>confiez vos accès</b> à personne.</li>
     </ul>
-    <p class="eng-solennel">Je ne donne <b>aucune permission</b> pour un usage contraire à cet engagement. Quiconque le trahit en rendra compte devant Allah, et je serai son adversaire devant Lui au Jour du Jugement.</p>
+    <p class="eng-solennel">Je ne donne <b>aucune permission</b> pour un autre usage. Quiconque trahit cet engagement en rendra compte devant Allah, et je serai son adversaire au Jour du Jugement.</p>
     <p class="eng-verset">« Et remplissez l'engagement, car on sera interrogé au sujet des engagements. »<br>Sourate Al-Isrâ', 17 : 34</p>
-    <p class="eng-avert">Si vous n'êtes pas d'accord avec cet engagement, il est préférable de ne pas entrer : le jugement du Dernier Jour est lourd.</p>
+    <p class="eng-avert">Si vous n'êtes pas d'accord, il est préférable de ne pas entrer.</p>
     <label class="eng-case" for="engCoche">
       <input type="checkbox" id="engCoche" onchange="document.getElementById('engOui').disabled = !this.checked">
-      <span>Je m'engage devant Allah, le Plus Savant, Témoin de toute chose, à garder cette formation pour moi seul(e) et pour ma propre pratique, à ne pas la partager, à ne pas la vendre à autrui et à ne confier mes accès à personne. Allah est témoin de ce que j'affirme.</span>
+      <span>Je m'engage devant Allah à garder cette formation pour moi seul(e), à ne pas la partager, à ne pas la vendre et à ne confier mes accès à personne.</span>
     </label>
     <div class="eng-actions">
       <button type="button" class="eng-oui" id="engOui" disabled onclick="accepterEngagement()">J'accepte et j'entre dans ma formation</button>
@@ -356,7 +477,7 @@ function logout() { stopSaveInterval(); sessionStorage.clear(); window.location.
     } catch (e) { m.textContent = 'Connexion impossible. Réessayez.'; m.style.display = 'block'; }
     b.disabled = false; b.textContent = "J'accepte et j'entre dans ma formation";
   }
-  if (sessionStorage.getItem('academy_client_id')) verifierEngagement();
+  if (sessionStorage.getItem('academy_client_id')) demarrerSession();
   function refuserEngagement() { try { sessionStorage.clear(); } catch (e) {} location.href = 'academy-login-alex.html'; }
 </script>
 

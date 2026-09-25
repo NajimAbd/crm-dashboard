@@ -134,6 +134,7 @@ async function submitStep2() {
       sessionStorage.setItem('academy_client_id', data.client_id);
       sessionStorage.setItem('academy_email', data.email);
       sessionStorage.setItem('academy_nom', data.nom);
+      sessionStorage.setItem('academy_session', data.session_token || '');
       window.location.href = 'academy-formations-alex.html';
     } else { showError('error2', data.message || 'Code incorrect.'); }
   } catch (e) { showError('error2', 'Connexion impossible. Réessayez.'); }
