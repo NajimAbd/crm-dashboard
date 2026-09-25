@@ -1,6 +1,17 @@
 // Securite Nexa (24.09.2026) : chaque appel au serveur n8n emporte le jeton de session
 // donne par le serveur a la connexion. Si le serveur refuse (401), on renvoie vers la connexion.
 (function () {
+  // Point 3 (26.09.2026) : mot de passe provisoire et 2FA obligatoires sur TOUTES les pages (le serveur le controle aussi).
+  try {
+    var page = location.pathname.split('/').pop() || '';
+    var libres = ['change-password.html', '2fa-setup.html', 'index.html', 'forgot-password.html', 'reset-password.html', ''];
+    var su = JSON.parse(localStorage.getItem('crm_session_user') || 'null');
+    if (su && libres.indexOf(page) < 0) {
+      var rac = location.pathname.indexOf('/laboratoire/') >= 0 ? '../' : '';
+      if (localStorage.getItem('crm_force_pwd_change') === '1') { location.replace(rac + 'change-password.html'); }
+      else if (su.role === 'praticien' && !su.totp_enabled) { location.replace(rac + '2fa-setup.html?obligatoire=1'); }
+    }
+  } catch (e) {}
   var HOTE = 'n8n.srv936251.hstgr.cloud/webhook/';
   var dejaAverti = false;
   function jeton() {
