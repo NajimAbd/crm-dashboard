@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<script src="session-securite.js?v=20260924"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Nexa — Collaborateurs</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Inter:wght@400;500;600&display=swap');
+
+  :root {
+    --green-deep: #0D1A12;
+    --gold: #B8965A;
+    --gold-light: #D4AF7A;
+    --cream: #F4ECE0;
+    --bg-soft: #FAF7F1;
+    --text-main: #2C2C2A;
+    --text-soft: #6B6B68;
+    --border-soft: #E5DECF;
+  }
+
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg-soft); font-family: 'Inter', sans-serif; color: var(--text-main); min-height: 100vh; }
+
+  .topbar { background: var(--green-deep); color: var(--cream); padding: 16px 32px; display: flex; align-items: center; justify-content: space-between; border-bottom: 3px solid var(--gold); }
+  .topbar-left { flex: 1; display: flex; align-items: center; gap: 14px; }
+  .topbar-center { display: flex; align-items: center; gap: 20px; }
+  .topbar-right { flex: 1; }
+  .brand-mark { width: 34px; height: 34px; }
+  .brand-text { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 22px; color: var(--cream); }
+  .brand-sub { font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); margin-top: 2px; }
+  .nav-link { color: var(--gold-light); text-decoration: none; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .nav-link:hover { color: var(--cream); }
+
+  .page { max-width: 1200px; margin: 0 auto; padding: 36px 32px 60px; }
+  .page-header { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 16px; margin-bottom: 28px; }
+  .eyebrow { font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--gold); font-weight: 600; margin-bottom: 8px; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 36px; margin: 0 0 6px; color: var(--green-deep); }
+  .subtitle { color: var(--text-soft); font-size: 14px; }
+
+  .period-picker { display: flex; align-items: center; gap: 8px; }
+  .period-picker select { font-family: 'Inter', sans-serif; font-size: 13px; padding: 9px 12px; border: 1px solid var(--border-soft); border-radius: 8px; background: white; color: var(--text-main); }
+
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .stat-card { background: white; border: 1px solid var(--border-soft); border-radius: 12px; padding: 22px 22px 20px; position: relative; overflow: hidden; }
+  .stat-card::before { content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%; background: var(--gold); }
+  .stat-card.recettes::before { background: #5A8C5A; }
+  .stat-card.depenses::before { background: #C4604E; }
+  .stat-value { font-family: 'Cormorant Garamond', serif; font-size: 32px; font-weight: 600; color: var(--green-deep); line-height: 1; margin-bottom: 6px; }
+  .stat-label { font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; }
+
+  .layout { display: grid; grid-template-columns: 1.6fr 1fr; gap: 20px; align-items: start; }
+  @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+  .card { background: white; border: 1px solid var(--border-soft); border-radius: 14px; padding: 22px; margin-bottom: 20px; }
+  .card-title { font-family: 'Cormorant Garamond', serif; font-size: 19px; font-weight: 600; color: var(--green-deep); margin: 0 0 16px; display: flex; align-items: center; justify-content: space-between; }
+
+  .journal-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .journal-table th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-soft); padding: 8px 6px; border-bottom: 2px solid var(--border-soft); }
+  .journal-table td { padding: 10px 6px; border-bottom: 1px solid var(--border-soft); }
+  .journal-table tr:last-child td { border-bottom: none; }
+  .amount-in { color: #2C6B3F; font-weight: 600; }
+  .amount-out { color: #B23A2E; font-weight: 600; }
+  .journal-empty { text-align: center; padding: 40px 20px; color: var(--text-soft); font-size: 13px; }
+  .tag { display: inline-block; font-size: 10px; padding: 2px 8px; border-radius: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.03em; }
+  .tag.in { background: #E4EFE6; color: #2C6B3F; }
+  .tag.out { background: #FAE3E0; color: #B23A2E; }
+
+  .form-row { display: flex; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+  .form-input { flex: 1; min-width: 100px; padding: 9px 11px; border: 1px solid var(--border-soft); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; }
+  .btn-primary { background: var(--green-deep); color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 13px; font-weight: 600; }
+  .btn-primary:hover { opacity: 0.9; }
+  .btn-secondary { background: white; border: 1px solid var(--border-soft); color: var(--text-soft); padding: 9px 14px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; }
+  .btn-secondary:hover { border-color: var(--gold); color: var(--green-deep); }
+
+  .type-toggle { display: flex; gap: 6px; margin-bottom: 10px; }
+  .type-toggle button { flex: 1; padding: 8px; border: 1px solid var(--border-soft); background: white; border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 600; color: var(--text-soft); }
+  .type-toggle button.active { background: var(--green-deep); color: white; border-color: var(--green-deep); }
+
+  .charge-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border-soft); font-size: 13px; }
+  .charge-item:last-child { border-bottom: none; }
+  .charge-item-name { font-weight: 600; color: var(--text-main); }
+  .charge-item-meta { font-size: 11px; color: var(--text-soft); }
+  .charge-item-amount { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-weight: 600; color: var(--green-deep); }
+  .charge-delete { background: none; border: none; color: #C4604E; cursor: pointer; font-size: 16px; padding: 2px 6px; }
+  .charge-delete:hover { opacity: 0.7; }
+
+  .empty-hint { font-size: 12px; color: var(--text-soft); text-align: center; padding: 16px; }
+  .loading-state { text-align: center; padding: 60px 24px; color: var(--text-soft); }
+  .spinner { width: 26px; height: 26px; border: 2.5px solid var(--border-soft); border-top-color: var(--gold); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 14px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); background: var(--green-deep); color: white; padding: 12px 22px; border-radius: 10px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 100; }
+  .toast.show { opacity: 1; }
+
+  /* ==== NOUVELLE NAVBAR 2 LIGNES (uniforme sur tout Nexa) ==== */
+  .product-btn {
+    width: 110px;
+    height: 36px;
+    display: inline-flex;
+    align-items: center !important;
+    justify-content: center !important;
+    text-align: center;
+    padding: 0;
+    box-sizing: border-box;
+    border-radius: 7px;
+    border: 1px solid #B8965A;
+    color: #D4AF7A;
+    text-decoration: none;
+    font-size: 12.5px;
+    font-weight: 500;
+    font-family: 'Inter', sans-serif;
+    line-height: 1;
+    cursor: pointer;
+    background: transparent;
+    transition: background .15s ease, color .15s ease;
+  }
+  .product-btn:hover { background: rgba(184,150,90,0.12); color: #F5EFE1; }
+  .product-btn.disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .logout-btn-gold {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    height: 36px;
+    padding: 0 14px;
+    background: rgba(196,96,78,0.08);
+    border: 1px solid #C4604E;
+    border-radius: 7px;
+    color: #E8998C;
+    font-size: 12px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease;
+  }
+  .logout-btn-gold:hover { background: rgba(196,96,78,0.18); color: #F5EFE1; }
+  .logout-btn-gold svg { flex: none; }
+
+  .nav-link-v2 {
+    color: #F5F1E8;
+    text-decoration: none;
+    font-size: 12.5px;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    white-space: nowrap;
+    background: none;
+    border: none;
+  }
+  .nav-link-v2:hover { color: #B8965A; }
+
+  @media (max-width: 900px) {
+    .topbar-row1, .topbar-row2 { flex-wrap: wrap; gap: 12px; }
+    .product-switch-group { flex-wrap: wrap; }
+  }
+
+  /* ==== Collaborateurs (25.09.2026) ==== */
+  .actions-haut { display: flex; gap: 8px; flex-wrap: wrap; }
+  .co-liste { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .co-liste th { text-align: left; font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-soft); padding: 8px 8px; border-bottom: 2px solid var(--border-soft); }
+  .co-liste td { padding: 12px 8px; border-bottom: 1px solid var(--border-soft); vertical-align: top; }
+  .co-liste tr.co-ligne { cursor: pointer; }
+  .co-liste tr.co-ligne:hover td { background: #FBF8F2; }
+  .co-nom { font-weight: 600; color: var(--green-deep); }
+  .co-sous { font-size: 11.5px; color: var(--text-soft); margin-top: 2px; }
+  .badge { display: inline-block; font-size: 10.5px; padding: 2px 9px; border-radius: 10px; font-weight: 600; }
+  .badge.actif { background: #E4EFE6; color: #2C6B3F; }
+  .badge.inactif { background: #EEE; color: #777; }
+  .badge.statut { background: #F4ECE0; color: #8A6A32; }
+  .badge.du { background: #FAE3E0; color: #B23A2E; }
+  .badge.ok { background: #E4EFE6; color: #2C6B3F; }
+  .co-vide { text-align: center; padding: 50px 20px; color: var(--text-soft); font-size: 14px; }
+  .co-vide b { display: block; font-family: 'Cormorant Garamond', serif; font-size: 22px; color: var(--green-deep); margin-bottom: 6px; }
+
+  .fi-fond { display: none; position: fixed; inset: 0; background: rgba(13,26,18,0.55); z-index: 100000; align-items: flex-start; justify-content: center; padding: 24px 16px; overflow-y: auto; }
+  .fi-fond.ouvert { display: flex; }
+  .fi-boite { background: #fff; border-radius: 14px; width: 100%; max-width: 900px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+  .fi-barre { position: sticky; top: 0; z-index: 2; display: flex; align-items: center; gap: 10px; padding: 12px 16px; border-bottom: 1px solid var(--border-soft); background: #F7F2E9; }
+  .fi-titre { flex: 1; font-family: 'Cormorant Garamond', serif; font-weight: 600; font-size: 20px; color: var(--green-deep); }
+  .fi-btn { border: 1px solid #d9cdb8; background: #fff; border-radius: 8px; padding: 7px 12px; font-size: 13px; cursor: pointer; color: var(--green-deep); font-family: 'Inter', sans-serif; }
+  .fi-btn:hover { background: #f1ebe0; }
+  .fi-x { border: none; background: transparent; font-size: 20px; line-height: 1; cursor: pointer; color: var(--green-deep); padding: 4px 8px; border-radius: 6px; }
+  .fi-x:hover { background: #ece4d6; }
+  .fi-corps { padding: 18px 22px 24px; }
+  .fi-section { border: 1px solid var(--border-soft); border-radius: 12px; padding: 16px 18px 8px; margin-bottom: 16px; }
+  .fi-section h3 { margin: 0 0 4px; font-family: 'Cormorant Garamond', serif; font-size: 18px; color: var(--green-deep); }
+  .fi-aide { font-size: 12px; color: var(--text-soft); margin: 0 0 12px; line-height: 1.5; }
+  .fi-grille { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px 14px; margin-bottom: 8px; }
+  .fi-champ label { display: block; font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--text-soft); font-weight: 600; margin-bottom: 4px; }
+  .fi-champ input, .fi-champ select, .fi-champ textarea { width: 100%; padding: 9px 11px; border: 1px solid var(--border-soft); border-radius: 8px; font-family: 'Inter', sans-serif; font-size: 13px; background: #fff; color: var(--text-main); }
+  .fi-champ textarea { min-height: 64px; resize: vertical; }
+  .fi-champ.large { grid-column: 1 / -1; }
+  .fi-coche { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; padding: 6px 0; cursor: pointer; }
+  .fi-coche input { margin-top: 2px; width: 16px; height: 16px; accent-color: var(--green-deep); }
+  .fi-note { font-size: 11.5px; color: #8A6A32; background: #FBF5EA; border-radius: 8px; padding: 8px 10px; margin: 4px 0 10px; line-height: 1.5; }
+  .fi-pied { display: flex; gap: 8px; justify-content: space-between; flex-wrap: wrap; margin-top: 4px; }
+  .btn-danger { background: white; border: 1px solid #E8B4AB; color: #B23A2E; padding: 9px 14px; border-radius: 8px; cursor: pointer; font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 600; }
+  .btn-danger:hover { background: #FDF1EF; }
+  .pr-table { width: 100%; border-collapse: collapse; font-size: 12.5px; margin-bottom: 12px; }
+  .pr-table th { text-align: left; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-soft); padding: 6px; border-bottom: 2px solid var(--border-soft); }
+  .pr-table td { padding: 8px 6px; border-bottom: 1px solid var(--border-soft); vertical-align: middle; }
+  .pr-table td.n { text-align: right; white-space: nowrap; }
+  .pr-ajout { background: #FBF8F2; border-radius: 10px; padding: 12px; }
+  .pr-ajout .fi-grille { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
+  .pr-total { font-size: 12.5px; color: var(--text-soft); margin: 6px 0 2px; }
+  .pr-total b { color: var(--green-deep); }
+  .mini-btn { border: 1px solid var(--border-soft); background: #fff; border-radius: 7px; padding: 4px 9px; font-size: 11.5px; cursor: pointer; white-space: nowrap; font-family: 'Inter', sans-serif; }
+  .mini-btn:hover { border-color: var(--gold); }
+  .mini-btn.vert { background: var(--green-deep); color: #fff; border-color: var(--green-deep); }
+  .mini-x { background: none; border: none; color: #C4604E; cursor: pointer; font-size: 15px; padding: 2px 6px; }
+
+  #zoneImpression { display: none; }
+  @media print {
+    body { background: #fff !important; }
+    body > *:not(#zoneImpression) { display: none !important; }
+    #zoneImpression { display: block !important; font-family: Georgia, serif; color: #000; padding: 0; }
+    #zoneImpression h1 { font-size: 22px; margin: 0 0 4px; }
+    #zoneImpression h2 { font-size: 15px; margin: 18px 0 6px; border-bottom: 1px solid #999; padding-bottom: 3px; }
+    #zoneImpression table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+    #zoneImpression td, #zoneImpression th { padding: 4px 6px; border-bottom: 1px solid #ddd; text-align: left; vertical-align: top; }
+    #zoneImpression .imp-sous { font-size: 11px; color: #555; }
+    #zoneImpression .imp-sign { margin-top: 40px; display: flex; gap: 60px; font-size: 12px; }
+    #zoneImpression .imp-sign div { flex: 1; border-top: 1px solid #000; padding-top: 4px; }
+  }
+
+</style>
+</head>
+<body>
+
+<div class="topbar-row1" style="background:#0D1A12;padding:14px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #2A3A2A">
+  <div class="topbar-left">
+    <svg class="brand-mark" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <ellipse cx="50" cy="50" rx="46" ry="46" fill="none" stroke="#B8965A" stroke-width="3"/>
+      <circle cx="50" cy="50" r="6" fill="#B8965A"/>
+      <path d="M50 18 L50 38 M50 62 L50 82 M18 50 L38 50 M62 50 L82 50" stroke="#B8965A" stroke-width="2.5" stroke-linecap="round"/>
+    </svg>
+    <div>
+      <div class="brand-text">Nexa</div>
+      <div class="brand-sub">Platform CRM</div>
+    </div>
+  </div>
+
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="product-switch-group" style="display:flex;background:rgba(255,255,255,0.03);border:1px solid #2A3A2A;border-radius:10px;padding:4px;gap:6px">
+      <a id="laboratoireLink" class="product-btn disabled" onclick="handleLockedClick('laboratoireLink', function(){ window.location.href='laboratoire.html'; })">Laboratoire</a>
+      <a id="showBtn" class="product-btn disabled" onclick="handleLockedClick('showBtn', function(){ window.location.href='webinars.html'; })">Show</a>
+      <a id="showEnrBtn" class="product-btn disabled" onclick="handleLockedClick('showEnrBtn', function(){ window.location.href='webinars.html#show-enregistre'; })">Show enregistré</a>
+      <a id="adminLink" href="admin.html" class="product-btn" style="display:none">Panel Admin</a>
+      <a id="irisBtn" class="product-btn disabled" onclick="handleLockedClick('irisBtn', goToIris)">Iris</a>
+      <a id="iriscueBtn" class="product-btn disabled" onclick="handleLockedClick('iriscueBtn', goToIriscue)">IrisCue</a>
+      <a id="formationBtn" class="product-btn disabled" onclick="handleLockedClick('formationBtn', function(){ window.location.href='formation.html'; })">Académie</a>
+    </div>
+    <div style="width:1px;height:24px;background:#2A3A2A;margin:0 4px"></div>
+    <button class="logout-btn-gold" onclick="logout()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Déconnexion
+    </button>
+  </div>
+</div>
+
+<div class="topbar-row2" style="background:#131F16;padding:10px 32px;display:flex;align-items:center;justify-content:center;gap:32px;flex-wrap:wrap">
+  <a class="nav-link-v2" onclick="window.location.href='dashboard.html'">Tableau de bord</a>
+  <a class="nav-link-v2" onclick="window.location.href='kpi.html'">KPI</a>
+  <a class="nav-link-v2" onclick="window.location.href='calendar.html'">Calendrier</a>
+  <a class="nav-link-v2" onclick="window.location.href='sales.html'">Mes ventes</a>
+  <a class="nav-link-v2" onclick="window.location.href='finances.html'">Finances</a>
+  <a class="nav-link-v2" onclick="window.location.href='comptabilite-officielle.html'">Comptabilité officielle</a>
+  <a class="nav-link-v2" onclick="window.location.href='collaborateurs.html'">Collaborateurs</a>
+</div>
+
+<div class="page">
+
+  <div class="page-header">
+    <div>
+      <div class="eyebrow">Équipe &amp; freelances</div>
+      <h1>Collaborateurs</h1>
+      <div class="subtitle" id="subtitleInfo">Chargement…</div>
+    </div>
+    <div class="actions-haut">
+      <button class="btn-secondary" onclick="imprimerListe()">🖨 Imprimer la liste</button>
+      <button class="btn-primary" onclick="ouvrirFiche(0)">+ Nouveau collaborateur</button>
+    </div>
+  </div>
+
+  <div class="stats">
+    <div class="stat-card recettes"><div class="stat-value" id="stActifs">–</div><div class="stat-label">Collaborateurs actifs</div></div>
+    <div class="stat-card"><div class="stat-value" id="stHeures">–</div><div class="stat-label">Heures enregistrées</div></div>
+    <div class="stat-card"><div class="stat-value" id="stPaye">–</div><div class="stat-label">Déjà payé (CHF)</div></div>
+    <div class="stat-card depenses"><div class="stat-value" id="stDu">–</div><div class="stat-label">Reste à payer (CHF)</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Mes collaborateurs</div>
+    <div id="listeCollab"><div class="loading-state"><div class="spinner"></div>Chargement…</div></div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="fi-fond" id="fiFond" onclick="if(event.target===this)fermerFiche()">
+  <div class="fi-boite" role="dialog" aria-modal="true">
+    <div class="fi-barre">
+      <button class="fi-btn" onclick="fermerFiche()" title="Retour à la liste">← Retour</button>
+      <span class="fi-titre" id="fiTitre">Nouveau collaborateur</span>
+      <button class="fi-btn" id="fiImprimer" onclick="imprimerFiche()">🖨 Imprimer</button>
+      <button class="fi-x" onclick="fermerFiche()" title="Fermer" aria-label="Fermer">✕</button>
+    </div>
+    <div class="fi-corps" id="fiCorps"></div>
+  </div>
+</div>
+
+<div id="zoneImpression"></div>
+
+<script>
+  function handleLockedClick(btnId, action) {
+    var btn = document.getElementById(btnId);
+    if (btn && btn.classList.contains('disabled')) {
+      alert("Ce module n'est pas encore activé sur ton compte. Contacte-nous pour l'activer : info.najim1@gmail.com");
+      return;
+    }
+    action();
+  }
+
+  const SESSION_KEY = 'crm_session_user';
+  const SESSION_EXPIRY = 'crm_session_expiry';
+  const MONTH_NAMES_FR = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+
+  function getSession() {
+    try {
+      const raw = localStorage.getItem(SESSION_KEY);
+      const expiry = parseInt(localStorage.getItem(SESSION_EXPIRY) || '0');
+      if (!raw || Date.now() >= expiry) return null;
+      return JSON.parse(raw);
+    } catch (e) { return null; }
+  }
+
+  const session = getSession();
+
+  const CRM_CREATE_SSO = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-create-sso-token';
+
+  function logout() {
+    localStorage.removeItem(SESSION_KEY);
+    if (typeof SESSION_EXPIRY !== 'undefined') localStorage.removeItem(SESSION_EXPIRY);
+    window.location.href = 'index.html';
+  }
+
+  async function goToIris() {
+    const s = getSession();
+    if (!s) return;
+    try {
+      const resp = await fetch(CRM_CREATE_SSO, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ login: s.login })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        window.open('https://www.contentviral.ch/?sso=' + encodeURIComponent(data.token), '_blank');
+        return;
+      }
+    } catch (e) {}
+    window.open('https://www.contentviral.ch', '_blank');
+  }
+
+  function goToIriscue() {
+    window.open('https://iriscue.contentviral.ch/desktop.html', '_blank');
+  }
+
+  (async function checkIrisAccessNav() {
+    const s = getSession();
+    if (!s) return;
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-iris-access', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: s.login })
+      });
+      const data = await resp.json();
+      if (data.iris) { const btn = document.getElementById('irisBtn'); if (btn) btn.classList.remove('disabled'); }
+    } catch (e) {}
+  })();
+
+  (async function checkLaboratoireAccessNav() {
+    const s = getSession();
+    if (!s) return;
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-laboratoire-access', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: s.login })
+      });
+      const data = await resp.json();
+      if (data.laboratoire) { const btn = document.getElementById('laboratoireLink'); if (btn) btn.classList.remove('disabled'); }
+    } catch (e) {}
+  })();
+
+  (async function checkIriscueAccessNav() {
+    const s = getSession();
+    if (!s) return;
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-iriscue-access', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ login: s.login })
+      });
+      const data = await resp.json();
+      if (data.iriscue) { const btn = document.getElementById('iriscueBtn'); if (btn) btn.classList.remove('disabled'); }
+    } catch (e) {}
+  })();
+
+  (async function checkFormationAccessNav() {
+    const s = getSession();
+    if (!s) return;
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-formation-access', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: s.account_id })
+      });
+      const data = await resp.json();
+      if (data.formation) { const btn = document.getElementById('formationBtn'); if (btn) btn.classList.remove('disabled'); }
+    } catch (e) {}
+  })();
+
+  if (!session) {
+    window.location.href = 'index.html';
+    throw new Error('No session');
+  }
+  if (session.role === 'super_admin') {
+    const adminLinkEl = document.getElementById('adminLink');
+    if (adminLinkEl) adminLinkEl.style.display = 'flex';
+    ['laboratoireLink','irisBtn','iriscueBtn','formationBtn'].forEach(function(id){
+      const el = document.getElementById(id);
+      if (el) el.classList.remove('disabled');
+    });
+  }
+
+  function esc(s) {
+    if (s === null || s === undefined) return '';
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 2500);
+  }
+
+  // ===== Collaborateurs (25.09.2026) =====
+  const COLLAB_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-collaborateurs';
+  const LIVRE_CREATE_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-comptabilite-livre-create';
+  const STATUTS = { independant: 'Freelance indépendant', entreprise: 'Entreprise / agence', salarie_temporaire: 'Employé temporaire', stagiaire: 'Stagiaire', benevole: 'Bénévole' };
+  const MODES_TARIF = { heure: 'par heure', jour: 'par jour', mois: 'par mois', forfait: 'au forfait' };
+  const MODES_PAIEMENT = { virement: 'Virement', twint: 'TWINT', especes: 'Espèces', paypal: 'PayPal', wise: 'Wise', carte: 'Carte', autre: 'Autre' };
+
+  const SECTIONS = [
+    { titre: 'Identité', aide: 'Qui est cette personne et comment la joindre.', champs: [
+      ['prenom', 'Prénom'], ['nom', 'Nom *'], ['email', 'Email', 'email'], ['telephone', 'Téléphone', 'tel'],
+      ['adresse', 'Adresse', 'text', 'large'],
+      ['statut', 'Statut', 'select', '', STATUTS], ['entreprise', 'Entreprise (si agence)'], ['numero_ide', 'N° IDE (CHE-…)'],
+      ['attestation_avs', 'J\'ai reçu son attestation AVS d\'indépendant', 'coche']
+    ], note: 'Important en Suisse : si un freelance n\'est pas reconnu indépendant par sa caisse AVS, c\'est vous qui pourriez devoir payer ses cotisations sociales. Demandez-lui son attestation et gardez-en une copie.' },
+    { titre: 'Mission', aide: 'Ce qu\'il fait pour vous et pendant quelle période.', champs: [
+      ['service', 'Service rendu', 'text', 'large'], ['competences', 'Compétences / outils', 'textarea', 'large'],
+      ['date_debut', 'Début de la collaboration', 'date'], ['date_fin', 'Fin (si connue)', 'date'],
+      ['actif', 'Collaboration en cours', 'coche']
+    ] },
+    { titre: 'Rémunération', aide: 'Combien vous le payez. La TVA ne s\'ajoute que si LUI est assujetti à la TVA.', champs: [
+      ['mode_tarif', 'Type de tarif', 'select', '', MODES_TARIF], ['tarif', 'Tarif (hors TVA)', 'number'], ['devise', 'Devise', 'select', '', { CHF: 'CHF', EUR: 'EUR', USD: 'USD' }],
+      ['heures_prevues', 'Heures prévues', 'number'], ['periode_heures', 'Par', 'select', '', { semaine: 'semaine', mois: 'mois' }],
+      ['assujetti_tva', 'Il facture la TVA (il est assujetti)', 'coche'], ['taux_tva', 'Taux TVA %', 'number'],
+      ['iban', 'IBAN pour le payer', 'text', 'large']
+    ] },
+    { titre: 'Accord de service (SLA)', aide: 'Les règles convenues ensemble : délais, disponibilité, confidentialité.', champs: [
+      ['delai_livraison_jours', 'Délai de livraison (jours)', 'number'], ['delai_reponse_heures', 'Délai de réponse (heures)', 'number'],
+      ['preavis_jours', 'Préavis pour arrêter (jours)', 'number'], ['contrat_signe_le', 'Accord signé le', 'date'],
+      ['disponibilite', 'Disponibilités (ex : lun–ven, 9h–17h)', 'text', 'large'],
+      ['confidentialite_signee', 'Accord de confidentialité signé (il ne partage rien sur vos clients)', 'coche'],
+      ['droits_cedes', 'Les créations (vidéos, textes, visuels) vous appartiennent', 'coche'],
+      ['notes', 'Notes', 'textarea', 'large']
+    ] }
+  ];
+
+  let collabs = [];
+  let ficheId = 0;
+  let prestations = [];
+  let envoiEnCours = false;
+
+  const chf = v => (Math.round((parseFloat(v) || 0) * 100) / 100).toFixed(2);
+  const dateFr = s => /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')) ? s.slice(8, 10) + '.' + s.slice(5, 7) + '.' + s.slice(0, 4) : '';
+  const vrai = v => v === 1 || v === '1' || v === true;
+
+  async function appel(action, donnees) {
+    const r = await fetch(COLLAB_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(Object.assign({ action }, donnees || {})) });
+    if (!r.ok) throw new Error('http ' + r.status);
+    const d = await r.json();
+    if (!d || d.success === false) throw new Error((d && d.erreur) || 'erreur');
+    return d.rows || [];
+  }
+
+  async function chargerListe() {
+    try {
+      collabs = await appel('list');
+      afficherListe();
+    } catch (e) {
+      document.getElementById('listeCollab').innerHTML = '<div class="co-vide">Impossible de charger la liste. Réessaie dans un instant.</div>';
+      document.getElementById('subtitleInfo').textContent = '';
+    }
+  }
+
+  function afficherListe() {
+    const actifs = collabs.filter(c => vrai(c.actif)).length;
+    const heures = collabs.reduce((s, c) => s + (parseFloat(c.total_heures) || 0), 0);
+    const total = collabs.reduce((s, c) => s + (parseFloat(c.total_ttc) || 0), 0);
+    const du = collabs.reduce((s, c) => s + (parseFloat(c.reste_a_payer) || 0), 0);
+    document.getElementById('stActifs').textContent = actifs;
+    document.getElementById('stHeures').textContent = (Math.round(heures * 10) / 10) + ' h';
+    document.getElementById('stPaye').textContent = chf(total - du);
+    document.getElementById('stDu').textContent = chf(du);
+    document.getElementById('subtitleInfo').textContent = collabs.length + ' collaborateur(s) enregistré(s).';
+    const zone = document.getElementById('listeCollab');
+    if (!collabs.length) {
+      zone.innerHTML = '<div class="co-vide"><b>Aucun collaborateur pour le moment</b>Ajoute ici les personnes qui t\'aident : freelances, monteurs vidéo, assistants…<br><br><button class="btn-primary" onclick="ouvrirFiche(0)">+ Ajouter le premier</button></div>';
+      return;
+    }
+    let h = '<table class="co-liste"><thead><tr><th>Nom</th><th>Service</th><th>Tarif</th><th>Accord</th><th>À payer</th><th></th></tr></thead><tbody>';
+    collabs.forEach(c => {
+      const tarif = c.tarif !== null && c.tarif !== undefined && c.tarif !== '' ? chf(c.tarif) + ' ' + esc(c.devise || 'CHF') + ' ' + esc(MODES_TARIF[c.mode_tarif] || '') : '—';
+      const sla = [c.delai_livraison_jours ? 'livraison ' + esc(c.delai_livraison_jours) + ' j' : '', c.delai_reponse_heures ? 'réponse ' + esc(c.delai_reponse_heures) + ' h' : ''].filter(Boolean).join(' · ') || '—';
+      const du = parseFloat(c.reste_a_payer) || 0;
+      h += '<tr class="co-ligne" onclick="ouvrirFiche(' + parseInt(c.id, 10) + ')">' +
+        '<td><div class="co-nom">' + esc(((c.prenom || '') + ' ' + (c.nom || '')).trim()) + '</div><div class="co-sous">' + esc(c.email || '') + (c.telephone ? ' · ' + esc(c.telephone) : '') + '</div></td>' +
+        '<td>' + esc(c.service || '—') + '<div class="co-sous"><span class="badge statut">' + esc(STATUTS[c.statut] || c.statut || '') + '</span> <span class="badge ' + (vrai(c.actif) ? 'actif">En cours' : 'inactif">Terminé') + '</span></div></td>' +
+        '<td>' + tarif + '</td>' +
+        '<td>' + sla + (vrai(c.confidentialite_signee) ? '<div class="co-sous">🔒 confidentialité signée</div>' : '') + '</td>' +
+        '<td>' + (du > 0 ? '<span class="badge du">' + chf(du) + ' CHF</span>' : '<span class="badge ok">à jour</span>') + '</td>' +
+        '<td style="text-align:right;"><button class="mini-btn">Ouvrir</button></td></tr>';
+    });
+    zone.innerHTML = h + '</tbody></table>';
+  }
+
+  function champHtml(f, c) {
+    const [cle, label, type, taille, options] = f;
+    const val = c[cle] === null || c[cle] === undefined ? '' : c[cle];
+    if (type === 'coche') return '<label class="fi-coche fi-champ large"><input type="checkbox" id="f_' + cle + '"' + (vrai(val) ? ' checked' : '') + '> <span>' + esc(label) + '</span></label>';
+    let input;
+    if (type === 'select') input = '<select id="f_' + cle + '">' + Object.keys(options).map(k => '<option value="' + esc(k) + '"' + (String(val) === k ? ' selected' : '') + '>' + esc(options[k]) + '</option>').join('') + '</select>';
+    else if (type === 'textarea') input = '<textarea id="f_' + cle + '">' + esc(val) + '</textarea>';
+    else input = '<input id="f_' + cle + '" type="' + (type || 'text') + '"' + (type === 'number' ? ' step="0.01" min="0"' : '') + ' value="' + esc(val) + '">';
+    return '<div class="fi-champ' + (taille === 'large' ? ' large' : '') + '"><label for="f_' + cle + '">' + esc(label) + '</label>' + input + '</div>';
+  }
+
+  function ouvrirFiche(id) {
+    ficheId = parseInt(id, 10) || 0;
+    const c = collabs.find(x => parseInt(x.id, 10) === ficheId) || { actif: 1, statut: 'independant', mode_tarif: 'heure', devise: 'CHF', periode_heures: 'mois', taux_tva: '8.10', date_debut: new Date().toISOString().slice(0, 10) };
+    if (!ficheId) prestations = [];
+    document.getElementById('fiTitre').textContent = ficheId ? ((c.prenom || '') + ' ' + (c.nom || '')).trim() : 'Nouveau collaborateur';
+    document.getElementById('fiImprimer').style.display = ficheId ? '' : 'none';
+    let h = '';
+    SECTIONS.forEach(s => {
+      h += '<div class="fi-section"><h3>' + esc(s.titre) + '</h3><p class="fi-aide">' + esc(s.aide) + '</p><div class="fi-grille">' + s.champs.map(f => champHtml(f, c)).join('') + '</div>' + (s.note ? '<div class="fi-note">' + esc(s.note) + '</div>' : '') + '</div>';
+    });
+    h += '<div class="fi-pied"><div>' + (ficheId ? '<button class="btn-danger" onclick="supprimerCollab()">Supprimer</button>' : '') + '</div><div style="display:flex;gap:8px;"><button class="btn-secondary" onclick="fermerFiche()">Annuler</button><button class="btn-primary" id="btnEnregistrer" onclick="enregistrerCollab()">Enregistrer</button></div></div>';
+    h += '<div class="fi-section" style="margin-top:18px;" id="zonePrestations">' + (ficheId ? '<div class="loading-state" style="padding:20px;"><div class="spinner"></div>Chargement des prestations…</div>' : '<h3>Heures et prestations</h3><p class="fi-aide">Enregistre d\'abord la fiche : ensuite tu pourras noter ici ses heures, ses factures et les ajouter à tes dépenses en un clic.</p>') + '</div>';
+    document.getElementById('fiCorps').innerHTML = h;
+    document.getElementById('fiFond').classList.add('ouvert');
+    document.getElementById('fiFond').scrollTop = 0;
+    document.body.style.overflow = 'hidden';
+    if (ficheId) chargerPrestations();
+  }
+
+  function fermerFiche() {
+    document.getElementById('fiFond').classList.remove('ouvert');
+    document.body.style.overflow = '';
+    ficheId = 0;
+  }
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && document.getElementById('fiFond').classList.contains('ouvert')) fermerFiche(); });
+
+  function lireFiche() {
+    const d = { id: ficheId };
+    SECTIONS.forEach(s => s.champs.forEach(f => {
+      const el = document.getElementById('f_' + f[0]);
+      if (el) d[f[0]] = f[2] === 'coche' ? (el.checked ? 1 : 0) : el.value;
+    }));
+    return d;
+  }
+
+  async function enregistrerCollab() {
+    const d = lireFiche();
+    if (!String(d.nom || '').trim()) { showToast('Indique au moins le nom.'); document.getElementById('f_nom').focus(); return; }
+    if (d.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) { showToast('L\'email semble incorrect.'); document.getElementById('f_email').focus(); return; }
+    const btn = document.getElementById('btnEnregistrer'); btn.disabled = true; btn.textContent = 'Enregistrement…';
+    try {
+      await appel('save', d);
+      const nouveau = !ficheId;
+      await chargerListe();
+      showToast('Fiche enregistrée.');
+      if (nouveau) {
+        const trouve = collabs.filter(c => String(c.nom || '').trim() === d.nom.trim() && String(c.prenom || '').trim() === String(d.prenom || '').trim()).sort((a, b) => b.id - a.id)[0];
+        if (trouve) ouvrirFiche(trouve.id); else fermerFiche();
+      } else {
+        ouvrirFiche(ficheId);
+      }
+    } catch (e) {
+      showToast('Erreur : la fiche n\'a pas été enregistrée.');
+      btn.disabled = false; btn.textContent = 'Enregistrer';
+    }
+  }
+
+  async function supprimerCollab() {
+    const c = collabs.find(x => parseInt(x.id, 10) === ficheId);
+    if (!c) return;
+    if ((parseInt(c.nb_prestations, 10) || 0) > 0) {
+      alert('Ce collaborateur a des prestations enregistrées : sa fiche doit être gardée pour la comptabilité (10 ans).\n\nPour arrêter la collaboration, décoche « Collaboration en cours », indique la date de fin, puis enregistre.');
+      return;
+    }
+    if (!confirm('Supprimer définitivement la fiche de ' + ((c.prenom || '') + ' ' + (c.nom || '')).trim() + ' ?')) return;
+    try { await appel('delete', { id: ficheId }); fermerFiche(); await chargerListe(); showToast('Fiche supprimée.'); }
+    catch (e) { showToast('Erreur lors de la suppression.'); }
+  }
+
+  // ----- Prestations -----
+  async function chargerPrestations() {
+    const idDemande = ficheId;
+    try {
+      const rows = await appel('presta_list', { collaborateur_id: idDemande });
+      if (idDemande !== ficheId) return;
+      prestations = rows;
+      afficherPrestations();
+    } catch (e) {
+      const z = document.getElementById('zonePrestations');
+      if (z) z.innerHTML = '<h3>Heures et prestations</h3><p class="fi-aide">Impossible de charger les prestations.</p>';
+    }
+  }
+
+  function collabCourant() { return collabs.find(x => parseInt(x.id, 10) === ficheId) || {}; }
+
+  function afficherPrestations() {
+    const c = collabCourant();
+    const z = document.getElementById('zonePrestations');
+    if (!z) return;
+    const du = prestations.filter(p => !vrai(p.paye)).reduce((s, p) => s + (parseFloat(p.montant_ttc) || 0), 0);
+    const tot = prestations.reduce((s, p) => s + (parseFloat(p.montant_ttc) || 0), 0);
+    const hrs = prestations.reduce((s, p) => s + (parseFloat(p.heures) || 0), 0);
+    let h = '<h3>Heures et prestations</h3><p class="fi-aide">Note chaque travail ou facture reçue. Quand tu le paies, clique sur « Payé → dépenses » : la dépense s\'ajoute automatiquement dans ta Comptabilité officielle.</p>';
+    if (prestations.length) {
+      h += '<table class="pr-table"><thead><tr><th>Date</th><th>Description</th><th class="n">Heures</th><th class="n">Hors TVA</th><th class="n">TVA</th><th class="n">Total</th><th></th></tr></thead><tbody>';
+      prestations.forEach(p => {
+        const pid = parseInt(p.id, 10);
+        const action = vrai(p.ajoute_depense)
+          ? '<span class="badge ok">✓ Payé ' + esc(dateFr(p.date_paiement)) + (p.mode_paiement ? ' · ' + esc(MODES_PAIEMENT[p.mode_paiement] || p.mode_paiement) : '') + '</span>'
+          : '<select id="pm_' + pid + '" class="mini-btn">' + Object.keys(MODES_PAIEMENT).map(k => '<option value="' + k + '">' + MODES_PAIEMENT[k] + '</option>').join('') + '</select> <button class="mini-btn vert" id="pb_' + pid + '" onclick="payerPrestation(' + pid + ')">Payé → dépenses</button> <button class="mini-x" title="Supprimer" onclick="supprimerPrestation(' + pid + ')">✕</button>';
+        h += '<tr><td>' + esc(dateFr(p.date_prestation)) + '</td><td>' + esc(p.description) + (p.reference_facture ? '<div class="co-sous">Facture ' + esc(p.reference_facture) + '</div>' : '') + '</td><td class="n">' + (p.heures !== null && p.heures !== undefined && p.heures !== '' ? esc(p.heures) : '') + '</td><td class="n">' + chf(p.montant_ht) + '</td><td class="n">' + chf(p.montant_tva) + '</td><td class="n"><b>' + chf(p.montant_ttc) + '</b></td><td style="text-align:right;white-space:nowrap;">' + action + '</td></tr>';
+      });
+      h += '</tbody></table><div class="pr-total">Total : <b>' + chf(tot) + ' ' + esc(c.devise || 'CHF') + '</b> · ' + (Math.round(hrs * 10) / 10) + ' h · Reste à payer : <b>' + chf(du) + ' ' + esc(c.devise || 'CHF') + '</b></div>';
+    } else {
+      h += '<p class="fi-aide" style="font-style:italic;">Aucune prestation enregistrée.</p>';
+    }
+    const auto = c.mode_tarif === 'heure' || c.mode_tarif === 'jour';
+    h += '<div class="pr-ajout"><div class="fi-grille">' +
+      '<div class="fi-champ"><label>Date</label><input type="date" id="p_date" value="' + new Date().toISOString().slice(0, 10) + '"></div>' +
+      '<div class="fi-champ" style="grid-column: span 2;"><label>Description</label><input id="p_desc" placeholder="ex : montage de 3 vidéos"></div>' +
+      '<div class="fi-champ"><label>' + (c.mode_tarif === 'jour' ? 'Jours' : 'Heures') + '</label><input type="number" step="0.25" min="0" id="p_heures" oninput="calculPresta()"></div>' +
+      '<div class="fi-champ"><label>Montant hors TVA</label><input type="number" step="0.01" min="0" id="p_ht" oninput="calculPresta(true)"></div>' +
+      '<div class="fi-champ"><label>TVA</label><input type="number" step="0.01" min="0" id="p_tva"' + (vrai(c.assujetti_tva) ? '' : ' value="0"') + '></div>' +
+      '<div class="fi-champ"><label>N° de sa facture</label><input id="p_ref" placeholder="optionnel"></div>' +
+      '</div><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><span class="fi-aide" style="margin:0;">' + (auto && c.tarif ? 'Le montant se calcule avec son tarif (' + chf(c.tarif) + ' ' + esc(MODES_TARIF[c.mode_tarif]) + ').' : '') + (vrai(c.assujetti_tva) ? ' TVA calculée à ' + esc(c.taux_tva) + ' %.' : '') + '</span><button class="btn-primary" id="btnPresta" onclick="ajouterPrestation()">+ Ajouter la prestation</button></div></div>';
+    z.innerHTML = h;
+  }
+
+  function calculPresta(depuisMontant) {
+    const c = collabCourant();
+    const q = parseFloat(document.getElementById('p_heures').value);
+    const htEl = document.getElementById('p_ht');
+    if (!depuisMontant && (c.mode_tarif === 'heure' || c.mode_tarif === 'jour') && parseFloat(c.tarif) > 0 && q >= 0) htEl.value = chf(q * parseFloat(c.tarif));
+    const ht = parseFloat(htEl.value);
+    if (vrai(c.assujetti_tva) && ht >= 0) document.getElementById('p_tva').value = chf(ht * (parseFloat(c.taux_tva) || 0) / 100);
+  }
+
+  async function ajouterPrestation() {
+    const d = {
+      collaborateur_id: ficheId,
+      date_prestation: document.getElementById('p_date').value,
+      description: document.getElementById('p_desc').value.trim(),
+      heures: document.getElementById('p_heures').value,
+      montant_ht: document.getElementById('p_ht').value,
+      montant_tva: document.getElementById('p_tva').value || 0,
+      reference_facture: document.getElementById('p_ref').value.trim()
+    };
+    if (!d.date_prestation || !d.description) { showToast('Indique la date et la description.'); return; }
+    if (!(parseFloat(d.montant_ht) >= 0) || d.montant_ht === '') { showToast('Indique le montant hors TVA.'); return; }
+    const btn = document.getElementById('btnPresta'); btn.disabled = true;
+    try { await appel('presta_save', d); showToast('Prestation ajoutée.'); await chargerPrestations(); chargerListe(); }
+    catch (e) { showToast('Erreur : prestation non ajoutée.'); btn.disabled = false; }
+  }
+
+  async function supprimerPrestation(pid) {
+    if (!confirm('Supprimer cette prestation ?')) return;
+    try { await appel('presta_delete', { id: pid }); await chargerPrestations(); chargerListe(); showToast('Prestation supprimée.'); }
+    catch (e) { showToast('Erreur lors de la suppression.'); }
+  }
+
+  async function payerPrestation(pid) {
+    if (envoiEnCours) return;
+    const p = prestations.find(x => parseInt(x.id, 10) === pid);
+    const c = collabCourant();
+    if (!p || vrai(p.ajoute_depense)) return;
+    const mode = (document.getElementById('pm_' + pid) || {}).value || 'virement';
+    const nomC = ((c.prenom || '') + ' ' + (c.nom || '')).trim();
+    if (!confirm('Confirmer le paiement de ' + chf(p.montant_ttc) + ' ' + (c.devise || 'CHF') + ' à ' + nomC + ' ?\n\nUne dépense « Honoraires collaborateurs » sera ajoutée à ta Comptabilité officielle à la date d\'aujourd\'hui.')) return;
+    envoiEnCours = true;
+    const btn = document.getElementById('pb_' + pid); if (btn) { btn.disabled = true; btn.textContent = 'Envoi…'; }
+    const aujourdhui = new Date().toISOString().slice(0, 10);
+    try {
+      const r = await fetch(LIVRE_CREATE_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
+        account_id: session.account_id, date_operation: aujourdhui, type: 'depense', categorie: 'Honoraires collaborateurs/freelances',
+        libelle: 'Honoraires ' + nomC + ' — ' + p.description, montant_ht: chf(p.montant_ttc), mode_paiement: mode,
+        reference_piece: p.reference_facture || null, client_nom: nomC, client_email: c.email || null, cree_par: session.login || null
+      }) });
+      if (!r.ok) throw new Error('livre');
+      await appel('presta_payer', { id: pid, mode_paiement: mode, date_paiement: aujourdhui });
+      showToast('Payé : la dépense est dans la comptabilité.');
+      await chargerPrestations(); chargerListe();
+    } catch (e) {
+      showToast('Erreur : rien n\'a été ajouté aux dépenses.');
+      if (btn) { btn.disabled = false; btn.textContent = 'Payé → dépenses'; }
+    }
+    envoiEnCours = false;
+  }
+
+  // ----- Impression -----
+  function imprimer(html) {
+    const z = document.getElementById('zoneImpression');
+    z.innerHTML = html;
+    window.print();
+    setTimeout(() => { z.innerHTML = ''; }, 500);
+  }
+
+  function imprimerFiche() {
+    const c = collabCourant();
+    if (!c.id) return;
+    const ligne = (l, v) => v === null || v === undefined || v === '' ? '' : '<tr><th style="width:38%;">' + esc(l) + '</th><td>' + esc(v) + '</td></tr>';
+    const oui = v => vrai(v) ? 'Oui' : 'Non';
+    let h = '<h1>Fiche collaborateur — ' + esc(((c.prenom || '') + ' ' + (c.nom || '')).trim()) + '</h1><div class="imp-sous">RoqyaSuisse · imprimé le ' + esc(dateFr(new Date().toISOString().slice(0, 10))) + '</div>';
+    h += '<h2>Identité</h2><table>' + ligne('Email', c.email) + ligne('Téléphone', c.telephone) + ligne('Adresse', c.adresse) + ligne('Statut', STATUTS[c.statut]) + ligne('Entreprise', c.entreprise) + ligne('N° IDE', c.numero_ide) + ligne('Attestation AVS indépendant', oui(c.attestation_avs)) + '</table>';
+    h += '<h2>Mission</h2><table>' + ligne('Service', c.service) + ligne('Compétences', c.competences) + ligne('Début', dateFr(c.date_debut)) + ligne('Fin', dateFr(c.date_fin)) + ligne('En cours', oui(c.actif)) + '</table>';
+    h += '<h2>Rémunération</h2><table>' + ligne('Tarif', c.tarif ? chf(c.tarif) + ' ' + (c.devise || 'CHF') + ' ' + (MODES_TARIF[c.mode_tarif] || '') + ' (hors TVA)' : '') + ligne('TVA', vrai(c.assujetti_tva) ? c.taux_tva + ' %' : 'Non assujetti') + ligne('Heures prévues', c.heures_prevues ? c.heures_prevues + ' h par ' + c.periode_heures : '') + ligne('IBAN', c.iban) + '</table>';
+    h += '<h2>Accord de service (SLA)</h2><table>' + ligne('Délai de livraison', c.delai_livraison_jours ? c.delai_livraison_jours + ' jour(s)' : '') + ligne('Délai de réponse', c.delai_reponse_heures ? c.delai_reponse_heures + ' heure(s)' : '') + ligne('Disponibilités', c.disponibilite) + ligne('Préavis', c.preavis_jours ? c.preavis_jours + ' jour(s)' : '') + ligne('Accord signé le', dateFr(c.contrat_signe_le)) + ligne('Confidentialité signée', oui(c.confidentialite_signee)) + ligne('Créations cédées à RoqyaSuisse', oui(c.droits_cedes)) + ligne('Notes', c.notes) + '</table>';
+    if (prestations.length) {
+      h += '<h2>Prestations</h2><table><tr><th>Date</th><th>Description</th><th>Heures</th><th>Hors TVA</th><th>TVA</th><th>Total</th><th>Payé</th></tr>' + prestations.map(p => '<tr><td>' + esc(dateFr(p.date_prestation)) + '</td><td>' + esc(p.description) + '</td><td>' + esc(p.heures || '') + '</td><td>' + chf(p.montant_ht) + '</td><td>' + chf(p.montant_tva) + '</td><td>' + chf(p.montant_ttc) + '</td><td>' + (vrai(p.paye) ? esc(dateFr(p.date_paiement)) : 'non') + '</td></tr>').join('') + '</table>';
+    }
+    h += '<div class="imp-sign"><div>Signature RoqyaSuisse</div><div>Signature du collaborateur</div></div>';
+    imprimer(h);
+  }
+
+  function imprimerListe() {
+    if (!collabs.length) { showToast('La liste est vide.'); return; }
+    let h = '<h1>Collaborateurs</h1><div class="imp-sous">RoqyaSuisse · imprimé le ' + esc(dateFr(new Date().toISOString().slice(0, 10))) + '</div><h2>Liste</h2><table><tr><th>Nom</th><th>Contact</th><th>Service</th><th>Statut</th><th>Tarif</th><th>SLA</th><th>Reste à payer</th></tr>';
+    collabs.forEach(c => {
+      h += '<tr><td>' + esc(((c.prenom || '') + ' ' + (c.nom || '')).trim()) + '</td><td>' + esc(c.email || '') + '<br>' + esc(c.telephone || '') + '</td><td>' + esc(c.service || '') + '</td><td>' + esc(STATUTS[c.statut] || '') + (vrai(c.actif) ? '' : ' (terminé)') + '</td><td>' + (c.tarif ? chf(c.tarif) + ' ' + esc(c.devise || 'CHF') + ' ' + esc(MODES_TARIF[c.mode_tarif] || '') : '') + '</td><td>' + (c.delai_livraison_jours ? esc(c.delai_livraison_jours) + ' j' : '') + (c.delai_reponse_heures ? ' / ' + esc(c.delai_reponse_heures) + ' h' : '') + '</td><td>' + chf(c.reste_a_payer) + '</td></tr>';
+    });
+    imprimer(h + '</table>');
+  }
+
+  chargerListe();
+</script>
+
+<script>
+/* Show enregistre : bouton ouvert pour l'administrateur ou si le client l'a achete (24.09.2026) */
+(function(){
+  try {
+    var s = JSON.parse(localStorage.getItem('crm_session_user') || 'null');
+    var b = document.getElementById('showEnrBtn');
+    if (!s || !b) return;
+    if (s.role === 'super_admin') { b.classList.remove('disabled'); return; }
+    fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-show-enregistre-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: s.account_id }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if (d && d.show_enregistre) b.classList.remove('disabled'); })
+      .catch(function(){});
+  } catch (e) {}
+})();
+</script>
+<script>
+/* Bouton Show en haut : ouvert pour l'administrateur ou si le compte a le Show (24.09.2026) */
+(function(){
+  try {
+    var s = JSON.parse(localStorage.getItem('crm_session_user') || 'null');
+    var b = document.getElementById('showBtn');
+    if (!s || !b) return;
+    if (s.role === 'super_admin') { b.classList.remove('disabled'); return; }
+    fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-check-show-access', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: s.account_id }) })
+      .then(function(r){ return r.json(); })
+      .then(function(d){ if (d && d.show) b.classList.remove('disabled'); })
+      .catch(function(){});
+  } catch (e) {}
+})();
+</script>
+</body>
+</html>
