@@ -657,6 +657,7 @@
     <div class="filter-tab" data-filter="social" onclick="setSourceFilter('social')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">📱 Réseaux sociaux</div>
     <div class="filter-tab" data-filter="ads" onclick="setSourceFilter('ads')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">🎯 Ads</div>
     <div style="flex:1 1 auto"></div>
+    <button type="button" onclick="ouvrirAjoutLead()" style="display:flex;align-items:center;gap:6px;padding:7px 16px;border-radius:20px;border:none;background:#0D1A12;color:#E8D5A8;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif">＋ Ajouter un lead</button>
     <div class="search-box">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
       <input type="text" id="searchInput" placeholder="Rechercher un lead…">
@@ -1653,5 +1654,95 @@
   } catch (e) {}
 })();
 </script>
+<!-- Ajouter un lead a la main (25.09.2026) -->
+<style>
+  .al-fond { position: fixed; inset: 0; background: rgba(13,26,18,.55); display: none; align-items: flex-start; justify-content: center; z-index: 9999; padding: 40px 16px; overflow-y: auto; }
+  .al-fond.show { display: flex; }
+  .al-boite { background: white; border-radius: 16px; width: 100%; max-width: 520px; padding: 26px 26px 22px; box-shadow: 0 20px 60px rgba(0,0,0,.25); position: relative; font-family: 'Inter', sans-serif; }
+  .al-boite h3 { font-family: 'Cormorant Garamond', serif; font-size: 26px; margin: 0 0 4px; color: #0D1A12; }
+  .al-sous { font-size: 13px; color: #6B6B68; margin-bottom: 18px; }
+  .al-grille { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .al-champ { display: flex; flex-direction: column; gap: 5px; }
+  .al-champ.large { grid-column: 1 / -1; }
+  .al-champ label { font-size: 12px; font-weight: 600; color: #6B6B68; }
+  .al-champ input, .al-champ select { padding: 10px 12px; border: 1px solid #DDD5C3; border-radius: 9px; font: inherit; font-size: 14px; background: white; }
+  .al-champ input:focus, .al-champ select:focus { outline: none; border-color: #B8965A; box-shadow: 0 0 0 3px rgba(184,150,90,.15); }
+  .al-msg { display: none; margin-top: 14px; padding: 10px 12px; border-radius: 9px; font-size: 13px; }
+  .al-msg.erreur { display: block; background: #FBEAE7; color: #A33A2B; }
+  .al-msg.ok { display: block; background: #E8F3E8; color: #3E6B3E; }
+  .al-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+  .al-actions button { padding: 10px 18px; border-radius: 9px; font: inherit; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .al-x { position: absolute; top: 12px; right: 14px; border: none; background: none; font-size: 20px; cursor: pointer; color: #6B6B68; }
+  @media (max-width: 520px) { .al-grille { grid-template-columns: 1fr; } }
+</style>
+<div class="al-fond" id="alFond" onclick="if (event.target === this) fermerAjoutLead()">
+  <div class="al-boite" role="dialog" aria-modal="true" aria-labelledby="alTitre">
+    <button type="button" class="al-x" onclick="fermerAjoutLead()" aria-label="Fermer">✕</button>
+    <h3 id="alTitre">Ajouter un lead</h3>
+    <div class="al-sous">Pour une personne qui t'a appelé, écrit ou rencontré. Tu la retrouves ensuite dans ta liste.</div>
+    <div class="al-grille">
+      <div class="al-champ"><label for="al_prenom">Prénom</label><input id="al_prenom" maxlength="100" autocomplete="off"></div>
+      <div class="al-champ"><label for="al_nom">Nom</label><input id="al_nom" maxlength="100" autocomplete="off"></div>
+      <div class="al-champ large"><label for="al_email">E-mail</label><input id="al_email" type="email" maxlength="190" autocomplete="off"></div>
+      <div class="al-champ large"><label for="al_tel">Téléphone / WhatsApp</label><input id="al_tel" maxlength="40" placeholder="+41 79 000 00 00" autocomplete="off"></div>
+      <div class="al-champ"><label for="al_type">Demande</label>
+        <select id="al_type">
+          <option value="RP">Roqya personne</option>
+          <option value="RM">Roqya maison / bureau</option>
+          <option value="DD">Diagnostic payant</option>
+          <option value="AP">Produits</option>
+          <option value="Fr">Formation (Académie)</option>
+          <option value="AA">Application Nexa</option>
+        </select>
+      </div>
+      <div class="al-champ"><label for="al_source">Source</label>
+        <select id="al_source">
+          <option>Téléphone</option><option>E-mail</option><option>WhatsApp</option><option>Recommandation</option><option>Rencontre</option><option>TikTok</option><option>Instagram</option><option>Facebook</option><option>Autre</option>
+        </select>
+      </div>
+    </div>
+    <div class="al-msg" id="alMsg"></div>
+    <div class="al-actions">
+      <button type="button" onclick="fermerAjoutLead()" style="border:1px solid #DDD5C3;background:white;color:#1a1a1a">Annuler</button>
+      <button type="button" id="alBtn" onclick="enregistrerAjoutLead()" style="border:none;background:#0D1A12;color:#E8D5A8">Ajouter</button>
+    </div>
+  </div>
+</div>
+<script>
+  function ouvrirAjoutLead() {
+    ['al_prenom', 'al_nom', 'al_email', 'al_tel'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('al_type').value = 'RP'; document.getElementById('al_source').value = 'Téléphone';
+    const m = document.getElementById('alMsg'); m.className = 'al-msg'; m.innerHTML = '';
+    document.getElementById('alFond').classList.add('show');
+    setTimeout(() => document.getElementById('al_prenom').focus(), 50);
+  }
+  function fermerAjoutLead() { document.getElementById('alFond').classList.remove('show'); }
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') fermerAjoutLead(); });
+  async function enregistrerAjoutLead() {
+    const m = document.getElementById('alMsg'), btn = document.getElementById('alBtn');
+    const v = id => document.getElementById(id).value.trim();
+    const s = JSON.parse(localStorage.getItem('crm_session_user') || '{}');
+    const d = { account_id: s.account_id, prenom: v('al_prenom'), nom: v('al_nom'), email: v('al_email'), whatsapp: v('al_tel'), type_client: v('al_type'), source: v('al_source') };
+    const faute = t => { m.className = 'al-msg erreur'; m.textContent = t; };
+    if (!d.prenom && !d.nom) return faute('Le prénom ou le nom est obligatoire.');
+    if (!d.email && !d.whatsapp) return faute('Il faut au moins un e-mail ou un numéro de téléphone.');
+    if (d.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(d.email)) return faute("L'adresse e-mail n'est pas valide.");
+    btn.disabled = true; btn.textContent = 'Enregistrement…';
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-lead-create', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(d) });
+      const data = await resp.json();
+      if (data.session_expiree) { alert('Ta session a expiré. Pour ta sécurité, reconnecte-toi.'); localStorage.removeItem('crm_session_user'); localStorage.removeItem('crm_session_expiry'); location.href = 'index.html'; return; }
+      if (data.success) {
+        m.className = 'al-msg ok'; m.textContent = '✅ Lead ajouté. Ouverture de sa fiche…';
+        setTimeout(() => { location.href = 'lead-detail.html?id=' + data.lead_id; }, 800);
+        return;
+      }
+      if (data.deja) { m.className = 'al-msg erreur'; m.innerHTML = 'Ce lead existe déjà dans ta liste. <a href="lead-detail.html?id=' + Number(data.deja) + '" style="color:#A33A2B;font-weight:700">Ouvrir sa fiche</a>'; }
+      else faute(data.message || 'Une erreur est survenue.');
+    } catch (e) { faute('Connexion impossible. Réessaie.'); }
+    btn.disabled = false; btn.textContent = 'Ajouter';
+  }
+</script>
+
 </body>
 </html>
