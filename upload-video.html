@@ -402,6 +402,10 @@
 </div>
 
 <script>
+// Securite (25.09.2026) : textes des fichiers affiches sans risque
+function escAttr(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
+function jsArg(v) { return JSON.stringify(String(v == null ? '' : v)).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
+
 const API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-upload-video';
 const CHUNK_SIZE = 8 * 1024 * 1024; // 8 Mo
 const RETRY_LIMIT = 5;
@@ -663,12 +667,12 @@ async function loadFilesList() {
       files.forEach(f => {
         html += '<div class="file-list-item">' +
                   '<div class="file-list-info">' +
-                    '<span class="file-list-name">' + f.display_name + '</span>' +
+                    '<span class="file-list-name">' + escAttr(f.display_name) + '</span>' +
                     '<span class="file-list-meta">' + formatSize(f.size_mo) + ' · ' + formatDate(f.date) + '</span>' +
                   '</div>' +
                   '<div class="file-list-actions">' +
-                    '<a class="file-list-icon-btn" href="' + f.url + '" target="_blank" title="Voir la vidéo">' + eyeIcon + '</a>' +
-                    '<a class="file-list-icon-btn danger" href="#" title="Supprimer" onclick="confirmDelete(\'' + groupTarget + '\',\'' + f.filename.replace(/'/g, "\\'") + '\',\'' + f.display_name.replace(/'/g, "\\'") + '\'); return false;">' + trashIcon + '</a>' +
+                    '<a class="file-list-icon-btn" href="' + escAttr(f.url) + '" target="_blank" title="Voir la vidéo">' + eyeIcon + '</a>' +
+                    '<a class="file-list-icon-btn danger" href="#" title="Supprimer" onclick="confirmDelete(' + jsArg(groupTarget) + ',' + jsArg(f.filename) + ',' + jsArg(f.display_name) + '); return false;">' + trashIcon + '</a>' +
                   '</div>' +
                 '</div>';
       });

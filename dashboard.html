@@ -690,7 +690,7 @@
     <div class="filter-tab" data-filter="social" onclick="setSourceFilter('social')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">📱 Réseaux sociaux</div>
     <div class="filter-tab" data-filter="ads" onclick="setSourceFilter('ads')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">🎯 Ads</div>
     <div class="leads-actions">
-      <button type="button" class="la-sombre" id="btnUpdate" onclick="lancerUpdate()" title="Contrôler et mettre à jour tous les clients">
+      <button type="button" class="la-sombre" id="btnUpdate" style="display:none" onclick="lancerUpdate()" title="Contrôler et mettre à jour tous les clients">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg><span>Update</span>
       </button>
       <button type="button" class="la-sombre" onclick="ouvrirAjoutLead()" title="Ajouter un lead">
@@ -880,7 +880,7 @@
     var theme = module === 'iris'
       ? { grad: 'linear-gradient(135deg,#F5DFA6 0%,#E8C77A 50%,#B8965A 100%)', text: '#F5DFA6', soft: 'rgba(245,223,166,0.82)', accent: '#E8C77A' }
       : { grad: 'linear-gradient(135deg,#C9A86A 0%,#B8965A 100%)', text: '#F4ECE0', soft: 'rgba(244,236,224,0.82)', accent: '#B8965A' };
-    var nomLine = nom ? '<div><span style="color:' + theme.accent + '">Nom :</span> ' + nom + '</div>' : '';
+    var nomLine = nom ? '<div><span style="color:' + theme.accent + '">Nom :</span> ' + escapeHtml(nom) + '</div>' : '';
     var labelStyle = 'display:flex;align-items:flex-start;gap:10px;cursor:pointer;padding:10px 12px;border:1px solid rgba(184,150,90,0.25);border-radius:10px;margin-bottom:8px;font-size:13.5px;color:' + theme.soft + ';line-height:1.5';
     zone.innerHTML =
       '<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(184,150,90,0.3);border-radius:14px;padding:20px;text-align:left">' +
@@ -1072,6 +1072,7 @@
     document.body.style.display = '';
     if (session.role === 'super_admin') {
       document.getElementById('adminLink').style.display = 'inline-flex';
+      document.getElementById('btnUpdate').style.display = 'inline-flex';
       document.getElementById('laboratoireLink').classList.remove('disabled');
       document.getElementById('showBtn').classList.remove('disabled');
       document.getElementById('irisBtn').classList.remove('disabled');
@@ -1264,7 +1265,7 @@
       const whatsapp = l.whatsapp || '';
       const isTally = (l.source || '').toLowerCase() === 'tally';
       const source = l.source
-        ? '<span class="source-chip' + (isTally ? ' tally' : '') + '">' + (isTally ? '📋 ' : '') + l.source + '</span>'
+        ? '<span class="source-chip' + (isTally ? ' tally' : '') + '">' + (isTally ? '📋 ' : '') + escapeHtml(l.source) + '</span>'
         : '—';
       const inscriptionPour = typeInscriptionLabels[l.type_inscription] || '—';
       const date = l.date_inscription
@@ -1296,7 +1297,7 @@
         : '<span style="color:#C9C9C6">—</span>';
       const vipCrown = estVip(l) ? '<span class="vip-crown" title="VIP : a acheté">👑</span>' : '';
       const tempIcons = { Froid: '❄️', Tiede: '🌤️', Chaud: '🔥' };
-      const tempDot = (!estVip(l) && tempIcons[l.statut_suivi]) ? '<span class="temp-dot" title="' + l.statut_suivi + '">' + tempIcons[l.statut_suivi] + '</span>' : '';
+      const tempDot = (!estVip(l) && tempIcons[l.statut_suivi]) ? '<span class="temp-dot" title="' + escapeHtml(l.statut_suivi) + '">' + tempIcons[l.statut_suivi] + '</span>' : '';
 
       // Colonne unifiée "Test Diagnostic-Tally" :
       // - Déjà rempli -> coche colorée (vert = demandé par le client, rouge = obligatoire/imposé)
@@ -1331,7 +1332,7 @@
         '<td>' + inscriptionPour + '</td>' +
         '<td style="text-align:center" onclick="event.stopPropagation()">' + diagnosticCell + '</td>' +
         '<td class="col-actions" onclick="event.stopPropagation()" style="text-align:center">' +
-          '<button class="btn-icon-delete" title="Supprimer ce lead" onclick="openDeleteModal(' + l.id + ', \'' + escapeHtml(fullName) + '\')">' +
+          '<button class="btn-icon-delete" title="Supprimer ce lead" onclick="openDeleteModal(' + (parseInt(l.id, 10) || 0) + ', ' + jsArg(fullName) + ')">' +
             '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>' +
           '</button>' +
         '</td>' +
@@ -1425,6 +1426,7 @@
     });
   }
 
+  function jsArg(v) { return JSON.stringify(String(v == null ? '' : v)).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function escapeHtml(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));

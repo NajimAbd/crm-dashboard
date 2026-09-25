@@ -85,7 +85,9 @@
   const CRM_WATCH_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-webinar-watch';
   const params = new URLSearchParams(window.location.search);
   const inscriptionId = params.get('id');
-  const isPresenterMode = params.get('presenter') === 'najim2026';
+  // Securite (25.09.2026) : le mode presentateur est reserve a l'entrepreneur connecte a Nexa (plus de mot de passe dans la page)
+  const nexaJeton = (function () { try { const s = JSON.parse(localStorage.getItem('crm_session_user') || 'null'); const exp = parseInt(localStorage.getItem('crm_session_expiry') || '0', 10); return (s && s.token && Date.now() < exp) ? s.token : ''; } catch (e) { return ''; } })();
+  const isPresenterMode = params.get('presenter') === '1' && !!nexaJeton;
   let reportInterval = null;
 
   const CHAT_PERSONS = [
@@ -535,7 +537,7 @@
     document.getElementById('ppChatToggle').addEventListener('click', function() {
       chatIsOn = !chatIsOn;
       this.textContent = chatIsOn ? '💬 Fermer le chat' : '💬 Rouvrir le chat';
-      fetch(CRM_WATCH_API, {
+      fetch(CRM_WATCH_API + '?jeton=' + encodeURIComponent(nexaJeton), {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'toggle_chat', webinar_id: webinarId, actif: chatIsOn ? 1 : 0 })

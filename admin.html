@@ -730,6 +730,7 @@
     throw new Error('Reconnexion necessaire');
   }
 
+  function jsArg(v) { return JSON.stringify(String(v == null ? '' : v)).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function esc(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -835,7 +836,7 @@
           (isSelf
             ? '<span class="stat-mini" title="Vous ne pouvez pas désactiver ou supprimer votre propre compte">Protégé</span>'
             : '<button class="toggle-btn ' + btnClass + '" onclick="toggleStatus(' + a.id + ', \'' + nextStatus + '\', this)">' + btnLabel + '</button>' +
-              '<button class="btn-delete" onclick="confirmDelete(' + a.id + ', \'' + esc(a.nom_praticien).replace(/'/g, "\\'") + '\', this)">Supprimer</button>') +
+              '<button class="btn-delete" onclick="confirmDelete(' + (parseInt(a.id, 10) || 0) + ', ' + jsArg(a.nom_praticien) + ', this)">Supprimer</button>') +
         '</div></td>' +
         '</tr>';
     });

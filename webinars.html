@@ -730,6 +730,7 @@
     });
   }
 
+  function jsArg(v) { return JSON.stringify(String(v == null ? '' : v)).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;'); }
   function esc(s) {
     if (s === null || s === undefined) return '';
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -774,7 +775,7 @@
       html += '<div class="site-meta"><span class="meta-date">📅 ' + esc(getSiteDateRange(site)) + '</span><span class="meta-slug">/' + esc(site.url_slug || '') + '</span></div>';
       html += '</div>';
       html += '<div class="site-header-actions">';
-      html += '<button class="btn-supprimer-site" title="Supprimer ce show" onclick="event.stopPropagation(); deleteShow(' + site.id + ', \'' + esc(site.nom_site).replace(/'/g,"\\'") + '\')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Supprimer</button>';
+      html += '<button class="btn-supprimer-site" title="Supprimer ce show" onclick="event.stopPropagation(); deleteShow(' + (parseInt(site.id, 10) || 0) + ', ' + jsArg(site.nom_site) + ')"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>Supprimer</button>';
       html += '<button class="toggle-btn" id="toggleBtn-' + site.id + '" onclick="toggleSiteBody(' + site.id + ')" title="Afficher / masquer les détails">▾</button>';
       html += '</div>';
       html += '</div>'; // site-header
@@ -1303,7 +1304,7 @@
       const data = await resp.json();
       if (data.success) {
         const link = 'webinar-watch.html?id=' + data.inscription_id;
-        resultEl.innerHTML = '✅ Prêt — <a href="' + link + '" target="_blank">Ouvrir la page test →</a> &nbsp;|&nbsp; <a href="' + link + '&presenter=najim2026" target="_blank" style="color:#c0392b">Ouvrir en mode présentateur →</a>';
+        resultEl.innerHTML = '✅ Prêt — <a href="' + link + '" target="_blank">Ouvrir la page test →</a> &nbsp;|&nbsp; <a href="' + link + '&presenter=1" target="_blank" style="color:#c0392b">Ouvrir en mode présentateur →</a>';
       } else {
         resultEl.textContent = 'Erreur.';
       }

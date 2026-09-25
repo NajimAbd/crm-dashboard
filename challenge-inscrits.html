@@ -136,7 +136,7 @@
 <div class="wrap">
   <a class="back-link" href="webinars.html">← Retour aux Shows</a>
   <a class="back-link" href="emails-modeles.html" style="margin-left:22px">✉️ Modifier les textes des emails</a>
-  <h1>Page Test — à effacer dans le futur</h1>
+  <h1>Inscrits du challenge</h1>
   <p class="sub" id="subtitle">Chargement…</p>
   <div class="legende" id="legende"></div>
 
@@ -144,6 +144,9 @@
 </div>
 
 <script>
+// Securite (25.09.2026) : page reservee aux personnes connectees, textes affiches sans risque
+(function () { let ok = false; try { const s = JSON.parse(localStorage.getItem('crm_session_user') || 'null'); const exp = parseInt(localStorage.getItem('crm_session_expiry') || '0', 10); ok = !!(s && s.token && Date.now() < exp); } catch (e) {} if (!ok) { location.href = 'index.html'; throw new Error('Session requise'); } })();
+function esc(v) { return String(v == null ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
   const WEBHOOK_URL = "https://n8n.srv936251.hstgr.cloud/webhook/crm-challenge-inscrits";
 
   const params = new URLSearchParams(window.location.search);
@@ -175,7 +178,7 @@
     if (t === 'call') return `<span class="th-ico">${ICO_TEL}</span>Call`;
     if (t === 'sondage') return `<span class="th-ico">${ICO_SONDAGE}</span>Sondage`;
     if (t === 'chat') return `<span class="th-ico">${ICO_CHAT}</span>Chat`;
-    return nom;
+    return esc(nom);
   }
 
   // Case a cocher : cochee (verte) si la personne a fait l'action, vide sinon
@@ -268,8 +271,8 @@
       }).join("");
       return `
         <tr>
-          <td>${p.nom}${p.ancien_lead ? `<span class="ancien" title="Ancien lead invité avec ADD (groupe d'origine : ${p.ancien_lead})">↻ Ancien lead · ${p.ancien_lead}</span>` : ''}</td>
-          <td>${p.email}</td>
+          <td>${esc(p.nom)}${p.ancien_lead ? `<span class="ancien" title="Ancien lead invité avec ADD (groupe d'origine : ${esc(p.ancien_lead)})">↻ Ancien lead · ${esc(p.ancien_lead)}</span>` : ''}</td>
+          <td>${esc(p.email)}</td>
           <td class="center ph-avant">${mailIcon(p.avant.confirmation)}</td>
           <td class="center ph-avant">${mailIcon(p.avant.valeur)}</td>
           ${cinqJours ? `<td class="center ph-avant">${mailIcon(p.avant.valeur2)}</td>` : ''}
@@ -309,7 +312,7 @@
             <th>Nom</th><th>Email</th>
             <th class="center ph-avant">Confirmation</th><th class="center ph-avant">Valeur${cinqJours ? ' 1' : ''}</th>${cinqJours ? '<th class="center ph-avant">Valeur 2</th>' : ''}<th class="center ph-avant" title="Rendez-vous 2 jours avant">Rdv (J-2)</th><th class="center ph-avant" title="Rendez-vous la veille">Rdv (J-1)</th><th class="plie plie-avant" title="Colonnes cachées : clique sur la lampe au-dessus pour les montrer"><span class="plie-lbl">Avant</span></th>
             ${headerJours}
-            ${allDeclencheurs.map(n => `<th class="center th-inter ph-durant" title="${n}">${enteteDeclencheur(n)}</th>`).join("")}<th class="plie plie-durant" title="Colonnes cachées : clique sur la lampe au-dessus pour les montrer"><span class="plie-lbl">Durant</span></th>
+            ${allDeclencheurs.map(n => `<th class="center th-inter ph-durant" title="${esc(n)}">${enteteDeclencheur(n)}</th>`).join("")}<th class="plie plie-durant" title="Colonnes cachées : clique sur la lampe au-dessus pour les montrer"><span class="plie-lbl">Durant</span></th>
             ${cinqJours
               ? '<th class="center ph-apres">Replay (J6)</th><th class="center ph-apres">Q&R (J7)</th><th class="center ph-apres">Témoignages (J8)</th><th class="center ph-apres">Clôture (J9)</th>'
               : '<th class="center ph-apres">Replay (J4)</th><th class="center ph-apres">Q&R (J5)</th><th class="center ph-apres">Clôture (J6)</th>'}<th class="plie plie-apres" title="Colonnes cachées : clique sur la lampe au-dessus pour les montrer"><span class="plie-lbl">Après</span></th>
@@ -331,10 +334,10 @@
     if (!allInvites || !allInvites.total) return '';
     const lignes = liste.map(v => `
       <tr>
-        <td>${v.nom || ''}</td>
-        <td>${v.email}</td>
-        <td><span class="badge ${badgeClass[v.groupe_origine] || ''}">${badgeIcon[v.groupe_origine] || ''} ${v.groupe_origine || ''}</span></td>
-        <td class="center">${v.ajoute_le || ''}</td>
+        <td>${esc(v.nom)}</td>
+        <td>${esc(v.email)}</td>
+        <td><span class="badge ${badgeClass[v.groupe_origine] || ''}">${badgeIcon[v.groupe_origine] || ''} ${esc(v.groupe_origine)}</span></td>
+        <td class="center">${esc(v.ajoute_le)}</td>
         <td class="center">${mailIcon(v.invitation)}</td>
         <td class="center">${mailIcon(v.rappel)}</td>
       </tr>`).join('');
@@ -353,7 +356,7 @@
     .then(r => r.json())
     .then(data => {
       if (!data.success) {
-        document.getElementById("content").innerHTML = `<div class="error">Erreur : ${data.message || "impossible de charger les inscrits"}</div>`;
+        document.getElementById("content").innerHTML = `<div class="error">Erreur : ${esc(data.message || "impossible de charger les inscrits")}</div>`;
         return;
       }
       allJours = data.jours || [];
