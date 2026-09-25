@@ -909,6 +909,8 @@
     html += '<div>';
     const isShowType = ['SW','SC','SB'].includes(l.type_client);
     const isAA = l.type_client === 'AA';
+    // Regle (25.09.2026) : un eleve de l'Academie (Fr) n'a rien qui concerne le diagnostic Roqya
+    const estEleve = l.type_client === 'Fr';
     // Pour un lead Show (SW/SC/SB), certains blocs (type de diagnostic Tally, conversion
     // entrepreneur) n'ont de sens qu'une fois le diagnostic accepté par le client —
     // pas dès la simple inscription au show.
@@ -959,8 +961,9 @@
       html += '<span class="header-chip" style="background:#F2EEE4;border-color:#B8965A"><b>💰 Total payé : ' + (parseFloat(l.montant_total_paye || 0)).toFixed(2) + ' CHF</b></span>';
       html += '<span class="header-chip">🧾 ' + (l.nombre_paiements || 0) + ' paiement(s)</span>';
       if (l.type_client) html += '<span class="header-chip">🏷️ ' + esc(typeLabels[l.type_client] || l.type_client) + '</span>';
+      if (estEleve) html += '<span class="header-chip" id="chipFormation">🎓 Formation : —</span>';
       if (l.roqya_status && l.roqya_status !== 'none') html += '<span class="header-chip">🕌 Roqya : ' + esc(l.roqya_status === 'in_progress' ? 'en cours' : 'terminée') + '</span>';
-      if (!showPasEncoreQualifie) {
+      if (!showPasEncoreQualifie && !estEleve) {
         const tallyTypeEffectif = l.tally_type || (l.type_client === 'DD' ? 'DTAP' : 'DTFF');
         html += '<select id="tallyTypeSelect" onchange="setTallyType(' + l.id + ', this.value)" title="Type de diagnostic Tally" style="padding:5px 10px;border-radius:6px;border:1px solid ' + (tallyTypeEffectif === 'DTAP' ? '#B8965A' : '#5A8C5A') + ';font-weight:700;font-size:12.5px;cursor:pointer;background:' + (tallyTypeEffectif === 'DTAP' ? '#FCF3DC' : '#E8F3E8') + ';color:' + (tallyTypeEffectif === 'DTAP' ? '#8A6D1F' : '#3E6B3E') + '">';
         html += '<option value="DTFF" ' + (tallyTypeEffectif === 'DTFF' ? 'selected' : '') + '>📋 DTFF — Diagnostic gratuit</option>';
@@ -997,8 +1000,8 @@
     const analyseTerminee = !!(latestDiag && latestDiag.ayrika_analysis);
 
     html += '<div class="diagnostic-action" style="margin-top:14px;display:flex;align-items:center;gap:10px;flex-wrap:wrap">';
-    if (l.type_client === 'AA') {
-      // Pas de diagnostic pour les prospects Application (AA)
+    if (l.type_client === 'AA' || estEleve) {
+      // Pas de diagnostic pour les prospects Application (AA) ni pour les eleves de l'Academie (Fr)
     } else if (l.a_rempli_diagnostic == 1) {
       // Diagnostic déjà rempli : on propose d'envoyer le RÉSULTAT + RDV, plus jamais le lien Tally
       const resultatEnvoye = (l.statut_global === 'resultat_envoye');
@@ -1072,7 +1075,7 @@
     html += '</div>';
 
     // ===== DIAGNOSTIC =====
-    if (l.type_client !== 'AA') {
+    if (l.type_client !== 'AA' && !estEleve) {
     html += sectionWrap('\ud83e\ude7a', 'Diagnostic', data.diagnostics.length, () => {
       if (data.diagnostics.length === 0) return '<div class="empty-row">Aucun diagnostic enregistr\u00e9.</div>';
       // On n'affiche que le diagnostic le plus recent (id le plus eleve)
@@ -1100,7 +1103,7 @@
     }
 
     // ===== HISTORIQUE DES DIAGNOSTICS =====
-    if (l.type_client !== 'AA' && data.diagnostics.length > 0) {
+    if (l.type_client !== 'AA' && !estEleve && data.diagnostics.length > 0) {
       html += sectionWrap('\ud83d\uddc2\ufe0f', 'Historique des diagnostics', data.diagnostics.length, () => {
         const statutLabels = {
           nouveau: '<span style="color:#8A6D1F;background:#FCF3DC;padding:3px 8px;border-radius:5px;font-size:11.5px;font-weight:600">\u23f3 En attente</span>',
@@ -1426,6 +1429,18 @@
     }
   }
 
+  // Appareil lisible a partir de la signature du navigateur (25.09.2026)
+  function appareilLisible(ua) {
+    ua = String(ua || '');
+    const tablette = /iPad|Tablet|SM-T|Tab(?!le)/i.test(ua) || (/Android/i.test(ua) && !/Mobile/i.test(ua));
+    const tel = !tablette && /iPhone|Android.*Mobile|Mobile|Windows Phone/i.test(ua);
+    const type = tablette ? '📲 Tablette' : tel ? '📱 Téléphone' : '💻 Ordinateur';
+    const sys = /iPhone/i.test(ua) ? 'iPhone' : /iPad/i.test(ua) ? 'iPad' : /Android/i.test(ua) ? 'Android' : /Windows/i.test(ua) ? 'Windows' : /Mac OS X|Macintosh/i.test(ua) ? 'Mac' : /Linux/i.test(ua) ? 'Linux' : '';
+    const nav = /Edg\//.test(ua) ? 'Edge' : /OPR\/|Opera/.test(ua) ? 'Opera' : /Firefox\//.test(ua) ? 'Firefox' : /Chrome\//.test(ua) ? 'Chrome' : /Safari\//.test(ua) ? 'Safari' : '';
+    const det = [sys, nav].filter(Boolean).join(', ');
+    return esc(type + (det ? ' (' + det + ')' : ''));
+  }
+
   // Section Academie : lit la vraie Academie (compte eleve, formations, progression, engagement, acces) (25.09.2026)
   async function chargerAcademie(l) {
     try {
@@ -1442,7 +1457,8 @@
         b += ligne('Compte élève', 'n° ' + esc(e.id) + (e.cree_le ? ' — créé le ' + fmtDate(e.cree_le) : ''));
         b += ligne('Mot de passe', Number(e.doit_changer_mdp) === 1 ? '⏳ Provisoire (pas encore changé)' : '✅ Choisi par l’élève');
         b += ligne('Engagement devant Allah', e.engagement_accepte_le ? '✅ Accepté le ' + fmtDate(e.engagement_accepte_le) : '— Pas encore');
-        b += ligne('Dernière connexion', e.session_derniere ? fmtDate(e.session_derniere) : '— Jamais connecté');
+        b += ligne('Dernière connexion', e.session_derniere ? fmtDateTime(e.session_derniere) : '— Jamais connecté');
+        b += ligne('Appareil utilisé', e.session_appareil ? appareilLisible(e.session_appareil) + ' <span style="font-weight:400;color:var(--text-soft)">· un seul appareil à la fois</span>' : '— Pas encore connu');
         b += ligne('Email d’accès', d.email_acces ? '✅ Envoyé le ' + fmtDate(d.email_acces) : '— Pas de trace d’envoi');
         (d.formations || []).forEach(fo => {
           const pct = fo.total ? Math.round(100 * fo.faites / fo.total) : 0;
@@ -1454,6 +1470,8 @@
         });
         if (!(d.formations || []).length) b += '<p style="color:var(--text-soft);margin:12px 0 0">Aucune formation ouverte sur ce compte.</p>';
       }
+      const chip = document.getElementById('chipFormation');
+      if (chip && (d.formations || []).length) chip.textContent = '🎓 Formation : ' + d.formations.map(fo => fo.titre).join(', ');
       const html = sectionWrap('🎓', 'Académie', d.eleve ? (d.formations || []).length + ' formation(s)' : '', () => b);
       const tete = document.querySelector('#pageContent .lead-header');
       if (tete) tete.insertAdjacentHTML('afterend', html); else document.getElementById('pageContent').insertAdjacentHTML('beforeend', html);
