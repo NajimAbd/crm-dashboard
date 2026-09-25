@@ -883,7 +883,7 @@
 
   function render(data) {
     const l = data.lead;
-    if (l.type_client === 'Fr') { renderFormationStudent(data); return; }
+    // Les eleves (Fr) ont la fiche complete ; la section Academie s'ajoute en dessous de l'en-tete (25.09.2026)
     const fullName = ((l.prenom || '') + ' ' + (l.nom || '')).trim() || 'Lead sans nom';
     const statutMap = {
       client: { label: 'Client', cls: 'status-buyer' },
@@ -1226,6 +1226,7 @@
     });
 
     document.getElementById('pageContent').innerHTML = html;
+    chargerAcademie(l);
   }
 
   async function setTallyType(leadId, value) {
@@ -1423,6 +1424,40 @@
       btn.textContent = labelIdle;
       alert('Erreur de connexion. R\u00e9essayez.');
     }
+  }
+
+  // Section Academie : lit la vraie Academie (compte eleve, formations, progression, engagement, acces) (25.09.2026)
+  async function chargerAcademie(l) {
+    try {
+      const r = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-lead-academie?lead_id=' + encodeURIComponent(l.id));
+      const d = await r.json();
+      if (!d || !d.success) return;
+      if (!d.eleve && l.type_client !== 'Fr') return;
+      const ligne = (label, valeur) => '<div style="display:flex;justify-content:space-between;gap:12px;padding:8px 0;border-bottom:1px solid var(--border-soft);font-size:13.5px"><span style="color:var(--text-soft)">' + label + '</span><span style="font-weight:600;text-align:right">' + valeur + '</span></div>';
+      let b = '';
+      if (!d.eleve) {
+        b = '<p style="color:var(--text-soft);margin:0">Pas encore de compte élève dans l’Académie pour ' + esc(l.email || 'cet email') + '. Si un paiement est trouvé, le bouton <b>Update</b> peut le créer et envoyer ses accès.</p>';
+      } else {
+        const e = d.eleve;
+        b += ligne('Compte élève', 'n° ' + esc(e.id) + (e.cree_le ? ' — créé le ' + fmtDate(e.cree_le) : ''));
+        b += ligne('Mot de passe', Number(e.doit_changer_mdp) === 1 ? '⏳ Provisoire (pas encore changé)' : '✅ Choisi par l’élève');
+        b += ligne('Engagement devant Allah', e.engagement_accepte_le ? '✅ Accepté le ' + fmtDate(e.engagement_accepte_le) : '— Pas encore');
+        b += ligne('Dernière connexion', e.session_derniere ? fmtDate(e.session_derniere) : '— Jamais connecté');
+        b += ligne('Email d’accès', d.email_acces ? '✅ Envoyé le ' + fmtDate(d.email_acces) : '— Pas de trace d’envoi');
+        (d.formations || []).forEach(fo => {
+          const pct = fo.total ? Math.round(100 * fo.faites / fo.total) : 0;
+          b += '<div style="margin-top:12px;padding:12px 14px;border:1px solid var(--border-soft);border-radius:10px;background:#FBFAF6">'
+            + '<div style="font-weight:700;font-size:14px;margin-bottom:6px">🎓 ' + esc(fo.titre) + '</div>'
+            + '<div style="font-size:12.5px;color:var(--text-soft);margin-bottom:8px">Achetée le ' + fmtDate(fo.date_achat) + (fo.certificat ? ' · 🏅 Certificat ' + esc(fo.certificat) : '') + '</div>'
+            + '<div style="height:8px;background:#EFE9DC;border-radius:6px;overflow:hidden"><div style="height:100%;width:' + pct + '%;background:#B8965A"></div></div>'
+            + '<div style="font-size:12px;color:var(--text-soft);margin-top:5px">' + fo.faites + ' / ' + fo.total + ' leçons terminées (' + pct + ' %)</div></div>';
+        });
+        if (!(d.formations || []).length) b += '<p style="color:var(--text-soft);margin:12px 0 0">Aucune formation ouverte sur ce compte.</p>';
+      }
+      const html = sectionWrap('🎓', 'Académie', d.eleve ? (d.formations || []).length + ' formation(s)' : '', () => b);
+      const tete = document.querySelector('#pageContent .lead-header');
+      if (tete) tete.insertAdjacentHTML('afterend', html); else document.getElementById('pageContent').insertAdjacentHTML('beforeend', html);
+    } catch (e) {}
   }
 
   function sectionWrap(emoji, title, count, bodyFn, opts) {
