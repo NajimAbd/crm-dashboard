@@ -731,6 +731,13 @@ loadFilesList();
     if (w) tW.style.display = '';
     if (a) tA.style.display = '';
     if (!w && a) setTarget('academie');
+    // Arrivee depuis l'Academie (25.09.2026) : onglet Academie ouvert directement
+    var cible = new URLSearchParams(location.search).get('cible');
+    if (cible === 'academie' && a) {
+      setTarget('academie');
+      var r = document.querySelector('a[href="webinars.html"]');
+      if (r) { r.href = document.referrer || 'dashboard.html'; r.textContent = '← Retour à l\'Académie'; }
+    }
     if (!w && !a) {
       var m = document.querySelector('main');
       if (m) m.innerHTML = '<div class="message error">L\'envoi de vidéos fait partie de l\'abonnement Show enregistré. Il n\'est pas encore activé sur ton compte. Pour l\'activer, contacte-nous : info.najim1@gmail.com</div>';
