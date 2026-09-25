@@ -543,6 +543,9 @@
         <button type="button" class="btn-manage-pwd" onclick="manageNexaFromEdit()">🔧 Nexa</button>
         <button type="button" class="btn-manage-pwd" onclick="manageIriscueFromEdit()">🔧 IrisCue</button>
       </div>
+      <div style="margin-top:10px">
+        <button type="button" class="btn-manage-pwd" id="btnDebloquer2fa" onclick="debloquer2faDepuisFiche()" title="Si la personne a perdu son téléphone ou son application de code">🔓 Débloquer : remettre à zéro le code à 6 chiffres</button>
+      </div>
     </div>
     <div class="modal-field" id="fieldAppLinks" style="display:none">
       <label>Liens à envoyer au client</label>
@@ -935,6 +938,24 @@
   function manageNexaFromEdit() {
     const id = parseInt(document.getElementById('modalAccountId').value, 10);
     openNexaPasswordModal(id);
+  }
+
+  // Debloquer un entrepreneur qui a perdu son application de code (25.09.2026)
+  async function debloquer2faDepuisFiche() {
+    const id = parseInt(document.getElementById('modalAccountId').value, 10);
+    const acc = allAccounts.find(a => a.id === id) || {};
+    if (!confirm('Débloquer ' + (acc.nom_praticien || 'ce compte') + ' ?\n\nSon code à 6 chiffres actuel ne marchera plus. À sa prochaine connexion (e-mail + mot de passe), il scannera un nouveau QR code avec son téléphone.')) return;
+    const btn = document.getElementById('btnDebloquer2fa');
+    btn.disabled = true;
+    try {
+      const resp = await fetch('https://n8n.srv936251.hstgr.cloud/webhook/crm-admin-reset-2fa', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ account_id: id })
+      });
+      const data = await resp.json();
+      if (data.success) { showToast('Compte débloqué'); alert('✅ ' + data.message); }
+      else alert(data.message || 'Opération impossible.');
+    } catch (e) { alert('Erreur de connexion. Réessaie.'); }
+    btn.disabled = false;
   }
 
   function manageIriscueFromEdit() {
