@@ -70,6 +70,17 @@
   .journal-table .recu-aucun { font-weight: 400; color: var(--text-soft); font-style: italic; }
   .journal-table td.recu-actions { text-align: center; white-space: nowrap; }
   .journal-table .recu-voir { font-size: 16px; margin-right: 4px; }
+  .recu-fond { display: none; position: fixed; inset: 0; background: rgba(13,26,18,0.55); z-index: 100000; align-items: center; justify-content: center; padding: 16px; }
+  .recu-fond.ouvert { display: flex; }
+  .recu-boite { background: #fff; border-radius: 12px; width: 100%; max-width: 720px; height: min(88vh, 900px); display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+  .recu-barre { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--border-soft, #e8e2d6); background: #F7F2E9; }
+  .recu-titre { flex: 1; font-weight: 600; font-size: 14px; color: #0D1A12; }
+  .recu-btn { border: 1px solid #d9cdb8; background: #fff; border-radius: 8px; padding: 6px 12px; font-size: 13px; cursor: pointer; color: #0D1A12; }
+  .recu-btn:hover { background: #f1ebe0; }
+  .recu-x { border: none; background: transparent; font-size: 20px; line-height: 1; cursor: pointer; color: #0D1A12; padding: 4px 8px; border-radius: 6px; }
+  .recu-x:hover { background: #ece4d6; }
+  #recuCadre { flex: 1; width: 100%; border: 0; background: #F7F2E9; }
+  @media print { .recu-fond { display: none !important; } }
   .amount-in { color: #2C6B3F; font-weight: 600; white-space: nowrap; }
   .amount-out { color: #B23A2E; font-weight: 600; white-space: nowrap; }
   .journal-empty { text-align: center; padding: 40px 20px; color: var(--text-soft); font-size: 13px; }
@@ -563,6 +574,17 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="recu-fond" id="recuFond" onclick="if(event.target===this)fermerRecu()">
+  <div class="recu-boite" role="dialog" aria-modal="true" aria-label="Reçu">
+    <div class="recu-barre">
+      <button class="recu-btn" onclick="fermerRecu()" title="Retour à la comptabilité">← Retour</button>
+      <span class="recu-titre" id="recuTitre">Reçu</span>
+      <button class="recu-btn" onclick="imprimerRecu()" title="Ouvrir pour imprimer">🖨 Imprimer</button>
+      <button class="recu-x" onclick="fermerRecu()" title="Fermer" aria-label="Fermer">✕</button>
+    </div>
+    <iframe id="recuCadre" sandbox="allow-modals" title="Reçu"></iframe>
+  </div>
+</div>
 
 <script>
   function handleLockedClick(btnId, action) {
@@ -1339,11 +1361,36 @@
     const u = String((e && e.recu_pdf_url) || '');
     return /^https:\/\/n8n\.srv936251\.hstgr\.cloud\/webhook\/crm-comptabilite-recu-view\?id=\d+&c=[a-f0-9]{24}$/.test(u) ? u : '';
   }
-  function voirRecu(id) {
+  let recuOuvert = '';
+  async function voirRecu(id) {
     const e = allEntries.find(x => String(x.id) === String(id));
     const u = lienRecu(e);
-    if (u) window.open(u, '_blank', 'noopener');
+    if (!u) return;
+    recuOuvert = u;
+    document.getElementById('recuTitre').textContent = 'Reçu ' + (e.numero_recu || '');
+    const cadre = document.getElementById('recuCadre');
+    cadre.srcdoc = '<p style="font-family:sans-serif;padding:30px;color:#666;">Chargement du reçu…</p>';
+    document.getElementById('recuFond').classList.add('ouvert');
+    document.body.style.overflow = 'hidden';
+    try {
+      const r = await fetch(u);
+      if (!r.ok) throw new Error('fail');
+      const html = await r.text();
+      cadre.srcdoc = html.replace('</head>', '<style>.btn-print{display:none !important}</style></head>');
+    } catch (err) {
+      cadre.srcdoc = '<p style="font-family:sans-serif;padding:30px;color:#a33;">Impossible d\'afficher le reçu. Utilise « Imprimer » pour l\'ouvrir.</p>';
+    }
   }
+  function fermerRecu() {
+    document.getElementById('recuFond').classList.remove('ouvert');
+    document.getElementById('recuCadre').srcdoc = '';
+    document.body.style.overflow = '';
+    recuOuvert = '';
+  }
+  function imprimerRecu() {
+    if (recuOuvert) window.open(recuOuvert, '_blank', 'noopener');
+  }
+  document.addEventListener('keydown', ev => { if (ev.key === 'Escape' && recuOuvert) fermerRecu(); });
 
   async function envoyerRecu(id) {
     try {
