@@ -275,12 +275,18 @@
     position: relative;
   }
   /* Barre « Mes leads » (25.09.2026) : Update, + Lead, recherche, imprimer, corbeille */
-  .leads-entete { flex-wrap: wrap; gap: 12px; }
-  .leads-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-  .leads-actions .la-sombre { display: inline-flex; align-items: center; gap: 6px; padding: 8px 16px; border-radius: 20px; border: none; background: #0D1A12; color: #E8D5A8; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; }
+  .leads-barre { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+  .leads-barre > .filter-tab { height: 40px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; padding: 0 18px !important; }
+  .leads-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-left: auto; }
+  .leads-actions .la-sombre { height: 40px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 8px; padding: 0 18px; border-radius: 20px; border: none; background: #0D1A12; color: #F4ECE0; font-size: 13px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; white-space: nowrap; transition: background .15s ease; }
+  .leads-actions .la-sombre svg { color: #C9A96A; flex: none; }
+  .leads-actions .la-sombre:hover { background: #1C2E22; }
   .leads-actions .la-sombre:disabled { opacity: .55; cursor: wait; }
-  .leads-actions .la-icone { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 50%; border: 1px solid var(--border-soft); background: white; color: var(--text-main); cursor: pointer; }
-  .leads-actions .la-corbeille { padding: 7px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #E5DECF; background: white; color: #6B6B68; white-space: nowrap; }
+  .leads-actions .search-box input { height: 40px; box-sizing: border-box; width: 240px; }
+  .leads-actions .la-icone { width: 40px; height: 40px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; border: 1px solid #E5DECF; background: white; color: #2C2C2A; cursor: pointer; transition: border-color .15s ease; }
+  .leads-actions .la-icone:hover, .leads-actions .la-corbeille:hover { border-color: #C9A96A; }
+  .leads-actions .la-corbeille { height: 40px; box-sizing: border-box; display: inline-flex; align-items: center; gap: 6px; padding: 0 16px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; border: 1px solid #E5DECF; background: white; color: #6B6B68; white-space: nowrap; }
+  @media (max-width: 760px) { .leads-actions { margin-left: 0; width: 100%; } .leads-actions .search-box { flex: 1 1 160px; } .leads-actions .search-box input { width: 100%; } }
   .search-box input {
     padding: 9px 14px 9px 36px;
     border: 1px solid var(--border-soft);
@@ -657,27 +663,33 @@
     </div>
   </div>
 
-  <div class="section-header leads-entete">
+  <div class="section-header">
     <h2 class="section-title">Mes leads</h2>
+  </div>
+
+  <div class="leads-barre">
+    <div class="filter-tab active" data-filter="all" onclick="setSourceFilter('all')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #0D1A12;background:#0D1A12;color:#F4ECE0">Tous</div>
+    <div class="filter-tab" id="filterTally" data-filter="tally" onclick="setSourceFilter('tally')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">📋 Tally</div>
+    <div class="filter-tab" data-filter="social" onclick="setSourceFilter('social')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">📱 Réseaux sociaux</div>
+    <div class="filter-tab" data-filter="ads" onclick="setSourceFilter('ads')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">🎯 Ads</div>
     <div class="leads-actions">
-      <button type="button" class="la-sombre" id="btnUpdate" onclick="lancerUpdate()" title="Contrôler et mettre à jour tous les clients">🔄 Update</button>
-      <button type="button" class="la-sombre" onclick="ouvrirAjoutLead()" title="Ajouter un lead">＋ Lead</button>
+      <button type="button" class="la-sombre" id="btnUpdate" onclick="lancerUpdate()" title="Contrôler et mettre à jour tous les clients">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg><span>Update</span>
+      </button>
+      <button type="button" class="la-sombre" onclick="ouvrirAjoutLead()" title="Ajouter un lead">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg><span>Lead</span>
+      </button>
       <div class="search-box">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input type="text" id="searchInput" placeholder="Rechercher un lead…">
       </div>
       <button type="button" class="la-icone" onclick="window.print()" title="Imprimer" aria-label="Imprimer">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
       </button>
-      <div class="filter-tab la-corbeille" data-filter="trash" onclick="setSourceFilter('trash')" title="Corbeille : leads effacés, gardés 30 jours">🗑️ (30j)</div>
+      <div class="filter-tab la-corbeille" data-filter="trash" onclick="setSourceFilter('trash')" title="Corbeille : leads effacés, gardés 30 jours">
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg><span>30j</span>
+      </div>
     </div>
-  </div>
-
-  <div style="display:flex;align-items:center;gap:8px;margin-bottom:16px;flex-wrap:wrap">
-    <div class="filter-tab active" data-filter="all" onclick="setSourceFilter('all')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #0D1A12;background:#0D1A12;color:#F4ECE0">Tous</div>
-    <div class="filter-tab" id="filterTally" data-filter="tally" onclick="setSourceFilter('tally')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">📋 Tally</div>
-    <div class="filter-tab" data-filter="social" onclick="setSourceFilter('social')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">📱 Réseaux sociaux</div>
-    <div class="filter-tab" data-filter="ads" onclick="setSourceFilter('ads')" style="padding:7px 16px;border-radius:20px;font-size:13px;font-weight:500;cursor:pointer;border:1px solid #E5DECF;background:white;color:#6B6B68">🎯 Ads</div>
   </div>
 
   <div id="typeFilterRow" style="display:flex;align-items:center;gap:6px;margin-bottom:16px;flex-wrap:wrap">
@@ -1406,7 +1418,7 @@
   let updActions = [];
   async function lancerUpdate() {
     const b = document.getElementById('btnUpdate');
-    b.disabled = true; b.textContent = '⏳ Contrôle…';
+    b.disabled = true; b.querySelector('span').textContent = 'Contrôle…';
     try {
       const r = await fetch(UPD_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'analyser' }) });
       const d = await r.json();
@@ -1414,7 +1426,7 @@
       else if (!d.actions || !d.actions.length) { showToast('✓ Tout est à jour (' + d.leads + ' leads contrôlés)'); loadLeads(); }
       else { updActions = d.actions; afficherUpdate(d.leads); }
     } catch (e) { alert('Connexion impossible. Réessaie.'); }
-    b.disabled = false; b.textContent = '🔄 Update';
+    b.disabled = false; b.querySelector('span').textContent = 'Update';
   }
   function afficherUpdate(nbLeads) {
     const parLead = {};
