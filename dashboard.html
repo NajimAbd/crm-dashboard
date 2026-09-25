@@ -1401,12 +1401,53 @@
     return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   }
 
-  // Bouton « Update » (25.09.2026) — etape 1 : actualise la liste des leads
+  // Bouton « Update » (25.09.2026) : controle tous les leads, montre la liste, puis applique ce qui est coche
+  const UPD_API = 'https://n8n.srv936251.hstgr.cloud/webhook/crm-update-leads';
+  let updActions = [];
   async function lancerUpdate() {
     const b = document.getElementById('btnUpdate');
-    b.disabled = true; b.textContent = '⏳ Update…';
-    try { await loadLeads(); showToast('✓ Liste des leads à jour'); } catch (e) { showToast('Mise à jour impossible, réessaie'); }
+    b.disabled = true; b.textContent = '⏳ Contrôle…';
+    try {
+      const r = await fetch(UPD_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'analyser' }) });
+      const d = await r.json();
+      if (!d || !d.success) { alert((d && d.message) || 'Le contrôle n’a pas pu se faire. Réessaie.'); }
+      else if (!d.actions || !d.actions.length) { showToast('✓ Tout est à jour (' + d.leads + ' leads contrôlés)'); loadLeads(); }
+      else { updActions = d.actions; afficherUpdate(d.leads); }
+    } catch (e) { alert('Connexion impossible. Réessaie.'); }
     b.disabled = false; b.textContent = '🔄 Update';
+  }
+  function afficherUpdate(nbLeads) {
+    const parLead = {};
+    updActions.forEach(a => { (parLead[a.lead_id] = parLead[a.lead_id] || { nom: a.nom, liste: [] }).liste.push(a); });
+    let h = '';
+    Object.keys(parLead).forEach(id => {
+      const g = parLead[id];
+      h += '<div class="upd-lead"><div class="upd-nom">' + escapeHtml(g.nom) + '</div>';
+      g.liste.forEach(a => {
+        h += a.faisable
+          ? '<label class="upd-ligne"><input type="checkbox" class="upd-coche" value="' + escapeHtml(a.id) + '" checked> <span>' + escapeHtml(a.texte) + '</span></label>'
+          : '<div class="upd-ligne upd-note">' + escapeHtml(a.texte) + '</div>';
+      });
+      h += '</div>';
+    });
+    document.getElementById('updResume').textContent = nbLeads + ' leads contrôlés — voici ce qu’il faut corriger. Décoche ce que tu ne veux pas faire.';
+    document.getElementById('updListe').innerHTML = h;
+    document.getElementById('updFond').classList.add('show');
+  }
+  function fermerUpdate() { document.getElementById('updFond').classList.remove('show'); }
+  async function appliquerUpdate() {
+    const ids = Array.from(document.querySelectorAll('.upd-coche:checked')).map(c => c.value);
+    if (!ids.length) { fermerUpdate(); return; }
+    const b = document.getElementById('updOui');
+    b.disabled = true; b.textContent = '⏳ En cours…';
+    try {
+      const r = await fetch(UPD_API, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'appliquer', actions: ids }) });
+      const d = await r.json();
+      fermerUpdate();
+      if (d && d.success) { alert('✅ Update terminé : ' + d.faites + ' correction(s)\n\n• ' + (d.detail || []).join('\n• ') + (d.erreur ? '\n\n⚠️ ' + d.erreur : '')); loadLeads(); }
+      else alert((d && d.message) || 'L’update n’a pas pu se faire. Réessaie.');
+    } catch (e) { alert('Connexion impossible. Réessaie.'); }
+    b.disabled = false; b.textContent = 'Tout faire';
   }
 
   function showToast(msg) {
@@ -1673,6 +1714,36 @@
   } catch (e) {}
 })();
 </script>
+
+<!-- Update des leads (25.09.2026) -->
+<style>
+  .upd-fond { position: fixed; inset: 0; z-index: 9000; background: rgba(13,26,18,.55); display: none; align-items: flex-start; justify-content: center; padding: 40px 16px; overflow-y: auto; }
+  .upd-fond.show { display: flex; }
+  .upd-boite { background: #FFFDF8; width: 100%; max-width: 620px; border-radius: 16px; padding: 26px 26px 20px; box-shadow: 0 24px 70px rgba(0,0,0,.3); font-family: 'Inter', sans-serif; }
+  .upd-boite h3 { font-family: 'Cormorant Garamond', serif; font-size: 26px; margin: 0 0 6px; color: #0D1A12; }
+  .upd-resume { font-size: 13px; color: #6B6B68; margin: 0 0 16px; }
+  .upd-lead { border: 1px solid #E5DECF; border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; background: white; }
+  .upd-nom { font-weight: 600; font-size: 14px; color: #0D1A12; margin-bottom: 6px; }
+  .upd-ligne { display: flex; gap: 8px; align-items: flex-start; font-size: 13px; line-height: 1.5; color: #2C2C2A; padding: 3px 0; cursor: pointer; }
+  .upd-ligne input { margin-top: 3px; accent-color: #0D1A12; }
+  .upd-note { color: #9A5B1E; cursor: default; }
+  .upd-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 16px; flex-wrap: wrap; }
+  .upd-actions button { border-radius: 20px; padding: 9px 20px; font: inherit; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .upd-non { border: 1px solid #E5DECF; background: white; color: #6B6B68; }
+  .upd-oui { border: none; background: #0D1A12; color: #E8D5A8; }
+  .upd-oui:disabled { opacity: .55; cursor: wait; }
+</style>
+<div class="upd-fond" id="updFond" role="dialog" aria-modal="true" aria-labelledby="updTitre">
+  <div class="upd-boite">
+    <h3 id="updTitre">🔄 Update des clients</h3>
+    <p class="upd-resume" id="updResume"></p>
+    <div id="updListe"></div>
+    <div class="upd-actions">
+      <button type="button" class="upd-non" onclick="fermerUpdate()">Annuler</button>
+      <button type="button" class="upd-oui" id="updOui" onclick="appliquerUpdate()">Tout faire</button>
+    </div>
+  </div>
+</div>
 <!-- Ajouter un lead a la main (25.09.2026) -->
 <style>
   .al-fond { position: fixed; inset: 0; background: rgba(13,26,18,.55); display: none; align-items: flex-start; justify-content: center; z-index: 9999; padding: 40px 16px; overflow-y: auto; }
