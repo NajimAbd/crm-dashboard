@@ -964,7 +964,7 @@
           let ancienJeton = '';
           try { const anc = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null'); if (anc && anc.login === data.login && anc.token) ancienJeton = anc.token; } catch (e) {}
           localStorage.setItem(SESSION_KEY, JSON.stringify({
-            login: data.login, role: data.role, account_id: data.account_id, nom_praticien: data.nom_praticien, totp_enabled: data.totp_enabled, token: ancienJeton
+            login: data.login, role: data.role, account_id: data.account_id, nom_praticien: data.nom_praticien, totp_enabled: data.totp_enabled, token: data.jeton || ancienJeton
           }));
           localStorage.setItem(SESSION_EXPIRY, Date.now() + SESSION_DURATION);
         }
